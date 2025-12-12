@@ -2,6 +2,13 @@
 
 This document provides guidelines for AI coding agents working on the BizPilot2 project. It includes a session-ending protocol to ensure proper issue tracking hygiene and database synchronization.
 
+## ⚠️ FIRST: Read the Workflow Script
+
+**Before starting any work, read the workflow script:**
+- Location: `.github/WORKFLOW_SCRIPT.md`
+- This script defines the exact steps to follow for every feature
+- Follow it exactly - do not deviate
+
 ## Issue Tracking with Beads
 
 This project uses [Beads](https://github.com/steveyegge/beads) for AI-native issue tracking. Issues are stored in `.beads/issues.jsonl` and synced via git.

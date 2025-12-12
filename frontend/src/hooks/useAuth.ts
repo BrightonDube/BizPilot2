@@ -48,17 +48,21 @@ export function useRequireAuth(redirectTo: string = '/auth/login') {
 
   useEffect(() => {
     // Check if we have tokens but no user data
-    const token = localStorage.getItem('access_token');
-    if (token && !isAuthenticated) {
-      fetchUser();
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token && !isAuthenticated) {
+        fetchUser();
+      }
     }
   }, [fetchUser, isAuthenticated]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        router.push(redirectTo);
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          router.push(redirectTo);
+        }
       }
     }
   }, [isAuthenticated, isLoading, router, redirectTo]);

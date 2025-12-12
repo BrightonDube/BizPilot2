@@ -57,6 +57,9 @@ apiClient.interceptors.response.use(
           // Refresh failed, clear tokens and redirect to login
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
+          // Note: Using window.location here because this is outside React context
+          // In production, consider using a custom event that the app can listen to
+          // and handle with Next.js router
           if (typeof window !== 'undefined') {
             window.location.href = '/auth/login';
           }
