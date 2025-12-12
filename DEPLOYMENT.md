@@ -138,6 +138,8 @@ Render is the recommended platform for deploying BizPilot because:
 
 #### Step 2: Deploy Backend (FastAPI)
 
+**Option A: Docker (Recommended)**
+
 1. Click "New" → "Web Service"
 2. Connect your GitHub repository
 3. Configure:
@@ -156,6 +158,22 @@ Render is the recommended platform for deploying BizPilot because:
    DEBUG=false
    CORS_ORIGINS=["https://your-frontend-url.onrender.com"]
    ```
+
+5. Click "Create Web Service"
+
+**Option B: Python (without Docker)**
+
+1. Click "New" → "Web Service"
+2. Connect your GitHub repository
+3. Configure:
+   - Name: `bizpilot-api`
+   - Environment: `Python 3`
+   - Root Directory: `backend`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: (auto-detected from Procfile, or use: `gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT`)
+   - Plan: Free (or paid for production)
+
+4. Add Environment Variables (same as Docker option above)
 
 5. Click "Create Web Service"
 
