@@ -8,7 +8,10 @@ This guide will help you deploy BizPilot to Render using the included Blueprint 
 
 - GitHub account with BizPilot2 repository
 - Render account (free at https://render.com)
+- **No payment information required** - configured for free tier
 - Google OAuth credentials (optional, for social login)
+
+> **Note**: The configuration uses Render's free tier. Free services spin down after 15 minutes of inactivity and take ~30 seconds to wake up on first request. For production use, upgrade to starter plans ($7/month per service).
 
 ---
 
@@ -243,6 +246,12 @@ To manually run migrations:
 - ✅ Check database is in same region as backend
 - ✅ Verify database is running (green status)
 
+#### Service takes 30+ seconds to respond
+- ✅ This is normal for free tier after inactivity
+- ✅ Free services "spin down" after 15 minutes
+- ✅ First request after sleep takes ~30 seconds to wake up
+- ✅ Upgrade to **starter** plan for always-on service
+
 #### OAuth not working
 - ✅ Verify Google credentials are correct
 - ✅ Check redirect URIs match exactly in Google Console
@@ -252,18 +261,28 @@ To manually run migrations:
 
 ## 💰 Pricing Considerations
 
-### Free Tier
+### Free Tier (Current Configuration) ✓
 - **Database**: 1GB storage, shared CPU
-- **Services**: Spin down after inactivity, 750 hrs/month
+- **Services**: Spin down after 15 min inactivity, 750 hrs/month
 - **Total**: $0/month
 
 **Note**: Free services spin down after 15 minutes of inactivity and take ~30 seconds to wake up.
 
 ### Starter Tier (Recommended for Production)
-- **Database Starter**: $7/month (always on)
-- **API Starter**: $7/month (always on)
-- **Web Starter**: $7/month (always on)
+
+To upgrade from free to starter (always-on):
+
+1. Go to each service **Settings**
+2. Change **Instance Type** to **Starter**
+3. Apply changes
+
+**Costs:**
+- **Database Starter**: $7/month (always on, more storage)
+- **API Starter**: $7/month (always on, faster)
+- **Web Starter**: $7/month (always on, faster)
 - **Total**: $21/month
+
+Or edit `render.yaml` and change all `plan: free` to `plan: starter`, then redeploy.
 
 ### Custom Domain
 
