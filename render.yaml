@@ -9,17 +9,18 @@ services:
     runtime: docker
     dockerfilePath: ./infrastructure/docker/Dockerfile.api
     dockerContext: ./backend
-    plan: free
+    plan: starter  # Use starter for better performance, or 'free' for testing
+    region: oregon
     healthCheckPath: /health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/**
+        - infrastructure/docker/Dockerfile.api
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: bizpilot-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: bizpilot-redis
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
@@ -28,15 +29,25 @@ services:
       - key: DEBUG
         value: "false"
       - key: CORS_ORIGINS
-        sync: false  # Set manually after frontend is deployed
+        value: '["https://bizpilot-web.onrender.com"]'
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
       - key: SMTP_HOST
-        sync: false
+        sync: false  # Configure in Render dashboard
       - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
         sync: false
       - key: GOOGLE_CLIENT_ID
-        sync: false
+        sync: false  # Configure in Render dashboard
       - key: GOOGLE_CLIENT_SECRET
-        sync: false
+        sync: false  # Configure in Render dashboard
+      - key: GOOGLE_REDIRECT_URI
+        value: https://bizpilot-api.onrender.com/api/v1/oauth/google/callback
 
   # Next.js Frontend
   - type: web
@@ -44,26 +55,32 @@ services:
     runtime: docker
     dockerfilePath: ./infrastructure/docker/Dockerfile.web
     dockerContext: ./frontend
-    plan: free
+    plan: starter  # Use starter for better performance, or 'free' for testing
+    region: oregon
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - frontend/**
+        - infrastructure/docker/Dockerfile.web
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        sync: false  # Set to https://bizpilot-api.onrender.com/api/v1 after API deploys
+        value: https://bizpilot-api.onrender.com/api/v1
       - key: NEXTAUTH_URL
-        sync: false  # Set to https://bizpilot-web.onrender.com after frontend deploys
+        value: https://bizpilot-web.onrender.com
       - key: NEXTAUTH_SECRET
         generateValue: true
+      - key: NODE_ENV
+        value: production
       - key: GOOGLE_CLIENT_ID
-        sync: false
+        sync: false  # Configure in Render dashboard (must match backend)
       - key: GOOGLE_CLIENT_SECRET
-        sync: false
+        sync: false  # Configure in Render dashboard (must match backend)
 
 databases:
   # PostgreSQL Database
   - name: bizpilot-db
     databaseName: bizpilot
     user: bizpilot
-    plan: free
-    ipAllowList: []  # Allow all connections (for simplicity)
-
-# Redis for caching and sessions
-# Note: Redis is configured separately as it uses a different service type
+    plan: starter  # Use starter for better performance, or 'free' for testing
+    region: oregon
+    ipAllowList: []  # Allow all connections

@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/bizpilot"
 
-    # Redis
+    # Redis (Optional - for caching and sessions when implemented)
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # JWT
