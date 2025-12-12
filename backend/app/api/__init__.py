@@ -5,6 +5,9 @@ from fastapi import APIRouter
 from app.api.auth import router as auth_router
 from app.api.oauth import router as oauth_router
 from app.api.products import router as products_router
+from app.api.customers import router as customers_router
+from app.api.orders import router as orders_router
+from app.api.invoices import router as invoices_router
 
 router = APIRouter()
 
@@ -12,6 +15,9 @@ router = APIRouter()
 router.include_router(auth_router)
 router.include_router(oauth_router)
 router.include_router(products_router)
+router.include_router(customers_router)
+router.include_router(orders_router)
+router.include_router(invoices_router)
 
 
 @router.get("/")
