@@ -65,7 +65,7 @@ class ProductService:
         if low_stock_only:
             query = query.filter(
                 and_(
-                    Product.track_inventory == True,
+                    Product.track_inventory.is_(True),
                     Product.quantity <= Product.low_stock_threshold,
                 )
             )

@@ -49,7 +49,8 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     user = auth_service.create_user(user_data)
     
     # Generate email verification token (would send email in production)
-    verification_token = create_email_verification_token(user.email)
+    # Token is created for future email sending - stored or sent in production
+    _ = create_email_verification_token(user.email)
     # TODO: Send verification email
     
     return UserResponse(
@@ -146,7 +147,8 @@ async def forgot_password(data: PasswordReset, db: Session = Depends(get_db)):
     
     if user:
         # Generate reset token (would send email in production)
-        reset_token = create_password_reset_token(data.email)
+        # Token is created for future email sending - stored or sent in production
+        _ = create_password_reset_token(data.email)
         # TODO: Send password reset email
     
     # Always return success to prevent email enumeration

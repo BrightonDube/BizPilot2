@@ -17,7 +17,6 @@ from app.schemas.inventory import (
     InventoryItemListResponse,
     InventoryAdjustment,
     InventoryTransactionResponse,
-    LowStockAlert,
     InventorySummary,
 )
 from app.services.inventory_service import InventoryService

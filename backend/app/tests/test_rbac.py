@@ -1,6 +1,5 @@
 """Tests for Role-Based Access Control."""
 
-import pytest
 
 
 class TestRBACDependencies:

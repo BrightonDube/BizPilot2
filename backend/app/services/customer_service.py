@@ -1,10 +1,9 @@
 """Customer service for business logic."""
 
 from typing import List, Optional, Tuple
-from uuid import UUID
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func
+from sqlalchemy import or_
 
 from app.models.customer import Customer, CustomerType
 from app.schemas.customer import CustomerCreate, CustomerUpdate

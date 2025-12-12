@@ -1,10 +1,8 @@
 """Inventory models for stock management."""
 
 from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime
-from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import enum
-from datetime import datetime
 
 from app.models.base import BaseModel
 

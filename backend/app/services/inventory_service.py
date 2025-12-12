@@ -1,11 +1,10 @@
 """Inventory service for business logic."""
 
 from typing import List, Optional, Tuple
-from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func
+from sqlalchemy import func
 
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
 from app.schemas.inventory import InventoryItemCreate, InventoryItemUpdate, InventoryAdjustment

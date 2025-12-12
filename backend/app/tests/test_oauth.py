@@ -1,6 +1,5 @@
 """Tests for Google OAuth integration."""
 
-import pytest
 
 
 class TestOAuthSchemas:

@@ -1,7 +1,6 @@
 """Order models for order management."""
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, ForeignKey, Enum as SQLEnum, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 import enum
 from datetime import datetime

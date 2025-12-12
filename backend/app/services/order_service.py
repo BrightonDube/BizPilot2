@@ -1,7 +1,7 @@
 """Order service for business logic."""
 
 from typing import List, Optional, Tuple
-from uuid import UUID, uuid4
+from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 from sqlalchemy.orm import Session

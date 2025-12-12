@@ -1,6 +1,5 @@
 """Unit tests for Order API endpoints."""
 
-import pytest
 from decimal import Decimal
 
 
@@ -184,7 +183,6 @@ class TestOrderService:
         """Test order number format."""
         from app.services.order_service import OrderService
         from unittest.mock import MagicMock
-        from datetime import datetime
         
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.count.return_value = 0

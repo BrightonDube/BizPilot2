@@ -1,6 +1,5 @@
 """Unit tests for Customer API endpoints."""
 
-import pytest
 from decimal import Decimal
 
 

@@ -1,10 +1,9 @@
 """Invoice models for invoicing."""
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, ForeignKey, Enum as SQLEnum, DateTime, Date
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum as SQLEnum, Date
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 import enum
-from datetime import datetime, date
+from datetime import date
 
 from app.models.base import BaseModel
 

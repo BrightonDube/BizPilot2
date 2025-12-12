@@ -21,12 +21,12 @@ class RoleService:
     def get_roles_for_business(self, business_id: str) -> List[Role]:
         """Get all roles for a business (including system roles)."""
         return self.db.query(Role).filter(
-            (Role.business_id == business_id) | (Role.is_system == True)
+            (Role.business_id == business_id) | (Role.is_system.is_(True))
         ).all()
 
     def get_system_roles(self) -> List[Role]:
         """Get all system roles."""
-        return self.db.query(Role).filter(Role.is_system == True).all()
+        return self.db.query(Role).filter(Role.is_system.is_(True)).all()
 
     def create_role(
         self,
@@ -117,7 +117,7 @@ class RoleService:
         for role_key, role_data in DEFAULT_ROLES.items():
             existing = self.db.query(Role).filter(
                 Role.name == role_data["name"],
-                Role.is_system == True
+                Role.is_system.is_(True)
             ).first()
             
             if not existing:

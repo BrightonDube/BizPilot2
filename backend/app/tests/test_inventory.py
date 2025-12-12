@@ -1,6 +1,5 @@
 """Unit tests for Inventory API endpoints."""
 
-import pytest
 from decimal import Decimal
 
 

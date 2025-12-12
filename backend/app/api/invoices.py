@@ -16,7 +16,6 @@ from app.schemas.invoice import (
     InvoiceUpdate,
     InvoiceResponse,
     InvoiceListResponse,
-    InvoiceItemCreate,
     InvoiceItemResponse,
     PaymentRecord,
     InvoiceSummary,

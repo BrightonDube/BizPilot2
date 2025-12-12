@@ -1,8 +1,5 @@
 """Tests for database models."""
 
-import pytest
-import uuid
-from datetime import datetime
 
 
 class TestUserModel:

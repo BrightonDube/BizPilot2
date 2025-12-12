@@ -1,8 +1,7 @@
 """User model for authentication and profile."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, String, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
 import enum
 
 from app.models.base import BaseModel

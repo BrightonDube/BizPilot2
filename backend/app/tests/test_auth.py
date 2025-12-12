@@ -1,7 +1,6 @@
 """Tests for authentication system."""
 
 import pytest
-from datetime import timedelta
 
 
 class TestSecurityModule:

@@ -1,6 +1,5 @@
 """Unit tests for Invoice API endpoints."""
 
-import pytest
 from decimal import Decimal
 from datetime import date, datetime
 

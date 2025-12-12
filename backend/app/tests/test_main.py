@@ -1,6 +1,5 @@
 """Tests for the main application endpoints."""
 
-import pytest
 
 
 class TestHealthEndpoint:

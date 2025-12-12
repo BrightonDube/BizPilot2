@@ -1,6 +1,5 @@
 """Tests for Product API."""
 
-import pytest
 from decimal import Decimal
 
 

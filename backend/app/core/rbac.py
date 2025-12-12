@@ -1,14 +1,12 @@
 """Role-Based Access Control (RBAC) dependencies and decorators."""
 
 from typing import List, Optional
-from functools import wraps
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
-from app.models.role import Permission
 from app.models.business_user import BusinessUser
 
 

@@ -18,9 +18,6 @@ from app.schemas.product import (
     ProductListResponse,
     ProductBulkCreate,
     ProductBulkDelete,
-    ProductCategoryCreate,
-    ProductCategoryUpdate,
-    ProductCategoryResponse,
 )
 from app.services.product_service import ProductService
 
