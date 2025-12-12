@@ -23,7 +23,7 @@ export default function DashboardPage() {
       value: 'R 45,231',
       change: '+20.1%',
       changeType: 'positive' as const,
-      icon: DollarSign,
+      icon: <DollarSign className="w-5 h-5" />,
       description: 'from last month',
     },
     {
@@ -31,7 +31,7 @@ export default function DashboardPage() {
       value: '356',
       change: '+12.5%',
       changeType: 'positive' as const,
-      icon: ShoppingCart,
+      icon: <ShoppingCart className="w-5 h-5" />,
       description: 'from last month',
     },
     {
@@ -39,7 +39,7 @@ export default function DashboardPage() {
       value: '1,234',
       change: '+5.2%',
       changeType: 'positive' as const,
-      icon: Users,
+      icon: <Users className="w-5 h-5" />,
       description: 'from last month',
     },
     {
@@ -47,7 +47,7 @@ export default function DashboardPage() {
       value: '573',
       change: '-2.1%',
       changeType: 'negative' as const,
-      icon: Package,
+      icon: <Package className="w-5 h-5" />,
       description: 'low stock items',
     },
   ];

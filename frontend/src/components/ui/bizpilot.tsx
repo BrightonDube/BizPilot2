@@ -46,8 +46,9 @@ interface StatCardProps {
   value: string | number;
   change?: string;
   changeType?: "positive" | "negative" | "neutral";
-  icon?: LucideIcon;
+  icon?: React.ReactNode;
   description?: string;
+  trend?: { value: number; isPositive: boolean };
 }
 
 export function StatCard({ 
@@ -55,8 +56,9 @@ export function StatCard({
   value, 
   change, 
   changeType = "neutral",
-  icon: Icon,
-  description 
+  icon,
+  description,
+  trend 
 }: StatCardProps) {
   const changeColors = {
     positive: "text-green-400",
@@ -68,9 +70,9 @@ export function StatCard({
     <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-gray-400">{title}</p>
-        {Icon && (
-          <div className="rounded-lg bg-gray-700 p-2">
-            <Icon className="h-5 w-5 text-blue-400" />
+        {icon && (
+          <div className="rounded-lg bg-gray-700 p-2 text-blue-400">
+            {icon}
           </div>
         )}
       </div>
@@ -79,6 +81,11 @@ export function StatCard({
         {change && (
           <span className={cn("text-sm", changeColors[changeType])}>
             {change}
+          </span>
+        )}
+        {trend && (
+          <span className={cn("text-sm", trend.isPositive ? "text-green-400" : "text-red-400")}>
+            {trend.isPositive ? "+" : "-"}{trend.value}%
           </span>
         )}
       </div>
@@ -148,13 +155,15 @@ export function LoadingSpinner({ size = "md" }: LoadingSpinnerProps) {
 }
 
 interface BadgeProps {
-  variant?: "default" | "success" | "warning" | "danger" | "info";
+  variant?: "default" | "success" | "warning" | "danger" | "info" | "secondary";
   children: React.ReactNode;
+  className?: string;
 }
 
-export function Badge({ variant = "default", children }: BadgeProps) {
+export function Badge({ variant = "default", children, className }: BadgeProps) {
   const variants = {
     default: "bg-gray-700 text-gray-300",
+    secondary: "bg-gray-600 text-gray-300",
     success: "bg-green-500/10 text-green-400 border border-green-500/20",
     warning: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
     danger: "bg-red-500/10 text-red-400 border border-red-500/20",
@@ -162,7 +171,7 @@ export function Badge({ variant = "default", children }: BadgeProps) {
   };
 
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", variants[variant])}>
+    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", variants[variant], className)}>
       {children}
     </span>
   );

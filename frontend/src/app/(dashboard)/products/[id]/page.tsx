@@ -90,14 +90,14 @@ export default function ProductDetailPage() {
           value={`${profitMargin}%`}
           change={`R ${(product.selling_price - product.cost_price).toFixed(2)} per unit`}
           changeType="positive"
-          icon={TrendingUp}
+          icon={<TrendingUp className="w-5 h-5" />}
         />
         <StatCard
           title="In Stock"
           value={product.quantity.toString()}
           change={isLowStock ? 'Low stock!' : 'Stock OK'}
           changeType={isLowStock ? 'negative' : 'positive'}
-          icon={isLowStock ? AlertTriangle : Package}
+          icon={isLowStock ? <AlertTriangle className="w-5 h-5" /> : <Package className="w-5 h-5" />}
         />
       </div>
 
