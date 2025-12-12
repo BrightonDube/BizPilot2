@@ -1,0 +1,26 @@
+{
+  "name": "bizpilot-monorepo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "BizPilot v2.0 - Modern Multi-Business Management Platform",
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "frontend:dev": "pnpm --filter frontend dev",
+    "frontend:build": "pnpm --filter frontend build",
+    "frontend:test": "pnpm --filter frontend test",
+    "backend:dev": "cd backend && source venv/bin/activate && uvicorn app.main:app --reload",
+    "backend:test": "cd backend && source venv/bin/activate && pytest"
+  },
+  "keywords": [
+    "bizpilot",
+    "business-management",
+    "multi-business",
+    "invoicing",
+    "inventory"
+  ],
+  "author": "BizPilot Team",
+  "license": "MIT"
+}
