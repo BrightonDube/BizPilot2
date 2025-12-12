@@ -9,7 +9,7 @@ services:
     runtime: docker
     dockerfilePath: ./infrastructure/docker/Dockerfile.api
     dockerContext: ./backend
-    plan: starter  # Use starter for better performance, or 'free' for testing
+    plan: free  # Free tier - spins down after 15 min inactivity. Upgrade to 'starter' for production
     region: oregon
     healthCheckPath: /health
     autoDeploy: true
@@ -55,7 +55,7 @@ services:
     runtime: docker
     dockerfilePath: ./infrastructure/docker/Dockerfile.web
     dockerContext: ./frontend
-    plan: starter  # Use starter for better performance, or 'free' for testing
+    plan: free  # Free tier - spins down after 15 min inactivity. Upgrade to 'starter' for production
     region: oregon
     autoDeploy: true
     buildFilter:
@@ -81,6 +81,6 @@ databases:
   - name: bizpilot-db
     databaseName: bizpilot
     user: bizpilot
-    plan: starter  # Use starter for better performance, or 'free' for testing
+    plan: free  # Free tier - 1GB storage, shared CPU. Upgrade to 'starter' for production
     region: oregon
     ipAllowList: []  # Allow all connections
