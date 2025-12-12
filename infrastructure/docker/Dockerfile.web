@@ -1,5 +1,5 @@
-# BizPilot Frontend Dockerfile
-FROM node:20-alpine
+# BizPilot Frontend Dockerfile (Production)
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -15,8 +15,30 @@ RUN pnpm install --frozen-lockfile
 # Copy application code
 COPY . .
 
+# Build the application
+RUN pnpm build
+
+# Production image
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy package files and install production dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+# Copy built application from builder
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.mjs ./
+
 # Expose port
 EXPOSE 3000
 
-# Run in development mode with hot-reload
-CMD ["pnpm", "dev"]
+# Run the application
+CMD ["pnpm", "start"]
