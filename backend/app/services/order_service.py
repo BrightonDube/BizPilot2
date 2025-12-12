@@ -25,7 +25,7 @@ class OrderService:
         ).count()
         
         # Format: ORD-YYYYMMDD-XXXXX
-        today = datetime.utcnow().strftime("%Y%m%d")
+        today = datetime.now().strftime("%Y%m%d")
         return f"ORD-{today}-{(count + 1):05d}"
 
     def get_orders(

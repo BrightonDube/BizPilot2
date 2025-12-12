@@ -142,7 +142,9 @@ export default function InvoicesPage() {
             className="pl-10 bg-gray-800 border-gray-700"
           />
         </div>
+        <label htmlFor="invoice-status-filter" className="sr-only">Filter by invoice status</label>
         <select
+          id="invoice-status-filter"
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
           className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"

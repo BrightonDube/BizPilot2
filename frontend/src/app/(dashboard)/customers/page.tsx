@@ -149,7 +149,9 @@ export default function CustomersPage() {
             className="pl-10 bg-gray-800 border-gray-700"
           />
         </div>
+        <label htmlFor="customer-type-filter" className="sr-only">Filter by customer type</label>
         <select
+          id="customer-type-filter"
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
           className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
