@@ -1,0 +1,69 @@
+# BizPilot v2.0 Render Blueprint
+# Deploy this app to Render by clicking "New" -> "Blueprint" -> Connect this repo
+# See: https://render.com/docs/infrastructure-as-code
+
+services:
+  # FastAPI Backend
+  - type: web
+    name: bizpilot-api
+    runtime: docker
+    dockerfilePath: ./infrastructure/docker/Dockerfile.api
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bizpilot-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: bizpilot-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: CORS_ORIGINS
+        sync: false  # Set manually after frontend is deployed
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+  # Next.js Frontend
+  - type: web
+    name: bizpilot-web
+    runtime: docker
+    dockerfilePath: ./infrastructure/docker/Dockerfile.web
+    dockerContext: ./frontend
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false  # Set to https://bizpilot-api.onrender.com/api/v1 after API deploys
+      - key: NEXTAUTH_URL
+        sync: false  # Set to https://bizpilot-web.onrender.com after frontend deploys
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+databases:
+  # PostgreSQL Database
+  - name: bizpilot-db
+    databaseName: bizpilot
+    user: bizpilot
+    plan: free
+    ipAllowList: []  # Allow all connections (for simplicity)
+
+# Redis for caching and sessions
+# Note: Redis is configured separately as it uses a different service type
