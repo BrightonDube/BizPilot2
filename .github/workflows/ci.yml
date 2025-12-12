@@ -9,7 +9,7 @@ on:
 env:
   PYTHON_VERSION: "3.12"
   NODE_VERSION: "20"
-  PNPM_VERSION: "8"
+  PNPM_VERSION: "9"
 
 jobs:
   # Backend CI
@@ -53,9 +53,6 @@ jobs:
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - name: Checkout code
@@ -71,19 +68,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm --filter frontend lint
 
       - name: Type check
-        run: pnpm exec tsc --noEmit
+        run: pnpm --filter frontend exec tsc --noEmit
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter frontend build
 
   # Shared types check
   shared:
