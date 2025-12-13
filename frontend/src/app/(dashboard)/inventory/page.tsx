@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -11,76 +11,67 @@ import {
   ArrowUpDown,
   History
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, LoadingSpinner } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
-const mockInventory = [
-  {
-    id: '1',
-    product_name: 'Premium Widget',
-    sku: 'PWD-001',
-    quantity_on_hand: 150,
-    quantity_reserved: 10,
-    reorder_point: 50,
-    location: 'Warehouse A',
-    bin_location: 'A-12-3',
-    average_cost: 25.00,
-    is_low_stock: false,
-  },
-  {
-    id: '2',
-    product_name: 'Standard Gadget',
-    sku: 'SGT-002',
-    quantity_on_hand: 8,
-    quantity_reserved: 5,
-    reorder_point: 20,
-    location: 'Warehouse A',
-    bin_location: 'A-08-1',
-    average_cost: 15.50,
-    is_low_stock: true,
-  },
-  {
-    id: '3',
-    product_name: 'Deluxe Package',
-    sku: 'DPK-003',
-    quantity_on_hand: 0,
-    quantity_reserved: 0,
-    reorder_point: 10,
-    location: 'Warehouse B',
-    bin_location: 'B-01-2',
-    average_cost: 45.00,
-    is_low_stock: true,
-  },
-  {
-    id: '4',
-    product_name: 'Basic Bundle',
-    sku: 'BBL-004',
-    quantity_on_hand: 200,
-    quantity_reserved: 25,
-    reorder_point: 30,
-    location: 'Warehouse A',
-    bin_location: 'A-15-4',
-    average_cost: 12.00,
-    is_low_stock: false,
-  },
-];
+interface InventoryItem {
+  id: string;
+  product_name: string;
+  sku: string;
+  quantity_on_hand: number;
+  quantity_reserved: number;
+  reorder_point: number;
+  location: string;
+  bin_location: string;
+  average_cost: number;
+  is_low_stock: boolean;
+}
 
 export default function InventoryPage() {
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
 
-  const filteredInventory = mockInventory.filter(item => {
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      const response = await apiClient.get('/inventory', {
+        params: { limit: 50 },
+      });
+      setInventory(response.data.items || []);
+    } catch (error) {
+      // Use empty array if API is not available
+      setInventory([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredInventory = inventory.filter(item => {
     const matchesSearch = 
-      item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      item.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.sku?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLowStock = !showLowStockOnly || item.is_low_stock;
     return matchesSearch && matchesLowStock;
   });
 
-  const totalItems = mockInventory.length;
-  const totalValue = mockInventory.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0);
-  const lowStockCount = mockInventory.filter(i => i.is_low_stock).length;
-  const outOfStockCount = mockInventory.filter(i => i.quantity_on_hand === 0).length;
+  const totalItems = inventory.length;
+  const totalValue = inventory.reduce((sum, i) => sum + ((i.quantity_on_hand || 0) * (i.average_cost || 0)), 0);
+  const lowStockCount = inventory.filter(i => i.is_low_stock).length;
+  const outOfStockCount = inventory.filter(i => (i.quantity_on_hand || 0) === 0).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -109,15 +100,14 @@ export default function InventoryPage() {
         />
         <StatCard
           title="Total Value"
-          value={`$${totalValue.toLocaleString()}`}
+          value={`R ${totalValue.toLocaleString()}`}
           icon={<DollarSign className="w-5 h-5" />}
-          trend={{ value: 5, isPositive: true }}
         />
         <StatCard
           title="Low Stock"
           value={lowStockCount}
           icon={<AlertTriangle className="w-5 h-5" />}
-          trend={{ value: lowStockCount, isPositive: false }}
+          trend={lowStockCount > 0 ? { value: lowStockCount, isPositive: false } : undefined}
         />
         <StatCard
           title="Out of Stock"
@@ -153,7 +143,10 @@ export default function InventoryPage() {
       {filteredInventory.length === 0 ? (
         <EmptyState
           title="No inventory items found"
-          description="Try adjusting your search or filters"
+          description={inventory.length === 0 
+            ? "Add products to start tracking inventory"
+            : "Try adjusting your search or filters"
+          }
         />
       ) : (
         <div className="overflow-x-auto">
@@ -172,9 +165,9 @@ export default function InventoryPage() {
             </thead>
             <tbody>
               {filteredInventory.map((item) => {
-                const available = item.quantity_on_hand - item.quantity_reserved;
-                const value = item.quantity_on_hand * item.average_cost;
-                const isOutOfStock = item.quantity_on_hand === 0;
+                const available = (item.quantity_on_hand || 0) - (item.quantity_reserved || 0);
+                const value = (item.quantity_on_hand || 0) * (item.average_cost || 0);
+                const isOutOfStock = (item.quantity_on_hand || 0) === 0;
                 
                 return (
                   <tr 
@@ -184,23 +177,25 @@ export default function InventoryPage() {
                     <td className="py-3 px-4">
                       <div className="font-medium text-white">{item.product_name}</div>
                     </td>
-                    <td className="py-3 px-4 text-gray-400">{item.sku}</td>
+                    <td className="py-3 px-4 text-gray-400">{item.sku || '-'}</td>
                     <td className="py-3 px-4 text-right">
                       <span className={`font-medium ${
                         isOutOfStock ? 'text-red-400' : 
                         item.is_low_stock ? 'text-yellow-400' : 'text-white'
                       }`}>
-                        {item.quantity_on_hand}
+                        {item.quantity_on_hand || 0}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right text-gray-400">{available}</td>
-                    <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point}</td>
+                    <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point || 0}</td>
                     <td className="py-3 px-4">
-                      <div className="text-white">{item.location}</div>
-                      <div className="text-xs text-gray-500">{item.bin_location}</div>
+                      <div className="text-white">{item.location || '-'}</div>
+                      {item.bin_location && (
+                        <div className="text-xs text-gray-500">{item.bin_location}</div>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-right text-white">
-                      ${value.toLocaleString()}
+                      R {value.toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-center">
                       {isOutOfStock ? (
