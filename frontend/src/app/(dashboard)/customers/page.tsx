@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -12,97 +12,134 @@ import {
   User,
   Tag,
   DollarSign,
-  ShoppingCart
+  ShoppingCart,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Button, Input, Card, CardContent } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
-// Mock data for customers
-const mockCustomers = [
-  {
-    id: '1',
-    first_name: 'John',
-    last_name: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    company_name: null,
-    customer_type: 'individual',
-    total_orders: 12,
-    total_spent: 1450.00,
-    tags: ['vip', 'repeat'],
-    city: 'New York',
-    country: 'USA',
-  },
-  {
-    id: '2',
-    first_name: 'Jane',
-    last_name: 'Smith',
-    email: 'jane.smith@acme.com',
-    phone: '+1 (555) 987-6543',
-    company_name: 'Acme Corporation',
-    customer_type: 'business',
-    total_orders: 45,
-    total_spent: 12500.00,
-    tags: ['wholesale', 'vip'],
-    city: 'Los Angeles',
-    country: 'USA',
-  },
-  {
-    id: '3',
-    first_name: 'Robert',
-    last_name: 'Johnson',
-    email: 'robert.j@email.com',
-    phone: '+1 (555) 456-7890',
-    company_name: null,
-    customer_type: 'individual',
-    total_orders: 3,
-    total_spent: 250.00,
-    tags: [],
-    city: 'Chicago',
-    country: 'USA',
-  },
-  {
-    id: '4',
-    first_name: 'Sarah',
-    last_name: 'Williams',
-    email: 'sarah@techstart.io',
-    phone: '+1 (555) 321-0987',
-    company_name: 'TechStart Inc',
-    customer_type: 'business',
-    total_orders: 28,
-    total_spent: 8750.00,
-    tags: ['tech', 'wholesale'],
-    city: 'San Francisco',
-    country: 'USA',
-  },
-];
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  company_name: string | null;
+  customer_type: string;
+  total_orders?: number;
+  total_spent?: number;
+  tags?: string[];
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string | null;
+}
+
+interface CustomerListResponse {
+  items: Customer[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-ZA', {
+    style: 'currency',
+    currency: 'ZAR',
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
 
 export default function CustomersPage() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredCustomers = mockCustomers.filter(customer => {
-    const matchesSearch = 
-      customer.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-    
-    const matchesType = selectedType === 'all' || customer.customer_type === selectedType;
-    
-    return matchesSearch && matchesType;
-  });
+  useEffect(() => {
+    async function fetchCustomers() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const params = new URLSearchParams({
+          page: page.toString(),
+          per_page: '20',
+        });
+        
+        if (searchTerm) {
+          params.append('search', searchTerm);
+        }
+        
+        if (selectedType !== 'all') {
+          params.append('customer_type', selectedType);
+        }
+        
+        const response = await apiClient.get<CustomerListResponse>(`/customers?${params}`);
+        setCustomers(response.data.items);
+        setTotal(response.data.total);
+        setPages(response.data.pages);
+      } catch (err) {
+        console.error('Failed to fetch customers:', err);
+        setError('Failed to load customers');
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  const totalCustomers = mockCustomers.length;
-  const totalRevenue = mockCustomers.reduce((sum, c) => sum + c.total_spent, 0);
-  const businessCustomers = mockCustomers.filter(c => c.customer_type === 'business').length;
-  const avgOrderValue = totalRevenue / mockCustomers.reduce((sum, c) => sum + c.total_orders, 0) || 0;
+    // Debounce search
+    const timeoutId = setTimeout(fetchCustomers, 300);
+    return () => clearTimeout(timeoutId);
+  }, [page, searchTerm, selectedType]);
+
+  const filteredCustomers = customers;
+
+  const totalCustomers = total;
+  const totalRevenue = customers.reduce((sum, c) => sum + (c.total_spent || 0), 0);
+  const businessCustomers = customers.filter(c => c.customer_type === 'business').length;
+  const totalOrders = customers.reduce((sum, c) => sum + (c.total_orders || 0), 0);
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  if (isLoading && customers.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <p className="text-gray-400">Loading customers...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && customers.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500" />
+          <h2 className="text-xl font-semibold text-white">Unable to load customers</h2>
+          <p className="text-gray-400 max-w-md">{error}</p>
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Customers"
-        description="Manage your customer relationships"
+        description={`Manage your customer relationships (${totalCustomers} customers)`}
         actions={
           <Link href="/customers/new">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
@@ -118,13 +155,11 @@ export default function CustomersPage() {
           title="Total Customers"
           value={totalCustomers}
           icon={<User className="w-5 h-5" />}
-          trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          value={formatCurrency(totalRevenue)}
           icon={<DollarSign className="w-5 h-5" />}
-          trend={{ value: 8, isPositive: true }}
         />
         <StatCard
           title="Business Customers"
@@ -133,9 +168,8 @@ export default function CustomersPage() {
         />
         <StatCard
           title="Avg Order Value"
-          value={`$${avgOrderValue.toFixed(2)}`}
+          value={formatCurrency(avgOrderValue)}
           icon={<ShoppingCart className="w-5 h-5" />}
-          trend={{ value: 5, isPositive: true }}
         />
       </div>
 
@@ -145,7 +179,10 @@ export default function CustomersPage() {
           <Input
             placeholder="Search customers..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
             className="pl-10 bg-gray-800 border-gray-700"
           />
         </div>
@@ -153,7 +190,10 @@ export default function CustomersPage() {
         <select
           id="customer-type-filter"
           value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
+          onChange={(e) => {
+            setSelectedType(e.target.value);
+            setPage(1);
+          }}
           className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
         >
           <option value="all">All Types</option>
@@ -221,7 +261,7 @@ export default function CustomersPage() {
                             </span>
                           )}
                         </div>
-                        {customer.tags.length > 0 && (
+                        {customer.tags && customer.tags.length > 0 && (
                           <div className="flex items-center gap-2 mt-2">
                             <Tag className="w-3 h-3 text-gray-500" />
                             {customer.tags.map(tag => (
@@ -235,20 +275,49 @@ export default function CustomersPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-semibold text-white">
-                        ${customer.total_spent.toLocaleString()}
+                        {formatCurrency(customer.total_spent || 0)}
                       </div>
                       <div className="text-sm text-gray-400">
-                        {customer.total_orders} orders
+                        {customer.total_orders || 0} orders
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {customer.city}, {customer.country}
-                      </div>
+                      {customer.city && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {customer.city}{customer.country ? `, ${customer.country}` : ''}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <span className="text-sm text-gray-400">
+            Page {page} of {pages} ({total} customers)
+          </span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page <= 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page >= pages}
+              onClick={() => setPage(p => Math.min(pages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>

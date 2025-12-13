@@ -28,7 +28,10 @@ class User(BaseModel):
     phone = Column(String(20), nullable=True)
     avatar_url = Column(String(500), nullable=True)
     is_email_verified = Column(Boolean, default=False)
-    status = Column(SQLEnum(UserStatus), default=UserStatus.PENDING)
+    status = Column(
+        SQLEnum(UserStatus, values_callable=lambda x: [e.value for e in x], create_constraint=False, native_enum=True, name='userstatus'),
+        default=UserStatus.PENDING
+    )
 
     # OAuth fields
     google_id = Column(String(255), unique=True, nullable=True, index=True)

@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { Logo } from '@/components/common/Logo';
 import {
   LayoutDashboard,
   Package,
@@ -61,18 +62,14 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-gray-800">
         {!collapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold">B</span>
-            </div>
+          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Logo width={32} height={32} />
             <span className="text-xl font-bold text-white">BizPilot</span>
           </Link>
         )}
         {collapsed && (
-          <Link href="/dashboard" className="mx-auto">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold">B</span>
-            </div>
+          <Link href="/dashboard" className="mx-auto hover:opacity-80 transition-opacity">
+            <Logo width={32} height={32} />
           </Link>
         )}
         <button

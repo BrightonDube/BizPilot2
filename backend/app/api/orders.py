@@ -7,10 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.order import OrderStatus, PaymentStatus
+from app.models.customer import Customer
 from app.schemas.order import (
     OrderCreate,
     OrderUpdate,
@@ -26,16 +27,14 @@ from app.services.order_service import OrderService
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
-# Hardcoded business ID for demo - in production, get from user's current business
-DEMO_BUSINESS_ID = "00000000-0000-0000-0000-000000000001"
 
-
-def _order_to_response(order, items=None) -> OrderResponse:
+def _order_to_response(order, items=None, customer_name: str = None) -> OrderResponse:
     """Convert order model to response schema."""
     return OrderResponse(
         id=str(order.id),
         business_id=str(order.business_id),
         customer_id=str(order.customer_id) if order.customer_id else None,
+        customer_name=customer_name,
         order_number=order.order_number,
         status=order.status,
         payment_status=order.payment_status,
@@ -60,6 +59,7 @@ def _order_to_response(order, items=None) -> OrderResponse:
         created_at=order.created_at,
         updated_at=order.updated_at,
         items=[_item_to_response(item) for item in (items or [])],
+        items_count=len(items) if items else 0,
     )
 
 
@@ -99,6 +99,7 @@ async def list_orders(
     sort_by: str = Query("created_at", pattern="^(order_number|total|status|order_date|created_at|updated_at)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
@@ -106,7 +107,7 @@ async def list_orders(
     """
     service = OrderService(db)
     orders, total = service.get_orders(
-        business_id=DEMO_BUSINESS_ID,
+        business_id=business_id,
         page=page,
         per_page=per_page,
         search=search,
@@ -119,11 +120,23 @@ async def list_orders(
         sort_order=sort_order,
     )
     
+    # Build a cache of customer IDs to names
+    customer_ids = [str(order.customer_id) for order in orders if order.customer_id]
+    customer_names = {}
+    if customer_ids:
+        customers = db.query(Customer).filter(Customer.id.in_(customer_ids)).all()
+        for customer in customers:
+            name = f"{customer.first_name} {customer.last_name}"
+            if customer.company_name:
+                name = customer.company_name
+            customer_names[str(customer.id)] = name
+    
     # Get items for each order
     order_responses = []
     for order in orders:
         items = service.get_order_items(str(order.id))
-        order_responses.append(_order_to_response(order, items))
+        customer_name = customer_names.get(str(order.customer_id)) if order.customer_id else None
+        order_responses.append(_order_to_response(order, items, customer_name))
     
     return OrderListResponse(
         items=order_responses,
@@ -137,11 +150,12 @@ async def list_orders(
 @router.get("/stats", response_model=OrderSummary)
 async def get_order_stats(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get order statistics."""
     service = OrderService(db)
-    stats = service.get_order_stats(DEMO_BUSINESS_ID)
+    stats = service.get_order_stats(business_id)
     return OrderSummary(**stats)
 
 
@@ -149,11 +163,12 @@ async def get_order_stats(
 async def get_order(
     order_id: str,
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get an order by ID."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(
@@ -169,11 +184,12 @@ async def get_order(
 async def create_order(
     data: OrderCreate,
     current_user: User = Depends(has_permission("orders:create")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Create a new order."""
     service = OrderService(db)
-    order = service.create_order(DEMO_BUSINESS_ID, data)
+    order = service.create_order(business_id, data)
     items = service.get_order_items(str(order.id))
     return _order_to_response(order, items)
 
@@ -183,11 +199,12 @@ async def update_order(
     order_id: str,
     data: OrderUpdate,
     current_user: User = Depends(has_permission("orders:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Update an order."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(
@@ -205,11 +222,12 @@ async def update_order_status(
     order_id: str,
     data: OrderStatusUpdate,
     current_user: User = Depends(has_permission("orders:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Update order status."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(
@@ -227,11 +245,12 @@ async def record_payment(
     order_id: str,
     data: PaymentRecord,
     current_user: User = Depends(has_permission("orders:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Record a payment for an order."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(
@@ -254,11 +273,12 @@ async def record_payment(
 async def delete_order(
     order_id: str,
     current_user: User = Depends(has_permission("orders:delete")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Delete an order."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(
@@ -274,11 +294,12 @@ async def delete_order(
 async def get_order_items(
     order_id: str,
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get items for an order."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(
@@ -295,11 +316,12 @@ async def add_order_item(
     order_id: str,
     data: OrderItemCreate,
     current_user: User = Depends(has_permission("orders:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Add an item to an order."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(
@@ -316,11 +338,12 @@ async def remove_order_item(
     order_id: str,
     item_id: str,
     current_user: User = Depends(has_permission("orders:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Remove an item from an order."""
     service = OrderService(db)
-    order = service.get_order(order_id, DEMO_BUSINESS_ID)
+    order = service.get_order(order_id, business_id)
     
     if not order:
         raise HTTPException(

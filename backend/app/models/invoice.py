@@ -33,7 +33,10 @@ class Invoice(BaseModel):
     invoice_number = Column(String(50), nullable=False, unique=True, index=True)
     
     # Status
-    status = Column(SQLEnum(InvoiceStatus), default=InvoiceStatus.DRAFT)
+    status = Column(
+        SQLEnum(InvoiceStatus, values_callable=lambda x: [e.value for e in x], name='invoicestatus'),
+        default=InvoiceStatus.DRAFT
+    )
     
     # Dates
     issue_date = Column(Date, default=date.today)
