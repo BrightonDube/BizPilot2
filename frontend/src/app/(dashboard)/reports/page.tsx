@@ -1,0 +1,287 @@
+'use client';
+
+/**
+ * Reports page - Financial reports and analytics dashboard.
+ */
+
+import { useState, useEffect } from 'react';
+import {
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingCart,
+  Users,
+  Package,
+  Calendar,
+  Download,
+  Filter,
+} from 'lucide-react';
+import {
+  PageHeader,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  StatCard,
+} from '@/components/ui';
+import { apiClient } from '@/lib/api';
+
+interface ReportStats {
+  total_revenue: number;
+  total_orders: number;
+  total_customers: number;
+  total_products: number;
+  revenue_change: number;
+  orders_change: number;
+  customers_change: number;
+}
+
+interface TopProduct {
+  id: string;
+  name: string;
+  sales: number;
+  revenue: number;
+}
+
+interface TopCustomer {
+  id: string;
+  name: string;
+  orders: number;
+  total_spent: number;
+}
+
+export default function ReportsPage() {
+  const [stats, setStats] = useState<ReportStats | null>(null);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dateRange, setDateRange] = useState('30d');
+
+  useEffect(() => {
+    fetchReportData();
+  }, [dateRange]);
+
+  const fetchReportData = async () => {
+    setIsLoading(true);
+    try {
+      const [statsRes, productsRes, customersRes] = await Promise.all([
+        apiClient.get('/reports/stats', { params: { range: dateRange } }),
+        apiClient.get('/reports/top-products', { params: { range: dateRange, limit: 5 } }),
+        apiClient.get('/reports/top-customers', { params: { range: dateRange, limit: 5 } }),
+      ]);
+      setStats(statsRes.data);
+      setTopProducts(productsRes.data || []);
+      setTopCustomers(customersRes.data || []);
+    } catch (error) {
+      // Use default values if API is not available
+      setStats({
+        total_revenue: 0,
+        total_orders: 0,
+        total_customers: 0,
+        total_products: 0,
+        revenue_change: 0,
+        orders_change: 0,
+        customers_change: 0,
+      });
+      setTopProducts([]);
+      setTopCustomers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const dateRangeOptions = [
+    { value: '7d', label: 'Last 7 days' },
+    { value: '30d', label: 'Last 30 days' },
+    { value: '90d', label: 'Last 90 days' },
+    { value: '1y', label: 'Last year' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Reports"
+        description="Business analytics and insights"
+        actions={
+          <div className="flex items-center gap-3">
+            <label htmlFor="date-range-select" className="sr-only">Select date range</label>
+            <select
+              id="date-range-select"
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+            >
+              {dateRangeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <Button variant="outline" className="border-gray-700">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          </div>
+        }
+      />
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-600 border-t-blue-500" />
+        </div>
+      ) : (
+        <>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Total Revenue"
+              value={`R ${(stats?.total_revenue || 0).toLocaleString()}`}
+              icon={<DollarSign className="w-5 h-5" />}
+              change={stats?.revenue_change ? `${stats.revenue_change > 0 ? '+' : ''}${stats.revenue_change}%` : undefined}
+              changeType={stats?.revenue_change && stats.revenue_change > 0 ? 'positive' : 'negative'}
+            />
+            <StatCard
+              title="Total Orders"
+              value={stats?.total_orders?.toLocaleString() || '0'}
+              icon={<ShoppingCart className="w-5 h-5" />}
+              change={stats?.orders_change ? `${stats.orders_change > 0 ? '+' : ''}${stats.orders_change}%` : undefined}
+              changeType={stats?.orders_change && stats.orders_change > 0 ? 'positive' : 'negative'}
+            />
+            <StatCard
+              title="Total Customers"
+              value={stats?.total_customers?.toLocaleString() || '0'}
+              icon={<Users className="w-5 h-5" />}
+              change={stats?.customers_change ? `${stats.customers_change > 0 ? '+' : ''}${stats.customers_change}%` : undefined}
+              changeType={stats?.customers_change && stats.customers_change > 0 ? 'positive' : 'negative'}
+            />
+            <StatCard
+              title="Active Products"
+              value={stats?.total_products?.toLocaleString() || '0'}
+              icon={<Package className="w-5 h-5" />}
+            />
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Revenue Chart Placeholder */}
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-blue-400" />
+                  Revenue Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center bg-gray-900/50 rounded-lg">
+                  <div className="text-center text-gray-500">
+                    <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>Revenue chart visualization</p>
+                    <p className="text-sm">Coming soon</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Orders Chart Placeholder */}
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                  Orders Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center bg-gray-900/50 rounded-lg">
+                  <div className="text-center text-gray-500">
+                    <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>Orders trend visualization</p>
+                    <p className="text-sm">Coming soon</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Top Lists */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Products */}
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-5 h-5 text-purple-400" />
+                  Top Products
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {topProducts.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No product data available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {topProducts.map((product, index) => (
+                      <div key={product.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-gray-400 w-6">
+                            #{index + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm font-medium text-white">{product.name}</p>
+                            <p className="text-xs text-gray-400">{product.sales} sales</p>
+                          </div>
+                        </div>
+                        <p className="text-sm font-medium text-white">
+                          R {product.revenue.toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Top Customers */}
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-orange-400" />
+                  Top Customers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {topCustomers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No customer data available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {topCustomers.map((customer, index) => (
+                      <div key={customer.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-gray-400 w-6">
+                            #{index + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm font-medium text-white">{customer.name}</p>
+                            <p className="text-xs text-gray-400">{customer.orders} orders</p>
+                          </div>
+                        </div>
+                        <p className="text-sm font-medium text-white">
+                          R {customer.total_spent.toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
