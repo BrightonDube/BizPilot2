@@ -23,8 +23,11 @@ class BusinessUser(BaseModel):
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False)
-    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=False)
-    status = Column(SQLEnum(BusinessUserStatus), default=BusinessUserStatus.ACTIVE)
+    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=True)
+    status = Column(
+        SQLEnum(BusinessUserStatus, values_callable=lambda x: [e.value for e in x], name='businessuserstatus'),
+        default=BusinessUserStatus.ACTIVE
+    )
     is_primary = Column(Boolean, default=False)  # User's primary business
 
     # Relationships

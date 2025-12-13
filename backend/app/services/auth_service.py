@@ -1,6 +1,7 @@
 """Authentication service for user management."""
 
-from typing import Optional
+import uuid
+from typing import Optional, Union
 from sqlalchemy.orm import Session
 
 from app.models.user import User, UserStatus
@@ -18,8 +19,14 @@ class AuthService:
         """Get a user by email."""
         return self.db.query(User).filter(User.email == email).first()
 
-    def get_user_by_id(self, user_id: str) -> Optional[User]:
+    def get_user_by_id(self, user_id: Union[str, uuid.UUID]) -> Optional[User]:
         """Get a user by ID."""
+        # Convert string to UUID if needed for PostgreSQL
+        if isinstance(user_id, str):
+            try:
+                user_id = uuid.UUID(user_id)
+            except ValueError:
+                return None
         return self.db.query(User).filter(User.id == user_id).first()
 
     def create_user(self, user_data: UserCreate) -> User:

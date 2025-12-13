@@ -43,8 +43,14 @@ class Order(BaseModel):
     order_number = Column(String(50), nullable=False, unique=True, index=True)
     
     # Status
-    status = Column(SQLEnum(OrderStatus), default=OrderStatus.DRAFT)
-    payment_status = Column(SQLEnum(PaymentStatus), default=PaymentStatus.PENDING)
+    status = Column(
+        SQLEnum(OrderStatus, values_callable=lambda x: [e.value for e in x], name='orderstatus'),
+        default=OrderStatus.DRAFT
+    )
+    payment_status = Column(
+        SQLEnum(PaymentStatus, values_callable=lambda x: [e.value for e in x], name='paymentstatus'),
+        default=PaymentStatus.PENDING
+    )
     
     # Pricing
     subtotal = Column(Numeric(12, 2), default=0)

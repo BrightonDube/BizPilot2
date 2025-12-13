@@ -4,6 +4,7 @@
  * Dashboard page component.
  */
 
+import { useRouter } from 'next/navigation';
 import {
   DollarSign,
   ShoppingCart,
@@ -16,6 +17,8 @@ import {
 import { PageHeader, StatCard, Card, CardHeader, CardTitle, CardContent, Button } from '@/components/ui';
 
 export default function DashboardPage() {
+  const router = useRouter();
+  
   // Mock data - in production this would come from API
   const stats = [
     {
@@ -94,7 +97,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Orders</CardTitle>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/orders')}>
               View all <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </CardHeader>
@@ -126,7 +129,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Top Products</CardTitle>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/products')}>
               View all <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </CardHeader>
@@ -158,19 +161,35 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/orders?action=new')}
+            >
               <ShoppingCart className="h-6 w-6" />
               <span>New Order</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/products?action=new')}
+            >
               <Package className="h-6 w-6" />
               <span>Add Product</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/customers?action=new')}
+            >
               <Users className="h-6 w-6" />
               <span>Add Customer</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/invoices?action=new')}
+            >
               <TrendingDown className="h-6 w-6" />
               <span>Create Invoice</span>
             </Button>

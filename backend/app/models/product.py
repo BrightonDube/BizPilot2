@@ -46,7 +46,10 @@ class Product(BaseModel):
     low_stock_threshold = Column(Integer, default=10)
     
     # Status
-    status = Column(SQLEnum(ProductStatus), default=ProductStatus.DRAFT)
+    status = Column(
+        SQLEnum(ProductStatus, values_callable=lambda x: [e.value for e in x], name='productstatus'),
+        default=ProductStatus.DRAFT
+    )
     
     # Media
     image_url = Column(String(500), nullable=True)

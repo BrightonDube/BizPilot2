@@ -4,7 +4,7 @@
  * Registration page component with BizPilot styling.
  */
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
@@ -46,6 +46,16 @@ declare global {
           }) => void;
           prompt: () => void;
         };
+        oauth2: {
+          initCodeClient: (config: {
+            client_id: string;
+            scope: string;
+            ux_mode?: 'popup' | 'redirect';
+            callback: (response: { code?: string; error?: string }) => void;
+          }) => {
+            requestCode: () => void;
+          };
+        };
       };
     };
   }
@@ -66,11 +76,12 @@ export default function RegisterPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleReady, setGoogleReady] = useState(false);
+  const googleClientRef = useRef<{ requestCode: () => void } | null>(null);
 
   // Redirect if already authenticated
   useGuestOnly();
 
-  // Initialize Google Sign-In
+  // Initialize Google OAuth
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
@@ -81,21 +92,31 @@ export default function RegisterPage() {
     script.onload = () => {
       const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
       if (window.google && clientId) {
-        window.google.accounts.id.initialize({
+        // Use OAuth2 code flow which works on localhost
+        googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
           client_id: clientId,
-          callback: async (response: { credential: string }) => {
-            setGoogleLoading(true);
-            setGoogleError(null);
-            try {
-              await loginWithGoogle(response.credential);
-              router.push('/dashboard');
-            } catch {
-              setGoogleError('Google sign-up failed. Please try again.');
-            } finally {
+          scope: 'email profile openid',
+          ux_mode: 'popup',
+          callback: async (response) => {
+            if (response.error) {
+              setGoogleError('Google sign-up was cancelled.');
               setGoogleLoading(false);
+              return;
+            }
+            if (response.code) {
+              setGoogleLoading(true);
+              setGoogleError(null);
+              try {
+                // Send auth code to backend to exchange for tokens
+                await loginWithGoogle(response.code);
+                router.push('/dashboard');
+              } catch {
+                setGoogleError('Google sign-up failed. Please try again.');
+              } finally {
+                setGoogleLoading(false);
+              }
             }
           },
-          ux_mode: 'popup',
         });
         setGoogleReady(true);
       }
@@ -110,8 +131,8 @@ export default function RegisterPage() {
   }, []);
 
   const handleGoogleSignIn = () => {
-    if (window.google && googleReady) {
-      window.google.accounts.id.prompt();
+    if (googleClientRef.current && googleReady) {
+      googleClientRef.current.requestCode();
     }
   };
 

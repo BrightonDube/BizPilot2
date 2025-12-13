@@ -78,7 +78,10 @@ class InventoryTransaction(BaseModel):
     inventory_item_id = Column(UUID(as_uuid=True), ForeignKey("inventory_items.id"), nullable=True, index=True)
     
     # Transaction details
-    transaction_type = Column(SQLEnum(TransactionType), nullable=False)
+    transaction_type = Column(
+        SQLEnum(TransactionType, values_callable=lambda x: [e.value for e in x], name='transactiontype'),
+        nullable=False
+    )
     quantity_change = Column(Integer, nullable=False)  # Positive for increase, negative for decrease
     quantity_before = Column(Integer, nullable=False)
     quantity_after = Column(Integer, nullable=False)
