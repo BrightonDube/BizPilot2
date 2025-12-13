@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -14,55 +14,21 @@ import {
   DollarSign,
   Calendar
 } from 'lucide-react';
-import { Button, Input, Card, CardContent } from '@/components/ui';
+import { Button, Input, Card, CardContent, LoadingSpinner } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
-const mockInvoices = [
-  {
-    id: '1',
-    invoice_number: 'INV-20241212-00001',
-    customer_name: 'Acme Corporation',
-    status: 'sent',
-    total: 2500.00,
-    amount_paid: 0,
-    issue_date: '2024-12-12',
-    due_date: '2024-12-26',
-    is_overdue: false,
-  },
-  {
-    id: '2',
-    invoice_number: 'INV-20241210-00023',
-    customer_name: 'TechStart Inc',
-    status: 'paid',
-    total: 8750.00,
-    amount_paid: 8750.00,
-    issue_date: '2024-12-10',
-    due_date: '2024-12-24',
-    is_overdue: false,
-  },
-  {
-    id: '3',
-    invoice_number: 'INV-20241201-00089',
-    customer_name: 'John Doe',
-    status: 'overdue',
-    total: 450.00,
-    amount_paid: 0,
-    issue_date: '2024-12-01',
-    due_date: '2024-12-08',
-    is_overdue: true,
-  },
-  {
-    id: '4',
-    invoice_number: 'INV-20241205-00056',
-    customer_name: 'Jane Smith',
-    status: 'partial',
-    total: 1200.00,
-    amount_paid: 600.00,
-    issue_date: '2024-12-05',
-    due_date: '2024-12-19',
-    is_overdue: false,
-  },
-];
+interface Invoice {
+  id: string;
+  invoice_number: string;
+  customer_name: string;
+  status: string;
+  total: number;
+  amount_paid: number;
+  issue_date: string;
+  due_date: string;
+  is_overdue: boolean;
+}
 
 const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
   draft: { color: 'bg-gray-500', icon: <FileText className="w-3 h-3" />, label: 'Draft' },
@@ -75,22 +41,50 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
 };
 
 export default function InvoicesPage() {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  const filteredInvoices = mockInvoices.filter(invoice => {
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      const response = await apiClient.get('/invoices', {
+        params: { limit: 50 },
+      });
+      setInvoices(response.data.items || []);
+    } catch (error) {
+      // Use empty array if API is not available
+      setInvoices([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = 
-      invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+      invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || invoice.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const totalInvoices = mockInvoices.length;
-  const totalAmount = mockInvoices.reduce((sum, i) => sum + i.total, 0);
-  const totalPaid = mockInvoices.reduce((sum, i) => sum + i.amount_paid, 0);
-  const overdueCount = mockInvoices.filter(i => i.is_overdue).length;
-  const overdueAmount = mockInvoices.filter(i => i.is_overdue).reduce((sum, i) => sum + (i.total - i.amount_paid), 0);
+  const totalInvoices = invoices.length;
+  const totalAmount = invoices.reduce((sum, i) => sum + (i.total || 0), 0);
+  const totalPaid = invoices.reduce((sum, i) => sum + (i.amount_paid || 0), 0);
+  const overdueCount = invoices.filter(i => i.is_overdue).length;
+  const overdueAmount = invoices.filter(i => i.is_overdue).reduce((sum, i) => sum + ((i.total || 0) - (i.amount_paid || 0)), 0);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -115,20 +109,19 @@ export default function InvoicesPage() {
         />
         <StatCard
           title="Total Amount"
-          value={`$${totalAmount.toLocaleString()}`}
+          value={`R ${totalAmount.toLocaleString()}`}
           icon={<DollarSign className="w-5 h-5" />}
         />
         <StatCard
           title="Collected"
-          value={`$${totalPaid.toLocaleString()}`}
+          value={`R ${totalPaid.toLocaleString()}`}
           icon={<CheckCircle className="w-5 h-5" />}
-          trend={{ value: 18, isPositive: true }}
         />
         <StatCard
           title="Overdue"
-          value={`$${overdueAmount.toLocaleString()}`}
+          value={`R ${overdueAmount.toLocaleString()}`}
           icon={<AlertCircle className="w-5 h-5" />}
-          trend={{ value: overdueCount, isPositive: false }}
+          trend={overdueCount > 0 ? { value: overdueCount, isPositive: false } : undefined}
         />
       </div>
 
@@ -165,7 +158,10 @@ export default function InvoicesPage() {
       {filteredInvoices.length === 0 ? (
         <EmptyState
           title="No invoices found"
-          description="Try adjusting your search or filters"
+          description={invoices.length === 0 
+            ? "Create your first invoice to get started"
+            : "Try adjusting your search or filters"
+          }
           action={
             <Link href="/invoices/new">
               <Button>Create Your First Invoice</Button>
@@ -175,8 +171,8 @@ export default function InvoicesPage() {
       ) : (
         <div className="space-y-4">
           {filteredInvoices.map((invoice) => {
-            const status = statusConfig[invoice.status];
-            const balanceDue = invoice.total - invoice.amount_paid;
+            const status = statusConfig[invoice.status] || statusConfig.draft;
+            const balanceDue = (invoice.total || 0) - (invoice.amount_paid || 0);
             return (
               <Link key={invoice.id} href={`/invoices/${invoice.id}`}>
                 <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer">
@@ -195,7 +191,7 @@ export default function InvoicesPage() {
                               {status.label}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-400">{invoice.customer_name}</p>
+                          <p className="text-sm text-gray-400">{invoice.customer_name || 'Unknown Customer'}</p>
                           <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -203,23 +199,23 @@ export default function InvoicesPage() {
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              Due: {invoice.due_date}
+                              Due: {invoice.due_date || 'N/A'}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold text-white">
-                          ${invoice.total.toLocaleString()}
+                          R {(invoice.total || 0).toLocaleString()}
                         </div>
                         {balanceDue > 0 && (
                           <div className={`text-sm ${invoice.is_overdue ? 'text-red-400' : 'text-gray-400'}`}>
-                            Due: ${balanceDue.toLocaleString()}
+                            Due: R {balanceDue.toLocaleString()}
                           </div>
                         )}
-                        {invoice.amount_paid > 0 && invoice.amount_paid < invoice.total && (
+                        {(invoice.amount_paid || 0) > 0 && (invoice.amount_paid || 0) < (invoice.total || 0) && (
                           <div className="text-xs text-green-400">
-                            Paid: ${invoice.amount_paid.toLocaleString()}
+                            Paid: R {(invoice.amount_paid || 0).toLocaleString()}
                           </div>
                         )}
                       </div>

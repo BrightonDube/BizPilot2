@@ -4,6 +4,8 @@
  * Dashboard page component.
  */
 
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   DollarSign,
   ShoppingCart,
@@ -12,61 +14,122 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowRight,
+  FileText,
 } from 'lucide-react';
-import { PageHeader, StatCard, Card, CardHeader, CardTitle, CardContent, Button } from '@/components/ui';
+import { PageHeader, StatCard, Card, CardHeader, CardTitle, CardContent, Button, LoadingSpinner } from '@/components/ui';
+import { apiClient } from '@/lib/api';
+
+interface DashboardStats {
+  total_revenue: number;
+  total_orders: number;
+  total_customers: number;
+  total_products: number;
+  revenue_change: number;
+  orders_change: number;
+  customers_change: number;
+}
+
+interface RecentOrder {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  total: number;
+  status: string;
+}
+
+interface TopProduct {
+  id: string;
+  name: string;
+  sales: number;
+  revenue: number;
+}
 
 export default function DashboardPage() {
-  // Mock data - in production this would come from API
-  const stats = [
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [statsRes, ordersRes, productsRes] = await Promise.all([
+        apiClient.get('/reports/stats', { params: { range: '30d' } }),
+        apiClient.get('/orders', { params: { limit: 5 } }),
+        apiClient.get('/reports/top-products', { params: { range: '30d', limit: 5 } }),
+      ]);
+      
+      setStats(statsRes.data);
+      setRecentOrders(ordersRes.data.items || []);
+      setTopProducts(productsRes.data || []);
+    } catch (error) {
+      // Use fallback data if API is not available
+      setStats({
+        total_revenue: 0,
+        total_orders: 0,
+        total_customers: 0,
+        total_products: 0,
+        revenue_change: 0,
+        orders_change: 0,
+        customers_change: 0,
+      });
+      setRecentOrders([]);
+      setTopProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getChangeType = (value: number): 'positive' | 'negative' | 'neutral' => {
+    if (value > 0) return 'positive';
+    if (value < 0) return 'negative';
+    return 'neutral';
+  };
+
+  const statsDisplay = stats ? [
     {
       title: 'Total Revenue',
-      value: 'R 45,231',
-      change: '+20.1%',
-      changeType: 'positive' as const,
+      value: `R ${stats.total_revenue.toLocaleString()}`,
+      change: stats.revenue_change ? `${stats.revenue_change > 0 ? '+' : ''}${stats.revenue_change}%` : undefined,
+      changeType: getChangeType(stats.revenue_change),
       icon: <DollarSign className="w-5 h-5" />,
-      description: 'from last month',
+      description: 'from last period',
     },
     {
       title: 'Orders',
-      value: '356',
-      change: '+12.5%',
-      changeType: 'positive' as const,
+      value: stats.total_orders.toLocaleString(),
+      change: stats.orders_change ? `${stats.orders_change > 0 ? '+' : ''}${stats.orders_change}%` : undefined,
+      changeType: getChangeType(stats.orders_change),
       icon: <ShoppingCart className="w-5 h-5" />,
-      description: 'from last month',
+      description: 'from last period',
     },
     {
       title: 'Customers',
-      value: '1,234',
-      change: '+5.2%',
-      changeType: 'positive' as const,
+      value: stats.total_customers.toLocaleString(),
+      change: stats.customers_change ? `${stats.customers_change > 0 ? '+' : ''}${stats.customers_change}%` : undefined,
+      changeType: getChangeType(stats.customers_change),
       icon: <Users className="w-5 h-5" />,
-      description: 'from last month',
+      description: 'total customers',
     },
     {
       title: 'Products',
-      value: '573',
-      change: '-2.1%',
-      changeType: 'negative' as const,
+      value: stats.total_products.toLocaleString(),
+      changeType: 'neutral' as const,
       icon: <Package className="w-5 h-5" />,
-      description: 'low stock items',
+      description: 'active products',
     },
-  ];
+  ] : [];
 
-  const recentOrders = [
-    { id: 'ORD-001', customer: 'John Doe', amount: 'R 1,250', status: 'Completed' },
-    { id: 'ORD-002', customer: 'Jane Smith', amount: 'R 890', status: 'Processing' },
-    { id: 'ORD-003', customer: 'Bob Wilson', amount: 'R 2,340', status: 'Pending' },
-    { id: 'ORD-004', customer: 'Alice Brown', amount: 'R 560', status: 'Completed' },
-    { id: 'ORD-005', customer: 'Charlie Davis', amount: 'R 1,890', status: 'Processing' },
-  ];
-
-  const topProducts = [
-    { name: 'Premium Widget', sales: 234, revenue: 'R 23,400' },
-    { name: 'Standard Gadget', sales: 189, revenue: 'R 18,900' },
-    { name: 'Deluxe Package', sales: 156, revenue: 'R 31,200' },
-    { name: 'Basic Bundle', sales: 143, revenue: 'R 7,150' },
-    { name: 'Pro Subscription', sales: 98, revenue: 'R 9,800' },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -74,16 +137,18 @@ export default function DashboardPage() {
         title="Dashboard"
         description="Welcome back! Here&apos;s what&apos;s happening with your business today."
         actions={
-          <Button variant="gradient">
-            <TrendingUp className="h-4 w-4 mr-2" />
-            View Reports
-          </Button>
+          <Link href="/reports">
+            <Button variant="gradient">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              View Reports
+            </Button>
+          </Link>
         }
       />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => (
+        {statsDisplay.map((stat) => (
           <StatCard key={stat.title} {...stat} />
         ))}
       </div>
@@ -94,31 +159,40 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Orders</CardTitle>
-            <Button variant="ghost" size="sm">
-              View all <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
+            <Link href="/orders">
+              <Button variant="ghost" size="sm">
+                View all <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-white">{order.id}</p>
-                    <p className="text-xs text-gray-400">{order.customer}</p>
+            {recentOrders.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>No recent orders</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-white">{order.order_number}</p>
+                      <p className="text-xs text-gray-400">{order.customer_name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-white">R {order.total?.toLocaleString() || '0'}</p>
+                      <p className={`text-xs ${
+                        order.status === 'completed' ? 'text-green-400' :
+                        order.status === 'processing' ? 'text-yellow-400' :
+                        'text-gray-400'
+                      }`}>
+                        {order.status}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-white">{order.amount}</p>
-                    <p className={`text-xs ${
-                      order.status === 'Completed' ? 'text-green-400' :
-                      order.status === 'Processing' ? 'text-yellow-400' :
-                      'text-gray-400'
-                    }`}>
-                      {order.status}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -126,27 +200,36 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Top Products</CardTitle>
-            <Button variant="ghost" size="sm">
-              View all <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
+            <Link href="/products">
+              <Button variant="ghost" size="sm">
+                View all <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {topProducts.map((product, index) => (
-                <div key={product.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-400 w-6">
-                      #{index + 1}
-                    </span>
-                    <div>
-                      <p className="text-sm font-medium text-white">{product.name}</p>
-                      <p className="text-xs text-gray-400">{product.sales} sales</p>
+            {topProducts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>No product data available</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topProducts.map((product, index) => (
+                  <div key={product.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-400 w-6">
+                        #{index + 1}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-white">{product.name}</p>
+                        <p className="text-xs text-gray-400">{product.sales} sales</p>
+                      </div>
                     </div>
+                    <p className="text-sm font-medium text-white">R {product.revenue?.toLocaleString() || '0'}</p>
                   </div>
-                  <p className="text-sm font-medium text-white">{product.revenue}</p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -158,22 +241,30 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <ShoppingCart className="h-6 w-6" />
-              <span>New Order</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <Package className="h-6 w-6" />
-              <span>Add Product</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <Users className="h-6 w-6" />
-              <span>Add Customer</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-              <TrendingDown className="h-6 w-6" />
-              <span>Create Invoice</span>
-            </Button>
+            <Link href="/orders">
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
+                <ShoppingCart className="h-6 w-6" />
+                <span>New Order</span>
+              </Button>
+            </Link>
+            <Link href="/products/new">
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
+                <Package className="h-6 w-6" />
+                <span>Add Product</span>
+              </Button>
+            </Link>
+            <Link href="/customers/new">
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
+                <Users className="h-6 w-6" />
+                <span>Add Customer</span>
+              </Button>
+            </Link>
+            <Link href="/invoices">
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
+                <FileText className="h-6 w-6" />
+                <span>Create Invoice</span>
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

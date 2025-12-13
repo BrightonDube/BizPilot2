@@ -4,7 +4,7 @@
  * Products list page with search, filter, and bulk actions.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Plus,
@@ -23,61 +23,20 @@ import {
   CardContent,
   Badge,
   EmptyState,
+  LoadingSpinner,
 } from '@/components/ui';
+import { apiClient } from '@/lib/api';
 
-// Mock data - in production this would come from API
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Premium Widget',
-    sku: 'WDG-001',
-    category: 'Widgets',
-    status: 'active',
-    quantity: 150,
-    selling_price: 99.99,
-    image_url: null,
-  },
-  {
-    id: '2',
-    name: 'Standard Gadget',
-    sku: 'GDG-002',
-    category: 'Gadgets',
-    status: 'active',
-    quantity: 8,
-    selling_price: 49.99,
-    image_url: null,
-  },
-  {
-    id: '3',
-    name: 'Deluxe Package',
-    sku: 'PKG-003',
-    category: 'Packages',
-    status: 'draft',
-    quantity: 25,
-    selling_price: 199.99,
-    image_url: null,
-  },
-  {
-    id: '4',
-    name: 'Basic Bundle',
-    sku: 'BND-004',
-    category: 'Bundles',
-    status: 'active',
-    quantity: 0,
-    selling_price: 29.99,
-    image_url: null,
-  },
-  {
-    id: '5',
-    name: 'Pro Subscription',
-    sku: 'SUB-005',
-    category: 'Subscriptions',
-    status: 'archived',
-    quantity: 999,
-    selling_price: 9.99,
-    image_url: null,
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  status: string;
+  quantity: number;
+  selling_price: number;
+  image_url: string | null;
+}
 
 const statusColors: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
   active: 'success',
@@ -87,12 +46,34 @@ const statusColors: Record<string, 'success' | 'warning' | 'danger' | 'default'>
 };
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [total, setTotal] = useState(0);
 
-  const filteredProducts = mockProducts.filter((product) =>
-    product.name.toLowerCase().includes(search.toLowerCase()) ||
-    product.sku.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await apiClient.get('/products', {
+        params: { limit: 50 },
+      });
+      setProducts(response.data.items || []);
+      setTotal(response.data.total || 0);
+    } catch (error) {
+      // Use empty array if API is not available
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredProducts = products.filter((product) =>
+    product.name?.toLowerCase().includes(search.toLowerCase()) ||
+    product.sku?.toLowerCase().includes(search.toLowerCase())
   );
 
   const toggleSelectAll = () => {
@@ -110,6 +91,25 @@ export default function ProductsPage() {
       setSelectedProducts([...selectedProducts, id]);
     }
   };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+      await apiClient.delete(`/products/${productId}`);
+      setProducts(products.filter((p) => p.id !== productId));
+    } catch (error) {
+      alert('Failed to delete product');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -168,7 +168,10 @@ export default function ProductsPage() {
         <EmptyState
           icon={Package}
           title="No products found"
-          description="Get started by adding your first product to the catalog."
+          description={products.length === 0 
+            ? "Get started by adding your first product to the catalog."
+            : "Try adjusting your search filters."
+          }
           action={
             <Link href="/products/new">
               <Button variant="gradient">
@@ -187,7 +190,7 @@ export default function ProductsPage() {
                   <th className="p-4 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedProducts.length === filteredProducts.length}
+                      checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
                       onChange={toggleSelectAll}
                       className="rounded bg-gray-700 border-gray-600"
                     />
@@ -220,19 +223,19 @@ export default function ProductsPage() {
                         <span className="font-medium text-white">{product.name}</span>
                       </div>
                     </td>
-                    <td className="p-4 text-gray-400">{product.sku}</td>
-                    <td className="p-4 text-gray-400">{product.category}</td>
+                    <td className="p-4 text-gray-400">{product.sku || '-'}</td>
+                    <td className="p-4 text-gray-400">{product.category || '-'}</td>
                     <td className="p-4">
                       <Badge variant={statusColors[product.status] || 'default'}>
-                        {product.status}
+                        {product.status || 'unknown'}
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <span className={product.quantity <= 10 ? 'text-red-400' : 'text-gray-400'}>
-                        {product.quantity}
+                      <span className={(product.quantity || 0) <= 10 ? 'text-red-400' : 'text-gray-400'}>
+                        {product.quantity || 0}
                       </span>
                     </td>
-                    <td className="p-4 text-white">R {product.selling_price.toFixed(2)}</td>
+                    <td className="p-4 text-white">R {(product.selling_price || 0).toFixed(2)}</td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
                         <Link href={`/products/${product.id}`}>
@@ -245,7 +248,12 @@ export default function ProductsPage() {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-300">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-red-400 hover:text-red-300"
+                          onClick={() => handleDeleteProduct(product.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -259,7 +267,7 @@ export default function ProductsPage() {
           {/* Pagination */}
           <div className="p-4 border-t border-gray-700 flex items-center justify-between">
             <span className="text-sm text-gray-400">
-              Showing {filteredProducts.length} of {mockProducts.length} products
+              Showing {filteredProducts.length} of {total} products
             </span>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" disabled>

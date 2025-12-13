@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -14,78 +14,54 @@ import {
   DollarSign,
   ShoppingCart
 } from 'lucide-react';
-import { Button, Input, Card, CardContent } from '@/components/ui';
+import { Button, Input, Card, CardContent, LoadingSpinner } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
-// Mock data for customers
-const mockCustomers = [
-  {
-    id: '1',
-    first_name: 'John',
-    last_name: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    company_name: null,
-    customer_type: 'individual',
-    total_orders: 12,
-    total_spent: 1450.00,
-    tags: ['vip', 'repeat'],
-    city: 'New York',
-    country: 'USA',
-  },
-  {
-    id: '2',
-    first_name: 'Jane',
-    last_name: 'Smith',
-    email: 'jane.smith@acme.com',
-    phone: '+1 (555) 987-6543',
-    company_name: 'Acme Corporation',
-    customer_type: 'business',
-    total_orders: 45,
-    total_spent: 12500.00,
-    tags: ['wholesale', 'vip'],
-    city: 'Los Angeles',
-    country: 'USA',
-  },
-  {
-    id: '3',
-    first_name: 'Robert',
-    last_name: 'Johnson',
-    email: 'robert.j@email.com',
-    phone: '+1 (555) 456-7890',
-    company_name: null,
-    customer_type: 'individual',
-    total_orders: 3,
-    total_spent: 250.00,
-    tags: [],
-    city: 'Chicago',
-    country: 'USA',
-  },
-  {
-    id: '4',
-    first_name: 'Sarah',
-    last_name: 'Williams',
-    email: 'sarah@techstart.io',
-    phone: '+1 (555) 321-0987',
-    company_name: 'TechStart Inc',
-    customer_type: 'business',
-    total_orders: 28,
-    total_spent: 8750.00,
-    tags: ['tech', 'wholesale'],
-    city: 'San Francisco',
-    country: 'USA',
-  },
-];
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  company_name: string | null;
+  customer_type: string;
+  total_orders: number;
+  total_spent: number;
+  tags: string[];
+  city: string | null;
+  country: string | null;
+}
 
 export default function CustomersPage() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
 
-  const filteredCustomers = mockCustomers.filter(customer => {
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await apiClient.get('/customers', {
+        params: { limit: 50 },
+      });
+      setCustomers(response.data.items || []);
+    } catch (error) {
+      // Use empty array if API is not available
+      setCustomers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredCustomers = customers.filter(customer => {
     const matchesSearch = 
-      customer.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
     
     const matchesType = selectedType === 'all' || customer.customer_type === selectedType;
@@ -93,10 +69,19 @@ export default function CustomersPage() {
     return matchesSearch && matchesType;
   });
 
-  const totalCustomers = mockCustomers.length;
-  const totalRevenue = mockCustomers.reduce((sum, c) => sum + c.total_spent, 0);
-  const businessCustomers = mockCustomers.filter(c => c.customer_type === 'business').length;
-  const avgOrderValue = totalRevenue / mockCustomers.reduce((sum, c) => sum + c.total_orders, 0) || 0;
+  const totalCustomers = customers.length;
+  const totalRevenue = customers.reduce((sum, c) => sum + (c.total_spent || 0), 0);
+  const businessCustomers = customers.filter(c => c.customer_type === 'business').length;
+  const totalOrders = customers.reduce((sum, c) => sum + (c.total_orders || 0), 0);
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -118,13 +103,11 @@ export default function CustomersPage() {
           title="Total Customers"
           value={totalCustomers}
           icon={<User className="w-5 h-5" />}
-          trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          value={`R ${totalRevenue.toLocaleString()}`}
           icon={<DollarSign className="w-5 h-5" />}
-          trend={{ value: 8, isPositive: true }}
         />
         <StatCard
           title="Business Customers"
@@ -133,9 +116,8 @@ export default function CustomersPage() {
         />
         <StatCard
           title="Avg Order Value"
-          value={`$${avgOrderValue.toFixed(2)}`}
+          value={`R ${avgOrderValue.toFixed(2)}`}
           icon={<ShoppingCart className="w-5 h-5" />}
-          trend={{ value: 5, isPositive: true }}
         />
       </div>
 
@@ -169,7 +151,10 @@ export default function CustomersPage() {
       {filteredCustomers.length === 0 ? (
         <EmptyState
           title="No customers found"
-          description="Try adjusting your search or filters"
+          description={customers.length === 0 
+            ? "Add your first customer to get started"
+            : "Try adjusting your search or filters"
+          }
           action={
             <Link href="/customers/new">
               <Button>Add Your First Customer</Button>
@@ -198,9 +183,9 @@ export default function CustomersPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium text-white">
-                            {customer.company_name || `${customer.first_name} ${customer.last_name}`}
+                            {customer.company_name || `${customer.first_name || ''} ${customer.last_name || ''}`}
                           </h3>
-                          {customer.tags.includes('vip') && (
+                          {customer.tags?.includes('vip') && (
                             <Badge variant="warning">VIP</Badge>
                           )}
                         </div>
@@ -212,7 +197,7 @@ export default function CustomersPage() {
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
                           <span className="flex items-center gap-1">
                             <Mail className="w-3 h-3" />
-                            {customer.email}
+                            {customer.email || 'No email'}
                           </span>
                           {customer.phone && (
                             <span className="flex items-center gap-1">
@@ -221,7 +206,7 @@ export default function CustomersPage() {
                             </span>
                           )}
                         </div>
-                        {customer.tags.length > 0 && (
+                        {customer.tags && customer.tags.length > 0 && (
                           <div className="flex items-center gap-2 mt-2">
                             <Tag className="w-3 h-3 text-gray-500" />
                             {customer.tags.map(tag => (
@@ -235,14 +220,16 @@ export default function CustomersPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-semibold text-white">
-                        ${customer.total_spent.toLocaleString()}
+                        R {(customer.total_spent || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-400">
-                        {customer.total_orders} orders
+                        {customer.total_orders || 0} orders
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {customer.city}, {customer.country}
-                      </div>
+                      {(customer.city || customer.country) && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {customer.city}{customer.city && customer.country ? ', ' : ''}{customer.country}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

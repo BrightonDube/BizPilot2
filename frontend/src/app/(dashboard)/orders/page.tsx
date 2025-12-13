@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -14,51 +14,20 @@ import {
   DollarSign,
   ShoppingCart
 } from 'lucide-react';
-import { Button, Input, Card, CardContent } from '@/components/ui';
+import { Button, Input, Card, CardContent, LoadingSpinner } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
-const mockOrders = [
-  {
-    id: '1',
-    order_number: 'ORD-20241212-00001',
-    customer_name: 'John Doe',
-    status: 'processing',
-    payment_status: 'paid',
-    total: 245.99,
-    items_count: 3,
-    order_date: '2024-12-12',
-  },
-  {
-    id: '2',
-    order_number: 'ORD-20241211-00045',
-    customer_name: 'Acme Corporation',
-    status: 'shipped',
-    payment_status: 'paid',
-    total: 1250.00,
-    items_count: 12,
-    order_date: '2024-12-11',
-  },
-  {
-    id: '3',
-    order_number: 'ORD-20241210-00089',
-    customer_name: 'Jane Smith',
-    status: 'pending',
-    payment_status: 'pending',
-    total: 89.50,
-    items_count: 2,
-    order_date: '2024-12-10',
-  },
-  {
-    id: '4',
-    order_number: 'ORD-20241209-00102',
-    customer_name: 'TechStart Inc',
-    status: 'delivered',
-    payment_status: 'paid',
-    total: 5499.00,
-    items_count: 25,
-    order_date: '2024-12-09',
-  },
-];
+interface Order {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  status: string;
+  payment_status: string;
+  total: number;
+  items_count: number;
+  order_date: string;
+}
 
 const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
   draft: { color: 'bg-gray-500', icon: <Clock className="w-3 h-3" />, label: 'Draft' },
@@ -67,25 +36,54 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
   processing: { color: 'bg-purple-500', icon: <Package className="w-3 h-3" />, label: 'Processing' },
   shipped: { color: 'bg-indigo-500', icon: <Truck className="w-3 h-3" />, label: 'Shipped' },
   delivered: { color: 'bg-green-500', icon: <CheckCircle className="w-3 h-3" />, label: 'Delivered' },
+  completed: { color: 'bg-green-500', icon: <CheckCircle className="w-3 h-3" />, label: 'Completed' },
   cancelled: { color: 'bg-red-500', icon: <XCircle className="w-3 h-3" />, label: 'Cancelled' },
 };
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  const filteredOrders = mockOrders.filter(order => {
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await apiClient.get('/orders', {
+        params: { limit: 50 },
+      });
+      setOrders(response.data.items || []);
+    } catch (error) {
+      // Use empty array if API is not available
+      setOrders([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredOrders = orders.filter(order => {
     const matchesSearch = 
-      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const totalOrders = mockOrders.length;
-  const totalRevenue = mockOrders.reduce((sum, o) => sum + o.total, 0);
-  const pendingOrders = mockOrders.filter(o => o.status === 'pending').length;
-  const completedOrders = mockOrders.filter(o => o.status === 'delivered').length;
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const pendingOrders = orders.filter(o => o.status === 'pending').length;
+  const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'completed').length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -107,13 +105,11 @@ export default function OrdersPage() {
           title="Total Orders"
           value={totalOrders}
           icon={<ShoppingCart className="w-5 h-5" />}
-          trend={{ value: 15, isPositive: true }}
         />
         <StatCard
           title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          value={`R ${totalRevenue.toLocaleString()}`}
           icon={<DollarSign className="w-5 h-5" />}
-          trend={{ value: 22, isPositive: true }}
         />
         <StatCard
           title="Pending Orders"
@@ -124,7 +120,6 @@ export default function OrdersPage() {
           title="Completed"
           value={completedOrders}
           icon={<CheckCircle className="w-5 h-5" />}
-          trend={{ value: 8, isPositive: true }}
         />
       </div>
 
@@ -161,7 +156,10 @@ export default function OrdersPage() {
       {filteredOrders.length === 0 ? (
         <EmptyState
           title="No orders found"
-          description="Try adjusting your search or filters"
+          description={orders.length === 0 
+            ? "Create your first order to get started"
+            : "Try adjusting your search or filters"
+          }
           action={
             <Link href="/orders/new">
               <Button>Create Your First Order</Button>
@@ -171,7 +169,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {filteredOrders.map((order) => {
-            const status = statusConfig[order.status];
+            const status = statusConfig[order.status] || statusConfig.pending;
             return (
               <Link key={order.id} href={`/orders/${order.id}`}>
                 <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer">
@@ -187,16 +185,16 @@ export default function OrdersPage() {
                           <div className="flex items-center gap-2">
                             <h3 className="font-medium text-white">{order.order_number}</h3>
                             <Badge variant={order.payment_status === 'paid' ? 'success' : 'warning'}>
-                              {order.payment_status}
+                              {order.payment_status || 'pending'}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-400">{order.customer_name}</p>
-                          <p className="text-xs text-gray-500">{order.items_count} items • {order.order_date}</p>
+                          <p className="text-sm text-gray-400">{order.customer_name || 'Unknown Customer'}</p>
+                          <p className="text-xs text-gray-500">{order.items_count || 0} items • {order.order_date}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold text-white">
-                          ${order.total.toLocaleString()}
+                          R {(order.total || 0).toLocaleString()}
                         </div>
                         <Badge variant="secondary">{status.label}</Badge>
                       </div>
