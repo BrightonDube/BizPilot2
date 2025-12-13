@@ -102,6 +102,7 @@ Example:
 from pydantic import BaseModel, ConfigDict
 from decimal import Decimal
 from uuid import UUID
+from datetime import datetime
 
 class ProductCreate(BaseModel):
     name: str
@@ -127,7 +128,9 @@ class ProductResponse(BaseModel):
 
 Example:
 ```python
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_business_id
 
 router = APIRouter(prefix="/products", tags=["Products"])
