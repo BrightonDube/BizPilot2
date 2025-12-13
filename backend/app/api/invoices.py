@@ -7,10 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.invoice import InvoiceStatus
+from app.models.customer import Customer
 from app.schemas.invoice import (
     InvoiceCreate,
     InvoiceUpdate,
@@ -24,15 +25,14 @@ from app.services.invoice_service import InvoiceService
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
-DEMO_BUSINESS_ID = "00000000-0000-0000-0000-000000000001"
 
-
-def _invoice_to_response(invoice, items=None) -> InvoiceResponse:
+def _invoice_to_response(invoice, items=None, customer_name: str = None) -> InvoiceResponse:
     """Convert invoice model to response schema."""
     return InvoiceResponse(
         id=str(invoice.id),
         business_id=str(invoice.business_id),
         customer_id=str(invoice.customer_id) if invoice.customer_id else None,
+        customer_name=customer_name,
         order_id=str(invoice.order_id) if invoice.order_id else None,
         invoice_number=invoice.invoice_number,
         status=invoice.status,
@@ -91,12 +91,13 @@ async def list_invoices(
     sort_by: str = Query("created_at", pattern="^(invoice_number|total|status|issue_date|due_date|created_at|updated_at)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """List invoices with filtering and pagination."""
     service = InvoiceService(db)
     invoices, total = service.get_invoices(
-        business_id=DEMO_BUSINESS_ID,
+        business_id=business_id,
         page=page,
         per_page=per_page,
         search=search,
@@ -109,10 +110,22 @@ async def list_invoices(
         sort_order=sort_order,
     )
     
+    # Build a cache of customer IDs to names
+    customer_ids = [str(inv.customer_id) for inv in invoices if inv.customer_id]
+    customer_names = {}
+    if customer_ids:
+        customers = db.query(Customer).filter(Customer.id.in_(customer_ids)).all()
+        for customer in customers:
+            name = f"{customer.first_name} {customer.last_name}"
+            if customer.company_name:
+                name = customer.company_name
+            customer_names[str(customer.id)] = name
+    
     invoice_responses = []
     for invoice in invoices:
         items = service.get_invoice_items(str(invoice.id))
-        invoice_responses.append(_invoice_to_response(invoice, items))
+        customer_name = customer_names.get(str(invoice.customer_id)) if invoice.customer_id else None
+        invoice_responses.append(_invoice_to_response(invoice, items, customer_name))
     
     return InvoiceListResponse(
         items=invoice_responses,
@@ -126,11 +139,12 @@ async def list_invoices(
 @router.get("/stats", response_model=InvoiceSummary)
 async def get_invoice_stats(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get invoice statistics."""
     service = InvoiceService(db)
-    stats = service.get_invoice_stats(DEMO_BUSINESS_ID)
+    stats = service.get_invoice_stats(business_id)
     return InvoiceSummary(**stats)
 
 
@@ -138,11 +152,12 @@ async def get_invoice_stats(
 async def get_invoice(
     invoice_id: str,
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get an invoice by ID."""
     service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, DEMO_BUSINESS_ID)
+    invoice = service.get_invoice(invoice_id, business_id)
     
     if not invoice:
         raise HTTPException(
@@ -158,11 +173,12 @@ async def get_invoice(
 async def create_invoice(
     data: InvoiceCreate,
     current_user: User = Depends(has_permission("invoices:create")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Create a new invoice."""
     service = InvoiceService(db)
-    invoice = service.create_invoice(DEMO_BUSINESS_ID, data)
+    invoice = service.create_invoice(business_id, data)
     items = service.get_invoice_items(str(invoice.id))
     return _invoice_to_response(invoice, items)
 
@@ -172,11 +188,12 @@ async def update_invoice(
     invoice_id: str,
     data: InvoiceUpdate,
     current_user: User = Depends(has_permission("invoices:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Update an invoice."""
     service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, DEMO_BUSINESS_ID)
+    invoice = service.get_invoice(invoice_id, business_id)
     
     if not invoice:
         raise HTTPException(
@@ -193,11 +210,12 @@ async def update_invoice(
 async def send_invoice(
     invoice_id: str,
     current_user: User = Depends(has_permission("invoices:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Send an invoice (mark as sent)."""
     service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, DEMO_BUSINESS_ID)
+    invoice = service.get_invoice(invoice_id, business_id)
     
     if not invoice:
         raise HTTPException(
@@ -215,11 +233,12 @@ async def record_payment(
     invoice_id: str,
     data: PaymentRecord,
     current_user: User = Depends(has_permission("invoices:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Record a payment for an invoice."""
     service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, DEMO_BUSINESS_ID)
+    invoice = service.get_invoice(invoice_id, business_id)
     
     if not invoice:
         raise HTTPException(
@@ -242,11 +261,12 @@ async def record_payment(
 async def delete_invoice(
     invoice_id: str,
     current_user: User = Depends(has_permission("invoices:delete")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Delete an invoice."""
     service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, DEMO_BUSINESS_ID)
+    invoice = service.get_invoice(invoice_id, business_id)
     
     if not invoice:
         raise HTTPException(
@@ -261,11 +281,12 @@ async def delete_invoice(
 async def get_invoice_items(
     invoice_id: str,
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get items for an invoice."""
     service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, DEMO_BUSINESS_ID)
+    invoice = service.get_invoice(invoice_id, business_id)
     
     if not invoice:
         raise HTTPException(

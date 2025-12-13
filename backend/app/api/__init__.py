@@ -9,12 +9,14 @@ from app.api.customers import router as customers_router
 from app.api.orders import router as orders_router
 from app.api.invoices import router as invoices_router
 from app.api.inventory import router as inventory_router
+from app.api.dashboard import router as dashboard_router
 
 router = APIRouter()
 
 # Include auth routes
 router.include_router(auth_router)
 router.include_router(oauth_router)
+router.include_router(dashboard_router)
 router.include_router(products_router)
 router.include_router(customers_router)
 router.include_router(orders_router)

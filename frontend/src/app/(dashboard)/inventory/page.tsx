@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -9,84 +9,129 @@ import {
   TrendingDown,
   DollarSign,
   ArrowUpDown,
-  History
+  History,
+  Loader2
 } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
-const mockInventory = [
-  {
-    id: '1',
-    product_name: 'Premium Widget',
-    sku: 'PWD-001',
-    quantity_on_hand: 150,
-    quantity_reserved: 10,
-    reorder_point: 50,
-    location: 'Warehouse A',
-    bin_location: 'A-12-3',
-    average_cost: 25.00,
-    is_low_stock: false,
-  },
-  {
-    id: '2',
-    product_name: 'Standard Gadget',
-    sku: 'SGT-002',
-    quantity_on_hand: 8,
-    quantity_reserved: 5,
-    reorder_point: 20,
-    location: 'Warehouse A',
-    bin_location: 'A-08-1',
-    average_cost: 15.50,
-    is_low_stock: true,
-  },
-  {
-    id: '3',
-    product_name: 'Deluxe Package',
-    sku: 'DPK-003',
-    quantity_on_hand: 0,
-    quantity_reserved: 0,
-    reorder_point: 10,
-    location: 'Warehouse B',
-    bin_location: 'B-01-2',
-    average_cost: 45.00,
-    is_low_stock: true,
-  },
-  {
-    id: '4',
-    product_name: 'Basic Bundle',
-    sku: 'BBL-004',
-    quantity_on_hand: 200,
-    quantity_reserved: 25,
-    reorder_point: 30,
-    location: 'Warehouse A',
-    bin_location: 'A-15-4',
-    average_cost: 12.00,
-    is_low_stock: false,
-  },
-];
+interface InventoryItem {
+  id: string;
+  product_id: string;
+  product_name?: string;
+  sku?: string;
+  quantity_on_hand: number;
+  quantity_reserved: number;
+  quantity_available: number;
+  reorder_point: number;
+  location: string | null;
+  bin_location: string | null;
+  average_cost: number;
+  is_low_stock: boolean;
+  created_at: string;
+}
+
+interface InventoryListResponse {
+  items: InventoryItem[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-ZA', {
+    style: 'currency',
+    currency: 'ZAR',
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
 
 export default function InventoryPage() {
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredInventory = mockInventory.filter(item => {
-    const matchesSearch = 
-      item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLowStock = !showLowStockOnly || item.is_low_stock;
-    return matchesSearch && matchesLowStock;
-  });
+  useEffect(() => {
+    async function fetchInventory() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const params = new URLSearchParams({
+          page: page.toString(),
+          per_page: '20',
+        });
+        
+        if (searchTerm) {
+          params.append('search', searchTerm);
+        }
+        
+        if (showLowStockOnly) {
+          params.append('low_stock', 'true');
+        }
+        
+        const response = await apiClient.get<InventoryListResponse>(`/inventory?${params}`);
+        setInventoryItems(response.data.items);
+        setTotal(response.data.total);
+        setPages(response.data.pages);
+      } catch (err) {
+        console.error('Failed to fetch inventory:', err);
+        setError('Failed to load inventory');
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  const totalItems = mockInventory.length;
-  const totalValue = mockInventory.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0);
-  const lowStockCount = mockInventory.filter(i => i.is_low_stock).length;
-  const outOfStockCount = mockInventory.filter(i => i.quantity_on_hand === 0).length;
+    // Debounce search
+    const timeoutId = setTimeout(fetchInventory, 300);
+    return () => clearTimeout(timeoutId);
+  }, [page, searchTerm, showLowStockOnly]);
+
+  const filteredInventory = inventoryItems;
+
+  const totalItems = total;
+  const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0);
+  const lowStockCount = inventoryItems.filter(i => i.is_low_stock).length;
+  const outOfStockCount = inventoryItems.filter(i => i.quantity_on_hand === 0).length;
+
+  if (isLoading && inventoryItems.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <p className="text-gray-400">Loading inventory...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && inventoryItems.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500" />
+          <h2 className="text-xl font-semibold text-white">Unable to load inventory</h2>
+          <p className="text-gray-400 max-w-md">{error}</p>
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Inventory"
-        description="Track and manage stock levels"
+        description={`Track and manage stock levels (${totalItems} items)`}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" className="border-gray-700">
@@ -109,15 +154,13 @@ export default function InventoryPage() {
         />
         <StatCard
           title="Total Value"
-          value={`$${totalValue.toLocaleString()}`}
+          value={formatCurrency(totalValue)}
           icon={<DollarSign className="w-5 h-5" />}
-          trend={{ value: 5, isPositive: true }}
         />
         <StatCard
           title="Low Stock"
           value={lowStockCount}
           icon={<AlertTriangle className="w-5 h-5" />}
-          trend={{ value: lowStockCount, isPositive: false }}
         />
         <StatCard
           title="Out of Stock"
@@ -132,14 +175,20 @@ export default function InventoryPage() {
           <Input
             placeholder="Search by product name or SKU..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
             className="pl-10 bg-gray-800 border-gray-700"
           />
         </div>
         <Button 
           variant={showLowStockOnly ? "default" : "outline"}
           className={showLowStockOnly ? "bg-red-600 hover:bg-red-700" : "border-gray-700"}
-          onClick={() => setShowLowStockOnly(!showLowStockOnly)}
+          onClick={() => {
+            setShowLowStockOnly(!showLowStockOnly);
+            setPage(1);
+          }}
         >
           <AlertTriangle className="w-4 h-4 mr-2" />
           Low Stock Only
@@ -172,7 +221,7 @@ export default function InventoryPage() {
             </thead>
             <tbody>
               {filteredInventory.map((item) => {
-                const available = item.quantity_on_hand - item.quantity_reserved;
+                const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved);
                 const value = item.quantity_on_hand * item.average_cost;
                 const isOutOfStock = item.quantity_on_hand === 0;
                 
@@ -182,9 +231,9 @@ export default function InventoryPage() {
                     className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer"
                   >
                     <td className="py-3 px-4">
-                      <div className="font-medium text-white">{item.product_name}</div>
+                      <div className="font-medium text-white">{item.product_name || 'Unknown Product'}</div>
                     </td>
-                    <td className="py-3 px-4 text-gray-400">{item.sku}</td>
+                    <td className="py-3 px-4 text-gray-400">{item.sku || '-'}</td>
                     <td className="py-3 px-4 text-right">
                       <span className={`font-medium ${
                         isOutOfStock ? 'text-red-400' : 
@@ -196,11 +245,13 @@ export default function InventoryPage() {
                     <td className="py-3 px-4 text-right text-gray-400">{available}</td>
                     <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point}</td>
                     <td className="py-3 px-4">
-                      <div className="text-white">{item.location}</div>
-                      <div className="text-xs text-gray-500">{item.bin_location}</div>
+                      <div className="text-white">{item.location || 'Not assigned'}</div>
+                      {item.bin_location && (
+                        <div className="text-xs text-gray-500">{item.bin_location}</div>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-right text-white">
-                      ${value.toLocaleString()}
+                      {formatCurrency(value)}
                     </td>
                     <td className="py-3 px-4 text-center">
                       {isOutOfStock ? (
@@ -216,6 +267,33 @@ export default function InventoryPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <span className="text-sm text-gray-400">
+            Page {page} of {pages} ({total} items)
+          </span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page <= 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page >= pages}
+              onClick={() => setPage(p => Math.min(pages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>

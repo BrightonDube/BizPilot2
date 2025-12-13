@@ -90,6 +90,7 @@ class InvoiceResponse(InvoiceBase):
     id: str
     business_id: str
     invoice_number: str
+    customer_name: Optional[str] = None  # Computed from customer relationship
     subtotal: Decimal
     tax_amount: Decimal
     discount_amount: Decimal

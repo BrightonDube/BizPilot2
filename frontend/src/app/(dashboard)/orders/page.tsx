@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -12,53 +12,53 @@ import {
   XCircle,
   Truck,
   DollarSign,
-  ShoppingCart
+  ShoppingCart,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Button, Input, Card, CardContent } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
-const mockOrders = [
-  {
-    id: '1',
-    order_number: 'ORD-20241212-00001',
-    customer_name: 'John Doe',
-    status: 'processing',
-    payment_status: 'paid',
-    total: 245.99,
-    items_count: 3,
-    order_date: '2024-12-12',
-  },
-  {
-    id: '2',
-    order_number: 'ORD-20241211-00045',
-    customer_name: 'Acme Corporation',
-    status: 'shipped',
-    payment_status: 'paid',
-    total: 1250.00,
-    items_count: 12,
-    order_date: '2024-12-11',
-  },
-  {
-    id: '3',
-    order_number: 'ORD-20241210-00089',
-    customer_name: 'Jane Smith',
-    status: 'pending',
-    payment_status: 'pending',
-    total: 89.50,
-    items_count: 2,
-    order_date: '2024-12-10',
-  },
-  {
-    id: '4',
-    order_number: 'ORD-20241209-00102',
-    customer_name: 'TechStart Inc',
-    status: 'delivered',
-    payment_status: 'paid',
-    total: 5499.00,
-    items_count: 25,
-    order_date: '2024-12-09',
-  },
-];
+interface Order {
+  id: string;
+  order_number: string;
+  customer_name?: string;
+  customer_id: string | null;
+  status: string;
+  payment_status: string;
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
+  total: number;
+  items_count?: number;
+  order_date: string;
+  created_at: string;
+}
+
+interface OrderListResponse {
+  items: Order[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-ZA', {
+    style: 'currency',
+    currency: 'ZAR',
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-ZA', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
 const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
   draft: { color: 'bg-gray-500', icon: <Clock className="w-3 h-3" />, label: 'Draft' },
@@ -71,27 +71,89 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
 };
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredOrders = mockOrders.filter(order => {
-    const matchesSearch = 
-      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const params = new URLSearchParams({
+          page: page.toString(),
+          per_page: '20',
+        });
+        
+        if (searchTerm) {
+          params.append('search', searchTerm);
+        }
+        
+        if (selectedStatus !== 'all') {
+          params.append('status', selectedStatus);
+        }
+        
+        const response = await apiClient.get<OrderListResponse>(`/orders?${params}`);
+        setOrders(response.data.items);
+        setTotal(response.data.total);
+        setPages(response.data.pages);
+      } catch (err) {
+        console.error('Failed to fetch orders:', err);
+        setError('Failed to load orders');
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  const totalOrders = mockOrders.length;
-  const totalRevenue = mockOrders.reduce((sum, o) => sum + o.total, 0);
-  const pendingOrders = mockOrders.filter(o => o.status === 'pending').length;
-  const completedOrders = mockOrders.filter(o => o.status === 'delivered').length;
+    // Debounce search
+    const timeoutId = setTimeout(fetchOrders, 300);
+    return () => clearTimeout(timeoutId);
+  }, [page, searchTerm, selectedStatus]);
+
+  const filteredOrders = orders;
+
+  const totalOrders = total;
+  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  const pendingOrders = orders.filter(o => o.status === 'pending').length;
+  const completedOrders = orders.filter(o => o.status === 'delivered').length;
+
+  if (isLoading && orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <p className="text-gray-400">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500" />
+          <h2 className="text-xl font-semibold text-white">Unable to load orders</h2>
+          <p className="text-gray-400 max-w-md">{error}</p>
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Orders"
-        description="Manage customer orders"
+        description={`Manage customer orders (${totalOrders} orders)`}
         actions={
           <Link href="/orders/new">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
@@ -107,13 +169,11 @@ export default function OrdersPage() {
           title="Total Orders"
           value={totalOrders}
           icon={<ShoppingCart className="w-5 h-5" />}
-          trend={{ value: 15, isPositive: true }}
         />
         <StatCard
           title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          value={formatCurrency(totalRevenue)}
           icon={<DollarSign className="w-5 h-5" />}
-          trend={{ value: 22, isPositive: true }}
         />
         <StatCard
           title="Pending Orders"
@@ -124,7 +184,6 @@ export default function OrdersPage() {
           title="Completed"
           value={completedOrders}
           icon={<CheckCircle className="w-5 h-5" />}
-          trend={{ value: 8, isPositive: true }}
         />
       </div>
 
@@ -134,7 +193,10 @@ export default function OrdersPage() {
           <Input
             placeholder="Search orders..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
             className="pl-10 bg-gray-800 border-gray-700"
           />
         </div>
@@ -142,7 +204,10 @@ export default function OrdersPage() {
         <select
           id="order-status-filter"
           value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
+          onChange={(e) => {
+            setSelectedStatus(e.target.value);
+            setPage(1);
+          }}
           className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
         >
           <option value="all">All Status</option>
@@ -171,7 +236,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {filteredOrders.map((order) => {
-            const status = statusConfig[order.status];
+            const status = statusConfig[order.status] || statusConfig.pending;
             return (
               <Link key={order.id} href={`/orders/${order.id}`}>
                 <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer">
@@ -190,13 +255,13 @@ export default function OrdersPage() {
                               {order.payment_status}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-400">{order.customer_name}</p>
-                          <p className="text-xs text-gray-500">{order.items_count} items • {order.order_date}</p>
+                          <p className="text-sm text-gray-400">{order.customer_name || 'Walk-in Customer'}</p>
+                          <p className="text-xs text-gray-500">{order.items_count || 0} items • {formatDate(order.order_date || order.created_at)}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold text-white">
-                          ${order.total.toLocaleString()}
+                          {formatCurrency(order.total)}
                         </div>
                         <Badge variant="secondary">{status.label}</Badge>
                       </div>
@@ -206,6 +271,33 @@ export default function OrdersPage() {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <span className="text-sm text-gray-400">
+            Page {page} of {pages} ({total} orders)
+          </span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page <= 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page >= pages}
+              onClick={() => setPage(p => Math.min(pages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>
