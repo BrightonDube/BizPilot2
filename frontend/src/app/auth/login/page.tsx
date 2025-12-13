@@ -4,12 +4,34 @@
  * Login page component with BizPilot styling.
  */
 
-import { useState, FormEvent, useEffect, useRef } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn } from 'lucide-react';
+
+// Google Icon component
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <path
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      fill="#4285F4"
+    />
+    <path
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      fill="#34A853"
+    />
+    <path
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      fill="#FBBC05"
+    />
+    <path
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+      fill="#EA4335"
+    />
+  </svg>
+);
 
 declare global {
   interface Window {
@@ -23,17 +45,6 @@ declare global {
             ux_mode?: 'popup' | 'redirect';
           }) => void;
           prompt: () => void;
-          renderButton: (
-            element: HTMLElement,
-            options: {
-              theme?: 'outline' | 'filled_blue' | 'filled_black';
-              size?: 'large' | 'medium' | 'small';
-              type?: 'standard' | 'icon';
-              width?: number;
-              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-            }
-          ) => void;
         };
       };
     };
@@ -47,7 +58,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
-  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [googleReady, setGoogleReady] = useState(false);
 
   // Redirect if already authenticated
   useGuestOnly();
@@ -77,20 +88,9 @@ export default function LoginPage() {
               setGoogleLoading(false);
             }
           },
-          ux_mode: 'popup', // Use popup instead of FedCM
+          ux_mode: 'popup',
         });
-        
-        // Render the Google button
-        if (googleButtonRef.current) {
-          window.google.accounts.id.renderButton(googleButtonRef.current, {
-            theme: 'outline',
-            size: 'large',
-            type: 'standard',
-            text: 'signin_with',
-            shape: 'rectangular',
-            width: 300,
-          });
-        }
+        setGoogleReady(true);
       }
     };
 
@@ -101,6 +101,12 @@ export default function LoginPage() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleGoogleSignIn = () => {
+    if (window.google && googleReady) {
+      window.google.accounts.id.prompt();
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -238,24 +244,31 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Google Sign-In Button - rendered by Google SDK */}
-        <div className="mt-4 flex justify-center">
+        {/* Custom Google Sign-In Button matching theme */}
+        <motion.button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading || !googleReady}
+          className="mt-4 w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
           {googleLoading ? (
-            <div className="w-full py-3 px-4 bg-white rounded-lg flex items-center justify-center gap-2">
+            <>
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="h-5 w-5 border-2 border-gray-900 border-t-transparent rounded-full"
+                className="h-5 w-5 border-2 border-white border-t-transparent rounded-full"
               />
-              <span className="text-gray-900 font-medium">Signing in...</span>
-            </div>
+              <span>Signing in with Google...</span>
+            </>
           ) : (
-            <div 
-              ref={googleButtonRef} 
-              className="w-full flex justify-center [&>div]:!w-full [&>div>div]:!w-full"
-            />
+            <>
+              <GoogleIcon />
+              <span>Sign in with Google</span>
+            </>
           )}
-        </div>
+        </motion.button>
         
         {googleError && (
           <motion.p
