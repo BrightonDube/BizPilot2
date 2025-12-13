@@ -48,7 +48,7 @@ def get_user_business_id(db: Session, user_id) -> Optional[str]:
 
 @router.get("/stats", response_model=ReportStats)
 async def get_report_stats(
-    range: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
+    range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -126,7 +126,7 @@ async def get_report_stats(
 
 @router.get("/top-products", response_model=List[TopProduct])
 async def get_top_products(
-    range: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
+    range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     limit: int = Query(5, ge=1, le=20),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
@@ -157,7 +157,7 @@ async def get_top_products(
 
 @router.get("/top-customers", response_model=List[TopCustomer])
 async def get_top_customers(
-    range: str = Query("30d", regex="^(7d|30d|90d|1y)$"),
+    range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     limit: int = Query(5, ge=1, le=20),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),

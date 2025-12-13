@@ -71,9 +71,8 @@ class PaymentResponse(BaseModel):
     payment_date: date
     reference: Optional[str] = None
     notes: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    
+    model_config = {"from_attributes": True}
 
 
 class PaymentListResponse(BaseModel):
