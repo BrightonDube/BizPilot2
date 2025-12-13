@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Link href="/" className="inline-flex items-center justify-center gap-3 mb-4">
+          <Link href="/" className="inline-flex items-center justify-center gap-3 mb-4" suppressHydrationWarning>
             <Logo width={48} height={48} />
             <span className="text-3xl font-bold text-white">BizPilot</span>
           </Link>
@@ -47,7 +47,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          &copy; {new Date().getFullYear()} BizPilot. Built with ❤️ for small businesses.
+          &copy; 2025 BizPilot. Built with ❤️ for small businesses.
         </motion.p>
       </div>
     </div>

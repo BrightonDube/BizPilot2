@@ -1,13 +1,15 @@
 'use client';
 
 /**
- * Registration page component.
+ * Registration page component with BizPilot styling.
  */
 
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
+import { motion } from 'framer-motion';
+import { Mail, Lock, User, Phone, UserPlus } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
