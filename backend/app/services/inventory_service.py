@@ -2,11 +2,11 @@
 
 from typing import List, Optional, Tuple
 from decimal import Decimal
-from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.base import utc_now
 from app.schemas.inventory import InventoryItemCreate, InventoryItemUpdate, InventoryAdjustment
 
 
@@ -152,7 +152,7 @@ class InventoryService:
             raise ValueError("Insufficient inventory")
         
         item.quantity_on_hand = quantity_after
-        item.last_sold_at = datetime.utcnow()
+        item.last_sold_at = utc_now()
         
         transaction = InventoryTransaction(
             business_id=business_id,
@@ -193,7 +193,7 @@ class InventoryService:
         item.average_cost = total_value / quantity_after if quantity_after > 0 else unit_cost
         item.last_cost = unit_cost
         item.quantity_on_hand = quantity_after
-        item.last_received_at = datetime.utcnow()
+        item.last_received_at = utc_now()
         
         transaction = InventoryTransaction(
             business_id=business_id,

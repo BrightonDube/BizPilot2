@@ -122,8 +122,7 @@ class CustomerService:
 
     def delete_customer(self, customer: Customer) -> None:
         """Soft delete a customer."""
-        from datetime import datetime
-        customer.deleted_at = datetime.utcnow()
+        customer.soft_delete()
         self.db.commit()
 
     def bulk_create_customers(
@@ -160,12 +159,12 @@ class CustomerService:
 
     def bulk_delete_customers(self, business_id: str, customer_ids: List[str]) -> int:
         """Bulk soft delete customers."""
-        from datetime import datetime
+        from app.models.base import utc_now
         result = self.db.query(Customer).filter(
             Customer.id.in_(customer_ids),
             Customer.business_id == business_id,
             Customer.deleted_at.is_(None),
-        ).update({Customer.deleted_at: datetime.utcnow()}, synchronize_session=False)
+        ).update({Customer.deleted_at: utc_now()}, synchronize_session=False)
         self.db.commit()
         return result
 

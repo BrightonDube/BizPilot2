@@ -11,7 +11,6 @@ from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.order import OrderStatus, PaymentStatus
-from app.models.customer import Customer
 from app.schemas.order import (
     OrderCreate,
     OrderUpdate,
@@ -120,22 +119,17 @@ async def list_orders(
         sort_order=sort_order,
     )
     
-    # Build a cache of customer IDs to names
-    customer_ids = [str(order.customer_id) for order in orders if order.customer_id]
-    customer_names = {}
-    if customer_ids:
-        customers = db.query(Customer).filter(Customer.id.in_(customer_ids)).all()
-        for customer in customers:
-            name = f"{customer.first_name} {customer.last_name}"
-            if customer.company_name:
-                name = customer.company_name
-            customer_names[str(customer.id)] = name
-    
-    # Get items for each order
+    # Build responses using eager-loaded relationships (no N+1 queries)
     order_responses = []
     for order in orders:
-        items = service.get_order_items(str(order.id))
-        customer_name = customer_names.get(str(order.customer_id)) if order.customer_id else None
+        # Items are eager-loaded via selectin relationship
+        items = [item for item in (order.items or []) if item.deleted_at is None]
+        
+        # Customer is eager-loaded via joined relationship
+        customer_name = None
+        if order.customer:
+            customer_name = order.customer.company_name or f"{order.customer.first_name} {order.customer.last_name}"
+        
         order_responses.append(_order_to_response(order, items, customer_name))
     
     return OrderListResponse(

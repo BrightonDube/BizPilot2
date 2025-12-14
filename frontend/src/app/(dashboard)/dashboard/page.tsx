@@ -59,10 +59,10 @@ interface DashboardData {
 }
 
 // Format currency in ZAR
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number, currency: string = 'ZAR'): string {
   return new Intl.NumberFormat('en-ZA', {
     style: 'currency',
-    currency: 'ZAR',
+    currency: currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);

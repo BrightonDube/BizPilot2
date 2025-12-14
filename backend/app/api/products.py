@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user, get_current_business_id
+from app.api.deps import get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
-from app.models.product import ProductStatus
+from app.models.product import Product, ProductStatus
 from app.schemas.product import (
     ProductCreate,
     ProductUpdate,
@@ -22,6 +22,33 @@ from app.schemas.product import (
 from app.services.product_service import ProductService
 
 router = APIRouter(prefix="/products", tags=["Products"])
+
+
+def _product_to_response(product: Product) -> ProductResponse:
+    """Convert a Product model to ProductResponse schema."""
+    return ProductResponse(
+        id=str(product.id),
+        business_id=str(product.business_id),
+        name=product.name,
+        description=product.description,
+        sku=product.sku,
+        barcode=product.barcode,
+        cost_price=product.cost_price,
+        selling_price=product.selling_price,
+        compare_at_price=product.compare_at_price,
+        is_taxable=product.is_taxable,
+        tax_rate=product.tax_rate,
+        track_inventory=product.track_inventory,
+        quantity=product.quantity,
+        low_stock_threshold=product.low_stock_threshold,
+        status=product.status,
+        image_url=product.image_url,
+        category_id=str(product.category_id) if product.category_id else None,
+        is_low_stock=product.is_low_stock,
+        profit_margin=product.profit_margin,
+        created_at=product.created_at,
+        updated_at=product.updated_at,
+    )
 
 
 @router.get("", response_model=ProductListResponse)
@@ -36,6 +63,7 @@ async def list_products(
     low_stock_only: bool = False,
     sort_by: str = Query("created_at", pattern="^(name|selling_price|quantity|created_at|updated_at)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
+    current_user: User = Depends(has_permission("products:view")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -58,29 +86,7 @@ async def list_products(
     )
     
     return ProductListResponse(
-        items=[ProductResponse(
-            id=str(p.id),
-            business_id=str(p.business_id),
-            name=p.name,
-            description=p.description,
-            sku=p.sku,
-            barcode=p.barcode,
-            cost_price=p.cost_price,
-            selling_price=p.selling_price,
-            compare_at_price=p.compare_at_price,
-            is_taxable=p.is_taxable,
-            tax_rate=p.tax_rate,
-            track_inventory=p.track_inventory,
-            quantity=p.quantity,
-            low_stock_threshold=p.low_stock_threshold,
-            status=p.status,
-            image_url=p.image_url,
-            category_id=str(p.category_id) if p.category_id else None,
-            is_low_stock=p.is_low_stock,
-            profit_margin=p.profit_margin,
-            created_at=p.created_at,
-            updated_at=p.updated_at,
-        ) for p in products],
+        items=[_product_to_response(p) for p in products],
         total=total,
         page=page,
         per_page=per_page,
@@ -91,6 +97,7 @@ async def list_products(
 @router.get("/{product_id}", response_model=ProductResponse)
 async def get_product(
     product_id: str,
+    current_user: User = Depends(has_permission("products:view")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -104,34 +111,13 @@ async def get_product(
             detail="Product not found",
         )
     
-    return ProductResponse(
-        id=str(product.id),
-        business_id=str(product.business_id),
-        name=product.name,
-        description=product.description,
-        sku=product.sku,
-        barcode=product.barcode,
-        cost_price=product.cost_price,
-        selling_price=product.selling_price,
-        compare_at_price=product.compare_at_price,
-        is_taxable=product.is_taxable,
-        tax_rate=product.tax_rate,
-        track_inventory=product.track_inventory,
-        quantity=product.quantity,
-        low_stock_threshold=product.low_stock_threshold,
-        status=product.status,
-        image_url=product.image_url,
-        category_id=str(product.category_id) if product.category_id else None,
-        is_low_stock=product.is_low_stock,
-        profit_margin=product.profit_margin,
-        created_at=product.created_at,
-        updated_at=product.updated_at,
-    )
+    return _product_to_response(product)
 
 
 @router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(
     data: ProductCreate,
+    current_user: User = Depends(has_permission("products:create")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -139,35 +125,14 @@ async def create_product(
     service = ProductService(db)
     product = service.create_product(business_id, data)
     
-    return ProductResponse(
-        id=str(product.id),
-        business_id=str(product.business_id),
-        name=product.name,
-        description=product.description,
-        sku=product.sku,
-        barcode=product.barcode,
-        cost_price=product.cost_price,
-        selling_price=product.selling_price,
-        compare_at_price=product.compare_at_price,
-        is_taxable=product.is_taxable,
-        tax_rate=product.tax_rate,
-        track_inventory=product.track_inventory,
-        quantity=product.quantity,
-        low_stock_threshold=product.low_stock_threshold,
-        status=product.status,
-        image_url=product.image_url,
-        category_id=str(product.category_id) if product.category_id else None,
-        is_low_stock=product.is_low_stock,
-        profit_margin=product.profit_margin,
-        created_at=product.created_at,
-        updated_at=product.updated_at,
-    )
+    return _product_to_response(product)
 
 
 @router.put("/{product_id}", response_model=ProductResponse)
 async def update_product(
     product_id: str,
     data: ProductUpdate,
+    current_user: User = Depends(has_permission("products:edit")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -183,34 +148,13 @@ async def update_product(
     
     product = service.update_product(product, data)
     
-    return ProductResponse(
-        id=str(product.id),
-        business_id=str(product.business_id),
-        name=product.name,
-        description=product.description,
-        sku=product.sku,
-        barcode=product.barcode,
-        cost_price=product.cost_price,
-        selling_price=product.selling_price,
-        compare_at_price=product.compare_at_price,
-        is_taxable=product.is_taxable,
-        tax_rate=product.tax_rate,
-        track_inventory=product.track_inventory,
-        quantity=product.quantity,
-        low_stock_threshold=product.low_stock_threshold,
-        status=product.status,
-        image_url=product.image_url,
-        category_id=str(product.category_id) if product.category_id else None,
-        is_low_stock=product.is_low_stock,
-        profit_margin=product.profit_margin,
-        created_at=product.created_at,
-        updated_at=product.updated_at,
-    )
+    return _product_to_response(product)
 
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     product_id: str,
+    current_user: User = Depends(has_permission("products:delete")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -230,6 +174,7 @@ async def delete_product(
 @router.post("/bulk", response_model=list[ProductResponse], status_code=status.HTTP_201_CREATED)
 async def bulk_create_products(
     data: ProductBulkCreate,
+    current_user: User = Depends(has_permission("products:create")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -237,34 +182,13 @@ async def bulk_create_products(
     service = ProductService(db)
     products = service.bulk_create_products(business_id, data.products)
     
-    return [ProductResponse(
-        id=str(p.id),
-        business_id=str(p.business_id),
-        name=p.name,
-        description=p.description,
-        sku=p.sku,
-        barcode=p.barcode,
-        cost_price=p.cost_price,
-        selling_price=p.selling_price,
-        compare_at_price=p.compare_at_price,
-        is_taxable=p.is_taxable,
-        tax_rate=p.tax_rate,
-        track_inventory=p.track_inventory,
-        quantity=p.quantity,
-        low_stock_threshold=p.low_stock_threshold,
-        status=p.status,
-        image_url=p.image_url,
-        category_id=str(p.category_id) if p.category_id else None,
-        is_low_stock=p.is_low_stock,
-        profit_margin=p.profit_margin,
-        created_at=p.created_at,
-        updated_at=p.updated_at,
-    ) for p in products]
+    return [_product_to_response(p) for p in products]
 
 
 @router.post("/bulk-delete")
 async def bulk_delete_products(
     data: ProductBulkDelete,
+    current_user: User = Depends(has_permission("products:delete")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):

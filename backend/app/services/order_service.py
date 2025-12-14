@@ -4,10 +4,11 @@ from typing import List, Optional, Tuple
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_, func
 
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
+from app.models.base import utc_now
 from app.schemas.order import OrderCreate, OrderUpdate, OrderItemCreate
 
 
@@ -204,9 +205,9 @@ class OrderService:
         
         # Set relevant dates
         if status == OrderStatus.SHIPPED:
-            order.shipped_date = datetime.utcnow()
+            order.shipped_date = utc_now()
         elif status == OrderStatus.DELIVERED:
-            order.delivered_date = datetime.utcnow()
+            order.delivered_date = utc_now()
         
         self.db.commit()
         self.db.refresh(order)
@@ -234,7 +235,7 @@ class OrderService:
 
     def delete_order(self, order: Order) -> None:
         """Soft delete an order."""
-        order.deleted_at = datetime.utcnow()
+        order.soft_delete()
         self.db.commit()
 
     def get_order_items(self, order_id: str) -> List[OrderItem]:
@@ -265,7 +266,7 @@ class OrderService:
         ).first()
         
         if item:
-            item.deleted_at = datetime.utcnow()
+            item.soft_delete()
             self._calculate_order_totals(order)
             self.db.commit()
 

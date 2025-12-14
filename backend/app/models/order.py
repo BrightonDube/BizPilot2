@@ -2,10 +2,10 @@
 
 from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
+from sqlalchemy.orm import relationship
 import enum
-from datetime import datetime
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, utc_now
 
 
 class OrderStatus(str, enum.Enum):
@@ -72,13 +72,17 @@ class Order(BaseModel):
     internal_notes = Column(Text, nullable=True)
     
     # Dates
-    order_date = Column(DateTime, default=datetime.utcnow)
-    shipped_date = Column(DateTime, nullable=True)
-    delivered_date = Column(DateTime, nullable=True)
+    order_date = Column(DateTime(timezone=True), default=utc_now)
+    shipped_date = Column(DateTime(timezone=True), nullable=True)
+    delivered_date = Column(DateTime(timezone=True), nullable=True)
     
     # Metadata
     tags = Column(ARRAY(String), default=[])
     source = Column(String(50), default="manual")  # manual, pos, online, etc.
+    
+    # Relationships
+    items = relationship("OrderItem", back_populates="order", lazy="selectin")
+    customer = relationship("Customer", backref="orders", lazy="joined")
 
     def __repr__(self) -> str:
         return f"<Order {self.order_number}>"
@@ -96,8 +100,8 @@ class Order(BaseModel):
     @property
     def item_count(self) -> int:
         """Get total item count from order items relationship."""
-        # Note: This would be populated from a relationship in a full implementation
-        # For now, returns 0 as a safe default
+        if self.items:
+            return sum(item.quantity for item in self.items if item.deleted_at is None)
         return 0
 
 
@@ -131,6 +135,9 @@ class OrderItem(BaseModel):
     
     # Notes
     notes = Column(Text, nullable=True)
+    
+    # Relationship back to order
+    order = relationship("Order", back_populates="items")
 
     def __repr__(self) -> str:
         return f"<OrderItem {self.name} x{self.quantity}>"

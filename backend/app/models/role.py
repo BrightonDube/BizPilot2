@@ -2,8 +2,9 @@
 
 from sqlalchemy import Column, String, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 import enum
+from typing import List
 
 from app.models.base import BaseModel
 from app.core.database import Base
@@ -89,8 +90,8 @@ class Role(BaseModel):
     business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=True)
     is_system = Column(Boolean, default=False)  # System roles can't be deleted
 
-    # Store permissions as array of strings
-    permissions = Column(String(2000), nullable=True)  # JSON-encoded permissions
+    # Store permissions as JSONB array for better performance and querying
+    permissions = Column(JSONB, nullable=True, default=[])
 
     # Relationships
     business_users = relationship("BusinessUser", back_populates="role")
@@ -98,17 +99,13 @@ class Role(BaseModel):
     def __repr__(self) -> str:
         return f"<Role {self.name}>"
 
-    def get_permissions(self) -> list[str]:
+    def get_permissions(self) -> List[str]:
         """Get list of permissions."""
-        import json
-        if self.permissions:
-            return json.loads(self.permissions)
-        return []
+        return self.permissions or []
 
-    def set_permissions(self, perms: list[str]) -> None:
+    def set_permissions(self, perms: List[str]) -> None:
         """Set list of permissions."""
-        import json
-        self.permissions = json.dumps(perms)
+        self.permissions = perms
 
     def has_permission(self, permission: str) -> bool:
         """Check if role has a specific permission."""

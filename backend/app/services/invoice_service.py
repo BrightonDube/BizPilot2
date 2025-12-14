@@ -210,7 +210,7 @@ class InvoiceService:
 
     def delete_invoice(self, invoice: Invoice) -> None:
         """Soft delete an invoice."""
-        invoice.deleted_at = datetime.utcnow()
+        invoice.soft_delete()
         self.db.commit()
 
     def get_invoice_items(self, invoice_id: str) -> List[InvoiceItem]:

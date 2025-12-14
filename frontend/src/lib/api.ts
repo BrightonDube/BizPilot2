@@ -53,8 +53,9 @@ apiClient.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${access_token}`;
           }
           return apiClient(originalRequest);
-        } catch {
+        } catch (refreshError) {
           // Refresh failed, clear tokens and redirect to login
+          console.error('Token refresh failed:', refreshError);
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           // Note: Using window.location here because this is outside React context

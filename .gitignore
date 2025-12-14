@@ -67,3 +67,14 @@ Thumbs.db
 .beads/*.db-*
 .beads/daemon.*
 .beads/bd.sock
+
+# Secrets
+secrets.json
+secrets-backup.json
+*.secret
+*.secrets
+
+# Environment files (already covered but being explicit)
+backend/.env
+frontend/.env
+frontend/.env.local

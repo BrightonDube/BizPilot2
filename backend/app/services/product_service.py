@@ -21,6 +21,7 @@ class ProductService:
         return self.db.query(Product).filter(
             Product.id == product_id,
             Product.business_id == business_id,
+            Product.deleted_at.is_(None),
         ).first()
 
     def get_products(
@@ -38,7 +39,10 @@ class ProductService:
         sort_order: str = "desc",
     ) -> Tuple[List[Product], int]:
         """Get products with filtering and pagination."""
-        query = self.db.query(Product).filter(Product.business_id == business_id)
+        query = self.db.query(Product).filter(
+            Product.business_id == business_id,
+            Product.deleted_at.is_(None),
+        )
         
         # Apply filters
         if search:
@@ -107,8 +111,8 @@ class ProductService:
         return product
 
     def delete_product(self, product: Product) -> bool:
-        """Delete a product."""
-        self.db.delete(product)
+        """Soft delete a product."""
+        product.soft_delete()
         self.db.commit()
         return True
 
@@ -129,12 +133,29 @@ class ProductService:
         
         return products
 
-    def bulk_delete_products(self, business_id: str, product_ids: List[str]) -> int:
-        """Delete multiple products at once."""
+    def bulk_delete_products(self, business_id: str, product_ids: List[str], max_ids: int = 100) -> int:
+        """Soft delete multiple products at once.
+        
+        Args:
+            business_id: The business ID to scope the deletion
+            product_ids: List of product IDs to delete (max 100)
+            max_ids: Maximum number of IDs allowed (default 100)
+        
+        Returns:
+            Number of products deleted
+        
+        Raises:
+            ValueError: If product_ids exceeds max_ids limit
+        """
+        if len(product_ids) > max_ids:
+            raise ValueError(f"Cannot delete more than {max_ids} products at once")
+        
+        from app.models.base import utc_now
         deleted = self.db.query(Product).filter(
             Product.id.in_(product_ids),
             Product.business_id == business_id,
-        ).delete(synchronize_session=False)
+            Product.deleted_at.is_(None),
+        ).update({"deleted_at": utc_now()}, synchronize_session=False)
         self.db.commit()
         return deleted
 
