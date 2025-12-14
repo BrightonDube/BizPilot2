@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_business_id
+from app.core.rbac import has_permission
 from app.models.product import Product, ProductStatus
 from app.schemas.product import (
     ProductCreate,
