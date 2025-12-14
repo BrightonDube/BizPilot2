@@ -1,9 +1,10 @@
 """Google OAuth API endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token
 from app.schemas.oauth import GoogleOAuthToken, GoogleAuthResponse
 from app.services.google_oauth_service import GoogleOAuthService
@@ -11,9 +12,49 @@ from app.services.google_oauth_service import GoogleOAuthService
 router = APIRouter(prefix="/oauth", tags=["OAuth"])
 
 
+def is_mobile_client(request: Request) -> bool:
+    """
+    Determine if the request is from a mobile client.
+    Mobile clients send X-Client-Type: mobile header.
+    """
+    client_type = request.headers.get("X-Client-Type", "").lower()
+    return client_type == "mobile"
+
+
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    """
+    Set HttpOnly cookies for web authentication.
+    """
+    # Access token cookie
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=settings.COOKIE_SECURE or settings.is_production,
+        samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+        domain=settings.COOKIE_DOMAIN or None,
+    )
+    
+    # Refresh token cookie
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=settings.COOKIE_SECURE or settings.is_production,
+        samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/",
+        domain=settings.COOKIE_DOMAIN or None,
+    )
+
+
 @router.post("/google", response_model=GoogleAuthResponse)
 async def google_oauth(
     token_data: GoogleOAuthToken,
+    request: Request,
+    response: Response,
     db: Session = Depends(get_db),
 ):
     """
@@ -21,6 +62,9 @@ async def google_oauth(
     
     Accepts a Google ID token (credential) from the frontend Google Sign-In.
     Returns JWT tokens for the authenticated user.
+    
+    For web clients: Sets HttpOnly cookies and returns tokens in body.
+    For mobile clients: Only returns tokens in body.
     """
     oauth_service = GoogleOAuthService(db)
     
@@ -35,6 +79,10 @@ async def google_oauth(
     # Create JWT tokens
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    
+    # For web clients, set HttpOnly cookies
+    if not is_mobile_client(request):
+        set_auth_cookies(response, access_token, refresh_token)
     
     return GoogleAuthResponse(
         access_token=access_token,
@@ -52,8 +100,6 @@ async def get_google_oauth_url():
     This is mainly for documentation purposes as the frontend
     typically handles the Google Sign-In button directly.
     """
-    from app.core.config import settings
-    
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
