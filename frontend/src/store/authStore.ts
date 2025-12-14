@@ -1,5 +1,11 @@
 /**
  * Authentication store using Zustand.
+ * 
+ * Authentication Strategy:
+ * - Uses HttpOnly cookies for secure token storage (set by backend)
+ * - No tokens are stored in localStorage (prevents XSS attacks)
+ * - Cookies are sent automatically with withCredentials: true in API client
+ * - User state is persisted in memory/localStorage for UI purposes only
  */
 
 import { create } from 'zustand';
@@ -30,7 +36,7 @@ interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
@@ -57,13 +63,10 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/login', { email, password });
-          const { access_token, refresh_token } = response.data;
+          // Login endpoint sets HttpOnly cookies automatically
+          await apiClient.post('/auth/login', { email, password });
           
-          localStorage.setItem('access_token', access_token);
-          localStorage.setItem('refresh_token', refresh_token);
-          
-          // Fetch user data
+          // Fetch user data (cookies will be sent automatically)
           await get().fetchUser();
           set({ isAuthenticated: true, isLoading: false });
         } catch (err) {
@@ -91,22 +94,23 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      logout: () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+      logout: async () => {
+        try {
+          // Call logout endpoint to clear cookies
+          await apiClient.post('/auth/logout');
+        } catch {
+          // Ignore errors during logout
+        }
         set({ user: null, isAuthenticated: false, error: null });
       },
 
       loginWithGoogle: async (credential: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/oauth/google', { credential });
-          const { access_token, refresh_token } = response.data;
+          // Google OAuth endpoint sets HttpOnly cookies automatically
+          await apiClient.post('/oauth/google', { credential });
           
-          localStorage.setItem('access_token', access_token);
-          localStorage.setItem('refresh_token', refresh_token);
-          
-          // Fetch user data
+          // Fetch user data (cookies will be sent automatically)
           await get().fetchUser();
           set({ isAuthenticated: true, isLoading: false });
         } catch (err) {
@@ -153,11 +157,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       fetchUser: async () => {
+        set({ isLoading: true });
         try {
+          // Cookies are sent automatically with the request
           const response = await apiClient.get('/auth/me');
-          set({ user: response.data, isAuthenticated: true });
+          set({ user: response.data, isAuthenticated: true, isLoading: false });
         } catch {
-          set({ user: null, isAuthenticated: false });
+          set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
 
@@ -167,6 +173,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      // Only persist user data for UI purposes (not security-sensitive)
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     }
   )
