@@ -212,7 +212,7 @@ class CategoryService:
             if category:
                 category.sort_order = sort_order
                 if parent_id is not None:
-                    category.parent_id = parent_id if parent_id else None
+                    category.parent_id = parent_id
 
         self.db.commit()
         return True

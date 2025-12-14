@@ -161,12 +161,18 @@ async def login(
 
 
 @router.post("/logout")
-async def logout(request: Request, response: Response):
+async def logout(
+    request: Request,
+    response: Response,
+    current_user: User = Depends(get_current_active_user),
+):
     """
     Logout the current user.
     
     For web clients: Clears HttpOnly cookies.
     For mobile clients: Client should discard tokens locally.
+    
+    Requires authentication to logout.
     """
     # Clear cookies for web clients
     if not is_mobile_client(request):
