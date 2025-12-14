@@ -18,13 +18,17 @@ class PaymentStatus(str, Enum):
 
 
 class PaymentMethod(str, Enum):
-    """Payment method enum."""
+    """Payment method enum - includes South African payment providers."""
     
     CASH = "cash"
     CARD = "card"
     BANK_TRANSFER = "bank_transfer"
+    EFT = "eft"
     MOBILE = "mobile"
     CHECK = "check"
+    PAYFAST = "payfast"
+    YOCO = "yoco"
+    SNAPSCAN = "snapscan"
     OTHER = "other"
 
 

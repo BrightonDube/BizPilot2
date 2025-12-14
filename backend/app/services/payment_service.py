@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models.payment import Payment, PaymentStatus, PaymentMethod
-from app.models.invoice import Invoice
+from app.models.invoice import Invoice, InvoiceStatus
 from app.models.customer import Customer
 from app.models.business_user import BusinessUser
 from app.schemas.payment import PaymentCreate, PaymentUpdate, PaymentResponse
@@ -38,6 +38,30 @@ class PaymentService:
             BusinessUser.user_id == user_id
         ).first()
         return business_user.business_id if business_user else None
+
+    def _update_invoice_status(self, invoice: Invoice) -> None:
+        """
+        Auto-update invoice status based on payment amount.
+        Called after payment is created or updated.
+        """
+        if not invoice:
+            return
+        
+        total = float(invoice.total or 0)
+        amount_paid = float(invoice.amount_paid or 0)
+        
+        if amount_paid <= 0:
+            # No payment made - keep current status unless it was paid/partial
+            if invoice.status in [InvoiceStatus.PAID, InvoiceStatus.PARTIAL]:
+                invoice.status = InvoiceStatus.SENT
+        elif amount_paid >= total:
+            # Fully paid
+            invoice.status = InvoiceStatus.PAID
+        else:
+            # Partially paid
+            invoice.status = InvoiceStatus.PARTIAL
+        
+        self.db.commit()
 
     def list_payments(
         self,
@@ -123,12 +147,14 @@ class PaymentService:
         self.db.commit()
         self.db.refresh(payment)
 
-        # Update invoice amount_paid if linked
+        # Update invoice amount_paid and status if linked
         if payment.invoice_id:
             invoice = self.db.query(Invoice).filter(Invoice.id == payment.invoice_id).first()
             if invoice:
                 invoice.amount_paid = float(invoice.amount_paid or 0) + payment_data.amount
                 self.db.commit()
+                # Auto-update invoice status based on payment
+                self._update_invoice_status(invoice)
 
         return self._to_response(payment)
 
