@@ -12,6 +12,10 @@ from alembic import context
 # Add the backend directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Load .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 from app.core.database import Base
 from app.models import *  # Import all models to register them
 

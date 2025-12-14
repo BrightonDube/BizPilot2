@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User, UserStatus
+from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.services.auth_service import AuthService
 
 # HTTP Bearer token security (auto_error=False to allow cookie fallback)
@@ -124,3 +125,22 @@ def get_optional_user(
     
     auth_service = AuthService(db)
     return auth_service.get_user_by_id(user_id)
+
+
+async def get_current_business_id(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+) -> str:
+    """Get the current user's active business ID."""
+    business_user = db.query(BusinessUser).filter(
+        BusinessUser.user_id == current_user.id,
+        BusinessUser.status == BusinessUserStatus.ACTIVE
+    ).first()
+    
+    if not business_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No business found for user. Please create or join a business first."
+        )
+    
+    return str(business_user.business_id)

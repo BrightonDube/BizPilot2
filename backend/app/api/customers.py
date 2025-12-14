@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.customer import CustomerType
@@ -22,9 +22,6 @@ from app.schemas.customer import (
 from app.services.customer_service import CustomerService
 
 router = APIRouter(prefix="/customers", tags=["Customers"])
-
-# Hardcoded business ID for demo - in production, get from user's current business
-DEMO_BUSINESS_ID = "00000000-0000-0000-0000-000000000001"
 
 
 def _customer_to_response(customer) -> CustomerResponse:
@@ -68,13 +65,14 @@ async def list_customers(
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """
     List customers with filtering and pagination.
     """
     service = CustomerService(db)
     customers, total = service.get_customers(
-        business_id=DEMO_BUSINESS_ID,
+        business_id=business_id,
         page=page,
         per_page=per_page,
         search=search,
@@ -98,10 +96,11 @@ async def get_top_customers(
     limit: int = Query(10, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Get top customers by total spent."""
     service = CustomerService(db)
-    customers = service.get_top_customers(DEMO_BUSINESS_ID, limit)
+    customers = service.get_top_customers(business_id, limit)
     return [_customer_to_response(c) for c in customers]
 
 
@@ -110,10 +109,11 @@ async def get_customer(
     customer_id: str,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Get a customer by ID."""
     service = CustomerService(db)
-    customer = service.get_customer(customer_id, DEMO_BUSINESS_ID)
+    customer = service.get_customer(customer_id, business_id)
     
     if not customer:
         raise HTTPException(
@@ -129,10 +129,11 @@ async def get_customer_metrics(
     customer_id: str,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Get customer metrics (orders, spending)."""
     service = CustomerService(db)
-    customer = service.get_customer(customer_id, DEMO_BUSINESS_ID)
+    customer = service.get_customer(customer_id, business_id)
     
     if not customer:
         raise HTTPException(
@@ -154,20 +155,21 @@ async def create_customer(
     data: CustomerCreate,
     current_user: User = Depends(has_permission("customers:create")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Create a new customer."""
     service = CustomerService(db)
     
     # Check for duplicate email
     if data.email:
-        existing = service.get_customer_by_email(data.email, DEMO_BUSINESS_ID)
+        existing = service.get_customer_by_email(data.email, business_id)
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="A customer with this email already exists",
             )
     
-    customer = service.create_customer(DEMO_BUSINESS_ID, data)
+    customer = service.create_customer(business_id, data)
     return _customer_to_response(customer)
 
 
@@ -177,10 +179,11 @@ async def update_customer(
     data: CustomerUpdate,
     current_user: User = Depends(has_permission("customers:edit")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Update a customer."""
     service = CustomerService(db)
-    customer = service.get_customer(customer_id, DEMO_BUSINESS_ID)
+    customer = service.get_customer(customer_id, business_id)
     
     if not customer:
         raise HTTPException(
@@ -190,7 +193,7 @@ async def update_customer(
     
     # Check for duplicate email if changing
     if data.email and data.email != customer.email:
-        existing = service.get_customer_by_email(data.email, DEMO_BUSINESS_ID)
+        existing = service.get_customer_by_email(data.email, business_id)
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -206,10 +209,11 @@ async def delete_customer(
     customer_id: str,
     current_user: User = Depends(has_permission("customers:delete")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Delete a customer."""
     service = CustomerService(db)
-    customer = service.get_customer(customer_id, DEMO_BUSINESS_ID)
+    customer = service.get_customer(customer_id, business_id)
     
     if not customer:
         raise HTTPException(
@@ -225,10 +229,11 @@ async def bulk_create_customers(
     data: CustomerBulkCreate,
     current_user: User = Depends(has_permission("customers:create")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Create multiple customers at once."""
     service = CustomerService(db)
-    customers = service.bulk_create_customers(DEMO_BUSINESS_ID, data.customers)
+    customers = service.bulk_create_customers(business_id, data.customers)
     return [_customer_to_response(c) for c in customers]
 
 
@@ -237,8 +242,9 @@ async def bulk_delete_customers(
     data: CustomerBulkDelete,
     current_user: User = Depends(has_permission("customers:delete")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Delete multiple customers at once."""
     service = CustomerService(db)
-    deleted_count = service.bulk_delete_customers(DEMO_BUSINESS_ID, data.customer_ids)
+    deleted_count = service.bulk_delete_customers(business_id, data.customer_ids)
     return {"deleted": deleted_count}

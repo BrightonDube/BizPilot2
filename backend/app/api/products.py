@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.product import ProductStatus
@@ -23,9 +23,6 @@ from app.services.product_service import ProductService
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
-# Hardcoded business ID for demo - in production, get from user's current business
-DEMO_BUSINESS_ID = "00000000-0000-0000-0000-000000000001"
-
 
 @router.get("", response_model=ProductListResponse)
 async def list_products(
@@ -39,7 +36,7 @@ async def list_products(
     low_stock_only: bool = False,
     sort_by: str = Query("created_at", pattern="^(name|selling_price|quantity|created_at|updated_at)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
-    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
@@ -47,7 +44,7 @@ async def list_products(
     """
     service = ProductService(db)
     products, total = service.get_products(
-        business_id=DEMO_BUSINESS_ID,
+        business_id=business_id,
         page=page,
         per_page=per_page,
         search=search,
@@ -94,12 +91,12 @@ async def list_products(
 @router.get("/{product_id}", response_model=ProductResponse)
 async def get_product(
     product_id: str,
-    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get a product by ID."""
     service = ProductService(db)
-    product = service.get_product(product_id, DEMO_BUSINESS_ID)
+    product = service.get_product(product_id, business_id)
     
     if not product:
         raise HTTPException(
@@ -135,12 +132,12 @@ async def get_product(
 @router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(
     data: ProductCreate,
-    current_user: User = Depends(has_permission("products:create")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Create a new product."""
     service = ProductService(db)
-    product = service.create_product(DEMO_BUSINESS_ID, data)
+    product = service.create_product(business_id, data)
     
     return ProductResponse(
         id=str(product.id),
@@ -171,12 +168,12 @@ async def create_product(
 async def update_product(
     product_id: str,
     data: ProductUpdate,
-    current_user: User = Depends(has_permission("products:edit")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Update a product."""
     service = ProductService(db)
-    product = service.get_product(product_id, DEMO_BUSINESS_ID)
+    product = service.get_product(product_id, business_id)
     
     if not product:
         raise HTTPException(
@@ -214,12 +211,12 @@ async def update_product(
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     product_id: str,
-    current_user: User = Depends(has_permission("products:delete")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Delete a product."""
     service = ProductService(db)
-    product = service.get_product(product_id, DEMO_BUSINESS_ID)
+    product = service.get_product(product_id, business_id)
     
     if not product:
         raise HTTPException(
@@ -233,12 +230,12 @@ async def delete_product(
 @router.post("/bulk", response_model=list[ProductResponse], status_code=status.HTTP_201_CREATED)
 async def bulk_create_products(
     data: ProductBulkCreate,
-    current_user: User = Depends(has_permission("products:create")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Create multiple products at once."""
     service = ProductService(db)
-    products = service.bulk_create_products(DEMO_BUSINESS_ID, data.products)
+    products = service.bulk_create_products(business_id, data.products)
     
     return [ProductResponse(
         id=str(p.id),
@@ -268,11 +265,11 @@ async def bulk_create_products(
 @router.post("/bulk-delete")
 async def bulk_delete_products(
     data: ProductBulkDelete,
-    current_user: User = Depends(has_permission("products:delete")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Delete multiple products at once."""
     service = ProductService(db)
-    deleted_count = service.bulk_delete_products(DEMO_BUSINESS_ID, data.product_ids)
+    deleted_count = service.bulk_delete_products(business_id, data.product_ids)
     
     return {"deleted": deleted_count}

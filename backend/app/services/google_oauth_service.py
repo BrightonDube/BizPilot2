@@ -1,5 +1,6 @@
 """Google OAuth service for authentication."""
 
+import httpx
 from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -16,9 +17,53 @@ class GoogleOAuthService:
     
     GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo"
     GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+    GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 
     def __init__(self, db: Session):
         self.db = db
+
+    async def exchange_code_for_tokens(self, code: str) -> Optional[dict]:
+        """Exchange an authorization code for tokens."""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    self.GOOGLE_TOKEN_URL,
+                    data={
+                        "code": code,
+                        "client_id": settings.GOOGLE_CLIENT_ID,
+                        "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                        "redirect_uri": "postmessage",  # For popup flow
+                        "grant_type": "authorization_code",
+                    },
+                )
+                if response.status_code == 200:
+                    return response.json()
+                return None
+        except Exception:
+            return None
+
+    async def get_user_info_from_access_token(self, access_token: str) -> Optional[GoogleUserInfo]:
+        """Get user info using an access token."""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    self.GOOGLE_USERINFO_URL,
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return GoogleUserInfo(
+                        id=data["id"],
+                        email=data["email"],
+                        verified_email=data.get("verified_email", False),
+                        name=data.get("name", ""),
+                        given_name=data.get("given_name"),
+                        family_name=data.get("family_name"),
+                        picture=data.get("picture"),
+                    )
+                return None
+        except Exception:
+            return None
 
     async def verify_google_token(self, token: str) -> Optional[GoogleUserInfo]:
         """Verify a Google ID token and return user info."""
@@ -84,15 +129,30 @@ class GoogleOAuthService:
         self.db.refresh(user)
         return user
 
-    async def authenticate_with_google(self, token: str) -> tuple[Optional[User], bool]:
+    async def authenticate_with_google(self, credential: str) -> tuple[Optional[User], bool]:
         """
         Authenticate a user with Google OAuth.
+        
+        Supports both:
+        - Authorization code (from OAuth2 code flow)
+        - ID token (from Google Sign-In)
         
         Returns:
             Tuple of (user, is_new_user) or (None, False) if authentication fails.
         """
-        # Verify the Google token
-        google_info = await self.verify_google_token(token)
+        google_info = None
+        
+        # Try to handle as authorization code first (starts with "4/" typically)
+        if credential.startswith("4/") or len(credential) < 500:
+            # This looks like an authorization code, exchange it for tokens
+            tokens = await self.exchange_code_for_tokens(credential)
+            if tokens and "access_token" in tokens:
+                google_info = await self.get_user_info_from_access_token(tokens["access_token"])
+        
+        # If not a code or code exchange failed, try as ID token
+        if not google_info:
+            google_info = await self.verify_google_token(credential)
+        
         if not google_info:
             return None, False
         

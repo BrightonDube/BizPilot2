@@ -12,22 +12,54 @@ import {
   AlertCircle,
   Send,
   DollarSign,
-  Calendar
+  Calendar,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
-import { Button, Input, Card, CardContent, LoadingSpinner } from '@/components/ui';
+import { Button, Input, Card, CardContent } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
 import { apiClient } from '@/lib/api';
 
 interface Invoice {
   id: string;
   invoice_number: string;
-  customer_name: string;
+  customer_name?: string;
+  customer_id: string | null;
   status: string;
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
   total: number;
   amount_paid: number;
+  balance_due: number;
   issue_date: string;
   due_date: string;
-  is_overdue: boolean;
+  is_overdue?: boolean;
+  created_at: string;
+}
+
+interface InvoiceListResponse {
+  items: Invoice[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-ZA', {
+    style: 'currency',
+    currency: 'ZAR',
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-ZA', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
@@ -42,46 +74,80 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchInvoices();
-  }, []);
-
-  const fetchInvoices = async () => {
-    try {
-      const response = await apiClient.get('/invoices', {
-        params: { limit: 50 },
-      });
-      setInvoices(response.data.items || []);
-    } catch (error) {
-      // Use empty array if API is not available
-      setInvoices([]);
-    } finally {
-      setIsLoading(false);
+    async function fetchInvoices() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const params = new URLSearchParams({
+          page: page.toString(),
+          per_page: '20',
+        });
+        
+        if (searchTerm) {
+          params.append('search', searchTerm);
+        }
+        
+        if (selectedStatus !== 'all') {
+          params.append('status', selectedStatus);
+        }
+        
+        const response = await apiClient.get<InvoiceListResponse>(`/invoices?${params}`);
+        setInvoices(response.data.items);
+        setTotal(response.data.total);
+        setPages(response.data.pages);
+      } catch (err) {
+        console.error('Failed to fetch invoices:', err);
+        setError('Failed to load invoices');
+      } finally {
+        setIsLoading(false);
+      }
     }
-  };
 
-  const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = 
-      invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.customer_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || invoice.status === selectedStatus;
-    return matchesSearch && matchesStatus;
-  });
+    // Debounce search
+    const timeoutId = setTimeout(fetchInvoices, 300);
+    return () => clearTimeout(timeoutId);
+  }, [page, searchTerm, selectedStatus]);
 
-  const totalInvoices = invoices.length;
-  const totalAmount = invoices.reduce((sum, i) => sum + (i.total || 0), 0);
-  const totalPaid = invoices.reduce((sum, i) => sum + (i.amount_paid || 0), 0);
-  const overdueCount = invoices.filter(i => i.is_overdue).length;
-  const overdueAmount = invoices.filter(i => i.is_overdue).reduce((sum, i) => sum + ((i.total || 0) - (i.amount_paid || 0)), 0);
+  const filteredInvoices = invoices;
 
-  if (isLoading) {
+  const totalInvoices = total;
+  const totalAmount = invoices.reduce((sum, i) => sum + i.total, 0);
+  const totalPaid = invoices.reduce((sum, i) => sum + i.amount_paid, 0);
+  const overdueInvoices = invoices.filter(i => i.status === 'overdue' || i.is_overdue);
+  const overdueAmount = overdueInvoices.reduce((sum, i) => sum + (i.balance_due || (i.total - i.amount_paid)), 0);
+
+  if (isLoading && invoices.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <p className="text-gray-400">Loading invoices...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && invoices.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500" />
+          <h2 className="text-xl font-semibold text-white">Unable to load invoices</h2>
+          <p className="text-gray-400 max-w-md">{error}</p>
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
@@ -90,7 +156,7 @@ export default function InvoicesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Invoices"
-        description="Create and manage invoices"
+        description={`Create and manage invoices (${totalInvoices} invoices)`}
         actions={
           <Link href="/invoices/new">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
@@ -109,19 +175,18 @@ export default function InvoicesPage() {
         />
         <StatCard
           title="Total Amount"
-          value={`R ${totalAmount.toLocaleString()}`}
+          value={formatCurrency(totalAmount)}
           icon={<DollarSign className="w-5 h-5" />}
         />
         <StatCard
           title="Collected"
-          value={`R ${totalPaid.toLocaleString()}`}
+          value={formatCurrency(totalPaid)}
           icon={<CheckCircle className="w-5 h-5" />}
         />
         <StatCard
           title="Overdue"
-          value={`R ${overdueAmount.toLocaleString()}`}
+          value={formatCurrency(overdueAmount)}
           icon={<AlertCircle className="w-5 h-5" />}
-          trend={overdueCount > 0 ? { value: overdueCount, isPositive: false } : undefined}
         />
       </div>
 
@@ -131,7 +196,10 @@ export default function InvoicesPage() {
           <Input
             placeholder="Search invoices..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
             className="pl-10 bg-gray-800 border-gray-700"
           />
         </div>
@@ -139,7 +207,10 @@ export default function InvoicesPage() {
         <select
           id="invoice-status-filter"
           value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
+          onChange={(e) => {
+            setSelectedStatus(e.target.value);
+            setPage(1);
+          }}
           className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
         >
           <option value="all">All Status</option>
@@ -158,10 +229,7 @@ export default function InvoicesPage() {
       {filteredInvoices.length === 0 ? (
         <EmptyState
           title="No invoices found"
-          description={invoices.length === 0 
-            ? "Create your first invoice to get started"
-            : "Try adjusting your search or filters"
-          }
+          description="Try adjusting your search or filters"
           action={
             <Link href="/invoices/new">
               <Button>Create Your First Invoice</Button>
@@ -172,7 +240,8 @@ export default function InvoicesPage() {
         <div className="space-y-4">
           {filteredInvoices.map((invoice) => {
             const status = statusConfig[invoice.status] || statusConfig.draft;
-            const balanceDue = (invoice.total || 0) - (invoice.amount_paid || 0);
+            const balanceDue = invoice.balance_due ?? (invoice.total - invoice.amount_paid);
+            const isOverdue = invoice.is_overdue || invoice.status === 'overdue';
             return (
               <Link key={invoice.id} href={`/invoices/${invoice.id}`}>
                 <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer">
@@ -187,35 +256,35 @@ export default function InvoicesPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-medium text-white">{invoice.invoice_number}</h3>
-                            <Badge variant={invoice.is_overdue ? 'danger' : invoice.status === 'paid' ? 'success' : 'secondary'}>
+                            <Badge variant={isOverdue ? 'danger' : invoice.status === 'paid' ? 'success' : 'secondary'}>
                               {status.label}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-400">{invoice.customer_name || 'Unknown Customer'}</p>
+                          <p className="text-sm text-gray-400">{invoice.customer_name || 'Walk-in Customer'}</p>
                           <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              Issued: {invoice.issue_date}
+                              Issued: {formatDate(invoice.issue_date)}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              Due: {invoice.due_date || 'N/A'}
+                              Due: {formatDate(invoice.due_date)}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold text-white">
-                          R {(invoice.total || 0).toLocaleString()}
+                          {formatCurrency(invoice.total)}
                         </div>
                         {balanceDue > 0 && (
-                          <div className={`text-sm ${invoice.is_overdue ? 'text-red-400' : 'text-gray-400'}`}>
-                            Due: R {balanceDue.toLocaleString()}
+                          <div className={`text-sm ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
+                            Due: {formatCurrency(balanceDue)}
                           </div>
                         )}
-                        {(invoice.amount_paid || 0) > 0 && (invoice.amount_paid || 0) < (invoice.total || 0) && (
+                        {invoice.amount_paid > 0 && invoice.amount_paid < invoice.total && (
                           <div className="text-xs text-green-400">
-                            Paid: R {(invoice.amount_paid || 0).toLocaleString()}
+                            Paid: {formatCurrency(invoice.amount_paid)}
                           </div>
                         )}
                       </div>
@@ -225,6 +294,33 @@ export default function InvoicesPage() {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <span className="text-sm text-gray-400">
+            Page {page} of {pages} ({total} invoices)
+          </span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page <= 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={page >= pages}
+              onClick={() => setPage(p => Math.min(pages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.inventory import TransactionType
@@ -22,8 +22,6 @@ from app.schemas.inventory import (
 from app.services.inventory_service import InventoryService
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
-
-DEMO_BUSINESS_ID = "00000000-0000-0000-0000-000000000001"
 
 
 def _item_to_response(item) -> InventoryItemResponse:
@@ -84,11 +82,12 @@ async def list_inventory(
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """List inventory items with filtering and pagination."""
     service = InventoryService(db)
     items, total = service.get_inventory_items(
-        business_id=DEMO_BUSINESS_ID,
+        business_id=business_id,
         page=page,
         per_page=per_page,
         low_stock_only=low_stock_only,
@@ -110,10 +109,11 @@ async def list_inventory(
 async def get_inventory_summary(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Get inventory summary statistics."""
     service = InventoryService(db)
-    summary = service.get_inventory_summary(DEMO_BUSINESS_ID)
+    summary = service.get_inventory_summary(business_id)
     return InventorySummary(**summary)
 
 
@@ -121,10 +121,11 @@ async def get_inventory_summary(
 async def get_low_stock_items(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Get items below reorder point."""
     service = InventoryService(db)
-    items = service.get_low_stock_items(DEMO_BUSINESS_ID)
+    items = service.get_low_stock_items(business_id)
     return [_item_to_response(item) for item in items]
 
 
@@ -136,11 +137,12 @@ async def list_transactions(
     per_page: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """List inventory transactions."""
     service = InventoryService(db)
     transactions, _ = service.get_transactions(
-        business_id=DEMO_BUSINESS_ID,
+        business_id=business_id,
         product_id=product_id,
         transaction_type=transaction_type,
         page=page,
@@ -154,10 +156,11 @@ async def get_inventory_item(
     item_id: str,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Get an inventory item by ID."""
     service = InventoryService(db)
-    item = service.get_inventory_item(item_id, DEMO_BUSINESS_ID)
+    item = service.get_inventory_item(item_id, business_id)
     
     if not item:
         raise HTTPException(
@@ -173,10 +176,11 @@ async def get_inventory_by_product(
     product_id: str,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Get inventory for a specific product."""
     service = InventoryService(db)
-    item = service.get_inventory_by_product(product_id, DEMO_BUSINESS_ID)
+    item = service.get_inventory_by_product(product_id, business_id)
     
     if not item:
         raise HTTPException(
@@ -192,19 +196,20 @@ async def create_inventory_item(
     data: InventoryItemCreate,
     current_user: User = Depends(has_permission("inventory:create")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Create a new inventory item."""
     service = InventoryService(db)
     
     # Check if product already has inventory
-    existing = service.get_inventory_by_product(data.product_id, DEMO_BUSINESS_ID)
+    existing = service.get_inventory_by_product(data.product_id, business_id)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inventory item already exists for this product",
         )
     
-    item = service.create_inventory_item(DEMO_BUSINESS_ID, data)
+    item = service.create_inventory_item(business_id, data)
     return _item_to_response(item)
 
 
@@ -214,10 +219,11 @@ async def update_inventory_item(
     data: InventoryItemUpdate,
     current_user: User = Depends(has_permission("inventory:edit")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Update an inventory item."""
     service = InventoryService(db)
-    item = service.get_inventory_item(item_id, DEMO_BUSINESS_ID)
+    item = service.get_inventory_item(item_id, business_id)
     
     if not item:
         raise HTTPException(
@@ -235,10 +241,11 @@ async def adjust_inventory(
     data: InventoryAdjustment,
     current_user: User = Depends(has_permission("inventory:edit")),
     db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
 ):
     """Adjust inventory quantity."""
     service = InventoryService(db)
-    item = service.get_inventory_item(item_id, DEMO_BUSINESS_ID)
+    item = service.get_inventory_item(item_id, business_id)
     
     if not item:
         raise HTTPException(

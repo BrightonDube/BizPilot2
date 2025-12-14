@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * Dashboard page component.
+ * Dashboard page component with real data from API.
  */
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   DollarSign,
   ShoppingCart,
@@ -14,9 +14,10 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowRight,
-  FileText,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
-import { PageHeader, StatCard, Card, CardHeader, CardTitle, CardContent, Button, LoadingSpinner } from '@/components/ui';
+import { PageHeader, StatCard, Card, CardHeader, CardTitle, CardContent, Button } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 
 interface DashboardStats {
@@ -24,9 +25,14 @@ interface DashboardStats {
   total_orders: number;
   total_customers: number;
   total_products: number;
-  revenue_change: number;
-  orders_change: number;
-  customers_change: number;
+  orders_today: number;
+  revenue_today: number;
+  orders_this_month: number;
+  revenue_this_month: number;
+  pending_invoices: number;
+  pending_invoice_amount: number;
+  low_stock_products: number;
+  currency: string;
 }
 
 interface RecentOrder {
@@ -35,101 +41,151 @@ interface RecentOrder {
   customer_name: string;
   total: number;
   status: string;
+  created_at: string;
 }
 
 interface TopProduct {
   id: string;
   name: string;
-  sales: number;
+  sku: string | null;
+  quantity_sold: number;
   revenue: number;
 }
 
+interface DashboardData {
+  stats: DashboardStats;
+  recent_orders: RecentOrder[];
+  top_products: TopProduct[];
+}
+
+// Format currency in ZAR
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-ZA', {
+    style: 'currency',
+    currency: 'ZAR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+// Format status for display
+function getStatusColor(status: string): string {
+  switch (status.toLowerCase()) {
+    case 'delivered':
+    case 'completed':
+    case 'paid':
+      return 'text-green-400';
+    case 'processing':
+    case 'shipped':
+    case 'confirmed':
+      return 'text-yellow-400';
+    case 'pending':
+    case 'draft':
+      return 'text-gray-400';
+    case 'cancelled':
+    case 'refunded':
+      return 'text-red-400';
+    default:
+      return 'text-gray-400';
+  }
+}
+
+function capitalizeStatus(status: string): string {
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const router = useRouter();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await apiClient.get('/dashboard');
+        setDashboardData(response.data);
+      } catch (err: unknown) {
+        console.error('Failed to fetch dashboard data:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const [statsRes, ordersRes, productsRes] = await Promise.all([
-        apiClient.get('/reports/stats', { params: { range: '30d' } }),
-        apiClient.get('/orders', { params: { limit: 5 } }),
-        apiClient.get('/reports/top-products', { params: { range: '30d', limit: 5 } }),
-      ]);
-      
-      setStats(statsRes.data);
-      setRecentOrders(ordersRes.data.items || []);
-      setTopProducts(productsRes.data || []);
-    } catch (error) {
-      // Use fallback data if API is not available
-      setStats({
-        total_revenue: 0,
-        total_orders: 0,
-        total_customers: 0,
-        total_products: 0,
-        revenue_change: 0,
-        orders_change: 0,
-        customers_change: 0,
-      });
-      setRecentOrders([]);
-      setTopProducts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <p className="text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const getChangeType = (value: number): 'positive' | 'negative' | 'neutral' => {
-    if (value > 0) return 'positive';
-    if (value < 0) return 'negative';
-    return 'neutral';
-  };
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500" />
+          <h2 className="text-xl font-semibold text-white">Unable to load dashboard</h2>
+          <p className="text-gray-400 max-w-md">{error}</p>
+          <Button variant="gradient" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-  const statsDisplay = stats ? [
+  // Build stats from API data
+  const stats = dashboardData ? [
     {
       title: 'Total Revenue',
-      value: `R ${stats.total_revenue.toLocaleString()}`,
-      change: stats.revenue_change ? `${stats.revenue_change > 0 ? '+' : ''}${stats.revenue_change}%` : undefined,
-      changeType: getChangeType(stats.revenue_change),
+      value: formatCurrency(dashboardData.stats.total_revenue),
+      change: `+${dashboardData.stats.orders_this_month} this month`,
+      changeType: 'positive' as const,
       icon: <DollarSign className="w-5 h-5" />,
-      description: 'from last period',
+      description: 'all time',
     },
     {
       title: 'Orders',
-      value: stats.total_orders.toLocaleString(),
-      change: stats.orders_change ? `${stats.orders_change > 0 ? '+' : ''}${stats.orders_change}%` : undefined,
-      changeType: getChangeType(stats.orders_change),
+      value: dashboardData.stats.total_orders.toString(),
+      change: `${dashboardData.stats.orders_today} today`,
+      changeType: 'positive' as const,
       icon: <ShoppingCart className="w-5 h-5" />,
-      description: 'from last period',
+      description: 'total orders',
     },
     {
       title: 'Customers',
-      value: stats.total_customers.toLocaleString(),
-      change: stats.customers_change ? `${stats.customers_change > 0 ? '+' : ''}${stats.customers_change}%` : undefined,
-      changeType: getChangeType(stats.customers_change),
+      value: dashboardData.stats.total_customers.toString(),
+      change: 'Active customers',
+      changeType: 'positive' as const,
       icon: <Users className="w-5 h-5" />,
-      description: 'total customers',
+      description: 'registered',
     },
     {
       title: 'Products',
-      value: stats.total_products.toLocaleString(),
-      changeType: 'neutral' as const,
+      value: dashboardData.stats.total_products.toString(),
+      change: `${dashboardData.stats.low_stock_products} low stock`,
+      changeType: dashboardData.stats.low_stock_products > 0 ? 'negative' as const : 'positive' as const,
       icon: <Package className="w-5 h-5" />,
       description: 'active products',
     },
   ] : [];
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+  const recentOrders = dashboardData?.recent_orders || [];
+  const topProducts = dashboardData?.top_products || [];
 
   return (
     <div>
@@ -137,18 +193,16 @@ export default function DashboardPage() {
         title="Dashboard"
         description="Welcome back! Here&apos;s what&apos;s happening with your business today."
         actions={
-          <Link href="/reports">
-            <Button variant="gradient">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              View Reports
-            </Button>
-          </Link>
+          <Button variant="gradient">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            View Reports
+          </Button>
         }
       />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statsDisplay.map((stat) => (
+        {stats.map((stat) => (
           <StatCard key={stat.title} {...stat} />
         ))}
       </div>
@@ -159,18 +213,13 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Orders</CardTitle>
-            <Link href="/orders">
-              <Button variant="ghost" size="sm">
-                View all <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/orders')}>
+              View all <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
             {recentOrders.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <ShoppingCart className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No recent orders</p>
-              </div>
+              <p className="text-gray-400 text-center py-4">No orders yet</p>
             ) : (
               <div className="space-y-4">
                 {recentOrders.map((order) => (
@@ -180,13 +229,9 @@ export default function DashboardPage() {
                       <p className="text-xs text-gray-400">{order.customer_name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-white">R {order.total?.toLocaleString() || '0'}</p>
-                      <p className={`text-xs ${
-                        order.status === 'completed' ? 'text-green-400' :
-                        order.status === 'processing' ? 'text-yellow-400' :
-                        'text-gray-400'
-                      }`}>
-                        {order.status}
+                      <p className="text-sm font-medium text-white">{formatCurrency(order.total)}</p>
+                      <p className={`text-xs ${getStatusColor(order.status)}`}>
+                        {capitalizeStatus(order.status)}
                       </p>
                     </div>
                   </div>
@@ -200,18 +245,13 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Top Products</CardTitle>
-            <Link href="/products">
-              <Button variant="ghost" size="sm">
-                View all <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/products')}>
+              View all <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
             {topProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No product data available</p>
-              </div>
+              <p className="text-gray-400 text-center py-4">No products yet</p>
             ) : (
               <div className="space-y-4">
                 {topProducts.map((product, index) => (
@@ -222,10 +262,10 @@ export default function DashboardPage() {
                       </span>
                       <div>
                         <p className="text-sm font-medium text-white">{product.name}</p>
-                        <p className="text-xs text-gray-400">{product.sales} sales</p>
+                        <p className="text-xs text-gray-400">{product.quantity_sold} in stock</p>
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-white">R {product.revenue?.toLocaleString() || '0'}</p>
+                    <p className="text-sm font-medium text-white">{formatCurrency(product.revenue)}</p>
                   </div>
                 ))}
               </div>
@@ -241,33 +281,68 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link href="/orders">
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
-                <ShoppingCart className="h-6 w-6" />
-                <span>New Order</span>
-              </Button>
-            </Link>
-            <Link href="/products/new">
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
-                <Package className="h-6 w-6" />
-                <span>Add Product</span>
-              </Button>
-            </Link>
-            <Link href="/customers/new">
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
-                <Users className="h-6 w-6" />
-                <span>Add Customer</span>
-              </Button>
-            </Link>
-            <Link href="/invoices">
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full">
-                <FileText className="h-6 w-6" />
-                <span>Create Invoice</span>
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/orders?action=new')}
+            >
+              <ShoppingCart className="h-6 w-6" />
+              <span>New Order</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/products?action=new')}
+            >
+              <Package className="h-6 w-6" />
+              <span>Add Product</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/customers?action=new')}
+            >
+              <Users className="h-6 w-6" />
+              <span>Add Customer</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-auto py-4 flex-col gap-2"
+              onClick={() => router.push('/invoices?action=new')}
+            >
+              <TrendingDown className="h-6 w-6" />
+              <span>Create Invoice</span>
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Pending Invoices Alert */}
+      {dashboardData && dashboardData.stats.pending_invoices > 0 && (
+        <Card className="mt-4 border-yellow-600/30 bg-yellow-900/10">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-400">
+                  You have {dashboardData.stats.pending_invoices} pending invoice{dashboardData.stats.pending_invoices > 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-yellow-300/70">
+                  Total outstanding: {formatCurrency(dashboardData.stats.pending_invoice_amount)}
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-yellow-600 text-yellow-400 hover:bg-yellow-600/20"
+                onClick={() => router.push('/invoices?status=pending')}
+              >
+                View Invoices
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

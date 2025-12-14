@@ -22,7 +22,10 @@ class Customer(BaseModel):
     business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
     
     # Customer type
-    customer_type = Column(SQLEnum(CustomerType), default=CustomerType.INDIVIDUAL)
+    customer_type = Column(
+        SQLEnum(CustomerType, values_callable=lambda x: [e.value for e in x], name='customertype'),
+        default=CustomerType.INDIVIDUAL
+    )
     
     # Contact info
     first_name = Column(String(100), nullable=True)

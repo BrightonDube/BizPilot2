@@ -107,6 +107,7 @@ class OrderResponse(OrderBase):
     id: str
     business_id: str
     order_number: str
+    customer_name: Optional[str] = None  # Computed from customer relationship
     subtotal: Decimal
     tax_amount: Decimal
     discount_amount: Decimal
@@ -121,6 +122,7 @@ class OrderResponse(OrderBase):
     created_at: datetime
     updated_at: datetime
     items: List[OrderItemResponse] = []
+    items_count: int = 0  # Number of line items
     
     model_config = {"from_attributes": True}
 
