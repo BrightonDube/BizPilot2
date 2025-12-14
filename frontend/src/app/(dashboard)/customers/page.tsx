@@ -16,7 +16,7 @@ import {
   Loader2,
   AlertTriangle
 } from 'lucide-react';
-import { Button, Input, Card, CardContent } from '@/components/ui';
+import { Button, Input, Card, CardContent, LoadingSpinner } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
 import { apiClient } from '@/lib/api';
 
@@ -209,7 +209,10 @@ export default function CustomersPage() {
       {filteredCustomers.length === 0 ? (
         <EmptyState
           title="No customers found"
-          description="Try adjusting your search or filters"
+          description={customers.length === 0 
+            ? "Add your first customer to get started"
+            : "Try adjusting your search or filters"
+          }
           action={
             <Link href="/customers/new">
               <Button>Add Your First Customer</Button>
@@ -238,9 +241,9 @@ export default function CustomersPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium text-white">
-                            {customer.company_name || `${customer.first_name} ${customer.last_name}`}
+                            {customer.company_name || `${customer.first_name || ''} ${customer.last_name || ''}`}
                           </h3>
-                          {customer.tags.includes('vip') && (
+                          {customer.tags?.includes('vip') && (
                             <Badge variant="warning">VIP</Badge>
                           )}
                         </div>
@@ -252,7 +255,7 @@ export default function CustomersPage() {
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
                           <span className="flex items-center gap-1">
                             <Mail className="w-3 h-3" />
-                            {customer.email}
+                            {customer.email || 'No email'}
                           </span>
                           {customer.phone && (
                             <span className="flex items-center gap-1">

@@ -1,9 +1,11 @@
 """Authentication API endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -30,6 +32,60 @@ from app.api.deps import get_current_active_user
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+def is_mobile_client(request: Request) -> bool:
+    """
+    Determine if the request is from a mobile client.
+    Mobile clients send X-Client-Type: mobile header.
+    """
+    client_type = request.headers.get("X-Client-Type", "").lower()
+    return client_type == "mobile"
+
+
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    """
+    Set HttpOnly cookies for web authentication.
+    """
+    # Access token cookie
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=settings.COOKIE_SECURE or settings.is_production,
+        samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+        domain=settings.COOKIE_DOMAIN or None,
+    )
+    
+    # Refresh token cookie
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=settings.COOKIE_SECURE or settings.is_production,
+        samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/",
+        domain=settings.COOKIE_DOMAIN or None,
+    )
+
+
+def clear_auth_cookies(response: Response) -> None:
+    """
+    Clear authentication cookies on logout.
+    """
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        domain=settings.COOKIE_DOMAIN or None,
+    )
+    response.delete_cookie(
+        key="refresh_token",
+        path="/",
+        domain=settings.COOKIE_DOMAIN or None,
+    )
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -65,8 +121,20 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    """Login with email and password."""
+async def login(
+    credentials: UserLogin,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    """
+    Login with email and password.
+    
+    For web clients: Sets HttpOnly cookies and returns tokens in body.
+    For mobile clients: Only returns tokens in body.
+    
+    Mobile clients should send X-Client-Type: mobile header.
+    """
     auth_service = AuthService(db)
     
     user = auth_service.authenticate_user(credentials.email, credentials.password)
@@ -81,16 +149,68 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
     
+    # For web clients, set HttpOnly cookies
+    if not is_mobile_client(request):
+        set_auth_cookies(response, access_token, refresh_token)
+    
     return Token(
         access_token=access_token,
         refresh_token=refresh_token,
     )
 
 
+@router.post("/logout")
+async def logout(
+    request: Request,
+    response: Response,
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Logout the current user.
+    
+    For web clients: Clears HttpOnly cookies.
+    For mobile clients: Client should discard tokens locally.
+    
+    Requires authentication to logout.
+    """
+    # Clear cookies for web clients
+    if not is_mobile_client(request):
+        clear_auth_cookies(response)
+    
+    return {"message": "Logged out successfully"}
+
+
 @router.post("/refresh", response_model=Token)
-async def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
-    """Refresh access token using refresh token."""
-    payload = decode_token(token_data.refresh_token)
+async def refresh_token(
+    request: Request,
+    response: Response,
+    token_data: Optional[TokenRefresh] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Refresh access token using refresh token.
+    
+    For web clients: Reads refresh token from cookie.
+    For mobile clients: Reads refresh token from request body.
+    """
+    # Get refresh token from cookie or body
+    if is_mobile_client(request):
+        if not token_data or not token_data.refresh_token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token required",
+            )
+        refresh_token_value = token_data.refresh_token
+    else:
+        # Web clients use cookies exclusively
+        refresh_token_value = request.cookies.get("refresh_token")
+        if not refresh_token_value:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token required",
+            )
+    
+    payload = decode_token(refresh_token_value)
     
     if payload is None or payload.get("type") != "refresh":
         raise HTTPException(
@@ -108,13 +228,17 @@ async def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db))
             detail="User not found",
         )
     
-    # Create new tokens
-    access_token = create_access_token(data={"sub": str(user.id)})
-    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    # Create new tokens (token rotation)
+    new_access_token = create_access_token(data={"sub": str(user.id)})
+    new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    
+    # For web clients, set new cookies
+    if not is_mobile_client(request):
+        set_auth_cookies(response, new_access_token, new_refresh_token)
     
     return Token(
-        access_token=access_token,
-        refresh_token=refresh_token,
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
     )
 
 

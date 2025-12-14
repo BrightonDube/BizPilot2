@@ -60,5 +60,15 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
 
+    # Cookie settings for web auth
+    COOKIE_DOMAIN: str = ""  # Leave empty for localhost
+    COOKIE_SECURE: bool = False  # Set to True in production (HTTPS)
+    COOKIE_SAMESITE: str = "lax"  # 'lax' for same-origin, 'none' for cross-origin (requires Secure)
+
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production environment."""
+        return self.ENVIRONMENT.lower() == "production"
+
 
 settings = Settings()

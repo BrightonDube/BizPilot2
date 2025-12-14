@@ -1,7 +1,7 @@
 """Authentication dependencies for FastAPI."""
 
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -11,22 +11,53 @@ from app.models.user import User, UserStatus
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.services.auth_service import AuthService
 
-# HTTP Bearer token security
-security = HTTPBearer()
+# HTTP Bearer token security (auto_error=False to allow cookie fallback)
+security = HTTPBearer(auto_error=False)
+
+
+def extract_token_from_request(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = None,
+) -> Optional[str]:
+    """
+    Extract JWT token from request.
+    Priority: 1. Bearer token, 2. Cookie
+    """
+    # First, try Bearer token from Authorization header
+    if credentials and credentials.credentials:
+        return credentials.credentials
+    
+    # Fallback to cookie for web clients
+    access_token = request.cookies.get("access_token")
+    if access_token:
+        return access_token
+    
+    return None
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
-    """Get the current authenticated user from JWT token."""
+    """
+    Get the current authenticated user from JWT token.
+    
+    Supports both:
+    - Bearer token (Authorization header) for mobile clients
+    - HttpOnly cookie for web clients
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    token = credentials.credentials
+    token = extract_token_from_request(request, credentials)
+    
+    if not token:
+        raise credentials_exception
+    
     payload = decode_token(token)
     
     if payload is None:
@@ -73,14 +104,16 @@ async def get_current_verified_user(
 
 
 def get_optional_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db),
 ) -> Optional[User]:
     """Get the current user if authenticated, otherwise None."""
-    if credentials is None:
+    token = extract_token_from_request(request, credentials)
+    
+    if not token:
         return None
     
-    token = credentials.credentials
     payload = decode_token(token)
     
     if payload is None or payload.get("type") != "access":

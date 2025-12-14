@@ -11,6 +11,7 @@ from app.models.customer import Customer, CustomerType
 from app.models.order import Order, OrderStatus, PaymentStatus, OrderItem
 from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.payment import Payment, PaymentMethod
 
 __all__ = [
     "BaseModel",
@@ -44,4 +45,7 @@ __all__ = [
     "InventoryItem",
     "InventoryTransaction",
     "TransactionType",
+    # Payment
+    "Payment",
+    "PaymentMethod",
 ]

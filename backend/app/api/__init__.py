@@ -10,6 +10,10 @@ from app.api.orders import router as orders_router
 from app.api.invoices import router as invoices_router
 from app.api.inventory import router as inventory_router
 from app.api.dashboard import router as dashboard_router
+from app.api.payments import router as payments_router
+from app.api.reports import router as reports_router
+from app.api.ai import router as ai_router
+from app.api.categories import router as categories_router
 
 router = APIRouter()
 
@@ -22,6 +26,10 @@ router.include_router(customers_router)
 router.include_router(orders_router)
 router.include_router(invoices_router)
 router.include_router(inventory_router)
+router.include_router(payments_router)
+router.include_router(reports_router)
+router.include_router(ai_router)
+router.include_router(categories_router)
 
 
 @router.get("/")
