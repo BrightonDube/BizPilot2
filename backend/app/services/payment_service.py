@@ -4,7 +4,6 @@ from typing import Optional, Tuple, List
 from datetime import date
 from uuid import UUID
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from app.models.payment import Payment, PaymentStatus, PaymentMethod
 from app.models.invoice import Invoice, InvoiceStatus

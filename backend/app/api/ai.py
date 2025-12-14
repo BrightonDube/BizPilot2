@@ -1,7 +1,7 @@
 """AI Assistant API endpoints."""
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -57,9 +57,9 @@ async def chat(
             response=response,
             conversation_id=request.conversation_id,
         )
-    except Exception as e:
+    except Exception:
         return ChatResponse(
-            response=f"I apologize, but I encountered an error processing your request. Please try again later.",
+            response="I apologize, but I encountered an error processing your request. Please try again later.",
             conversation_id=request.conversation_id,
         )
 

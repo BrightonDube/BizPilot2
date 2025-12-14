@@ -1,12 +1,11 @@
 """Dashboard API endpoints for overview statistics."""
 
-from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.core.database import get_db
 from app.api.deps import get_current_active_user
@@ -14,7 +13,7 @@ from app.models.user import User
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.product import Product, ProductStatus
 from app.models.customer import Customer
-from app.models.order import Order, OrderStatus
+from app.models.order import Order
 from app.models.invoice import Invoice, InvoiceStatus
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
@@ -154,7 +153,7 @@ async def get_dashboard_stats(
     low_stock_products = db.query(Product).filter(
         Product.business_id == business_id,
         Product.status == ProductStatus.ACTIVE,
-        Product.track_inventory == True,
+        Product.track_inventory.is_(True),
         Product.quantity <= Product.low_stock_threshold
     ).count()
     

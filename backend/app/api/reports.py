@@ -12,7 +12,6 @@ from app.models.user import User
 from app.models.order import Order
 from app.models.customer import Customer
 from app.models.product import Product
-from app.models.invoice import Invoice
 from app.models.business_user import BusinessUser
 from app.schemas.report import (
     ReportStats,
