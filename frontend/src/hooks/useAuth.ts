@@ -5,9 +5,13 @@
  * - Uses HttpOnly cookies for secure token storage
  * - Cookies are set by the backend and sent automatically with requests
  * - No tokens are stored in localStorage (prevents XSS attacks)
+ * 
+ * Hydration Strategy:
+ * - Wait for isInitialized before making redirect decisions
+ * - This prevents redirect loops caused by stale persisted state
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
@@ -16,6 +20,7 @@ export function useAuth() {
     user,
     isAuthenticated,
     isLoading,
+    isInitialized,
     error,
     login,
     register,
@@ -31,6 +36,7 @@ export function useAuth() {
     user,
     isAuthenticated,
     isLoading,
+    isInitialized,
     error,
     login,
     register,
@@ -49,50 +55,67 @@ export function useAuth() {
  * 
  * With cookie-based auth, we check authentication by calling /auth/me
  * which will fail if the cookie is invalid or expired.
+ * 
+ * IMPORTANT: Only redirects after isInitialized is true to prevent loops.
  */
 export function useRequireAuth(redirectTo: string = '/auth/login') {
-  const { isAuthenticated, isLoading, fetchUser } = useAuthStore();
+  const { isAuthenticated, isLoading, isInitialized, fetchUser } = useAuthStore();
   const router = useRouter();
+  const hasCheckedAuth = useRef(false);
 
   useEffect(() => {
-    // Try to fetch user on mount (cookies will be sent automatically)
-    if (!isAuthenticated && !isLoading) {
+    // Only fetch user once on mount
+    if (!hasCheckedAuth.current && !isInitialized) {
+      hasCheckedAuth.current = true;
       fetchUser();
     }
-  }, [fetchUser, isAuthenticated, isLoading]);
+  }, [fetchUser, isInitialized]);
 
   useEffect(() => {
-    // After loading completes, if not authenticated, redirect to login
-    if (!isLoading && !isAuthenticated) {
+    // Only redirect after initialization completes and we know auth state
+    if (isInitialized && !isLoading && !isAuthenticated) {
       router.push(redirectTo);
     }
-  }, [isAuthenticated, isLoading, router, redirectTo]);
+  }, [isAuthenticated, isLoading, isInitialized, router, redirectTo]);
 
-  return { isAuthenticated, isLoading };
+  // Show loading until initialized
+  return { 
+    isAuthenticated, 
+    isLoading: !isInitialized || isLoading 
+  };
 }
 
 /**
  * Hook for guest-only pages (login, register).
  * Redirects to dashboard if already authenticated.
+ * 
+ * IMPORTANT: Only redirects after isInitialized is true to prevent loops.
  */
 export function useGuestOnly(redirectTo: string = '/dashboard') {
-  const { isAuthenticated, isLoading, fetchUser } = useAuthStore();
+  const { isAuthenticated, isLoading, isInitialized, fetchUser } = useAuthStore();
   const router = useRouter();
+  const hasCheckedAuth = useRef(false);
 
   useEffect(() => {
-    // Try to fetch user on mount to check if already authenticated
-    if (!isAuthenticated && !isLoading) {
+    // Only fetch user once on mount
+    if (!hasCheckedAuth.current && !isInitialized) {
+      hasCheckedAuth.current = true;
       fetchUser();
     }
-  }, [fetchUser, isAuthenticated, isLoading]);
+  }, [fetchUser, isInitialized]);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    // Only redirect after initialization completes and we know auth state
+    if (isInitialized && !isLoading && isAuthenticated) {
       router.push(redirectTo);
     }
-  }, [isAuthenticated, isLoading, router, redirectTo]);
+  }, [isAuthenticated, isLoading, isInitialized, router, redirectTo]);
 
-  return { isAuthenticated, isLoading };
+  // Show loading until initialized
+  return { 
+    isAuthenticated, 
+    isLoading: !isInitialized || isLoading 
+  };
 }
 
 export default useAuth;

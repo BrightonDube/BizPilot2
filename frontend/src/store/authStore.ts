@@ -6,6 +6,11 @@
  * - No tokens are stored in localStorage (prevents XSS attacks)
  * - Cookies are sent automatically with withCredentials: true in API client
  * - User state is persisted in memory/localStorage for UI purposes only
+ * 
+ * Hydration Strategy:
+ * - isInitialized: false until first fetchUser() completes (prevents redirect loops)
+ * - _hasHydrated: tracks if Zustand has hydrated from localStorage
+ * - Hooks wait for initialization before making redirect decisions
  */
 
 import { create } from 'zustand';
@@ -31,7 +36,9 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean; // True after first fetchUser() completes
   error: string | null;
+  _hasHydrated: boolean; // Internal flag for Zustand hydration
   
   // Actions
   login: (email: string, password: string) => Promise<void>;
@@ -42,6 +49,7 @@ interface AuthState {
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   fetchUser: () => Promise<void>;
   clearError: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 interface RegisterData {
@@ -52,13 +60,22 @@ interface RegisterData {
   phone?: string;
 }
 
+// Track if fetchUser is already in progress to prevent concurrent calls
+let fetchUserPromise: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      isInitialized: false,
       error: null,
+      _hasHydrated: false,
+      
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state });
+      },
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -157,14 +174,36 @@ export const useAuthStore = create<AuthState>()(
       },
 
       fetchUser: async () => {
-        set({ isLoading: true });
-        try {
-          // Cookies are sent automatically with the request
-          const response = await apiClient.get('/auth/me');
-          set({ user: response.data, isAuthenticated: true, isLoading: false });
-        } catch {
-          set({ user: null, isAuthenticated: false, isLoading: false });
+        // Prevent concurrent fetchUser calls - return existing promise if in progress
+        if (fetchUserPromise) {
+          return fetchUserPromise;
         }
+        
+        set({ isLoading: true });
+        
+        fetchUserPromise = (async () => {
+          try {
+            // Cookies are sent automatically with the request
+            const response = await apiClient.get('/auth/me');
+            set({ 
+              user: response.data, 
+              isAuthenticated: true, 
+              isLoading: false,
+              isInitialized: true 
+            });
+          } catch {
+            set({ 
+              user: null, 
+              isAuthenticated: false, 
+              isLoading: false,
+              isInitialized: true 
+            });
+          } finally {
+            fetchUserPromise = null;
+          }
+        })();
+        
+        return fetchUserPromise;
       },
 
       clearError: () => {
@@ -174,7 +213,16 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       // Only persist user data for UI purposes (not security-sensitive)
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      // DO NOT persist isAuthenticated - always verify via API
+      partialize: (state) => ({ user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        // Mark hydration complete - but DON'T trust persisted isAuthenticated
+        if (state) {
+          state.setHasHydrated(true);
+          // Reset isAuthenticated to false - will be verified by fetchUser
+          state.isAuthenticated = false;
+        }
+      },
     }
   )
 );
