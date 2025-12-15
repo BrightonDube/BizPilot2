@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
