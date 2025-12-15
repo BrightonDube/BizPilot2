@@ -41,8 +41,12 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
-    // If 401 and we haven't already retried, try to refresh
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    // Skip refresh logic for auth endpoints to prevent redirect loops
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/') || 
+                           originalRequest?.url?.includes('/oauth/');
+    
+    // If 401 and we haven't already retried, try to refresh (but not for auth endpoints)
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
       
       try {
@@ -57,11 +61,9 @@ apiClient.interceptors.response.use(
         // Retry the original request - new cookies will be sent automatically
         return apiClient(originalRequest);
       } catch {
-        // Refresh failed, redirect to login
-        // Using window.location because this is outside React context
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
-        }
+        // Refresh failed - let the error propagate
+        // The auth store will handle setting isAuthenticated = false
+        // Don't redirect here - it causes infinite loops on login page
       }
     }
     
