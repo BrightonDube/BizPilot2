@@ -8,7 +8,6 @@ import {
   Edit, 
   Trash2, 
   Send, 
-  Download,
   Loader2, 
   Calendar,
   User,
@@ -16,11 +15,7 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  DollarSign,
-  CreditCard,
-  Building2,
-  Mail,
-  Phone
+  CreditCard
 } from 'lucide-react'
 import { Button, Card, CardContent } from '@/components/ui'
 import { Badge } from '@/components/ui/bizpilot'

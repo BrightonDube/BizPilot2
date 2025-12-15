@@ -13,7 +13,7 @@ import {
   User,
   Package
 } from 'lucide-react'
-import { Button, Input, Card, CardContent } from '@/components/ui'
+import { Button, Card, CardContent } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 
 interface Customer {
@@ -60,7 +60,7 @@ function formatCurrency(amount: number): string {
 
 export default function NewInvoicePage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [_loading, _setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   
