@@ -91,6 +91,22 @@ async def get_current_active_user(
     return current_user
 
 
+async def get_current_user_for_onboarding(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    Get the current user for onboarding endpoints.
+    Allows PENDING and ACTIVE users (for business setup flow).
+    Only blocks INACTIVE and SUSPENDED users.
+    """
+    if current_user.status in (UserStatus.INACTIVE, UserStatus.SUSPENDED):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is suspended or inactive",
+        )
+    return current_user
+
+
 async def get_current_verified_user(
     current_user: User = Depends(get_current_active_user),
 ) -> User:

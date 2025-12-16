@@ -1,50 +1,55 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { 
   Plus, 
   Search, 
-  Filter, 
   Mail, 
   Phone, 
   Building2, 
   User,
+  Users,
   Tag,
   DollarSign,
   ShoppingCart,
   Loader2,
-  AlertTriangle
-} from 'lucide-react';
-import { Button, Input, Card, CardContent, LoadingSpinner } from '@/components/ui';
-import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
-import { apiClient } from '@/lib/api';
+  AlertTriangle,
+  Edit,
+  Trash2,
+  MapPin,
+  Calendar
+} from 'lucide-react'
+import { Button, Input, Card, CardContent, Badge } from '@/components/ui'
+import { apiClient } from '@/lib/api'
 
 interface Customer {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string | null;
-  company_name: string | null;
-  customer_type: string;
-  total_orders?: number;
-  total_spent?: number;
-  tags?: string[];
-  address_line1: string | null;
-  address_line2: string | null;
-  city: string | null;
-  state: string | null;
-  postal_code: string | null;
-  country: string | null;
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string | null
+  company_name: string | null
+  customer_type: string
+  total_orders?: number
+  total_spent?: number
+  tags?: string[]
+  address_line1: string | null
+  address_line2: string | null
+  city: string | null
+  state: string | null
+  postal_code: string | null
+  country: string | null
+  last_order_date?: string
 }
 
 interface CustomerListResponse {
-  items: Customer[];
-  total: number;
-  page: number;
-  per_page: number;
-  pages: number;
+  items: Customer[]
+  total: number
+  page: number
+  per_page: number
+  pages: number
 }
 
 function formatCurrency(amount: number): string {
@@ -52,254 +57,455 @@ function formatCurrency(amount: number): string {
     style: 'currency',
     currency: 'ZAR',
     minimumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)
+}
+
+function formatDate(dateString: string | undefined): string {
+  if (!dateString) return 'Never'
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
+function CustomerCardSkeleton() {
+  return (
+    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-full bg-gray-700" />
+        <div className="flex-1 space-y-2">
+          <div className="h-5 bg-gray-700 rounded w-1/2" />
+          <div className="h-4 bg-gray-700 rounded w-3/4" />
+          <div className="h-3 bg-gray-700 rounded w-1/3" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pages, setPages] = useState(0)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedType, setSelectedType] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'total_spent' | 'total_orders' | 'recent'>('name')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchCustomers() {
       try {
-        setIsLoading(true);
-        setError(null);
+        setIsLoading(true)
+        setError(null)
         
         const params = new URLSearchParams({
           page: page.toString(),
           per_page: '20',
-        });
+        })
         
         if (searchTerm) {
-          params.append('search', searchTerm);
+          params.append('search', searchTerm)
         }
         
         if (selectedType !== 'all') {
-          params.append('customer_type', selectedType);
+          params.append('customer_type', selectedType)
         }
         
-        const response = await apiClient.get<CustomerListResponse>(`/customers?${params}`);
-        setCustomers(response.data.items);
-        setTotal(response.data.total);
-        setPages(response.data.pages);
+        const response = await apiClient.get<CustomerListResponse>(`/customers?${params}`)
+        setCustomers(response.data.items)
+        setTotal(response.data.total)
+        setPages(response.data.pages)
       } catch (err) {
-        console.error('Failed to fetch customers:', err);
-        setError('Failed to load customers');
+        console.error('Failed to fetch customers:', err)
+        setError('Failed to load customers')
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
-    // Debounce search
-    const timeoutId = setTimeout(fetchCustomers, 300);
-    return () => clearTimeout(timeoutId);
-  }, [page, searchTerm, selectedType]);
+    const timeoutId = setTimeout(fetchCustomers, 300)
+    return () => clearTimeout(timeoutId)
+  }, [page, searchTerm, selectedType])
 
-  const filteredCustomers = customers;
+  const handleDeleteCustomer = async (customerId: string, customerName: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!window.confirm(`Are you sure you want to delete "${customerName}"? This action cannot be undone.`)) {
+      return
+    }
 
-  const totalCustomers = total;
-  const totalRevenue = customers.reduce((sum, c) => sum + (c.total_spent || 0), 0);
-  const businessCustomers = customers.filter(c => c.customer_type === 'business').length;
-  const totalOrders = customers.reduce((sum, c) => sum + (c.total_orders || 0), 0);
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-  if (isLoading && customers.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-          <p className="text-gray-400">Loading customers...</p>
-        </div>
-      </div>
-    );
+    try {
+      setDeletingId(customerId)
+      await apiClient.delete(`/customers/${customerId}`)
+      setCustomers(customers.filter(c => c.id !== customerId))
+    } catch (err) {
+      console.error('Failed to delete customer:', err)
+      setError('Failed to delete customer')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
+  const totalCustomers = total
+  const totalRevenue = customers.reduce((sum, c) => sum + (c.total_spent || 0), 0)
+  const businessCustomers = customers.filter(c => c.customer_type === 'business').length
+  const totalOrders = customers.reduce((sum, c) => sum + (c.total_orders || 0), 0)
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+
+  // Loading state with skeletons
+  if (isLoading && customers.length === 0) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6"
+      >
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-100">Customers</h1>
+            <p className="text-gray-400">Manage your customer database</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <CustomerCardSkeleton key={i} />
+          ))}
+        </div>
+      </motion.div>
+    )
+  }
+
+  // Error state
   if (error && customers.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <AlertTriangle className="w-12 h-12 text-yellow-500" />
-          <h2 className="text-xl font-semibold text-white">Unable to load customers</h2>
-          <p className="text-gray-400 max-w-md">{error}</p>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-red-900/20 border border-red-500/30 rounded-xl p-8 text-center"
+      >
+        <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+        <h3 className="font-medium text-lg mb-2 text-white">Unable to load customers</h3>
+        <p className="text-sm mb-4 text-gray-400">{error}</p>
+        <Button onClick={() => window.location.reload()} className="bg-gradient-to-r from-blue-600 to-purple-600">
+          Try Again
+        </Button>
+      </motion.div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Customers"
-        description={`Manage your customer relationships (${totalCustomers} customers)`}
-        actions={
-          <Link href="/customers/new">
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Customer
-            </Button>
-          </Link>
-        }
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Customers"
-          value={totalCustomers}
-          icon={<User className="w-5 h-5" />}
-        />
-        <StatCard
-          title="Total Revenue"
-          value={formatCurrency(totalRevenue)}
-          icon={<DollarSign className="w-5 h-5" />}
-        />
-        <StatCard
-          title="Business Customers"
-          value={businessCustomers}
-          icon={<Building2 className="w-5 h-5" />}
-        />
-        <StatCard
-          title="Avg Order Value"
-          value={formatCurrency(avgOrderValue)}
-          icon={<ShoppingCart className="w-5 h-5" />}
-        />
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search customers..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-            }}
-            className="pl-10 bg-gray-800 border-gray-700"
-          />
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Header */}
+      <motion.div 
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <div>
+          <h1 className="text-2xl font-bold text-gray-100">Customers</h1>
+          <p className="text-gray-400">Manage your customer database ({totalCustomers} customers)</p>
         </div>
-        <label htmlFor="customer-type-filter" className="sr-only">Filter by customer type</label>
-        <select
-          id="customer-type-filter"
-          value={selectedType}
-          onChange={(e) => {
-            setSelectedType(e.target.value);
-            setPage(1);
-          }}
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-        >
-          <option value="all">All Types</option>
-          <option value="individual">Individual</option>
-          <option value="business">Business</option>
-        </select>
-        <Button variant="outline" className="border-gray-700">
-          <Filter className="w-4 h-4 mr-2" />
-          More Filters
-        </Button>
+        <Link href="/customers/new">
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Customer
+          </Button>
+        </Link>
+      </motion.div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { icon: Users, label: 'Total Customers', value: totalCustomers, color: 'blue' },
+          { icon: DollarSign, label: 'Total Revenue', value: formatCurrency(totalRevenue), color: 'green' },
+          { icon: Building2, label: 'Business', value: businessCustomers, color: 'purple' },
+          { icon: ShoppingCart, label: 'Avg Order Value', value: formatCurrency(avgOrderValue), color: 'yellow' }
+        ].map((stat, index) => (
+          <motion.div 
+            key={stat.label}
+            className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + index * 0.1 }}
+            whileHover={{ scale: 1.02, y: -4 }}
+          >
+            <div className="flex items-center">
+              <motion.div 
+                className={`p-2 bg-${stat.color}-500/20 rounded-lg border border-${stat.color}-500/30`}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <stat.icon className={`h-6 w-6 text-${stat.color}-400`} />
+              </motion.div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">{stat.label}</p>
+                <motion.p 
+                  className="text-2xl font-bold text-gray-100"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.4 + index * 0.1, type: "spring", stiffness: 300 }}
+                >
+                  {stat.value}
+                </motion.p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      {filteredCustomers.length === 0 ? (
-        <EmptyState
-          title="No customers found"
-          description={customers.length === 0 
-            ? "Add your first customer to get started"
-            : "Try adjusting your search or filters"
-          }
-          action={
+      {/* Search and Filters */}
+      <motion.div 
+        className="bg-gray-800/50 border border-gray-700 rounded-xl p-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 absolute left-3 top-3 text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search customers..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setPage(1)
+              }}
+              className="pl-10 bg-gray-900/50 border-gray-600"
+            />
+          </div>
+          <select
+            value={selectedType}
+            onChange={(e) => {
+              setSelectedType(e.target.value)
+              setPage(1)
+            }}
+            className="px-4 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+          >
+            <option value="all">All Types</option>
+            <option value="individual">Individual</option>
+            <option value="business">Business</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="px-4 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+          >
+            <option value="name">Name (A-Z)</option>
+            <option value="total_spent">Total Spent</option>
+            <option value="total_orders">Total Orders</option>
+            <option value="recent">Recent Activity</option>
+          </select>
+        </div>
+      </motion.div>
+
+      {error && (
+        <motion.div 
+          className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          {error}
+        </motion.div>
+      )}
+
+      {/* Customers Grid */}
+      {customers.length === 0 ? (
+        <motion.div 
+          className="text-center py-12"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Users className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-100 mb-2">
+            {searchTerm ? 'No customers found' : 'No customers yet'}
+          </h3>
+          <p className="text-gray-400 mb-6">
+            {searchTerm 
+              ? 'Try adjusting your search terms'
+              : 'Add your first customer to get started'
+            }
+          </p>
+          {!searchTerm && (
             <Link href="/customers/new">
-              <Button>Add Your First Customer</Button>
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Customer
+              </Button>
             </Link>
-          }
-        />
+          )}
+        </motion.div>
       ) : (
-        <div className="grid gap-4">
-          {filteredCustomers.map((customer) => (
-            <Link key={customer.id} href={`/customers/${customer.id}`}>
-              <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        customer.customer_type === 'business' 
-                          ? 'bg-purple-500/20 text-purple-400' 
-                          : 'bg-blue-500/20 text-blue-400'
-                      }`}>
-                        {customer.customer_type === 'business' ? (
-                          <Building2 className="w-6 h-6" />
-                        ) : (
-                          <User className="w-6 h-6" />
-                        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {customers.map((customer, index) => {
+            const customerName = customer.company_name || `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+            
+            return (
+              <motion.div
+                key={customer.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+              >
+                <Link href={`/customers/${customer.id}`}>
+                  <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-all cursor-pointer h-full">
+                    <CardContent className="p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                            customer.customer_type === 'business' 
+                              ? 'bg-purple-500/20 text-purple-400' 
+                              : 'bg-blue-500/20 text-blue-400'
+                          }`}>
+                            {customer.customer_type === 'business' ? (
+                              <Building2 className="w-6 h-6" />
+                            ) : (
+                              <User className="w-6 h-6" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-lg font-semibold text-gray-100 truncate">
+                              {customerName || 'Unnamed Customer'}
+                            </h3>
+                            {customer.company_name && customer.first_name && (
+                              <p className="text-sm text-gray-400">
+                                {customer.first_name} {customer.last_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
+                          <Link href={`/customers/${customer.id}/edit`}>
+                            <motion.button
+                              className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                              title="Edit"
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </motion.button>
+                          </Link>
+                          <motion.button
+                            onClick={(e) => handleDeleteCustomer(customer.id, customerName, e)}
+                            className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                            title="Delete"
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                            disabled={deletingId === customer.id}
+                          >
+                            {deletingId === customer.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </motion.button>
+                        </div>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-white">
-                            {customer.company_name || `${customer.first_name || ''} ${customer.last_name || ''}`}
-                          </h3>
-                          {customer.tags?.includes('vip') && (
-                            <Badge variant="warning">VIP</Badge>
-                          )}
-                        </div>
-                        {customer.company_name && (
-                          <p className="text-sm text-gray-400">
-                            {customer.first_name} {customer.last_name}
-                          </p>
+
+                      {/* Contact Info */}
+                      <div className="space-y-2 mb-4">
+                        {customer.email && (
+                          <div className="flex items-center space-x-2 text-sm text-gray-300">
+                            <Mail className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="truncate">{customer.email}</span>
+                          </div>
                         )}
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {customer.email || 'No email'}
-                          </span>
-                          {customer.phone && (
-                            <span className="flex items-center gap-1">
-                              <Phone className="w-3 h-3" />
-                              {customer.phone}
-                            </span>
-                          )}
-                        </div>
-                        {customer.tags && customer.tags.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <Tag className="w-3 h-3 text-gray-500" />
-                            {customer.tags.map(tag => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
+                        {customer.phone && (
+                          <div className="flex items-center space-x-2 text-sm text-gray-300">
+                            <Phone className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span>{customer.phone}</span>
+                          </div>
+                        )}
+                        {customer.city && (
+                          <div className="flex items-center space-x-2 text-sm text-gray-300">
+                            <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span className="truncate">{customer.city}{customer.country ? `, ${customer.country}` : ''}</span>
                           </div>
                         )}
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-white">
-                        {formatCurrency(customer.total_spent || 0)}
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
+                        <div>
+                          <div className="flex items-center space-x-1 text-xs text-gray-500 mb-1">
+                            <ShoppingCart className="h-3 w-3" />
+                            <span>Orders</span>
+                          </div>
+                          <div className="text-lg font-semibold text-gray-200">
+                            {customer.total_orders || 0}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-1 text-xs text-gray-500 mb-1">
+                            <DollarSign className="h-3 w-3" />
+                            <span>Total Spent</span>
+                          </div>
+                          <div className="text-lg font-semibold text-green-400">
+                            {formatCurrency(customer.total_spent || 0)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-400">
-                        {customer.total_orders || 0} orders
-                      </div>
-                      {customer.city && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {customer.city}{customer.country ? `, ${customer.country}` : ''}
+
+                      {/* Last Order */}
+                      {customer.last_order_date && (
+                        <div className="mt-3 pt-3 border-t border-gray-700">
+                          <div className="flex items-center space-x-2 text-xs text-gray-500">
+                            <Calendar className="h-3 w-3" />
+                            <span>Last order: {formatDate(customer.last_order_date)}</span>
+                          </div>
                         </div>
                       )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+
+                      {/* Tags */}
+                      {customer.tags && customer.tags.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {customer.tags.slice(0, 3).map((tag, i) => (
+                            <span
+                              key={i}
+                              className="px-2 py-0.5 text-xs rounded-full bg-blue-900/30 text-blue-400 border border-blue-500/30"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {customer.tags.length > 3 && (
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-gray-800 text-gray-400">
+                              +{customer.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            )
+          })}
         </div>
       )}
 
       {/* Pagination */}
       {pages > 1 && (
-        <div className="flex items-center justify-between mt-6">
+        <motion.div 
+          className="flex items-center justify-between"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
           <span className="text-sm text-gray-400">
             Page {page} of {pages} ({total} customers)
           </span>
@@ -321,8 +527,46 @@ export default function CustomersPage() {
               Next
             </Button>
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
-  );
+
+      {/* Summary Stats */}
+      {customers.length > 0 && (
+        <motion.div 
+          className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <h3 className="font-semibold text-gray-100 mb-4">Customer Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Total Customers', value: totalCustomers },
+              { label: 'Total Revenue', value: formatCurrency(totalRevenue) },
+              { label: 'Total Orders', value: totalOrders },
+              { label: 'Avg Order Value', value: formatCurrency(avgOrderValue) }
+            ].map((stat, index) => (
+              <motion.div 
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + index * 0.1 }}
+              >
+                <motion.p 
+                  className="text-2xl font-bold text-gray-100"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.8 + index * 0.1, type: "spring", stiffness: 300 }}
+                >
+                  {stat.value}
+                </motion.p>
+                <p className="text-sm text-gray-400">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </motion.div>
+  )
 }

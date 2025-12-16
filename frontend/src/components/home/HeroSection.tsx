@@ -7,13 +7,11 @@ import { motion } from 'framer-motion'
 export function HeroSection() {
   return (
     <motion.section
-      className="relative grid min-h-screen place-content-center overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 px-4 py-24 text-gray-200"
+      className="relative grid min-h-screen place-content-center overflow-hidden px-4 py-24 text-gray-200"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.1),transparent_50%)]" />
       
       <div className="relative z-10 flex flex-col items-center">
         <motion.h1 
@@ -22,7 +20,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          Smart Business Management for Small Businesses
+          Smart Business Management for Modern Businesses
         </motion.h1>
         
         <motion.p 

@@ -12,3 +12,9 @@ export {
   LoadingSpinner,
   Badge,
 } from "./bizpilot";
+
+// Shader Components
+export { default as ShaderBackground } from "./shader-background";
+
+// Image Components
+export { ImageInput } from "./image-input";

@@ -1,43 +1,49 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { 
   Search, 
-  Filter, 
+  Plus,
   Package,
   AlertTriangle,
   TrendingDown,
   DollarSign,
   ArrowUpDown,
   History,
-  Loader2
-} from 'lucide-react';
-import { Button, Input } from '@/components/ui';
-import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
-import { apiClient } from '@/lib/api';
+  Loader2,
+  Edit,
+  Trash2,
+  Grid,
+  List,
+  Warehouse
+} from 'lucide-react'
+import { Button, Input, Badge } from '@/components/ui'
+import { apiClient } from '@/lib/api'
 
 interface InventoryItem {
-  id: string;
-  product_id: string;
-  product_name?: string;
-  sku?: string;
-  quantity_on_hand: number;
-  quantity_reserved: number;
-  quantity_available: number;
-  reorder_point: number;
-  location: string | null;
-  bin_location: string | null;
-  average_cost: number;
-  is_low_stock: boolean;
-  created_at: string;
+  id: string
+  product_id: string
+  product_name?: string
+  sku?: string
+  quantity_on_hand: number
+  quantity_reserved: number
+  quantity_available: number
+  reorder_point: number
+  location: string | null
+  bin_location: string | null
+  average_cost: number
+  is_low_stock: boolean
+  created_at: string
 }
 
 interface InventoryListResponse {
-  items: InventoryItem[];
-  total: number;
-  page: number;
-  per_page: number;
-  pages: number;
+  items: InventoryItem[]
+  total: number
+  page: number
+  per_page: number
+  pages: number
 }
 
 function formatCurrency(amount: number): string {
@@ -45,234 +51,439 @@ function formatCurrency(amount: number): string {
     style: 'currency',
     currency: 'ZAR',
     minimumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)
+}
+
+function InventoryCardSkeleton() {
+  return (
+    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
+      <div className="flex items-center mb-4">
+        <div className="p-2 bg-gray-700 rounded-lg w-10 h-10" />
+        <div className="ml-4 space-y-2 flex-1">
+          <div className="h-4 bg-gray-700 rounded w-3/4" />
+          <div className="h-3 bg-gray-700 rounded w-1/2" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="h-4 bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-700 rounded w-2/3" />
+      </div>
+    </div>
+  )
 }
 
 export default function InventoryPage() {
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pages, setPages] = useState(0)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showLowStockOnly, setShowLowStockOnly] = useState(false)
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchInventory() {
       try {
-        setIsLoading(true);
-        setError(null);
+        setIsLoading(true)
+        setError(null)
         
         const params = new URLSearchParams({
           page: page.toString(),
           per_page: '20',
-        });
+        })
         
         if (searchTerm) {
-          params.append('search', searchTerm);
+          params.append('search', searchTerm)
         }
         
         if (showLowStockOnly) {
-          params.append('low_stock', 'true');
+          params.append('low_stock', 'true')
         }
         
-        const response = await apiClient.get<InventoryListResponse>(`/inventory?${params}`);
-        setInventoryItems(response.data.items);
-        setTotal(response.data.total);
-        setPages(response.data.pages);
+        const response = await apiClient.get<InventoryListResponse>(`/inventory?${params}`)
+        setInventoryItems(response.data.items)
+        setTotal(response.data.total)
+        setPages(response.data.pages)
       } catch (err) {
-        console.error('Failed to fetch inventory:', err);
-        setError('Failed to load inventory');
+        console.error('Failed to fetch inventory:', err)
+        setError('Failed to load inventory')
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
-    // Debounce search
-    const timeoutId = setTimeout(fetchInventory, 300);
-    return () => clearTimeout(timeoutId);
-  }, [page, searchTerm, showLowStockOnly]);
+    const timeoutId = setTimeout(fetchInventory, 300)
+    return () => clearTimeout(timeoutId)
+  }, [page, searchTerm, showLowStockOnly])
 
-  const filteredInventory = inventoryItems;
+  const totalItems = total
+  const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0)
+  const lowStockCount = inventoryItems.filter(i => i.is_low_stock).length
+  const outOfStockCount = inventoryItems.filter(i => i.quantity_on_hand === 0).length
 
-  const totalItems = total;
-  const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0);
-  const lowStockCount = inventoryItems.filter(i => i.is_low_stock).length;
-  const outOfStockCount = inventoryItems.filter(i => i.quantity_on_hand === 0).length;
-
+  // Loading state with skeletons
   if (isLoading && inventoryItems.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-          <p className="text-gray-400">Loading inventory...</p>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6"
+      >
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-100">Inventory</h1>
+            <p className="text-gray-400">Track and manage your stock levels</p>
+          </div>
         </div>
-      </div>
-    );
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
+              <div className="flex items-center">
+                <div className="p-2 bg-gray-700 rounded-lg w-10 h-10" />
+                <div className="ml-4 space-y-2">
+                  <div className="h-3 bg-gray-700 rounded w-20" />
+                  <div className="h-6 bg-gray-700 rounded w-16" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    )
   }
 
+  // Error state
   if (error && inventoryItems.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <AlertTriangle className="w-12 h-12 text-yellow-500" />
-          <h2 className="text-xl font-semibold text-white">Unable to load inventory</h2>
-          <p className="text-gray-400 max-w-md">{error}</p>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-red-900/20 border border-red-500/30 rounded-xl p-8 text-center"
+      >
+        <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+        <h3 className="font-medium text-lg mb-2 text-white">Unable to load inventory</h3>
+        <p className="text-sm mb-4 text-gray-400">{error}</p>
+        <Button onClick={() => window.location.reload()} className="bg-gradient-to-r from-blue-600 to-purple-600">
+          Try Again
+        </Button>
+      </motion.div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Inventory"
-        description={`Track and manage stock levels (${totalItems} items)`}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" className="border-gray-700">
-              <History className="w-4 h-4 mr-2" />
-              Transactions
-            </Button>
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Header */}
+      <motion.div 
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <div>
+          <h1 className="text-2xl font-bold text-gray-100">Inventory</h1>
+          <p className="text-gray-400">Track and manage your stock levels ({totalItems} items)</p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/inventory/new">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-              <ArrowUpDown className="w-4 h-4 mr-2" />
-              Adjust Stock
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
             </Button>
-          </div>
-        }
-      />
+          </Link>
+        </div>
+      </motion.div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Items"
-          value={totalItems}
-          icon={<Package className="w-5 h-5" />}
-        />
-        <StatCard
-          title="Total Value"
-          value={formatCurrency(totalValue)}
-          icon={<DollarSign className="w-5 h-5" />}
-        />
-        <StatCard
-          title="Low Stock"
-          value={lowStockCount}
-          icon={<AlertTriangle className="w-5 h-5" />}
-        />
-        <StatCard
-          title="Out of Stock"
-          value={outOfStockCount}
-          icon={<TrendingDown className="w-5 h-5" />}
-        />
+        {[
+          { icon: Warehouse, label: 'Total Items', value: totalItems, color: 'blue' },
+          { icon: DollarSign, label: 'Total Value', value: formatCurrency(totalValue), color: 'green' },
+          { icon: AlertTriangle, label: 'Low Stock', value: lowStockCount, color: 'yellow' },
+          { icon: TrendingDown, label: 'Out of Stock', value: outOfStockCount, color: 'red' }
+        ].map((stat, index) => (
+          <motion.div 
+            key={stat.label}
+            className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + index * 0.1 }}
+            whileHover={{ scale: 1.02, y: -4 }}
+          >
+            <div className="flex items-center">
+              <motion.div 
+                className={`p-2 bg-${stat.color}-500/20 rounded-lg border border-${stat.color}-500/30`}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <stat.icon className={`h-6 w-6 text-${stat.color}-400`} />
+              </motion.div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">{stat.label}</p>
+                <motion.p 
+                  className="text-2xl font-bold text-gray-100"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.4 + index * 0.1, type: "spring", stiffness: 300 }}
+                >
+                  {stat.value}
+                </motion.p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search by product name or SKU..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
+      {/* Search and Filters */}
+      <motion.div 
+        className="bg-gray-800/50 border border-gray-700 rounded-xl p-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 absolute left-3 top-3 text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search by product name or SKU..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setPage(1)
+              }}
+              className="pl-10 bg-gray-900/50 border-gray-600"
+            />
+          </div>
+          <Button 
+            variant={showLowStockOnly ? "default" : "outline"}
+            className={showLowStockOnly ? "bg-red-600 hover:bg-red-700" : ""}
+            onClick={() => {
+              setShowLowStockOnly(!showLowStockOnly)
+              setPage(1)
             }}
-            className="pl-10 bg-gray-800 border-gray-700"
-          />
+          >
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Low Stock Only
+          </Button>
+          <div className="bg-gray-900/50 rounded-lg p-1 border border-gray-600">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+              }`}
+              title="Table view"
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'cards'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+              }`}
+              title="Card view"
+            >
+              <Grid className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <Button 
-          variant={showLowStockOnly ? "default" : "outline"}
-          className={showLowStockOnly ? "bg-red-600 hover:bg-red-700" : "border-gray-700"}
-          onClick={() => {
-            setShowLowStockOnly(!showLowStockOnly);
-            setPage(1);
-          }}
-        >
-          <AlertTriangle className="w-4 h-4 mr-2" />
-          Low Stock Only
-        </Button>
-        <Button variant="outline" className="border-gray-700">
-          <Filter className="w-4 h-4 mr-2" />
-          More Filters
-        </Button>
-      </div>
+      </motion.div>
 
-      {filteredInventory.length === 0 ? (
-        <EmptyState
-          title="No inventory items found"
-          description="Try adjusting your search or filters"
-        />
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Product</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">SKU</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">On Hand</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Available</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Reorder Point</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Location</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Value</th>
-                <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredInventory.map((item) => {
-                const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved);
-                const value = item.quantity_on_hand * item.average_cost;
-                const isOutOfStock = item.quantity_on_hand === 0;
-                
-                return (
-                  <tr 
-                    key={item.id} 
-                    className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer"
-                  >
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-white">{item.product_name || 'Unknown Product'}</div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-400">{item.sku || '-'}</td>
-                    <td className="py-3 px-4 text-right">
-                      <span className={`font-medium ${
-                        isOutOfStock ? 'text-red-400' : 
-                        item.is_low_stock ? 'text-yellow-400' : 'text-white'
-                      }`}>
-                        {item.quantity_on_hand}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right text-gray-400">{available}</td>
-                    <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point}</td>
-                    <td className="py-3 px-4">
-                      <div className="text-white">{item.location || 'Not assigned'}</div>
-                      {item.bin_location && (
-                        <div className="text-xs text-gray-500">{item.bin_location}</div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right text-white">
-                      {formatCurrency(value)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      {isOutOfStock ? (
-                        <Badge variant="danger">Out of Stock</Badge>
-                      ) : item.is_low_stock ? (
-                        <Badge variant="warning">Low Stock</Badge>
-                      ) : (
-                        <Badge variant="success">In Stock</Badge>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {error && (
+        <motion.div 
+          className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          {error}
+        </motion.div>
+      )}
+
+      {/* Inventory Display */}
+      {inventoryItems.length === 0 ? (
+        <motion.div 
+          className="text-center py-12"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Warehouse className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-100 mb-2">
+            {searchTerm || showLowStockOnly ? 'No inventory items found' : 'No inventory yet'}
+          </h3>
+          <p className="text-gray-400 mb-6">
+            {searchTerm || showLowStockOnly
+              ? 'Try adjusting your search or filters'
+              : 'Start tracking your inventory by adding items'
+            }
+          </p>
+          {!searchTerm && !showLowStockOnly && (
+            <Link href="/inventory/new">
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Item
+              </Button>
+            </Link>
+          )}
+        </motion.div>
+      ) : viewMode === 'cards' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {inventoryItems.map((item, index) => {
+            const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved)
+            const value = item.quantity_on_hand * item.average_cost
+            const isOutOfStock = item.quantity_on_hand === 0
+
+            return (
+              <motion.div 
+                key={item.id}
+                className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-100 mb-1">{item.product_name || 'Unknown Product'}</h3>
+                    <p className="text-sm text-gray-400">{item.sku || 'No SKU'}</p>
+                  </div>
+                  <div>
+                    {isOutOfStock ? (
+                      <Badge variant="danger">Out of Stock</Badge>
+                    ) : item.is_low_stock ? (
+                      <Badge variant="warning">Low Stock</Badge>
+                    ) : (
+                      <Badge variant="success">In Stock</Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">On Hand:</span>
+                    <span className={`font-medium ${
+                      isOutOfStock ? 'text-red-400' : 
+                      item.is_low_stock ? 'text-yellow-400' : 'text-gray-100'
+                    }`}>
+                      {item.quantity_on_hand}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Available:</span>
+                    <span className="text-gray-100">{available}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Reorder Point:</span>
+                    <span className="text-gray-100">{item.reorder_point}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-700">
+                    <span className="text-sm text-gray-400">Value:</span>
+                    <span className="font-bold text-green-400">{formatCurrency(value)}</span>
+                  </div>
+                </div>
+
+                {item.location && (
+                  <div className="mt-3 pt-3 border-t border-gray-700 text-sm text-gray-400">
+                    📍 {item.location}{item.bin_location && ` - ${item.bin_location}`}
+                  </div>
+                )}
+              </motion.div>
+            )
+          })}
         </div>
+      ) : (
+        <motion.div
+          className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Product</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">SKU</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">On Hand</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Available</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Reorder Point</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Location</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Value</th>
+                  <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventoryItems.map((item, index) => {
+                  const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved)
+                  const value = item.quantity_on_hand * item.average_cost
+                  const isOutOfStock = item.quantity_on_hand === 0
+
+                  return (
+                    <motion.tr 
+                      key={item.id} 
+                      className="border-b border-gray-800 hover:bg-gray-800/50"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + index * 0.03 }}
+                    >
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-white">{item.product_name || 'Unknown Product'}</div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-400">{item.sku || '-'}</td>
+                      <td className="py-3 px-4 text-right">
+                        <span className={`font-medium ${
+                          isOutOfStock ? 'text-red-400' : 
+                          item.is_low_stock ? 'text-yellow-400' : 'text-white'
+                        }`}>
+                          {item.quantity_on_hand}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right text-gray-400">{available}</td>
+                      <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point}</td>
+                      <td className="py-3 px-4">
+                        <div className="text-white">{item.location || 'Not assigned'}</div>
+                        {item.bin_location && (
+                          <div className="text-xs text-gray-500">{item.bin_location}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right text-white">
+                        {formatCurrency(value)}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {isOutOfStock ? (
+                          <Badge variant="danger">Out of Stock</Badge>
+                        ) : item.is_low_stock ? (
+                          <Badge variant="warning">Low Stock</Badge>
+                        ) : (
+                          <Badge variant="success">In Stock</Badge>
+                        )}
+                      </td>
+                    </motion.tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
       )}
 
       {/* Pagination */}
       {pages > 1 && (
-        <div className="flex items-center justify-between mt-6">
+        <motion.div 
+          className="flex items-center justify-between"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
           <span className="text-sm text-gray-400">
             Page {page} of {pages} ({total} items)
           </span>
@@ -294,8 +505,46 @@ export default function InventoryPage() {
               Next
             </Button>
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
-  );
+
+      {/* Summary Stats */}
+      {inventoryItems.length > 0 && (
+        <motion.div 
+          className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <h3 className="font-semibold text-gray-100 mb-4">Inventory Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Total Items', value: totalItems },
+              { label: 'Total Value', value: formatCurrency(totalValue) },
+              { label: 'Low Stock', value: lowStockCount },
+              { label: 'Out of Stock', value: outOfStockCount }
+            ].map((stat, index) => (
+              <motion.div 
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + index * 0.1 }}
+              >
+                <motion.p 
+                  className="text-2xl font-bold text-gray-100"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.8 + index * 0.1, type: "spring", stiffness: 300 }}
+                >
+                  {stat.value}
+                </motion.p>
+                <p className="text-sm text-gray-400">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </motion.div>
+  )
 }

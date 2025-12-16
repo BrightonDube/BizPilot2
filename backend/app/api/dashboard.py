@@ -2,16 +2,17 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 from app.core.database import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.models.business_user import BusinessUser, BusinessUserStatus
-from app.models.product import Product, ProductStatus
+from app.models.product import Product, ProductStatus, ProductCategory
 from app.models.customer import Customer
 from app.models.order import Order
 from app.models.invoice import Invoice, InvoiceStatus
@@ -54,11 +55,34 @@ class TopProduct(BaseModel):
     revenue: float
 
 
+class RevenueByMonth(BaseModel):
+    """Revenue data by month for charts."""
+    month: str
+    revenue: float
+    orders: int
+
+
+class ProductByCategory(BaseModel):
+    """Product count by category for charts."""
+    category: str
+    count: int
+
+
+class InventoryStatus(BaseModel):
+    """Inventory status for charts."""
+    name: str
+    in_stock: int
+    low_stock: int
+
+
 class DashboardResponse(BaseModel):
     """Full dashboard response."""
     stats: DashboardStats
     recent_orders: List[RecentOrder]
     top_products: List[TopProduct]
+    revenue_by_month: List[RevenueByMonth]
+    products_by_category: List[ProductByCategory]
+    inventory_status: List[InventoryStatus]
 
 
 def get_user_business_id(user: User, db: Session) -> str:
@@ -243,20 +267,157 @@ async def get_top_products(
     return result
 
 
+@router.get("/revenue-by-month", response_model=List[RevenueByMonth])
+async def get_revenue_by_month(
+    months: int = 6,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get revenue data by month for charts.
+    """
+    business_id = get_user_business_id(current_user, db)
+    
+    # Get data for last N months
+    result = []
+    today = datetime.now()
+    
+    for i in range(months - 1, -1, -1):
+        month_date = today - relativedelta(months=i)
+        month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_end = (month_start + relativedelta(months=1))
+        
+        # Revenue for this month
+        revenue = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
+            Order.business_id == business_id,
+            Order.created_at >= month_start,
+            Order.created_at < month_end
+        ).scalar()
+        
+        # Order count for this month
+        orders = db.query(Order).filter(
+            Order.business_id == business_id,
+            Order.created_at >= month_start,
+            Order.created_at < month_end
+        ).count()
+        
+        result.append(RevenueByMonth(
+            month=month_date.strftime("%b"),
+            revenue=float(revenue or 0),
+            orders=orders
+        ))
+    
+    return result
+
+
+@router.get("/products-by-category", response_model=List[ProductByCategory])
+async def get_products_by_category(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get product distribution by category for pie chart.
+    """
+    business_id = get_user_business_id(current_user, db)
+    
+    # Get products grouped by category
+    products_with_category = db.query(
+        ProductCategory.name,
+        func.count(Product.id).label('count')
+    ).outerjoin(
+        Product, 
+        (Product.category_id == ProductCategory.id) & 
+        (Product.business_id == business_id) &
+        (Product.status == ProductStatus.ACTIVE)
+    ).filter(
+        ProductCategory.business_id == business_id
+    ).group_by(ProductCategory.name).all()
+    
+    result = []
+    for category_name, count in products_with_category:
+        if count > 0:
+            result.append(ProductByCategory(
+                category=category_name,
+                count=count
+            ))
+    
+    # If no categories, count uncategorized products
+    if not result:
+        uncategorized = db.query(Product).filter(
+            Product.business_id == business_id,
+            Product.status == ProductStatus.ACTIVE
+        ).count()
+        if uncategorized > 0:
+            result.append(ProductByCategory(
+                category="Uncategorized",
+                count=uncategorized
+            ))
+    
+    return result
+
+
+@router.get("/inventory-status", response_model=List[InventoryStatus])
+async def get_inventory_status(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get inventory status summary for bar chart.
+    """
+    business_id = get_user_business_id(current_user, db)
+    
+    # Get inventory summary by day of week (last 7 days snapshot)
+    result = []
+    today = datetime.now()
+    
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        day_name = day.strftime("%a")
+        
+        # Total in stock
+        in_stock = db.query(func.coalesce(func.sum(Product.quantity), 0)).filter(
+            Product.business_id == business_id,
+            Product.status == ProductStatus.ACTIVE,
+            Product.track_inventory.is_(True)
+        ).scalar()
+        
+        # Low stock count
+        low_stock = db.query(Product).filter(
+            Product.business_id == business_id,
+            Product.status == ProductStatus.ACTIVE,
+            Product.track_inventory.is_(True),
+            Product.quantity <= Product.low_stock_threshold
+        ).count()
+        
+        result.append(InventoryStatus(
+            name=day_name,
+            in_stock=int(in_stock or 0),
+            low_stock=low_stock
+        ))
+    
+    return result
+
+
 @router.get("", response_model=DashboardResponse)
 async def get_full_dashboard(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """
-    Get complete dashboard data including stats, recent orders, and top products.
+    Get complete dashboard data including stats, recent orders, top products, and chart data.
     """
     stats = await get_dashboard_stats(current_user, db)
     recent_orders = await get_recent_orders(5, current_user, db)
     top_products = await get_top_products(5, current_user, db)
+    revenue_by_month = await get_revenue_by_month(6, current_user, db)
+    products_by_category = await get_products_by_category(current_user, db)
+    inventory_status = await get_inventory_status(current_user, db)
     
     return DashboardResponse(
         stats=stats,
         recent_orders=recent_orders,
-        top_products=top_products
+        top_products=top_products,
+        revenue_by_month=revenue_by_month,
+        products_by_category=products_by_category,
+        inventory_status=inventory_status
     )

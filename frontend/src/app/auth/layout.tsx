@@ -47,7 +47,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          &copy; 2025 BizPilot. Built with ❤️ for small businesses.
+          &copy; 2025 BizPilot. Built with ❤️ for businesses everywhere.
         </motion.p>
       </div>
     </div>

@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Settings as SettingsIcon,
   User,
@@ -48,7 +49,9 @@ const tabs: TabConfig[] = [
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as SettingsTab | null;
+  const [activeTab, setActiveTab] = useState<SettingsTab>(tabParam || 'profile');
   const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     first_name: '',

@@ -50,18 +50,20 @@ export default function MenuPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-900">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <User className="h-6 w-6 text-white" />
+        <Link href="/settings?tab=profile">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <User className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-medium text-white truncate">
+                {user?.first_name} {user?.last_name}
+              </p>
+              <p className="text-sm text-gray-400 truncate">{user?.email}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-500" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-base font-medium text-white truncate">
-              {user?.first_name} {user?.last_name}
-            </p>
-            <p className="text-sm text-gray-400 truncate">{user?.email}</p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-gray-500" />
-        </div>
+        </Link>
       </motion.div>
 
       {/* Business Info */}
@@ -71,16 +73,18 @@ export default function MenuPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, delay: 0.05 }}
       >
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-900">
-          <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center">
-            <Building2 className="h-5 w-5 text-gray-400" />
+        <Link href="/settings?tab=business">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer">
+            <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-gray-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">Current Business</p>
+              <p className="text-xs text-gray-400 truncate">Switch or manage businesses</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-500" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">Current Business</p>
-            <p className="text-xs text-gray-400 truncate">Switch or manage businesses</p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-gray-500" />
-        </div>
+        </Link>
       </motion.div>
 
       {/* Menu Items */}

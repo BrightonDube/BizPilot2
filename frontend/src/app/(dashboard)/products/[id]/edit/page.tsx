@@ -1,13 +1,9 @@
 'use client';
 
-/**
- * New product creation page.
- */
-
 import { useState, useEffect, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, RefreshCw, Calculator, TrendingUp, Percent, FolderTree } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, FolderTree } from 'lucide-react';
 import {
   PageHeader,
   Button,
@@ -20,15 +16,37 @@ import {
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  sku: string | null;
+  barcode: string | null;
+  cost_price: number | null;
+  selling_price: number;
+  compare_at_price: number | null;
+  quantity: number;
+  low_stock_threshold: number;
+  is_taxable: boolean;
+  track_inventory: boolean;
+  status: string;
+  image_url: string | null;
+  category_id: string | null;
+}
+
 interface Category {
   id: string;
   name: string;
   color: string | null;
 }
 
-export default function NewProductPage() {
+export default function EditProductPage() {
   const router = useRouter();
+  const params = useParams();
+  const productId = params.id as string;
+
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
@@ -48,7 +66,44 @@ export default function NewProductPage() {
     category_id: '',
   });
 
-  // Fetch categories on mount
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        setIsFetching(true);
+        setError(null);
+        const response = await apiClient.get<Product>(`/products/${productId}`);
+        const product = response.data;
+        
+        setFormData({
+          name: product.name || '',
+          description: product.description || '',
+          sku: product.sku || '',
+          barcode: product.barcode || '',
+          cost_price: product.cost_price?.toString() || '',
+          selling_price: product.selling_price?.toString() || '',
+          compare_at_price: product.compare_at_price?.toString() || '',
+          quantity: product.quantity?.toString() || '0',
+          low_stock_threshold: product.low_stock_threshold?.toString() || '10',
+          is_taxable: product.is_taxable ?? true,
+          track_inventory: product.track_inventory ?? true,
+          status: product.status || 'active',
+          image_url: product.image_url || '',
+          category_id: product.category_id || '',
+        });
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError('Failed to load product. Please try again.');
+      } finally {
+        setIsFetching(false);
+      }
+    }
+
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  // Fetch categories
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -76,7 +131,6 @@ export default function NewProductPage() {
     setError(null);
     
     try {
-      // Build the product data for API
       const productData = {
         name: formData.name,
         description: formData.description || null,
@@ -94,74 +148,43 @@ export default function NewProductPage() {
         category_id: formData.category_id || null,
       };
 
-      await apiClient.post('/products', productData);
-      router.push('/products');
+      await apiClient.put(`/products/${productId}`, productData);
+      router.push(`/products/${productId}`);
     } catch (err) {
-      console.error('Error creating product:', err);
-      setError('Failed to create product. Please try again.');
+      console.error('Error updating product:', err);
+      setError('Failed to update product. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Auto-generate SKU when product name changes
-  const generateSku = () => {
-    if (!formData.name) return;
-    const prefix = formData.name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .join('')
-      .slice(0, 3);
-    const timestamp = Date.now().toString().slice(-4);
-    const newSku = `${prefix}-${timestamp}`;
-    setFormData(prev => ({ ...prev, sku: newSku }));
-  };
-
-  // Calculate pricing metrics
   const costPrice = parseFloat(formData.cost_price) || 0;
   const sellingPrice = parseFloat(formData.selling_price) || 0;
-  const compareAtPrice = parseFloat(formData.compare_at_price) || 0;
-  
-  // Profit calculations
-  const profit = sellingPrice - costPrice;
   const profitMargin = sellingPrice > 0 && costPrice > 0
-    ? ((profit / sellingPrice) * 100).toFixed(1)
+    ? ((sellingPrice - costPrice) / sellingPrice * 100).toFixed(1)
     : '0.0';
-  const markup = costPrice > 0
-    ? ((profit / costPrice) * 100).toFixed(1)
-    : '0.0';
-  
-  // Discount calculation (if compare_at_price is set)
-  const discount = compareAtPrice > 0 && sellingPrice > 0
-    ? (((compareAtPrice - sellingPrice) / compareAtPrice) * 100).toFixed(0)
-    : '0';
 
-  // Calculate suggested selling price based on desired margin
-  const calculatePriceFromMargin = (desiredMargin: number) => {
-    if (costPrice > 0) {
-      const suggestedPrice = costPrice / (1 - desiredMargin / 100);
-      setFormData(prev => ({ ...prev, selling_price: suggestedPrice.toFixed(2) }));
-    }
-  };
-
-  // Calculate suggested selling price based on desired markup
-  const calculatePriceFromMarkup = (desiredMarkup: number) => {
-    if (costPrice > 0) {
-      const suggestedPrice = costPrice * (1 + desiredMarkup / 100);
-      setFormData(prev => ({ ...prev, selling_price: suggestedPrice.toFixed(2) }));
-    }
-  };
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-500" />
+          <p className="mt-2 text-gray-400">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <PageHeader
-        title="Add New Product"
-        description="Create a new product in your catalog"
+        title="Edit Product"
+        description="Update product details and pricing"
         actions={
-          <Link href="/products">
+          <Link href={`/products/${productId}`}>
             <Button variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Products
+              Back to Product
             </Button>
           </Link>
         }
@@ -214,24 +237,12 @@ export default function NewProductPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-1">
                       SKU
                     </label>
-                    <div className="flex gap-2">
-                      <Input
-                        name="sku"
-                        value={formData.sku}
-                        onChange={handleChange}
-                        placeholder="e.g., PRD-001"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={generateSku}
-                        disabled={!formData.name}
-                        title="Auto-generate SKU from product name"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Input
+                      name="sku"
+                      value={formData.sku}
+                      onChange={handleChange}
+                      placeholder="e.g., PRD-001"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -311,66 +322,18 @@ export default function NewProductPage() {
                   </div>
                 </div>
 
-                {/* Profit Calculator */}
-                <div className="p-4 bg-gray-700/50 rounded-lg space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calculator className="h-4 w-4 text-blue-400" />
-                    <span className="text-sm font-medium text-gray-200">Pricing Calculator</span>
+                {/* Profit Margin Calculator */}
+                <div className="p-4 bg-gray-700/50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Profit Margin</span>
+                    <span className={`text-lg font-semibold ${parseFloat(profitMargin) > 0 ? 'text-green-400' : 'text-gray-400'}`}>
+                      {profitMargin}%
+                    </span>
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-2 bg-gray-800/50 rounded">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <TrendingUp className="h-3 w-3 text-green-400" />
-                        <span className="text-xs text-gray-400">Profit</span>
-                      </div>
-                      <span className={`text-lg font-semibold ${profit > 0 ? 'text-green-400' : profit < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                        R {profit.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="text-center p-2 bg-gray-800/50 rounded">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <Percent className="h-3 w-3 text-blue-400" />
-                        <span className="text-xs text-gray-400">Margin</span>
-                      </div>
-                      <span className={`text-lg font-semibold ${parseFloat(profitMargin) > 0 ? 'text-green-400' : 'text-gray-400'}`}>
-                        {profitMargin}%
-                      </span>
-                    </div>
-                    <div className="text-center p-2 bg-gray-800/50 rounded">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <Percent className="h-3 w-3 text-purple-400" />
-                        <span className="text-xs text-gray-400">Markup</span>
-                      </div>
-                      <span className={`text-lg font-semibold ${parseFloat(markup) > 0 ? 'text-purple-400' : 'text-gray-400'}`}>
-                        {markup}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {compareAtPrice > 0 && sellingPrice > 0 && compareAtPrice > sellingPrice && (
-                    <div className="mt-2 p-2 bg-orange-900/20 border border-orange-500/30 rounded text-center">
-                      <span className="text-xs text-orange-400">Discount: {discount}% off</span>
-                    </div>
-                  )}
-
-                  {/* Quick margin presets */}
-                  {costPrice > 0 && (
-                    <div className="pt-3 border-t border-gray-600">
-                      <p className="text-xs text-gray-400 mb-2">Quick set selling price by margin:</p>
-                      <div className="flex gap-2 flex-wrap">
-                        {[20, 30, 40, 50].map((margin) => (
-                          <button
-                            key={margin}
-                            type="button"
-                            onClick={() => calculatePriceFromMargin(margin)}
-                            className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded transition-colors"
-                          >
-                            {margin}% margin
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                  {costPrice > 0 && sellingPrice > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Profit per unit: R {(sellingPrice - costPrice).toFixed(2)}
+                    </p>
                   )}
                 </div>
 
@@ -500,9 +463,9 @@ export default function NewProductPage() {
             <div className="flex flex-col gap-3">
               <Button type="submit" variant="gradient" disabled={isLoading}>
                 <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Product'}
+                {isLoading ? 'Saving...' : 'Update Product'}
               </Button>
-              <Link href="/products">
+              <Link href={`/products/${productId}`}>
                 <Button type="button" variant="outline" className="w-full">
                   Cancel
                 </Button>

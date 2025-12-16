@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { Logo } from '@/components/common/Logo'
 import { HeroSection } from '@/components/home/HeroSection'
+import { ShaderBackground } from '@/components/ui'
 import { 
   BarChart3, 
   Package, 
@@ -64,7 +65,10 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen">
+      {/* WebGL Shader Background - placed at root for persistent animation */}
+      <ShaderBackground />
+      
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -321,7 +325,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Join thousands of small business owners who are making smarter decisions with BizPilot.
+            Join thousands of business owners who are making smarter decisions with BizPilot.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
