@@ -151,7 +151,7 @@ export default function PricingPage() {
           <PricingCard
             tier="Starter"
             price="Free"
-            bestFor="Perfect for small businesses"
+            bestFor="Perfect for getting started"
             cta="Get Started Free"
             benefits={[
               { text: "Up to 5 products", checked: true },
@@ -263,7 +263,7 @@ export default function PricingPage() {
               <span className="ml-2 font-semibold text-white">BizPilot</span>
             </div>
             <p className="text-gray-400 text-sm">
-              © 2025 BizPilot. Built with ❤️ for small businesses.
+              © 2025 BizPilot. Built with ❤️ for businesses everywhere.
             </p>
           </div>
         </div>

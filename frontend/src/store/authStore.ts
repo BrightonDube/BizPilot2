@@ -88,8 +88,23 @@ export const useAuthStore = create<AuthState>()(
           set({ isAuthenticated: true, isLoading: false });
         } catch (err) {
           const error = err as AxiosError<ApiError>;
+          const errorMessage = error.response?.data?.detail;
+          
+          // Map backend errors to user-friendly messages
+          let userMessage = 'Login failed. Please try again.';
+          if (errorMessage) {
+            if (errorMessage.toLowerCase().includes('invalid credentials') || 
+                errorMessage.toLowerCase().includes('incorrect')) {
+              userMessage = 'Invalid email or password. Please check your credentials.';
+            } else {
+              userMessage = errorMessage;
+            }
+          } else if (error.message === 'Network Error') {
+            userMessage = 'Unable to connect to server. Please check your connection.';
+          }
+          
           set({
-            error: error.response?.data?.detail || 'Login failed',
+            error: userMessage,
             isLoading: false,
           });
           throw error;
@@ -103,8 +118,22 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false });
         } catch (err) {
           const error = err as AxiosError<ApiError>;
+          const errorMessage = error.response?.data?.detail;
+          
+          // Map backend errors to user-friendly messages
+          let userMessage = 'Registration failed. Please try again.';
+          if (errorMessage) {
+            if (errorMessage.toLowerCase().includes('email already registered')) {
+              userMessage = 'This email is already registered. Please use a different email or try logging in.';
+            } else {
+              userMessage = errorMessage;
+            }
+          } else if (error.message === 'Network Error') {
+            userMessage = 'Unable to connect to server. Please check your connection.';
+          }
+          
           set({
-            error: error.response?.data?.detail || 'Registration failed',
+            error: userMessage,
             isLoading: false,
           });
           throw error;

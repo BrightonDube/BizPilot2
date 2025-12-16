@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 import re
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_user_for_onboarding
 from app.models.user import User
 from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
@@ -105,7 +105,7 @@ async def get_business_status(
 @router.post("/setup", response_model=BusinessResponse, status_code=status.HTTP_201_CREATED)
 async def setup_business(
     business_data: BusinessCreate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user_for_onboarding),
     db: Session = Depends(get_db),
 ):
     """

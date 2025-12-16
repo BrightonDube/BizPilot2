@@ -4,8 +4,10 @@
  * Product detail page.
  */
 
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit, Trash2, Package, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Package, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
 import {
   PageHeader,
   Button,
@@ -16,41 +18,122 @@ import {
   Badge,
   StatCard,
 } from '@/components/ui';
+import { apiClient } from '@/lib/api';
 
-// Mock product data - in production this would come from API
-const mockProduct = {
-  id: '1',
-  name: 'Premium Widget',
-  description: 'A high-quality widget for professional use. Made with durable materials and precision engineering.',
-  sku: 'WDG-001',
-  barcode: '1234567890123',
-  category: 'Widgets',
-  status: 'active',
-  quantity: 150,
-  low_stock_threshold: 10,
-  cost_price: 49.99,
-  selling_price: 99.99,
-  compare_at_price: 129.99,
-  is_taxable: true,
-  track_inventory: true,
-  created_at: '2024-01-15',
-  updated_at: '2024-03-20',
-};
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  sku: string | null;
+  barcode: string | null;
+  category_id: string | null;
+  status: string;
+  quantity: number;
+  low_stock_threshold: number;
+  cost_price: number | null;
+  selling_price: number;
+  compare_at_price: number | null;
+  is_taxable: boolean;
+  track_inventory: boolean;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function ProductDetailPage() {
-  const product = mockProduct;
+  const params = useParams();
+  const router = useRouter();
+  const productId = params.id as string;
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await apiClient.get<Product>(`/products/${productId}`);
+        setProduct(response.data);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError('Failed to load product');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  const handleDelete = async () => {
+    if (!product) return;
+    if (!window.confirm(`Are you sure you want to delete "${product.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await apiClient.delete(`/products/${productId}`);
+      router.push('/products');
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      setError('Failed to delete product');
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-500" />
+          <p className="mt-2 text-gray-400">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="text-center py-12">
+        <Package className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-100 mb-2">Product not found</h3>
+        <p className="text-gray-400 mb-6">{error || 'The product you are looking for does not exist.'}</p>
+        <Link href="/products">
+          <Button variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Products
+          </Button>
+        </Link>
+      </div>
+    );
+  }
   
-  const profitMargin = product.cost_price > 0
-    ? ((product.selling_price - product.cost_price) / product.selling_price * 100).toFixed(1)
+  const costPrice = product.cost_price || 0;
+  const profitMargin = costPrice > 0
+    ? ((product.selling_price - costPrice) / product.selling_price * 100).toFixed(1)
     : '0.0';
 
   const isLowStock = product.track_inventory && product.quantity <= product.low_stock_threshold;
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-ZA', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   return (
     <div>
       <PageHeader
         title={product.name}
-        description={`SKU: ${product.sku}`}
+        description={product.sku ? `SKU: ${product.sku}` : 'No SKU'}
         actions={
           <div className="flex items-center gap-3">
             <Link href="/products">
@@ -65,9 +148,9 @@ export default function ProductDetailPage() {
                 Edit
               </Button>
             </Link>
-            <Button variant="destructive">
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </div>
         }
@@ -82,13 +165,13 @@ export default function ProductDetailPage() {
         />
         <StatCard
           title="Cost Price"
-          value={`R ${product.cost_price.toFixed(2)}`}
+          value={`R ${costPrice.toFixed(2)}`}
           description="Per unit cost"
         />
         <StatCard
           title="Profit Margin"
           value={`${profitMargin}%`}
-          change={`R ${(product.selling_price - product.cost_price).toFixed(2)} per unit`}
+          change={`R ${(product.selling_price - costPrice).toFixed(2)} per unit`}
           changeType="positive"
           icon={<TrendingUp className="w-5 h-5" />}
         />
@@ -128,7 +211,7 @@ export default function ProductDetailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h4 className="text-sm font-medium text-gray-400 mb-1">Category</h4>
-                  <p className="text-white">{product.category || 'Uncategorized'}</p>
+                  <p className="text-white">{product.category_id ? 'Has Category' : 'Uncategorized'}</p>
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-gray-400 mb-1">Status</h4>
@@ -177,9 +260,17 @@ export default function ProductDetailPage() {
               <CardTitle>Product Image</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="aspect-square bg-gray-700 rounded-lg flex items-center justify-center">
-                <Package className="h-16 w-16 text-gray-500" />
-              </div>
+              {product.image_url ? (
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="aspect-square w-full object-cover rounded-lg"
+                />
+              ) : (
+                <div className="aspect-square bg-gray-700 rounded-lg flex items-center justify-center">
+                  <Package className="h-16 w-16 text-gray-500" />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -194,7 +285,7 @@ export default function ProductDetailPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Cost Price</span>
-                <span className="text-white">R {product.cost_price.toFixed(2)}</span>
+                <span className="text-white">R {costPrice.toFixed(2)}</span>
               </div>
               {product.compare_at_price && (
                 <div className="flex justify-between">
@@ -205,7 +296,7 @@ export default function ProductDetailPage() {
               <div className="pt-3 border-t border-gray-700">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Profit</span>
-                  <span className="text-green-400 font-medium">R {(product.selling_price - product.cost_price).toFixed(2)}</span>
+                  <span className="text-green-400 font-medium">R {(product.selling_price - costPrice).toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
