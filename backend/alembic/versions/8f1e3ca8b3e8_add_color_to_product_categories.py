@@ -18,9 +18,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add color column to product_categories (image_url already exists)
+    # Add color and image_url columns to product_categories
     op.add_column('product_categories', sa.Column('color', sa.String(length=20), nullable=True))
+    op.add_column('product_categories', sa.Column('image_url', sa.String(length=500), nullable=True))
 
 
 def downgrade() -> None:
+    op.drop_column('product_categories', 'image_url')
     op.drop_column('product_categories', 'color')
