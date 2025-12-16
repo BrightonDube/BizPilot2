@@ -83,6 +83,7 @@ class ProductCategory(BaseModel):
     
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
+    color = Column(String(20), nullable=True)  # Hex color like #3b82f6
     image_url = Column(String(500), nullable=True)
     sort_order = Column(Integer, default=0)
     

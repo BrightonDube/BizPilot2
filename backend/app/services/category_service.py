@@ -4,8 +4,9 @@ from typing import Optional, Tuple, List, Dict
 from uuid import UUID
 from sqlalchemy.orm import Session
 
-from app.models.product import ProductCategory
+from app.models.product import ProductCategory, Product
 from app.models.business_user import BusinessUser
+from sqlalchemy import func
 from app.schemas.category import (
     CategoryCreate,
     CategoryUpdate,
@@ -66,15 +67,25 @@ class CategoryService:
         category_map: Dict[UUID, CategoryTreeNode] = {}
         root_categories: List[CategoryTreeNode] = []
 
+        # Get product counts per category
+        product_counts = dict(
+            self.db.query(Product.category_id, func.count(Product.id))
+            .filter(Product.deleted_at.is_(None))
+            .group_by(Product.category_id)
+            .all()
+        )
+
         # First pass: create all nodes
         for cat in categories:
             node = CategoryTreeNode(
                 id=cat.id,
                 name=cat.name,
                 description=cat.description,
+                color=cat.color,
                 image_url=cat.image_url,
                 sort_order=cat.sort_order,
                 parent_id=cat.parent_id,
+                product_count=product_counts.get(cat.id, 0),
                 children=[],
             )
             category_map[cat.id] = node
@@ -109,6 +120,7 @@ class CategoryService:
             parent_id=category_data.parent_id,
             name=category_data.name,
             description=category_data.description,
+            color=category_data.color,
             image_url=category_data.image_url,
             sort_order=category_data.sort_order,
         )
@@ -219,11 +231,19 @@ class CategoryService:
 
     def _to_response(self, category: ProductCategory) -> CategoryResponse:
         """Convert category model to response."""
+        # Count products in this category
+        product_count = self.db.query(func.count(Product.id)).filter(
+            Product.category_id == category.id,
+            Product.deleted_at.is_(None),
+        ).scalar() or 0
+        
         return CategoryResponse(
             id=category.id,
             name=category.name,
             description=category.description,
+            color=category.color,
             image_url=category.image_url,
             sort_order=category.sort_order,
             parent_id=category.parent_id,
+            product_count=product_count,
         )
