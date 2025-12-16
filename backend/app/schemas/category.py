@@ -10,6 +10,7 @@ class CategoryBase(BaseModel):
     
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = None
+    color: Optional[str] = None
     image_url: Optional[str] = None
     sort_order: int = 0
 
@@ -25,6 +26,7 @@ class CategoryUpdate(BaseModel):
     
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = None
+    color: Optional[str] = None
     image_url: Optional[str] = None
     parent_id: Optional[UUID] = None
     sort_order: Optional[int] = None
@@ -35,6 +37,7 @@ class CategoryResponse(CategoryBase):
     
     id: UUID
     parent_id: Optional[UUID] = None
+    product_count: int = 0
     
     model_config = {"from_attributes": True}
 

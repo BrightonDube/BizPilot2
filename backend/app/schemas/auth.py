@@ -30,9 +30,9 @@ class Token(BaseModel):
 
 
 class TokenRefresh(BaseModel):
-    """Schema for token refresh request."""
+    """Schema for token refresh request (mobile clients only)."""
     
-    refresh_token: str
+    refresh_token: Optional[str] = None
 
 
 class PasswordReset(BaseModel):
