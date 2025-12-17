@@ -1,16 +1,16 @@
 """
-Seed script for BizPilot with Cape Town, South Africa data.
+Comprehensive Seed Script for BizPilot - Cape Town, South Africa
 
-This script creates comprehensive demo data for:
-- Users (demo account)
-- Organizations
-- Businesses (Cape Town retail store)
-- Roles (Admin, Manager, Employee)
-- Product Categories
-- Products (SA retail products)
-- Customers (Cape Town area)
-- Orders with OrderItems
-- Invoices with InvoiceItems
+This script seeds ALL data needed for every UI component:
+- Dashboard: stats, recent_orders, top_products
+- Products: products with categories
+- Inventory: inventory_items with locations
+- Categories: categories with colors and product_count
+- Customers: individual and business customers with metrics
+- Orders: orders with order_items
+- Invoices: invoices with invoice_items
+- Payments: payment records
+- Reports: uses data from orders, customers, products
 
 Run: python -m scripts.seed_capetown
 """
@@ -27,43 +27,57 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import Session
 
-from app.core.database import SessionLocal, engine
+from app.core.database import SessionLocal
 from app.core.security import get_password_hash
-from app.models.base import Base
 from app.models.user import User, UserStatus
 from app.models.organization import Organization
 from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
-from app.models.role import Role, Permission, DEFAULT_ROLES
+from app.models.role import Role, DEFAULT_ROLES
 from app.models.product import Product, ProductCategory, ProductStatus
 from app.models.customer import Customer, CustomerType
-from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
+from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus as OrderPaymentStatus
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
+from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.payment import Payment, PaymentStatus, PaymentMethod
 
 
-def clear_data(db: Session):
-    """Clear all existing data in correct order (respecting foreign keys)."""
-    print("Clearing existing data...")
+def clear_all_data(db: Session):
+    """Clear all data in correct order respecting foreign keys."""
+    print("Clearing all existing data...")
     
-    # Delete in reverse dependency order
-    db.query(InvoiceItem).delete()
-    db.query(Invoice).delete()
-    db.query(OrderItem).delete()
-    db.query(Order).delete()
-    db.query(Product).delete()
-    db.query(ProductCategory).delete()
-    db.query(Customer).delete()
-    db.query(BusinessUser).delete()
-    db.query(Role).delete()
-    db.query(Business).delete()
-    db.query(Organization).delete()
-    db.query(User).delete()
+    from sqlalchemy import text
     
-    db.commit()
-    print("  ✓ Data cleared")
+    # Delete in reverse dependency order using raw SQL for reliability
+    tables = [
+        "payments",
+        "inventory_transactions",
+        "inventory_items",
+        "invoice_items",
+        "invoices",
+        "order_items",
+        "orders",
+        "products",
+        "product_categories",
+        "customers",
+        "business_users",
+        "roles",
+        "businesses",
+        "organizations",
+        "users",
+    ]
+    
+    for table in tables:
+        try:
+            db.execute(text(f"DELETE FROM {table}"))
+            db.commit()
+        except Exception:
+            db.rollback()  # Table might not exist
+    
+    print("  ✓ All data cleared")
 
 
-def create_demo_user(db: Session) -> User:
+def create_user(db: Session) -> User:
     """Create demo user."""
     print("Creating demo user...")
     
@@ -79,7 +93,7 @@ def create_demo_user(db: Session) -> User:
     db.add(user)
     db.commit()
     db.refresh(user)
-    print(f"  ✓ Created user: {user.email}")
+    print(f"  ✓ User: {user.email}")
     return user
 
 
@@ -95,41 +109,33 @@ def create_organization(db: Session, user: User) -> Organization:
     db.add(org)
     db.commit()
     db.refresh(org)
-    print(f"  ✓ Created organization: {org.name}")
+    print(f"  ✓ Organization: {org.name}")
     return org
 
 
 def create_business(db: Session, org: Organization) -> Business:
-    """Create Cape Town business."""
+    """Create business."""
     print("Creating business...")
     
     business = Business(
         name="Table Bay General Store",
         slug="table-bay-general-store",
         organization_id=org.id,
-        description="Your one-stop shop for quality goods in Cape Town. We stock everything from fresh produce to household essentials.",
-        
-        # Cape Town Address
+        description="Your one-stop shop for quality goods in Cape Town.",
         address_street="123 Long Street",
         address_city="Cape Town",
         address_state="Western Cape",
         address_postal_code="8001",
         address_country="South Africa",
-        
-        # SA Tax Details
         tax_number="9876543210",
         vat_number="4567890123",
         vat_rate=Decimal("15.00"),
         currency="ZAR",
-        
-        # Contact
         phone="+27 21 555 0100",
         email="info@tablebaystore.co.za",
         website="https://tablebaystore.co.za",
-        
-        # Invoice Settings
         invoice_prefix="TBS",
-        invoice_terms="Payment due within 30 days. Late payments subject to 2% monthly interest.",
+        invoice_terms="Payment due within 30 days.",
         bank_name="First National Bank",
         bank_account_number="62845678901",
         bank_branch_code="250655",
@@ -137,12 +143,12 @@ def create_business(db: Session, org: Organization) -> Business:
     db.add(business)
     db.commit()
     db.refresh(business)
-    print(f"  ✓ Created business: {business.name}")
+    print(f"  ✓ Business: {business.name}")
     return business
 
 
 def create_roles(db: Session, business: Business) -> dict:
-    """Create roles for the business."""
+    """Create roles."""
     print("Creating roles...")
     
     roles = {}
@@ -161,141 +167,125 @@ def create_roles(db: Session, business: Business) -> dict:
     for role in roles.values():
         db.refresh(role)
     
-    print(f"  ✓ Created {len(roles)} roles")
+    print(f"  ✓ Roles: {len(roles)}")
     return roles
 
 
-def link_user_to_business(db: Session, user: User, business: Business, role: Role):
-    """Link user to business with role."""
+def link_user_business(db: Session, user: User, business: Business, role: Role):
+    """Link user to business."""
     print("Linking user to business...")
     
-    business_user = BusinessUser(
+    bu = BusinessUser(
         user_id=user.id,
         business_id=business.id,
         role_id=role.id,
         status=BusinessUserStatus.ACTIVE,
         is_primary=True,
     )
-    db.add(business_user)
+    db.add(bu)
     db.commit()
-    print(f"  ✓ Linked {user.email} to {business.name} as {role.name}")
+    print(f"  ✓ Linked: {user.email} -> {business.name}")
 
 
 def create_categories(db: Session, business: Business) -> list:
     """Create product categories."""
-    print("Creating product categories...")
+    print("Creating categories...")
     
-    categories_data = [
-        {"name": "Groceries", "description": "Food and household essentials", "color": "#22c55e", "sort_order": 1},
-        {"name": "Beverages", "description": "Drinks and refreshments", "color": "#3b82f6", "sort_order": 2},
-        {"name": "Electronics", "description": "Electronic devices and accessories", "color": "#8b5cf6", "sort_order": 3},
-        {"name": "Clothing", "description": "Apparel and fashion items", "color": "#ec4899", "sort_order": 4},
-        {"name": "Home & Garden", "description": "Home improvement and gardening supplies", "color": "#f59e0b", "sort_order": 5},
-        {"name": "Health & Beauty", "description": "Personal care and wellness products", "color": "#14b8a6", "sort_order": 6},
-        {"name": "Stationery", "description": "Office and school supplies", "color": "#6366f1", "sort_order": 7},
-        {"name": "Sports & Outdoors", "description": "Sports equipment and outdoor gear", "color": "#ef4444", "sort_order": 8},
+    data = [
+        {"name": "Groceries", "desc": "Food and household essentials", "color": "#22c55e"},
+        {"name": "Beverages", "desc": "Drinks and refreshments", "color": "#3b82f6"},
+        {"name": "Electronics", "desc": "Electronic devices and accessories", "color": "#8b5cf6"},
+        {"name": "Clothing", "desc": "Apparel and fashion items", "color": "#ec4899"},
+        {"name": "Home & Garden", "desc": "Home improvement and gardening", "color": "#f59e0b"},
+        {"name": "Health & Beauty", "desc": "Personal care and wellness", "color": "#14b8a6"},
+        {"name": "Stationery", "desc": "Office and school supplies", "color": "#6366f1"},
+        {"name": "Sports & Outdoors", "desc": "Sports equipment and outdoor gear", "color": "#ef4444"},
     ]
     
     categories = []
-    for cat_data in categories_data:
-        category = ProductCategory(
+    for i, d in enumerate(data):
+        cat = ProductCategory(
             business_id=business.id,
-            name=cat_data["name"],
-            description=cat_data["description"],
-            color=cat_data["color"],
-            sort_order=cat_data["sort_order"],
+            name=d["name"],
+            description=d["desc"],
+            color=d["color"],
+            sort_order=i + 1,
         )
-        db.add(category)
-        categories.append(category)
+        db.add(cat)
+        categories.append(cat)
     
     db.commit()
-    for cat in categories:
-        db.refresh(cat)
+    for c in categories:
+        db.refresh(c)
     
-    print(f"  ✓ Created {len(categories)} categories")
+    print(f"  ✓ Categories: {len(categories)}")
     return categories
 
 
 def create_products(db: Session, business: Business, categories: list) -> list:
-    """Create products with SA pricing in ZAR."""
+    """Create products."""
     print("Creating products...")
     
-    # Map category names to objects
-    cat_map = {cat.name: cat for cat in categories}
+    cat_map = {c.name: c for c in categories}
     
     products_data = [
         # Groceries
-        {"name": "White Bread (700g)", "sku": "GRO-001", "cost": 15.00, "price": 22.99, "qty": 50, "cat": "Groceries"},
-        {"name": "Full Cream Milk (2L)", "sku": "GRO-002", "cost": 28.00, "price": 39.99, "qty": 40, "cat": "Groceries"},
-        {"name": "Free Range Eggs (18)", "sku": "GRO-003", "cost": 55.00, "price": 79.99, "qty": 30, "cat": "Groceries"},
-        {"name": "Sunflower Oil (2L)", "sku": "GRO-004", "cost": 65.00, "price": 89.99, "qty": 25, "cat": "Groceries"},
-        {"name": "Basmati Rice (2kg)", "sku": "GRO-005", "cost": 45.00, "price": 64.99, "qty": 35, "cat": "Groceries"},
-        {"name": "Robertsons Mixed Herbs", "sku": "GRO-006", "cost": 18.00, "price": 29.99, "qty": 60, "cat": "Groceries"},
-        {"name": "Jungle Oats (1kg)", "sku": "GRO-007", "cost": 35.00, "price": 49.99, "qty": 45, "cat": "Groceries"},
-        {"name": "Tastic Rice (2kg)", "sku": "GRO-008", "cost": 40.00, "price": 54.99, "qty": 38, "cat": "Groceries"},
-        
+        {"name": "White Bread (700g)", "sku": "GRO-001", "cost": 15, "price": 22.99, "qty": 50, "cat": "Groceries"},
+        {"name": "Full Cream Milk (2L)", "sku": "GRO-002", "cost": 28, "price": 39.99, "qty": 40, "cat": "Groceries"},
+        {"name": "Free Range Eggs (18)", "sku": "GRO-003", "cost": 55, "price": 79.99, "qty": 30, "cat": "Groceries"},
+        {"name": "Sunflower Oil (2L)", "sku": "GRO-004", "cost": 65, "price": 89.99, "qty": 25, "cat": "Groceries"},
+        {"name": "Basmati Rice (2kg)", "sku": "GRO-005", "cost": 45, "price": 64.99, "qty": 35, "cat": "Groceries"},
+        {"name": "Jungle Oats (1kg)", "sku": "GRO-006", "cost": 35, "price": 49.99, "qty": 45, "cat": "Groceries"},
         # Beverages
-        {"name": "Coca-Cola (2L)", "sku": "BEV-001", "cost": 18.00, "price": 27.99, "qty": 100, "cat": "Beverages"},
-        {"name": "Rooibos Tea (80 bags)", "sku": "BEV-002", "cost": 32.00, "price": 49.99, "qty": 60, "cat": "Beverages"},
-        {"name": "Appletiser (1.25L)", "sku": "BEV-003", "cost": 28.00, "price": 42.99, "qty": 45, "cat": "Beverages"},
-        {"name": "Castle Lager (6 Pack)", "sku": "BEV-004", "cost": 75.00, "price": 109.99, "qty": 80, "cat": "Beverages"},
-        {"name": "Oros Orange Squash (2L)", "sku": "BEV-005", "cost": 35.00, "price": 52.99, "qty": 55, "cat": "Beverages"},
-        {"name": "Nescafe Gold (200g)", "sku": "BEV-006", "cost": 95.00, "price": 139.99, "qty": 30, "cat": "Beverages"},
-        
+        {"name": "Coca-Cola (2L)", "sku": "BEV-001", "cost": 18, "price": 27.99, "qty": 100, "cat": "Beverages"},
+        {"name": "Rooibos Tea (80 bags)", "sku": "BEV-002", "cost": 32, "price": 49.99, "qty": 60, "cat": "Beverages"},
+        {"name": "Appletiser (1.25L)", "sku": "BEV-003", "cost": 28, "price": 42.99, "qty": 45, "cat": "Beverages"},
+        {"name": "Castle Lager (6 Pack)", "sku": "BEV-004", "cost": 75, "price": 109.99, "qty": 80, "cat": "Beverages"},
+        {"name": "Nescafe Gold (200g)", "sku": "BEV-005", "cost": 95, "price": 139.99, "qty": 30, "cat": "Beverages"},
         # Electronics
-        {"name": "USB-C Charging Cable", "sku": "ELE-001", "cost": 45.00, "price": 79.99, "qty": 75, "cat": "Electronics"},
-        {"name": "Wireless Earbuds", "sku": "ELE-002", "cost": 250.00, "price": 449.99, "qty": 20, "cat": "Electronics"},
-        {"name": "Power Bank 10000mAh", "sku": "ELE-003", "cost": 180.00, "price": 329.99, "qty": 30, "cat": "Electronics"},
-        {"name": "LED Desk Lamp", "sku": "ELE-004", "cost": 150.00, "price": 279.99, "qty": 25, "cat": "Electronics"},
-        {"name": "Bluetooth Speaker", "sku": "ELE-005", "cost": 320.00, "price": 549.99, "qty": 15, "cat": "Electronics"},
-        
+        {"name": "USB-C Charging Cable", "sku": "ELE-001", "cost": 45, "price": 79.99, "qty": 75, "cat": "Electronics"},
+        {"name": "Wireless Earbuds", "sku": "ELE-002", "cost": 250, "price": 449.99, "qty": 20, "cat": "Electronics"},
+        {"name": "Power Bank 10000mAh", "sku": "ELE-003", "cost": 180, "price": 329.99, "qty": 30, "cat": "Electronics"},
+        {"name": "LED Desk Lamp", "sku": "ELE-004", "cost": 150, "price": 279.99, "qty": 25, "cat": "Electronics"},
+        {"name": "Bluetooth Speaker", "sku": "ELE-005", "cost": 320, "price": 549.99, "qty": 15, "cat": "Electronics"},
         # Clothing
-        {"name": "Cotton T-Shirt (Unisex)", "sku": "CLO-001", "cost": 85.00, "price": 149.99, "qty": 60, "cat": "Clothing"},
-        {"name": "Denim Jeans", "sku": "CLO-002", "cost": 250.00, "price": 449.99, "qty": 35, "cat": "Clothing"},
-        {"name": "Running Shoes", "sku": "CLO-003", "cost": 450.00, "price": 799.99, "qty": 20, "cat": "Clothing"},
-        {"name": "Winter Jacket", "sku": "CLO-004", "cost": 380.00, "price": 699.99, "qty": 15, "cat": "Clothing"},
-        {"name": "Beanie Hat", "sku": "CLO-005", "cost": 45.00, "price": 89.99, "qty": 50, "cat": "Clothing"},
-        
+        {"name": "Cotton T-Shirt", "sku": "CLO-001", "cost": 85, "price": 149.99, "qty": 60, "cat": "Clothing"},
+        {"name": "Denim Jeans", "sku": "CLO-002", "cost": 250, "price": 449.99, "qty": 35, "cat": "Clothing"},
+        {"name": "Running Shoes", "sku": "CLO-003", "cost": 450, "price": 799.99, "qty": 20, "cat": "Clothing"},
+        {"name": "Winter Jacket", "sku": "CLO-004", "cost": 380, "price": 699.99, "qty": 15, "cat": "Clothing"},
         # Home & Garden
-        {"name": "Garden Hose (15m)", "sku": "HOM-001", "cost": 180.00, "price": 299.99, "qty": 20, "cat": "Home & Garden"},
-        {"name": "Potting Soil (20L)", "sku": "HOM-002", "cost": 45.00, "price": 79.99, "qty": 40, "cat": "Home & Garden"},
-        {"name": "LED Light Bulb (3 Pack)", "sku": "HOM-003", "cost": 55.00, "price": 99.99, "qty": 50, "cat": "Home & Garden"},
-        {"name": "Braai Grid (Large)", "sku": "HOM-004", "cost": 280.00, "price": 479.99, "qty": 15, "cat": "Home & Garden"},
-        {"name": "Cooler Box (26L)", "sku": "HOM-005", "cost": 350.00, "price": 599.99, "qty": 12, "cat": "Home & Garden"},
-        
+        {"name": "Garden Hose (15m)", "sku": "HOM-001", "cost": 180, "price": 299.99, "qty": 20, "cat": "Home & Garden"},
+        {"name": "Potting Soil (20L)", "sku": "HOM-002", "cost": 45, "price": 79.99, "qty": 40, "cat": "Home & Garden"},
+        {"name": "LED Light Bulb (3 Pack)", "sku": "HOM-003", "cost": 55, "price": 99.99, "qty": 50, "cat": "Home & Garden"},
+        {"name": "Braai Grid (Large)", "sku": "HOM-004", "cost": 280, "price": 479.99, "qty": 15, "cat": "Home & Garden"},
         # Health & Beauty
-        {"name": "Sunscreen SPF50 (200ml)", "sku": "HEA-001", "cost": 85.00, "price": 149.99, "qty": 40, "cat": "Health & Beauty"},
-        {"name": "Ingram's Camphor Cream", "sku": "HEA-002", "cost": 35.00, "price": 59.99, "qty": 55, "cat": "Health & Beauty"},
-        {"name": "Panado Tablets (24)", "sku": "HEA-003", "cost": 25.00, "price": 44.99, "qty": 80, "cat": "Health & Beauty"},
-        {"name": "Vaseline (250ml)", "sku": "HEA-004", "cost": 40.00, "price": 69.99, "qty": 45, "cat": "Health & Beauty"},
-        {"name": "Dove Soap (4 Pack)", "sku": "HEA-005", "cost": 55.00, "price": 89.99, "qty": 60, "cat": "Health & Beauty"},
-        
+        {"name": "Sunscreen SPF50", "sku": "HEA-001", "cost": 85, "price": 149.99, "qty": 40, "cat": "Health & Beauty"},
+        {"name": "Ingram's Camphor Cream", "sku": "HEA-002", "cost": 35, "price": 59.99, "qty": 55, "cat": "Health & Beauty"},
+        {"name": "Panado Tablets (24)", "sku": "HEA-003", "cost": 25, "price": 44.99, "qty": 80, "cat": "Health & Beauty"},
+        {"name": "Dove Soap (4 Pack)", "sku": "HEA-004", "cost": 55, "price": 89.99, "qty": 60, "cat": "Health & Beauty"},
         # Stationery
-        {"name": "A4 Paper Ream (500)", "sku": "STA-001", "cost": 65.00, "price": 99.99, "qty": 50, "cat": "Stationery"},
-        {"name": "Ballpoint Pens (10 Pack)", "sku": "STA-002", "cost": 25.00, "price": 44.99, "qty": 80, "cat": "Stationery"},
-        {"name": "School Bag (Large)", "sku": "STA-003", "cost": 180.00, "price": 329.99, "qty": 25, "cat": "Stationery"},
-        {"name": "Calculator (Scientific)", "sku": "STA-004", "cost": 120.00, "price": 219.99, "qty": 30, "cat": "Stationery"},
-        {"name": "Notebook (A5, 5 Pack)", "sku": "STA-005", "cost": 45.00, "price": 79.99, "qty": 65, "cat": "Stationery"},
-        
+        {"name": "A4 Paper Ream (500)", "sku": "STA-001", "cost": 65, "price": 99.99, "qty": 50, "cat": "Stationery"},
+        {"name": "Ballpoint Pens (10 Pack)", "sku": "STA-002", "cost": 25, "price": 44.99, "qty": 80, "cat": "Stationery"},
+        {"name": "School Bag (Large)", "sku": "STA-003", "cost": 180, "price": 329.99, "qty": 25, "cat": "Stationery"},
+        {"name": "Calculator Scientific", "sku": "STA-004", "cost": 120, "price": 219.99, "qty": 30, "cat": "Stationery"},
         # Sports & Outdoors
-        {"name": "Soccer Ball (Size 5)", "sku": "SPO-001", "cost": 150.00, "price": 279.99, "qty": 25, "cat": "Sports & Outdoors"},
-        {"name": "Yoga Mat", "sku": "SPO-002", "cost": 180.00, "price": 329.99, "qty": 20, "cat": "Sports & Outdoors"},
-        {"name": "Camping Tent (2-Person)", "sku": "SPO-003", "cost": 650.00, "price": 1199.99, "qty": 8, "cat": "Sports & Outdoors"},
-        {"name": "Water Bottle (1L)", "sku": "SPO-004", "cost": 65.00, "price": 119.99, "qty": 45, "cat": "Sports & Outdoors"},
-        {"name": "Swimming Goggles", "sku": "SPO-005", "cost": 85.00, "price": 159.99, "qty": 30, "cat": "Sports & Outdoors"},
+        {"name": "Soccer Ball (Size 5)", "sku": "SPO-001", "cost": 150, "price": 279.99, "qty": 25, "cat": "Sports & Outdoors"},
+        {"name": "Yoga Mat", "sku": "SPO-002", "cost": 180, "price": 329.99, "qty": 20, "cat": "Sports & Outdoors"},
+        {"name": "Camping Tent (2-Person)", "sku": "SPO-003", "cost": 650, "price": 1199.99, "qty": 8, "cat": "Sports & Outdoors"},
+        {"name": "Water Bottle (1L)", "sku": "SPO-004", "cost": 65, "price": 119.99, "qty": 45, "cat": "Sports & Outdoors"},
     ]
     
     products = []
-    for p_data in products_data:
+    for p in products_data:
         product = Product(
             business_id=business.id,
-            category_id=cat_map[p_data["cat"]].id,
-            name=p_data["name"],
-            sku=p_data["sku"],
+            category_id=cat_map[p["cat"]].id,
+            name=p["name"],
+            sku=p["sku"],
             barcode=f"600{random.randint(1000000000, 9999999999)}",
-            cost_price=Decimal(str(p_data["cost"])),
-            selling_price=Decimal(str(p_data["price"])),
-            quantity=p_data["qty"],
+            cost_price=Decimal(str(p["cost"])),
+            selling_price=Decimal(str(p["price"])),
+            quantity=p["qty"],
             low_stock_threshold=10,
             status=ProductStatus.ACTIVE,
             track_inventory=True,
@@ -308,12 +298,45 @@ def create_products(db: Session, business: Business, categories: list) -> list:
     for prod in products:
         db.refresh(prod)
     
-    print(f"  ✓ Created {len(products)} products")
+    print(f"  ✓ Products: {len(products)}")
     return products
 
 
+def create_inventory(db: Session, business: Business, products: list) -> list:
+    """Create inventory items for each product."""
+    print("Creating inventory items...")
+    
+    locations = ["Warehouse A", "Warehouse B", "Store Front", "Back Room"]
+    bins = ["A-01", "A-02", "B-01", "B-02", "C-01", "C-02"]
+    
+    items = []
+    for product in products:
+        inv = InventoryItem(
+            business_id=business.id,
+            product_id=product.id,
+            quantity_on_hand=product.quantity,
+            quantity_reserved=random.randint(0, min(5, product.quantity)),
+            quantity_incoming=random.randint(0, 20),
+            reorder_point=product.low_stock_threshold,
+            reorder_quantity=50,
+            location=random.choice(locations),
+            bin_location=random.choice(bins),
+            average_cost=float(product.cost_price) if product.cost_price else 0,
+            last_cost=float(product.cost_price) if product.cost_price else 0,
+        )
+        db.add(inv)
+        items.append(inv)
+    
+    db.commit()
+    for item in items:
+        db.refresh(item)
+    
+    print(f"  ✓ Inventory items: {len(items)}")
+    return items
+
+
 def create_customers(db: Session, business: Business) -> list:
-    """Create Cape Town area customers."""
+    """Create customers."""
     print("Creating customers...")
     
     customers_data = [
@@ -328,7 +351,6 @@ def create_customers(db: Session, business: Business) -> list:
         {"first": "Liezel", "last": "Pretorius", "email": "liezel.p@gmail.com", "phone": "+27 84 890 1234", "city": "Constantia", "type": "individual"},
         {"first": "Themba", "last": "Ndlovu", "email": "themba.ndlovu@yahoo.com", "phone": "+27 72 901 2345", "city": "Khayelitsha", "type": "individual"},
         {"first": "Sarah", "last": "Williams", "email": "sarah.w@gmail.com", "phone": "+27 73 012 3456", "city": "Muizenberg", "type": "individual"},
-        
         # Business customers
         {"company": "Cape Coffee Roasters", "email": "orders@capecoffee.co.za", "phone": "+27 21 555 1001", "city": "De Waterkant", "type": "business", "vat": "4901234567"},
         {"company": "Table Mountain Catering", "email": "supplies@tmcatering.co.za", "phone": "+27 21 555 1002", "city": "Gardens", "type": "business", "vat": "4902345678"},
@@ -338,16 +360,16 @@ def create_customers(db: Session, business: Business) -> list:
     ]
     
     customers = []
-    for c_data in customers_data:
-        if c_data["type"] == "individual":
+    for c in customers_data:
+        if c["type"] == "individual":
             customer = Customer(
                 business_id=business.id,
                 customer_type=CustomerType.INDIVIDUAL,
-                first_name=c_data["first"],
-                last_name=c_data["last"],
-                email=c_data["email"],
-                phone=c_data["phone"],
-                city=c_data["city"],
+                first_name=c["first"],
+                last_name=c["last"],
+                email=c["email"],
+                phone=c["phone"],
+                city=c["city"],
                 state="Western Cape",
                 postal_code=f"80{random.randint(10, 99)}",
                 country="South Africa",
@@ -356,11 +378,11 @@ def create_customers(db: Session, business: Business) -> list:
             customer = Customer(
                 business_id=business.id,
                 customer_type=CustomerType.BUSINESS,
-                company_name=c_data["company"],
-                email=c_data["email"],
-                phone=c_data["phone"],
-                tax_number=c_data.get("vat"),
-                city=c_data["city"],
+                company_name=c["company"],
+                email=c["email"],
+                phone=c["phone"],
+                tax_number=c.get("vat"),
+                city=c["city"],
                 state="Western Cape",
                 postal_code=f"80{random.randint(10, 99)}",
                 country="South Africa",
@@ -372,27 +394,26 @@ def create_customers(db: Session, business: Business) -> list:
     for cust in customers:
         db.refresh(cust)
     
-    print(f"  ✓ Created {len(customers)} customers")
+    print(f"  ✓ Customers: {len(customers)}")
     return customers
 
 
 def create_orders(db: Session, business: Business, customers: list, products: list) -> list:
-    """Create sample orders with items."""
+    """Create orders with items."""
     print("Creating orders...")
     
     orders = []
     order_num = 1000
     
-    # Create orders for the past 30 days
-    for i in range(25):
-        order_date = datetime.now() - timedelta(days=random.randint(0, 30))
+    # Create orders for past 60 days
+    for i in range(40):
+        order_date = datetime.now() - timedelta(days=random.randint(0, 60))
         customer = random.choice(customers)
         
-        # Random order items (2-5 products)
+        # 2-5 products per order
         num_items = random.randint(2, 5)
         selected_products = random.sample(products, min(num_items, len(products)))
         
-        # Calculate totals
         subtotal = Decimal("0")
         items_data = []
         
@@ -412,29 +433,29 @@ def create_orders(db: Session, business: Business, customers: list, products: li
         tax_amount = subtotal * Decimal("0.15")
         total = subtotal + tax_amount
         
-        # Determine status
-        status_choices = [
-            (OrderStatus.DELIVERED, PaymentStatus.PAID, 0.5),
-            (OrderStatus.SHIPPED, PaymentStatus.PAID, 0.15),
-            (OrderStatus.PROCESSING, PaymentStatus.PAID, 0.1),
-            (OrderStatus.CONFIRMED, PaymentStatus.PENDING, 0.1),
-            (OrderStatus.PENDING, PaymentStatus.PENDING, 0.1),
-            (OrderStatus.CANCELLED, PaymentStatus.PENDING, 0.05),
+        # Weighted status distribution
+        status_weights = [
+            (OrderStatus.DELIVERED, OrderPaymentStatus.PAID, 0.50),
+            (OrderStatus.SHIPPED, OrderPaymentStatus.PAID, 0.15),
+            (OrderStatus.PROCESSING, OrderPaymentStatus.PAID, 0.10),
+            (OrderStatus.CONFIRMED, OrderPaymentStatus.PENDING, 0.10),
+            (OrderStatus.PENDING, OrderPaymentStatus.PENDING, 0.10),
+            (OrderStatus.CANCELLED, OrderPaymentStatus.PENDING, 0.05),
         ]
         
         rand = random.random()
         cumulative = 0
         order_status = OrderStatus.PENDING
-        payment_status = PaymentStatus.PENDING
+        payment_status = OrderPaymentStatus.PENDING
         
-        for os, ps, prob in status_choices:
+        for os, ps, prob in status_weights:
             cumulative += prob
             if rand < cumulative:
                 order_status = os
                 payment_status = ps
                 break
         
-        amount_paid = total if payment_status == PaymentStatus.PAID else Decimal("0")
+        amount_paid = total if payment_status == OrderPaymentStatus.PAID else Decimal("0")
         
         order = Order(
             business_id=business.id,
@@ -446,14 +467,13 @@ def create_orders(db: Session, business: Business, customers: list, products: li
             tax_amount=tax_amount,
             total=total,
             amount_paid=amount_paid,
-            payment_method="card" if payment_status == PaymentStatus.PAID else None,
+            payment_method="card" if payment_status == OrderPaymentStatus.PAID else None,
             order_date=order_date,
             source="manual",
         )
         db.add(order)
-        db.flush()  # Get the order ID
+        db.flush()
         
-        # Add order items
         for item_data in items_data:
             order_item = OrderItem(
                 order_id=order.id,
@@ -472,21 +492,20 @@ def create_orders(db: Session, business: Business, customers: list, products: li
         order_num += 1
     
     db.commit()
-    print(f"  ✓ Created {len(orders)} orders with items")
+    print(f"  ✓ Orders: {len(orders)}")
     return orders
 
 
 def create_invoices(db: Session, business: Business, orders: list) -> list:
-    """Create invoices for completed orders."""
+    """Create invoices from paid orders."""
     print("Creating invoices...")
     
     invoices = []
     inv_num = 1000
     
-    # Create invoices for delivered/paid orders
-    paid_orders = [o for o in orders if o.payment_status == PaymentStatus.PAID]
+    paid_orders = [o for o in orders if o.payment_status == OrderPaymentStatus.PAID]
     
-    for order in paid_orders[:15]:  # Create invoices for first 15 paid orders
+    for order in paid_orders[:20]:
         issue_date = order.order_date.date() if isinstance(order.order_date, datetime) else order.order_date
         due_date = issue_date + timedelta(days=30)
         
@@ -507,7 +526,6 @@ def create_invoices(db: Session, business: Business, orders: list) -> list:
         db.add(invoice)
         db.flush()
         
-        # Add invoice items based on order items
         for order_item in order.items:
             invoice_item = InvoiceItem(
                 invoice_id=invoice.id,
@@ -525,12 +543,62 @@ def create_invoices(db: Session, business: Business, orders: list) -> list:
         inv_num += 1
     
     db.commit()
-    print(f"  ✓ Created {len(invoices)} invoices")
+    print(f"  ✓ Invoices: {len(invoices)}")
     return invoices
 
 
+def create_payments(db: Session, business: Business, invoices: list, customers: list) -> int:
+    """Create payment records using raw SQL due to enum case sensitivity."""
+    print("Creating payments...")
+    
+    from sqlalchemy import text
+    from uuid import uuid4
+    from datetime import datetime, timezone
+    
+    # Database enum values are uppercase
+    payment_methods = ['CARD', 'CASH', 'EFT', 'YOCO', 'PAYFAST']
+    
+    payments_created = 0
+    pay_num = 1000
+    
+    for invoice in invoices:
+        payment_id = uuid4()
+        now = datetime.now(timezone.utc)
+        payment_date = invoice.paid_date or date.today()
+        method = random.choice(payment_methods)
+        
+        # Use string interpolation for enum cast, bind params for data
+        sql = f"""
+            INSERT INTO payments (id, business_id, invoice_id, customer_id, payment_number, 
+                                  amount, payment_method, status, payment_date, reference,
+                                  created_at, updated_at)
+            VALUES (:id, :business_id, :invoice_id, :customer_id, :payment_number,
+                    :amount, '{method}'::paymentmethod, 'COMPLETED'::paymentstatus, 
+                    :payment_date, :reference, :created_at, :updated_at)
+        """
+        
+        db.execute(text(sql), {
+            "id": payment_id,
+            "business_id": business.id,
+            "invoice_id": invoice.id,
+            "customer_id": invoice.customer_id,
+            "payment_number": f"TBS-PAY-{pay_num}",
+            "amount": float(invoice.total),
+            "payment_date": payment_date,
+            "reference": f"REF{random.randint(100000, 999999)}",
+            "created_at": now,
+            "updated_at": now,
+        })
+        payments_created += 1
+        pay_num += 1
+    
+    db.commit()
+    print(f"  ✓ Payments: {payments_created}")
+    return payments_created
+
+
 def update_customer_metrics(db: Session, business: Business):
-    """Update customer metrics based on orders."""
+    """Update customer order metrics."""
     print("Updating customer metrics...")
     
     customers = db.query(Customer).filter(Customer.business_id == business.id).all()
@@ -538,7 +606,7 @@ def update_customer_metrics(db: Session, business: Business):
     for customer in customers:
         orders = db.query(Order).filter(
             Order.customer_id == customer.id,
-            Order.payment_status == PaymentStatus.PAID,
+            Order.payment_status == OrderPaymentStatus.PAID,
         ).all()
         
         if orders:
@@ -547,58 +615,65 @@ def update_customer_metrics(db: Session, business: Business):
             customer.average_order_value = customer.total_spent / len(orders)
     
     db.commit()
-    print("  ✓ Customer metrics updated")
+    print("  ✓ Metrics updated")
 
 
 def main():
     """Run seed script."""
-    print("=" * 60)
+    print("\n" + "=" * 60)
     print("BizPilot Cape Town Seed Script")
-    print("=" * 60)
+    print("=" * 60 + "\n")
     
     db = SessionLocal()
     
     try:
-        # Clear existing data
-        clear_data(db)
+        clear_all_data(db)
         
-        # Create core entities
-        user = create_demo_user(db)
+        # Core entities
+        user = create_user(db)
         org = create_organization(db, user)
         business = create_business(db, org)
         roles = create_roles(db, business)
+        link_user_business(db, user, business, roles["admin"])
         
-        # Link user to business
-        link_user_to_business(db, user, business, roles["admin"])
-        
-        # Create business data
+        # Business data
         categories = create_categories(db, business)
         products = create_products(db, business, categories)
+        inventory = create_inventory(db, business, products)
         customers = create_customers(db, business)
         orders = create_orders(db, business, customers, products)
         invoices = create_invoices(db, business, orders)
         
-        # Update metrics
+        # Payments - wrap in try/except due to potential enum mismatch
+        payments_count = 0
+        try:
+            payments_count = create_payments(db, business, invoices, customers)
+        except Exception as e:
+            db.rollback()
+            print(f"  ⚠ Payments skipped: {str(e)[:100]}")
+        
+        # Metrics
         update_customer_metrics(db, business)
         
         # Summary
         print("\n" + "=" * 60)
-        print("Seeding Complete!")
+        print("✅ SEEDING COMPLETE")
         print("=" * 60)
         print(f"\n📧 Demo Login:")
         print(f"   Email: demo@bizpilot.co.za")
         print(f"   Password: Demo@2024")
         print(f"\n🏢 Business: {business.name}")
-        print(f"   Location: {business.address_city}, {business.address_state}")
-        print(f"   Currency: {business.currency}")
-        print(f"   VAT Rate: {business.vat_rate}%")
+        print(f"   Location: Cape Town, Western Cape")
+        print(f"   Currency: ZAR | VAT: 15%")
         print(f"\n📊 Data Summary:")
-        print(f"   Categories: {len(categories)}")
-        print(f"   Products: {len(products)}")
-        print(f"   Customers: {len(customers)}")
-        print(f"   Orders: {len(orders)}")
-        print(f"   Invoices: {len(invoices)}")
-        print("=" * 60)
+        print(f"   Categories:      {len(categories)}")
+        print(f"   Products:        {len(products)}")
+        print(f"   Inventory Items: {len(inventory)}")
+        print(f"   Customers:       {len(customers)}")
+        print(f"   Orders:          {len(orders)}")
+        print(f"   Invoices:        {len(invoices)}")
+        print(f"   Payments:        {payments_count}")
+        print("=" * 60 + "\n")
         
     except Exception as e:
         db.rollback()
