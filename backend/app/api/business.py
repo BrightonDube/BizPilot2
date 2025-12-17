@@ -12,7 +12,7 @@ from app.models.user import User
 from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.organization import Organization
-from app.models.role import Role, Permission, DEFAULT_ROLES
+from app.models.role import Role, Permission
 
 router = APIRouter(prefix="/business", tags=["Business"])
 
