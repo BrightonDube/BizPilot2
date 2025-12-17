@@ -17,10 +17,13 @@ import {
   Trash2,
   Grid,
   List,
-  Warehouse
+  Warehouse,
+  Check,
+  X
 } from 'lucide-react'
 import { Button, Input, Badge } from '@/components/ui'
 import { apiClient } from '@/lib/api'
+import { useCallback } from 'react'
 
 interface InventoryItem {
   id: string
@@ -82,6 +85,9 @@ export default function InventoryPage() {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState<number>(0)
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     async function fetchInventory() {
@@ -122,6 +128,49 @@ export default function InventoryPage() {
   const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0)
   const lowStockCount = inventoryItems.filter(i => i.is_low_stock).length
   const outOfStockCount = inventoryItems.filter(i => i.quantity_on_hand === 0).length
+
+  const startEditing = useCallback((item: InventoryItem) => {
+    setEditingId(item.id)
+    setEditValue(item.quantity_on_hand)
+  }, [])
+
+  const cancelEditing = useCallback(() => {
+    setEditingId(null)
+    setEditValue(0)
+  }, [])
+
+  const saveStock = useCallback(async (itemId: string) => {
+    try {
+      setIsSaving(true)
+      const item = inventoryItems.find(i => i.id === itemId)
+      if (!item) return
+
+      const quantityChange = editValue - item.quantity_on_hand
+      if (quantityChange === 0) {
+        cancelEditing()
+        return
+      }
+
+      await apiClient.post(`/inventory/${itemId}/adjust`, {
+        quantity_change: quantityChange,
+        reason: 'Manual stock adjustment',
+      })
+
+      // Update local state
+      setInventoryItems(prev => 
+        prev.map(i => i.id === itemId 
+          ? { ...i, quantity_on_hand: editValue, quantity_available: editValue - i.quantity_reserved }
+          : i
+        )
+      )
+      cancelEditing()
+    } catch (err) {
+      console.error('Failed to update stock:', err)
+      setError('Failed to update stock')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [editValue, inventoryItems, cancelEditing])
 
   // Loading state with skeletons
   if (isLoading && inventoryItems.length === 0) {
@@ -440,12 +489,46 @@ export default function InventoryPage() {
                       </td>
                       <td className="py-3 px-4 text-gray-400">{item.sku || '-'}</td>
                       <td className="py-3 px-4 text-right">
-                        <span className={`font-medium ${
-                          isOutOfStock ? 'text-red-400' : 
-                          item.is_low_stock ? 'text-yellow-400' : 'text-white'
-                        }`}>
-                          {item.quantity_on_hand}
-                        </span>
+                        {editingId === item.id ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <input
+                              type="number"
+                              value={editValue}
+                              onChange={(e) => setEditValue(parseInt(e.target.value) || 0)}
+                              className="w-20 px-2 py-1 text-right bg-gray-900 border border-gray-600 rounded text-white text-sm"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveStock(item.id)
+                                if (e.key === 'Escape') cancelEditing()
+                              }}
+                            />
+                            <button
+                              onClick={() => saveStock(item.id)}
+                              disabled={isSaving}
+                              className="p-1 text-green-400 hover:text-green-300 disabled:opacity-50"
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={cancelEditing}
+                              disabled={isSaving}
+                              className="p-1 text-red-400 hover:text-red-300 disabled:opacity-50"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => startEditing(item)}
+                            className={`font-medium hover:underline cursor-pointer ${
+                              isOutOfStock ? 'text-red-400' : 
+                              item.is_low_stock ? 'text-yellow-400' : 'text-white'
+                            }`}
+                            title="Click to edit"
+                          >
+                            {item.quantity_on_hand}
+                          </button>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right text-gray-400">{available}</td>
                       <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point}</td>
