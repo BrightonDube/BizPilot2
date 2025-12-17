@@ -76,6 +76,9 @@ interface DashboardData {
   stats: DashboardStats
   recent_orders: RecentOrder[]
   top_products: TopProduct[]
+  revenue_by_month?: { month: string; revenue: number; orders: number }[]
+  products_by_category?: { category: string; count: number }[]
+  inventory_status?: { name: string; in_stock: number; low_stock: number }[]
 }
 
 function formatCurrency(amount: number, currency: string = 'ZAR'): string {
@@ -475,7 +478,11 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1 }}
       >
-        <DashboardCharts />
+        <DashboardCharts data={dashboardData ? {
+          revenue_by_month: dashboardData.revenue_by_month,
+          products_by_category: dashboardData.products_by_category,
+          inventory_status: dashboardData.inventory_status
+        } : undefined} />
       </motion.div>
 
       {/* Low Stock Alert */}

@@ -1,5 +1,7 @@
 """Main FastAPI application entry point."""
 
+import time
+import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -8,6 +10,36 @@ import traceback
 
 from app.api import router as api_router
 from app.core.config import settings
+
+# Configure logging for performance monitoring
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("bizpilot.performance")
+
+
+class TimingMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware to log request timing for performance monitoring.
+    Logs slow requests (>500ms) as warnings.
+    """
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        
+        # Add timing header for debugging
+        response.headers["X-Response-Time"] = f"{duration_ms:.2f}ms"
+        
+        # Log slow requests
+        if duration_ms > 500:
+            logger.warning(
+                f"SLOW REQUEST: {request.method} {request.url.path} took {duration_ms:.2f}ms"
+            )
+        elif settings.DEBUG:
+            logger.info(
+                f"Request: {request.method} {request.url.path} - {duration_ms:.2f}ms"
+            )
+        
+        return response
 
 
 class CORSDebugMiddleware(BaseHTTPMiddleware):
@@ -51,7 +83,10 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
-# Add custom CORS middleware FIRST (before FastAPI's CORSMiddleware)
+# Add timing middleware FIRST (outermost - measures total request time)
+app.add_middleware(TimingMiddleware)
+
+# Add custom CORS middleware 
 app.add_middleware(CORSDebugMiddleware)
 
 # Configure standard CORS middleware as backup
@@ -66,8 +101,9 @@ app.add_middleware(
 
 
 @app.get("/health")
+@app.get("/api/health")
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint (available at both /health and /api/health for DO routing)."""
     return {"status": "healthy", "version": "2.0.0"}
 
 

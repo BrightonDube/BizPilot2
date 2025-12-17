@@ -29,7 +29,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: CORS_ORIGINS
-        value: '["https://bizpilot-web.onrender.com"]'
+        value: '["https://bizpilot2.onrender.com", "https://bizpilot-web.onrender.com", "http://localhost:3000"]'
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES

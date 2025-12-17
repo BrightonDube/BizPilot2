@@ -205,24 +205,27 @@ async def get_recent_orders(
 ):
     """
     Get recent orders for the dashboard.
+    Uses eager loading to avoid N+1 queries.
     """
     business_id = get_user_business_id(current_user, db)
     
-    orders = db.query(Order).filter(
+    # Eager load customer relationship to avoid N+1 queries
+    from sqlalchemy.orm import joinedload
+    orders = db.query(Order).options(
+        joinedload(Order.customer)
+    ).filter(
         Order.business_id == business_id
     ).order_by(Order.created_at.desc()).limit(limit).all()
     
     result = []
     for order in orders:
-        # Get customer name
+        # Customer is already loaded - no additional query
         customer_name = "Walk-in Customer"
-        if order.customer_id:
-            customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
-            if customer:
-                if customer.company_name:
-                    customer_name = customer.company_name
-                else:
-                    customer_name = f"{customer.first_name or ''} {customer.last_name or ''}".strip() or "Unknown"
+        if order.customer:
+            if order.customer.company_name:
+                customer_name = order.customer.company_name
+            else:
+                customer_name = f"{order.customer.first_name or ''} {order.customer.last_name or ''}".strip() or "Unknown"
         
         result.append(RecentOrder(
             id=str(order.id),
@@ -275,36 +278,41 @@ async def get_revenue_by_month(
 ):
     """
     Get revenue data by month for charts.
+    Optimized: Single query with GROUP BY instead of 2N queries.
     """
     business_id = get_user_business_id(current_user, db)
     
-    # Get data for last N months
-    result = []
     today = datetime.now()
+    start_date = (today - relativedelta(months=months-1)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
+    # Single query with GROUP BY month - reduces 12 queries to 1
+    monthly_data = db.query(
+        extract('year', Order.created_at).label('year'),
+        extract('month', Order.created_at).label('month'),
+        func.coalesce(func.sum(Order.total), 0).label('revenue'),
+        func.count(Order.id).label('orders')
+    ).filter(
+        Order.business_id == business_id,
+        Order.created_at >= start_date
+    ).group_by(
+        extract('year', Order.created_at),
+        extract('month', Order.created_at)
+    ).all()
+    
+    # Create a lookup dict for the results
+    data_lookup = {(int(row.year), int(row.month)): row for row in monthly_data}
+    
+    # Build result for all months (including those with no data)
+    result = []
     for i in range(months - 1, -1, -1):
         month_date = today - relativedelta(months=i)
-        month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        month_end = (month_start + relativedelta(months=1))
-        
-        # Revenue for this month
-        revenue = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
-            Order.business_id == business_id,
-            Order.created_at >= month_start,
-            Order.created_at < month_end
-        ).scalar()
-        
-        # Order count for this month
-        orders = db.query(Order).filter(
-            Order.business_id == business_id,
-            Order.created_at >= month_start,
-            Order.created_at < month_end
-        ).count()
+        key = (month_date.year, month_date.month)
+        row = data_lookup.get(key)
         
         result.append(RevenueByMonth(
             month=month_date.strftime("%b"),
-            revenue=float(revenue or 0),
-            orders=orders
+            revenue=float(row.revenue if row else 0),
+            orders=int(row.orders if row else 0)
         ))
     
     return result
@@ -363,35 +371,36 @@ async def get_inventory_status(
 ):
     """
     Get inventory status summary for bar chart.
+    Optimized: Single query instead of 14 queries.
+    Note: Since inventory is a current snapshot (not historical), 
+    we show the same current values for all days.
     """
     business_id = get_user_business_id(current_user, db)
     
-    # Get inventory summary by day of week (last 7 days snapshot)
+    # Single query for current inventory status (reduces 14 queries to 2)
+    in_stock = db.query(func.coalesce(func.sum(Product.quantity), 0)).filter(
+        Product.business_id == business_id,
+        Product.status == ProductStatus.ACTIVE,
+        Product.track_inventory.is_(True)
+    ).scalar()
+    
+    low_stock = db.query(Product).filter(
+        Product.business_id == business_id,
+        Product.status == ProductStatus.ACTIVE,
+        Product.track_inventory.is_(True),
+        Product.quantity <= Product.low_stock_threshold
+    ).count()
+    
+    # Build result for last 7 days (current snapshot for each)
     result = []
     today = datetime.now()
+    in_stock_val = int(in_stock or 0)
     
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
-        day_name = day.strftime("%a")
-        
-        # Total in stock
-        in_stock = db.query(func.coalesce(func.sum(Product.quantity), 0)).filter(
-            Product.business_id == business_id,
-            Product.status == ProductStatus.ACTIVE,
-            Product.track_inventory.is_(True)
-        ).scalar()
-        
-        # Low stock count
-        low_stock = db.query(Product).filter(
-            Product.business_id == business_id,
-            Product.status == ProductStatus.ACTIVE,
-            Product.track_inventory.is_(True),
-            Product.quantity <= Product.low_stock_threshold
-        ).count()
-        
         result.append(InventoryStatus(
-            name=day_name,
-            in_stock=int(in_stock or 0),
+            name=day.strftime("%a"),
+            in_stock=in_stock_val,
             low_stock=low_stock
         ))
     
