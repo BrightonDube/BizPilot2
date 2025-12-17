@@ -45,6 +45,8 @@ class InventoryItemResponse(InventoryItemBase):
     
     id: str
     business_id: str
+    product_name: Optional[str] = None
+    sku: Optional[str] = None
     quantity_available: int
     is_low_stock: bool
     stock_value: float

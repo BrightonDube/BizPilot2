@@ -10,6 +10,7 @@ from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.inventory import TransactionType
+from app.models.product import Product
 from app.schemas.inventory import (
     InventoryItemCreate,
     InventoryItemUpdate,
@@ -24,12 +25,23 @@ from app.services.inventory_service import InventoryService
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
 
-def _item_to_response(item) -> InventoryItemResponse:
+def _item_to_response(item, db: Session = None) -> InventoryItemResponse:
     """Convert inventory item to response schema."""
+    product_name = None
+    sku = None
+    
+    if db:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product:
+            product_name = product.name
+            sku = product.sku
+    
     return InventoryItemResponse(
         id=str(item.id),
         business_id=str(item.business_id),
         product_id=str(item.product_id),
+        product_name=product_name,
+        sku=sku,
         quantity_on_hand=item.quantity_on_hand,
         quantity_reserved=item.quantity_reserved,
         quantity_incoming=item.quantity_incoming,
@@ -97,7 +109,7 @@ async def list_inventory(
     )
     
     return InventoryItemListResponse(
-        items=[_item_to_response(item) for item in items],
+        items=[_item_to_response(item, db) for item in items],
         total=total,
         page=page,
         per_page=per_page,
@@ -126,7 +138,7 @@ async def get_low_stock_items(
     """Get items below reorder point."""
     service = InventoryService(db)
     items = service.get_low_stock_items(business_id)
-    return [_item_to_response(item) for item in items]
+    return [_item_to_response(item, db) for item in items]
 
 
 @router.get("/transactions", response_model=list[InventoryTransactionResponse])
@@ -168,7 +180,7 @@ async def get_inventory_item(
             detail="Inventory item not found",
         )
     
-    return _item_to_response(item)
+    return _item_to_response(item, db)
 
 
 @router.get("/product/{product_id}", response_model=InventoryItemResponse)
@@ -188,7 +200,7 @@ async def get_inventory_by_product(
             detail="Inventory not found for this product",
         )
     
-    return _item_to_response(item)
+    return _item_to_response(item, db)
 
 
 @router.post("", response_model=InventoryItemResponse, status_code=status.HTTP_201_CREATED)
@@ -210,7 +222,7 @@ async def create_inventory_item(
         )
     
     item = service.create_inventory_item(business_id, data)
-    return _item_to_response(item)
+    return _item_to_response(item, db)
 
 
 @router.put("/{item_id}", response_model=InventoryItemResponse)
@@ -232,7 +244,7 @@ async def update_inventory_item(
         )
     
     item = service.update_inventory_item(item, data)
-    return _item_to_response(item)
+    return _item_to_response(item, db)
 
 
 @router.post("/{item_id}/adjust", response_model=InventoryTransactionResponse)
