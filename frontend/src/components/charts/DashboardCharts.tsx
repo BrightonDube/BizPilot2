@@ -48,52 +48,67 @@ function formatCurrency(value: number): string {
   }).format(value)
 }
 
-export function DashboardCharts() {
+interface DashboardChartsProps {
+  data?: {
+    revenue_by_month?: { month: string; revenue: number; orders: number }[]
+    products_by_category?: { category: string; count: number }[]
+    inventory_status?: { name: string; in_stock: number; low_stock: number }[]
+  }
+}
+
+export function DashboardCharts({ data: propData }: DashboardChartsProps) {
   const [revenueData, setRevenueData] = useState<RevenueData[]>([])
   const [productData, setProductData] = useState<ProductData[]>([])
   const [inventoryData, setInventoryData] = useState<InventoryData[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(!propData)
   const [hasData, setHasData] = useState(false)
 
   useEffect(() => {
+    // If data is passed as prop, use it directly (avoid duplicate API call)
+    if (propData) {
+      transformData(propData)
+      return
+    }
+    // Only fetch if no data provided
     fetchChartData()
-  }, [])
+  }, [propData])
+
+  const transformData = (data: NonNullable<DashboardChartsProps['data']>) => {
+    // Transform revenue data
+    if (data.revenue_by_month && data.revenue_by_month.length > 0) {
+      setRevenueData(data.revenue_by_month.map((item) => ({
+        name: item.month,
+        revenue: item.revenue,
+        orders: item.orders
+      })))
+      setHasData(true)
+    }
+
+    // Transform product category data
+    if (data.products_by_category && data.products_by_category.length > 0) {
+      setProductData(data.products_by_category.map((item, index) => ({
+        name: item.category,
+        value: item.count,
+        color: COLORS[index % COLORS.length]
+      })))
+    }
+
+    // Transform inventory status data
+    if (data.inventory_status && data.inventory_status.length > 0) {
+      setInventoryData(data.inventory_status.map((item) => ({
+        name: item.name,
+        inStock: item.in_stock,
+        lowStock: item.low_stock
+      })))
+    }
+    setIsLoading(false)
+  }
 
   const fetchChartData = async () => {
     try {
       setIsLoading(true)
-      
-      // Fetch real data from the API
       const response = await apiClient.get('/dashboard')
-      const data = response.data
-
-      // Transform revenue data
-      if (data.revenue_by_month && data.revenue_by_month.length > 0) {
-        setRevenueData(data.revenue_by_month.map((item: { month: string; revenue: number; orders: number }) => ({
-          name: item.month,
-          revenue: item.revenue,
-          orders: item.orders
-        })))
-        setHasData(true)
-      }
-
-      // Transform product category data
-      if (data.products_by_category && data.products_by_category.length > 0) {
-        setProductData(data.products_by_category.map((item: { category: string; count: number }, index: number) => ({
-          name: item.category,
-          value: item.count,
-          color: COLORS[index % COLORS.length]
-        })))
-      }
-
-      // Transform inventory status data
-      if (data.inventory_status && data.inventory_status.length > 0) {
-        setInventoryData(data.inventory_status.map((item: { name: string; in_stock: number; low_stock: number }) => ({
-          name: item.name,
-          inStock: item.in_stock,
-          lowStock: item.low_stock
-        })))
-      }
+      transformData(response.data)
     } catch (error) {
       console.error('Failed to fetch chart data:', error)
       setHasData(false)
