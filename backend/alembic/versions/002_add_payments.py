@@ -19,13 +19,27 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create payment status enum
-    payment_status = sa.Enum('pending', 'completed', 'failed', 'refunded', 'cancelled', name='paymentstatus')
-    payment_status.create(op.get_bind(), checkfirst=True)
-    
-    # Create payment method enum
-    payment_method = sa.Enum('cash', 'card', 'bank_transfer', 'mobile', 'check', 'other', name='paymentmethod')
-    payment_method.create(op.get_bind(), checkfirst=True)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE TYPE paymentstatus AS ENUM ('pending', 'completed', 'failed', 'refunded', 'cancelled');
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END $$;
+        """
+    )
+
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE TYPE paymentmethod AS ENUM ('cash', 'card', 'bank_transfer', 'mobile', 'check', 'other');
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END $$;
+        """
+    )
 
     # Create payments table
     op.create_table(

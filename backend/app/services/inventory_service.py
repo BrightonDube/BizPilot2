@@ -2,6 +2,7 @@
 
 from typing import List, Optional, Tuple
 from decimal import Decimal
+import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -15,6 +16,16 @@ class InventoryService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    def _coerce_uuid(self, value: Optional[str]):
+        if value is None:
+            return None
+        if isinstance(value, uuid.UUID):
+            return value
+        try:
+            return uuid.UUID(str(value))
+        except (ValueError, TypeError):
+            return value
 
     def get_inventory_items(
         self,
@@ -117,15 +128,15 @@ class InventoryService:
         
         # Create transaction record
         transaction = InventoryTransaction(
-            business_id=str(item.business_id),
-            product_id=str(item.product_id),
+            business_id=item.business_id,
+            product_id=item.product_id,
             inventory_item_id=item.id,
             transaction_type=TransactionType.ADJUSTMENT,
             quantity_change=adjustment.quantity_change,
             quantity_before=quantity_before,
             quantity_after=quantity_after,
             notes=f"{adjustment.reason}: {adjustment.notes or ''}",
-            user_id=user_id,
+            user_id=self._coerce_uuid(user_id),
         )
         self.db.add(transaction)
         self.db.commit()
@@ -155,8 +166,8 @@ class InventoryService:
         item.last_sold_at = utc_now()
         
         transaction = InventoryTransaction(
-            business_id=item.business_id,
-            product_id=item.product_id,
+            business_id=business_id,
+            product_id=product_id,
             inventory_item_id=item.id,
             transaction_type=TransactionType.SALE,
             quantity_change=-quantity,
@@ -165,7 +176,7 @@ class InventoryService:
             unit_cost=item.average_cost,
             total_cost=item.average_cost * quantity,
             reference_type="order" if order_id else None,
-            reference_id=self._coerce_uuid(order_id),
+            reference_id=order_id,
         )
         self.db.add(transaction)
         self.db.commit()
@@ -196,8 +207,8 @@ class InventoryService:
         item.last_received_at = utc_now()
         
         transaction = InventoryTransaction(
-            business_id=item.business_id,
-            product_id=item.product_id,
+            business_id=business_id,
+            product_id=product_id,
             inventory_item_id=item.id,
             transaction_type=TransactionType.PURCHASE,
             quantity_change=quantity,
@@ -206,7 +217,7 @@ class InventoryService:
             unit_cost=unit_cost,
             total_cost=unit_cost * quantity,
             reference_type="purchase_order" if purchase_order_id else None,
-            reference_id=self._coerce_uuid(purchase_order_id),
+            reference_id=purchase_order_id,
         )
         self.db.add(transaction)
         self.db.commit()
