@@ -1,6 +1,7 @@
 """Payment model for tracking payments."""
 
 from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum as SQLEnum, Date
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.dialects.postgresql import UUID
 import enum
 from datetime import date
@@ -47,8 +48,24 @@ class Payment(BaseModel):
     
     # Payment details
     amount = Column(Numeric(12, 2), nullable=False)
-    payment_method = Column(SQLEnum(PaymentMethod), default=PaymentMethod.CASH)
-    status = Column(SQLEnum(PaymentStatus), default=PaymentStatus.PENDING)
+    payment_method = Column(
+        ENUM(
+            PaymentMethod,
+            values_callable=lambda x: [e.value for e in x],
+            name="paymentmethod",
+            create_type=False,
+        ),
+        default=PaymentMethod.CASH,
+    )
+    status = Column(
+        ENUM(
+            PaymentStatus,
+            values_callable=lambda x: [e.value for e in x],
+            name="paymentstatus",
+            create_type=False,
+        ),
+        default=PaymentStatus.PENDING,
+    )
     
     # Dates
     payment_date = Column(Date, default=date.today)
