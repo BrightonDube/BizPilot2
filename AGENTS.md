@@ -30,7 +30,7 @@ bd update <issue-id> --status in_progress
 bd update <issue-id> --status done
 
 # Sync with git remote
-bd sync
+pnpm beads:sync
 ```
 
 ## Session-Ending Protocol
@@ -69,20 +69,21 @@ Only if code changes were made:
 
 ### 3. Sync the Issue Tracker Carefully
 
-Work methodically to ensure local and remote issues merge safely:
+Work methodically to ensure local and remote issues merge safely on the `dev` branch:
 - Handle git conflicts thoughtfully (sometimes accepting remote and re-importing)
 - Goal: clean reconciliation where no issues are lost
 
 ```bash
 # Sync issues with git remote
-bd sync
+git checkout dev
+pnpm beads:sync
 
 # If conflicts occur, you may need to:
 # 1. Pull latest changes
 # 2. Resolve conflicts
 # 3. Re-import and sync again
 bd import -i .beads/issues.jsonl
-bd sync
+pnpm beads:sync
 ```
 
 ### 4. Verify Clean State
@@ -129,7 +130,7 @@ Beads acts like a centralized database, but it's actually distributed via git:
 
 ## Best Practices for AI Agents
 
-1. **Start each session** by syncing: `bd sync`
+1. **Start each session** by syncing: `pnpm beads:sync`
 2. **Track your work** by updating issue status as you go
 3. **Create issues** for anything you discover that needs follow-up
 4. **End each session** by following the Session-Ending Protocol above

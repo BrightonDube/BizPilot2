@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Logo } from '@/components/common/Logo'
 import { HeroSection } from '@/components/home/HeroSection'
 import { ShaderBackground } from '@/components/ui'
+import { MarketingFooter } from '@/components/common/MarketingFooter'
 import { 
   BarChart3, 
   Package, 
@@ -362,29 +363,7 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 py-8">
-        <motion.div 
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <motion.div 
-              className="flex items-center mb-4 md:mb-0"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Logo width={24} height={24} />
-              <span className="ml-2 font-semibold text-white">BizPilot</span>
-            </motion.div>
-            <p className="text-gray-400 text-sm">
-              © 2025 BizPilot. Built with ❤️ for small businesses.
-            </p>
-          </div>
-        </motion.div>
-      </footer>
+      <MarketingFooter />
     </div>
   )
 }

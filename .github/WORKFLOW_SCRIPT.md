@@ -4,7 +4,7 @@ This script defines the standard workflow for building features from beads issue
 
 ## Prerequisites
 - Beads CLI installed: `go install github.com/steveyegge/beads/cmd/bd@latest`
-- Backend virtual environment set up: `cd backend && source venv/bin/activate`
+- Backend virtual environment set up
 - Frontend dependencies installed: `cd frontend && pnpm install`
 
 ---
@@ -13,6 +13,12 @@ This script defines the standard workflow for building features from beads issue
 
 ### Step 1: Read the Issue
 ```bash
+# Ensure you're working on dev (main is protected)
+git checkout dev
+
+# Sync Beads on dev
+pnpm beads:sync
+
 # List available issues
 bd list
 
@@ -21,6 +27,11 @@ bd show <issue-id>
 
 # Mark as in progress
 bd update <issue-id> --status in_progress
+```
+
+### Local Development (One Command)
+```bash
+pnpm dev:all
 ```
 
 ### Step 2: Build the Feature
@@ -36,7 +47,7 @@ bd update <issue-id> --status in_progress
 ### Step 4: Run Tests
 ```bash
 # Backend tests
-cd backend && source venv/bin/activate && python -m pytest app/tests/ -v
+pnpm backend:test
 
 # Frontend build (acts as type checking/linting)
 cd frontend && pnpm build
@@ -58,7 +69,7 @@ Repeat until ALL tests pass.
 ### Step 6: Build Application
 ```bash
 # Backend - verify imports and syntax
-cd backend && source venv/bin/activate && python -c "from app.main import app; print('Backend OK')"
+cd backend && python -c "from app.main import app; print('Backend OK')"
 
 # Frontend - full production build
 cd frontend && pnpm build
@@ -129,12 +140,10 @@ bd update <id> --status in_progress  # Mark in progress
 bd update <id> --status done         # Mark done
 bd close <id>                        # Close issue
 bd create "Title" --priority N       # Create issue (N: 0=P0, 1=P1, 2=P2, 3=P3)
-bd sync                              # Sync with git
+pnpm beads:sync                       # Sync with git (on dev)
 
 # Backend Testing
-cd backend && source venv/bin/activate
-python -m pytest app/tests/ -v       # Run all tests
-python -m pytest app/tests/test_X.py -v  # Run specific test file
+pnpm backend:test                    # Run all tests
 
 # Frontend Building
 cd frontend && pnpm build            # Production build
@@ -163,4 +172,4 @@ When starting a session:
 - [ ] Check `bd list` for current state
 - [ ] Identify next feature to work on
 - [ ] Follow the 9-step workflow above
-- [ ] Before ending: `bd sync` and report_progress
+- [ ] Before ending: `pnpm beads:sync` and report_progress

@@ -6,13 +6,13 @@
 
 <!-- Mark the appropriate option -->
 
-- [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
-- [ ] ✨ New feature (non-breaking change that adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] 📚 Documentation update
-- [ ] 🔧 Configuration change
-- [ ] ♻️ Refactoring (no functional changes)
-- [ ] 🧪 Test improvements
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Documentation update
+- [ ] Configuration change
+- [ ] Refactoring (no functional changes)
+- [ ] Test improvements
 
 ## Related Issues
 

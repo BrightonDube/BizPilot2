@@ -260,7 +260,7 @@ export default function ProductsPage() {
 ### Before Starting Work
 
 1. **Read the workflow script**: `.github/WORKFLOW_SCRIPT.md`
-2. **Sync issues**: `bd sync`
+2. **Sync issues (on dev)**: `pnpm beads:sync`
 3. **Pick an issue**: `bd list` and `bd show <issue-id>`
 4. **Mark as in progress**: `bd update <issue-id> --status in_progress`
 
@@ -269,8 +269,8 @@ export default function ProductsPage() {
 1. **Implement the feature** following existing patterns
 2. **Write comprehensive tests** (pytest for backend, type checking for frontend)
 3. **Run tests**: 
-   - Backend: `cd backend && python -m pytest app/tests/ -v`
-   - Frontend: `cd frontend && pnpm build`
+   - Backend: `pnpm backend:test`
+   - Frontend: `pnpm frontend:test`
 4. **Fix failing tests** and create issues for any bugs found
 5. **Build and verify**: Test the application manually
 6. **Code review**: Perform multiple reviews (correctness, security, performance, quality)
@@ -286,9 +286,9 @@ export default function ProductsPage() {
 ### Issue Tracking with Beads
 
 - Issues stored in `.beads/issues.jsonl` and synced via git
-- Commands: `bd list`, `bd create`, `bd show`, `bd update`, `bd close`, `bd sync`
+- Commands: `bd list`, `bd create`, `bd show`, `bd update`, `bd close`, `pnpm beads:sync`
 - Priorities: P0 (critical), P1 (high), P2 (medium), P3 (low)
-- Always sync before ending a session: `bd sync`
+- Always sync before ending a session (on dev): `pnpm beads:sync`
 
 ## Key Patterns
 
@@ -345,11 +345,9 @@ export default function ProductsPage() {
 
 ```bash
 # Backend
-cd backend && source venv/bin/activate
-python -m pytest app/tests/ -v
-alembic revision --autogenerate -m "description"
-alembic upgrade head
-uvicorn app.main:app --reload
+pnpm backend:test
+pnpm backend:migrate
+pnpm backend:dev
 
 # Frontend
 cd frontend
@@ -368,7 +366,7 @@ bd list
 bd show <issue-id>
 bd update <issue-id> --status in_progress
 bd close <issue-id>
-bd sync
+pnpm beads:sync
 ```
 
 ## Deployment
