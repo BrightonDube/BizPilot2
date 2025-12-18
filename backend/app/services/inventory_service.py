@@ -155,8 +155,8 @@ class InventoryService:
         item.last_sold_at = utc_now()
         
         transaction = InventoryTransaction(
-            business_id=business_id,
-            product_id=product_id,
+            business_id=item.business_id,
+            product_id=item.product_id,
             inventory_item_id=item.id,
             transaction_type=TransactionType.SALE,
             quantity_change=-quantity,
@@ -165,7 +165,7 @@ class InventoryService:
             unit_cost=item.average_cost,
             total_cost=item.average_cost * quantity,
             reference_type="order" if order_id else None,
-            reference_id=order_id,
+            reference_id=self._coerce_uuid(order_id),
         )
         self.db.add(transaction)
         self.db.commit()
@@ -196,8 +196,8 @@ class InventoryService:
         item.last_received_at = utc_now()
         
         transaction = InventoryTransaction(
-            business_id=business_id,
-            product_id=product_id,
+            business_id=item.business_id,
+            product_id=item.product_id,
             inventory_item_id=item.id,
             transaction_type=TransactionType.PURCHASE,
             quantity_change=quantity,
@@ -206,7 +206,7 @@ class InventoryService:
             unit_cost=unit_cost,
             total_cost=unit_cost * quantity,
             reference_type="purchase_order" if purchase_order_id else None,
-            reference_id=purchase_order_id,
+            reference_id=self._coerce_uuid(purchase_order_id),
         )
         self.db.add(transaction)
         self.db.commit()

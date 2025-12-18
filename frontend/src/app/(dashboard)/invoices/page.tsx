@@ -26,12 +26,12 @@ interface Invoice {
   customer_name?: string;
   customer_id: string | null;
   status: string;
-  subtotal: number;
-  tax_amount: number;
-  discount_amount: number;
-  total: number;
-  amount_paid: number;
-  balance_due: number;
+  subtotal: number | string;
+  tax_amount: number | string;
+  discount_amount: number | string;
+  total: number | string;
+  amount_paid: number | string;
+  balance_due: number | string;
   issue_date: string;
   due_date: string;
   is_overdue?: boolean;
@@ -52,6 +52,15 @@ function formatCurrency(amount: number): string {
     currency: 'ZAR',
     minimumFractionDigits: 2,
   }).format(amount);
+}
+
+function toNumber(value: unknown): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (typeof value === 'string') {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
 }
 
 function formatDate(dateString: string): string {
@@ -121,10 +130,14 @@ export default function InvoicesPage() {
   const filteredInvoices = invoices;
 
   const totalInvoices = total;
-  const totalAmount = invoices.reduce((sum, i) => sum + i.total, 0);
-  const totalPaid = invoices.reduce((sum, i) => sum + i.amount_paid, 0);
+  const totalAmount = invoices.reduce((sum, i) => sum + toNumber(i.total), 0);
+  const totalPaid = invoices.reduce((sum, i) => sum + toNumber(i.amount_paid), 0);
   const overdueInvoices = invoices.filter(i => i.status === 'overdue' || i.is_overdue);
-  const overdueAmount = overdueInvoices.reduce((sum, i) => sum + (i.balance_due || (i.total - i.amount_paid)), 0);
+  const overdueAmount = overdueInvoices.reduce((sum, i) => {
+    const balanceDue = toNumber(i.balance_due);
+    if (balanceDue > 0) return sum + balanceDue;
+    return sum + (toNumber(i.total) - toNumber(i.amount_paid));
+  }, 0);
 
   if (isLoading && invoices.length === 0) {
     return (
@@ -240,7 +253,9 @@ export default function InvoicesPage() {
         <div className="space-y-4">
           {filteredInvoices.map((invoice) => {
             const status = statusConfig[invoice.status] || statusConfig.draft;
-            const balanceDue = invoice.balance_due ?? (invoice.total - invoice.amount_paid);
+            const totalValue = toNumber(invoice.total);
+            const paidValue = toNumber(invoice.amount_paid);
+            const balanceDue = toNumber(invoice.balance_due) || (totalValue - paidValue);
             const isOverdue = invoice.is_overdue || invoice.status === 'overdue';
             return (
               <Link key={invoice.id} href={`/invoices/${invoice.id}`}>
@@ -275,16 +290,16 @@ export default function InvoicesPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold text-white">
-                          {formatCurrency(invoice.total)}
+                          {formatCurrency(totalValue)}
                         </div>
                         {balanceDue > 0 && (
                           <div className={`text-sm ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
                             Due: {formatCurrency(balanceDue)}
                           </div>
                         )}
-                        {invoice.amount_paid > 0 && invoice.amount_paid < invoice.total && (
+                        {paidValue > 0 && paidValue < totalValue && (
                           <div className="text-xs text-green-400">
-                            Paid: {formatCurrency(invoice.amount_paid)}
+                            Paid: {formatCurrency(paidValue)}
                           </div>
                         )}
                       </div>

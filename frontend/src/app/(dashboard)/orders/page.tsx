@@ -27,10 +27,10 @@ interface Order {
   customer_id: string | null;
   status: string;
   payment_status: string;
-  subtotal: number;
-  tax_amount: number;
-  discount_amount: number;
-  total: number;
+  subtotal: number | string;
+  tax_amount: number | string;
+  discount_amount: number | string;
+  total: number | string;
   items_count?: number;
   order_date: string;
   created_at: string;
@@ -50,6 +50,15 @@ function formatCurrency(amount: number): string {
     currency: 'ZAR',
     minimumFractionDigits: 2,
   }).format(amount);
+}
+
+function toNumber(value: unknown): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (typeof value === 'string') {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
 }
 
 function formatDate(dateString: string): string {
@@ -119,7 +128,7 @@ export default function OrdersPage() {
   const filteredOrders = orders;
 
   const totalOrders = total;
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  const totalRevenue = orders.reduce((sum, o) => sum + toNumber(o.total), 0);
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
   const completedOrders = orders.filter(o => o.status === 'delivered').length;
 
@@ -237,6 +246,7 @@ export default function OrdersPage() {
         <div className="space-y-4">
           {filteredOrders.map((order) => {
             const status = statusConfig[order.status] || statusConfig.pending;
+            const orderTotal = toNumber(order.total);
             return (
               <Link key={order.id} href={`/orders/${order.id}`}>
                 <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer">
@@ -261,7 +271,7 @@ export default function OrdersPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold text-white">
-                          {formatCurrency(order.total)}
+                          {formatCurrency(orderTotal)}
                         </div>
                         <Badge variant="secondary">{status.label}</Badge>
                       </div>
