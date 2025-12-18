@@ -555,8 +555,21 @@ def create_payments(db: Session, business: Business, invoices: list, customers: 
     from uuid import uuid4
     from datetime import datetime, timezone
     
-    # Database enum values are uppercase
-    payment_methods = ['CARD', 'CASH', 'EFT', 'YOCO', 'PAYFAST']
+    # Keep enum values aligned with the DB schema created by Alembic (002_add_payments)
+    # paymentmethod: cash, card, bank_transfer, mobile, check, other
+    # paymentstatus: pending, completed, failed, refunded, cancelled
+    payment_methods = [
+        "cash",
+        "card",
+        "bank_transfer",
+        "eft",
+        "mobile",
+        "check",
+        "payfast",
+        "yoco",
+        "snapscan",
+        "other",
+    ]
     
     payments_created = 0
     pay_num = 1000
@@ -573,7 +586,7 @@ def create_payments(db: Session, business: Business, invoices: list, customers: 
                                   amount, payment_method, status, payment_date, reference,
                                   created_at, updated_at)
             VALUES (:id, :business_id, :invoice_id, :customer_id, :payment_number,
-                    :amount, '{method}'::paymentmethod, 'paid'::paymentstatus, 
+                    :amount, '{method}'::paymentmethod, 'completed'::paymentstatus, 
                     :payment_date, :reference, :created_at, :updated_at)
         """
         
