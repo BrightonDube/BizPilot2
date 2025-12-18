@@ -19,11 +19,18 @@ import {
   List,
   Warehouse,
   Check,
-  X
+  X,
+  Upload,
+  Download
 } from 'lucide-react'
 import { Button, Input, Badge } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 import { useCallback } from 'react'
+import dynamic from 'next/dynamic'
+
+const BulkInventoryExport = dynamic(() => import('@/components/inventory/BulkInventoryExport').then(mod => ({ default: mod.BulkInventoryExport })), { ssr: false })
+const BulkInventoryImport = dynamic(() => import('@/components/inventory/BulkInventoryImport').then(mod => ({ default: mod.BulkInventoryImport })), { ssr: false })
+const BulkEditModal = dynamic(() => import('@/components/inventory/BulkEditModal').then(mod => ({ default: mod.BulkEditModal })), { ssr: false })
 
 interface InventoryItem {
   id: string
@@ -88,6 +95,10 @@ export default function InventoryPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<number>(0)
   const [isSaving, setIsSaving] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [showExport, setShowExport] = useState(false)
+  const [showBulkEdit, setShowBulkEdit] = useState(false)
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function fetchInventory() {
@@ -138,6 +149,37 @@ export default function InventoryPage() {
     setEditingId(null)
     setEditValue(0)
   }, [])
+
+  const toggleItemSelection = useCallback((itemId: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId)
+      } else {
+        newSet.add(itemId)
+      }
+      return newSet
+    })
+  }, [])
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedItems.size === inventoryItems.length) {
+      setSelectedItems(new Set())
+    } else {
+      setSelectedItems(new Set(inventoryItems.map(i => i.id)))
+    }
+  }, [inventoryItems, selectedItems.size])
+
+  const getSelectedInventoryItems = useCallback(() => {
+    return inventoryItems.filter(i => selectedItems.has(i.id)).map(i => ({
+      id: i.id,
+      product_name: i.product_name || 'Unknown',
+      sku: i.sku || '',
+      quantity_on_hand: i.quantity_on_hand,
+      reorder_point: i.reorder_point,
+      location: i.location,
+    }))
+  }, [inventoryItems, selectedItems])
 
   const saveStock = useCallback(async (itemId: string) => {
     try {
@@ -240,6 +282,31 @@ export default function InventoryPage() {
           <p className="text-gray-400">Track and manage your stock levels ({totalItems} items)</p>
         </div>
         <div className="flex gap-2">
+          {selectedItems.size > 0 && (
+            <Button 
+              onClick={() => setShowBulkEdit(true)}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit {selectedItems.size} Items
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            onClick={() => setShowImport(true)}
+            className="border-gray-600 hover:bg-gray-700"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowExport(true)}
+            className="border-gray-600 hover:bg-gray-700"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
           <Link href="/inventory/new">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               <Plus className="h-4 w-4 mr-2" />
@@ -460,6 +527,14 @@ export default function InventoryPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-700">
+                  <th className="w-10 py-3 px-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.size === inventoryItems.length && inventoryItems.length > 0}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-gray-500 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Product</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">SKU</th>
                   <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">On Hand</th>
@@ -479,11 +554,19 @@ export default function InventoryPage() {
                   return (
                     <motion.tr 
                       key={item.id} 
-                      className="border-b border-gray-800 hover:bg-gray-800/50"
+                      className={`border-b border-gray-800 hover:bg-gray-800/50 ${selectedItems.has(item.id) ? 'bg-blue-900/20' : ''}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + index * 0.03 }}
                     >
+                      <td className="py-3 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.has(item.id)}
+                          onChange={() => toggleItemSelection(item.id)}
+                          className="w-4 h-4 rounded border-gray-500 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </td>
                       <td className="py-3 px-4">
                         <div className="font-medium text-white">{item.product_name || 'Unknown Product'}</div>
                       </td>
@@ -627,6 +710,31 @@ export default function InventoryPage() {
             ))}
           </div>
         </motion.div>
+      )}
+
+      {/* Import/Export/Bulk Edit Modals */}
+      {showImport && (
+        <BulkInventoryImport 
+          onClose={() => setShowImport(false)} 
+          onSuccess={() => {
+            setShowImport(false)
+            setPage(1)
+          }}
+        />
+      )}
+      {showExport && (
+        <BulkInventoryExport onClose={() => setShowExport(false)} />
+      )}
+      {showBulkEdit && selectedItems.size > 0 && (
+        <BulkEditModal
+          items={getSelectedInventoryItems()}
+          onClose={() => setShowBulkEdit(false)}
+          onSuccess={() => {
+            setShowBulkEdit(false)
+            setSelectedItems(new Set())
+            setPage(1)
+          }}
+        />
       )}
     </motion.div>
   )

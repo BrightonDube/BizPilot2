@@ -46,7 +46,7 @@ jobs:
       - name: Run tests
         env:
           SECRET_KEY: test-secret-key-for-ci-testing-only
-        run: pytest app/tests/ -v --tb=short
+        run: pytest app/tests/ -v --tb=short --cov --cov-report=term-missing --cov-report=xml --cov-fail-under=80
 
   # Frontend CI
   frontend:

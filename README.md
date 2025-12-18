@@ -22,15 +22,17 @@ docker-compose up -d
 ### Manual Setup
 
 ```bash
-# Backend
-cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+# Install frontend deps
+pnpm --filter frontend install
 
-# Frontend
-cd frontend
-pnpm install && pnpm dev
+# Run DB migrations (backend)
+pnpm backend:migrate
+
+# Start backend
+pnpm backend:dev
+
+# Start frontend (in another terminal)
+pnpm frontend:dev
 ```
 
 ## 📦 Deployment

@@ -5,14 +5,17 @@
   "description": "BizPilot v2.0 - Modern Multi-Business Management Platform",
   "scripts": {
     "dev": "pnpm -r dev",
+    "dev:all": "pwsh -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\start-dev.ps1",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "frontend:dev": "pnpm --filter frontend dev",
     "frontend:build": "pnpm --filter frontend build",
     "frontend:test": "pnpm --filter frontend test",
-    "backend:dev": "cd backend && source venv/bin/activate && uvicorn app.main:app --reload",
-    "backend:test": "cd backend && source venv/bin/activate && pytest"
+    "backend:dev": "cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "backend:test": "cd backend && python -m pytest --cov --cov-report=term-missing --cov-report=xml --cov-fail-under=80",
+    "backend:migrate": "cd backend && python -m alembic upgrade head",
+    "beads:sync": "pwsh -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\beads-sync.ps1"
   },
   "keywords": [
     "bizpilot",
