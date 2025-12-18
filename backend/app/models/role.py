@@ -32,6 +32,8 @@ class Permission(str, enum.Enum):
 
     # Inventory management
     INVENTORY_VIEW = "inventory:view"
+    INVENTORY_CREATE = "inventory:create"
+    INVENTORY_EDIT = "inventory:edit"
     INVENTORY_ADJUST = "inventory:adjust"
     INVENTORY_TRANSFER = "inventory:transfer"
 
@@ -108,7 +110,13 @@ class Role(BaseModel):
         self.permissions = perms
 
     def has_permission(self, permission: str) -> bool:
-        """Check if role has a specific permission."""
+        """Check if role has a specific permission.
+        
+        Admin roles automatically have all permissions.
+        """
+        # Admin role has all permissions (handles new permissions added after role creation)
+        if self.name and self.name.lower() == "admin":
+            return True
         return permission in self.get_permissions()
 
 
@@ -127,6 +135,8 @@ DEFAULT_ROLES = {
             Permission.PRODUCTS_CREATE.value,
             Permission.PRODUCTS_EDIT.value,
             Permission.INVENTORY_VIEW.value,
+            Permission.INVENTORY_CREATE.value,
+            Permission.INVENTORY_EDIT.value,
             Permission.INVENTORY_ADJUST.value,
             Permission.ORDERS_VIEW.value,
             Permission.ORDERS_CREATE.value,
