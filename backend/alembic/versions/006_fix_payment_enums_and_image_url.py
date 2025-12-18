@@ -1,6 +1,6 @@
 """Fix payment enum casing and allow longer image URLs
 
-Revision ID: 006_fix_payment_enums_and_image_url
+Revision ID: 006_fix_pay_enums_imgurl
 Revises: 005_add_deleted_at_columns
 Create Date: 2025-12-18 00:00:00.000000
 
@@ -12,7 +12,9 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = "006_fix_payment_enums_and_image_url"
+# NOTE: Postgres alembic_version.version_num is often VARCHAR(32).
+# Keep revision IDs <= 32 chars to avoid deployment failures during stamping.
+revision: str = "006_fix_pay_enums_imgurl"
 down_revision: Union[str, None] = "005_add_deleted_at_columns"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
