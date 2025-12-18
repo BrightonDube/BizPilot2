@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.inventory import InventoryItem, TransactionType
 from app.schemas.inventory import InventoryAdjustment, InventoryItemCreate
 from app.services.inventory_service import InventoryService
 

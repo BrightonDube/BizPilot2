@@ -20,13 +20,22 @@ interface Product {
   id: string
   name: string
   sku: string
-  price: number
-  cost_price: number
+  price: number | string
+  cost_price: number | string
 }
 
 interface ProductListResponse {
   items: Product[]
   total: number
+}
+
+function toNumber(value: unknown): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0
+  if (typeof value === 'string') {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : 0
+  }
+  return 0
 }
 
 export default function NewInventoryPage() {
@@ -193,8 +202,9 @@ export default function NewInventoryPage() {
                     key={product.id}
                     onClick={() => {
                       handleInputChange('product_id', product.id)
-                      handleInputChange('average_cost', product.cost_price || 0)
-                      handleInputChange('last_cost', product.cost_price || 0)
+                      const cost = toNumber(product.cost_price)
+                      handleInputChange('average_cost', cost)
+                      handleInputChange('last_cost', cost)
                     }}
                     className={`p-3 cursor-pointer border-b border-gray-700 last:border-b-0 transition-colors ${
                       formData.product_id === product.id 
@@ -208,7 +218,7 @@ export default function NewInventoryPage() {
                         <p className="text-sm text-gray-400">SKU: {product.sku || 'N/A'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-400">Cost: R{product.cost_price?.toFixed(2) || '0.00'}</p>
+                        <p className="text-sm text-gray-400">Cost: R{toNumber(product.cost_price).toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
