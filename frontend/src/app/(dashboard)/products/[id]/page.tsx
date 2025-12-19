@@ -30,9 +30,9 @@ interface Product {
   status: string;
   quantity: number;
   low_stock_threshold: number;
-  cost_price: number | null;
-  selling_price: number;
-  compare_at_price: number | null;
+  cost_price: number | string | null;
+  selling_price: number | string;
+  compare_at_price: number | string | null;
   is_taxable: boolean;
   track_inventory: boolean;
   image_url: string | null;
@@ -113,10 +113,20 @@ export default function ProductDetailPage() {
       </div>
     );
   }
-  
-  const costPrice = product.cost_price || 0;
-  const profitMargin = costPrice > 0
-    ? ((product.selling_price - costPrice) / product.selling_price * 100).toFixed(1)
+
+  const toNumber = (value: unknown, fallback = 0): number => {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const sellingPrice = toNumber(product.selling_price, 0);
+  const costPrice = toNumber(product.cost_price, 0);
+  const compareAtPrice = product.compare_at_price === null ? null : toNumber(product.compare_at_price, 0);
+
+  const profitMargin = sellingPrice > 0 && costPrice > 0
+    ? ((sellingPrice - costPrice) / sellingPrice * 100).toFixed(1)
     : '0.0';
 
   const isLowStock = product.track_inventory && product.quantity <= product.low_stock_threshold;
@@ -160,8 +170,8 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <StatCard
           title="Selling Price"
-          value={`R ${product.selling_price.toFixed(2)}`}
-          description={product.compare_at_price ? `Was R ${product.compare_at_price.toFixed(2)}` : undefined}
+          value={`R ${sellingPrice.toFixed(2)}`}
+          description={compareAtPrice ? `Was R ${compareAtPrice.toFixed(2)}` : undefined}
         />
         <StatCard
           title="Cost Price"
@@ -171,7 +181,7 @@ export default function ProductDetailPage() {
         <StatCard
           title="Profit Margin"
           value={`${profitMargin}%`}
-          change={`R ${(product.selling_price - costPrice).toFixed(2)} per unit`}
+          change={`R ${(sellingPrice - costPrice).toFixed(2)} per unit`}
           changeType="positive"
           icon={<TrendingUp className="w-5 h-5" />}
         />
@@ -257,46 +267,27 @@ export default function ProductDetailPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Product Image</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="aspect-square w-full object-cover rounded-lg"
-                />
-              ) : (
-                <div className="aspect-square bg-gray-700 rounded-lg flex items-center justify-center">
-                  <Package className="h-16 w-16 text-gray-500" />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle>Pricing</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-400">Selling Price</span>
-                <span className="text-white font-medium">R {product.selling_price.toFixed(2)}</span>
+                <span className="text-white font-medium">R {sellingPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Cost Price</span>
                 <span className="text-white">R {costPrice.toFixed(2)}</span>
               </div>
-              {product.compare_at_price && (
+              {compareAtPrice && (
                 <div className="flex justify-between">
                   <span className="text-gray-400">Compare at</span>
-                  <span className="text-gray-500 line-through">R {product.compare_at_price.toFixed(2)}</span>
+                  <span className="text-gray-500 line-through">R {compareAtPrice.toFixed(2)}</span>
                 </div>
               )}
               <div className="pt-3 border-t border-gray-700">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Profit</span>
-                  <span className="text-green-400 font-medium">R {(product.selling_price - costPrice).toFixed(2)}</span>
+                  <span className="text-green-400 font-medium">R {(sellingPrice - costPrice).toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">

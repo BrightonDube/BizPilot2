@@ -6,7 +6,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 
 from app.models.product import Product, ProductCategory, ProductStatus
-from app.schemas.product import ProductCreate, ProductUpdate, ProductCategoryCreate, ProductCategoryUpdate
+from app.models.product_ingredient import ProductIngredient
+from app.schemas.product import (
+    ProductCreate,
+    ProductUpdate,
+    ProductCategoryCreate,
+    ProductCategoryUpdate,
+    ProductIngredientCreate,
+    ProductIngredientUpdate,
+)
 
 
 class ProductService:
@@ -92,11 +100,21 @@ class ProductService:
 
     def create_product(self, business_id: str, data: ProductCreate) -> Product:
         """Create a new product."""
+        ingredient_payloads = data.ingredients
+        data_dict = data.model_dump(exclude={"ingredients"})
         product = Product(
             business_id=business_id,
-            **data.model_dump(),
+            **data_dict,
         )
         self.db.add(product)
+        self.db.flush()
+
+        if ingredient_payloads:
+            self.replace_product_ingredients(
+                product=product,
+                business_id=business_id,
+                ingredients=ingredient_payloads,
+            )
         self.db.commit()
         self.db.refresh(product)
         return product
@@ -104,11 +122,91 @@ class ProductService:
     def update_product(self, product: Product, data: ProductUpdate) -> Product:
         """Update a product."""
         update_data = data.model_dump(exclude_unset=True)
+        ingredient_payloads = update_data.pop("ingredients", None)
         for field, value in update_data.items():
             setattr(product, field, value)
+
+        if ingredient_payloads is not None:
+            self.replace_product_ingredients(
+                product=product,
+                business_id=str(product.business_id),
+                ingredients=ingredient_payloads,
+            )
         self.db.commit()
         self.db.refresh(product)
         return product
+
+    # Ingredients/BOM
+    def list_product_ingredients(self, product_id: str, business_id: str) -> List[ProductIngredient]:
+        return (
+            self.db.query(ProductIngredient)
+            .filter(
+                ProductIngredient.product_id == product_id,
+                ProductIngredient.business_id == business_id,
+                ProductIngredient.deleted_at.is_(None),
+            )
+            .order_by(ProductIngredient.sort_order.asc())
+            .all()
+        )
+
+    def add_product_ingredient(
+        self,
+        product_id: str,
+        business_id: str,
+        data: ProductIngredientCreate,
+    ) -> ProductIngredient:
+        ingredient = ProductIngredient(
+            business_id=business_id,
+            product_id=product_id,
+            **data.model_dump(),
+        )
+        self.db.add(ingredient)
+        self.db.commit()
+        self.db.refresh(ingredient)
+        return ingredient
+
+    def update_product_ingredient(
+        self,
+        ingredient: ProductIngredient,
+        data: ProductIngredientUpdate,
+    ) -> ProductIngredient:
+        update_data = data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(ingredient, field, value)
+        self.db.commit()
+        self.db.refresh(ingredient)
+        return ingredient
+
+    def delete_product_ingredient(self, ingredient: ProductIngredient) -> None:
+        ingredient.soft_delete()
+        self.db.commit()
+
+    def replace_product_ingredients(
+        self,
+        product: Product,
+        business_id: str,
+        ingredients: List[ProductIngredientCreate],
+    ) -> None:
+        # Soft-delete existing ingredients
+        existing = self.db.query(ProductIngredient).filter(
+            ProductIngredient.product_id == product.id,
+            ProductIngredient.business_id == business_id,
+            ProductIngredient.deleted_at.is_(None),
+        )
+        for ing in existing:
+            ing.soft_delete()
+
+        for i, ing in enumerate(ingredients):
+            ing_dict = ing.model_dump()
+            if "sort_order" not in ing_dict or ing_dict["sort_order"] is None:
+                ing_dict["sort_order"] = i
+            self.db.add(
+                ProductIngredient(
+                    business_id=business_id,
+                    product_id=product.id,
+                    **ing_dict,
+                )
+            )
 
     def delete_product(self, product: Product) -> bool:
         """Soft delete a product."""

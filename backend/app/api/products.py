@@ -18,6 +18,9 @@ from app.schemas.product import (
     ProductListResponse,
     ProductBulkCreate,
     ProductBulkDelete,
+    ProductIngredientCreate,
+    ProductIngredientUpdate,
+    ProductIngredientResponse,
 )
 from app.services.product_service import ProductService
 
@@ -26,6 +29,27 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 def _product_to_response(product: Product) -> ProductResponse:
     """Convert a Product model to ProductResponse schema."""
+    ingredients = [
+        ProductIngredientResponse(
+            id=str(ing.id),
+            business_id=str(ing.business_id),
+            product_id=str(ing.product_id),
+            name=ing.name,
+            unit=ing.unit,
+            quantity=ing.quantity,
+            cost=ing.cost,
+            sort_order=ing.sort_order,
+            created_at=ing.created_at,
+            updated_at=ing.updated_at,
+        )
+        for ing in (product.ingredients or [])
+        if ing.deleted_at is None
+    ]
+
+    total_cost = None
+    if product.has_ingredients:
+        total_cost = Decimal(str(product.ingredients_total_cost))
+
     return ProductResponse(
         id=str(product.id),
         business_id=str(product.business_id),
@@ -36,6 +60,7 @@ def _product_to_response(product: Product) -> ProductResponse:
         cost_price=product.cost_price,
         selling_price=product.selling_price,
         compare_at_price=product.compare_at_price,
+        labor_minutes=product.labor_minutes or 0,
         is_taxable=product.is_taxable,
         tax_rate=product.tax_rate,
         track_inventory=product.track_inventory,
@@ -46,9 +71,137 @@ def _product_to_response(product: Product) -> ProductResponse:
         category_id=str(product.category_id) if product.category_id else None,
         is_low_stock=product.is_low_stock,
         profit_margin=product.profit_margin,
+        total_cost=total_cost,
+        has_ingredients=product.has_ingredients,
+        ingredients=ingredients,
         created_at=product.created_at,
         updated_at=product.updated_at,
     )
+
+
+@router.get("/{product_id}/ingredients", response_model=list[ProductIngredientResponse])
+async def list_product_ingredients(
+    product_id: str,
+    current_user: User = Depends(has_permission("products:view")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    service = ProductService(db)
+    product = service.get_product(product_id, business_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    ingredients = service.list_product_ingredients(product_id=product_id, business_id=business_id)
+    return [
+        ProductIngredientResponse(
+            id=str(ing.id),
+            business_id=str(ing.business_id),
+            product_id=str(ing.product_id),
+            name=ing.name,
+            unit=ing.unit,
+            quantity=ing.quantity,
+            cost=ing.cost,
+            sort_order=ing.sort_order,
+            created_at=ing.created_at,
+            updated_at=ing.updated_at,
+        )
+        for ing in ingredients
+    ]
+
+
+@router.post("/{product_id}/ingredients", response_model=ProductIngredientResponse, status_code=status.HTTP_201_CREATED)
+async def create_product_ingredient(
+    product_id: str,
+    data: ProductIngredientCreate,
+    current_user: User = Depends(has_permission("products:edit")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    service = ProductService(db)
+    product = service.get_product(product_id, business_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    ing = service.add_product_ingredient(product_id=product_id, business_id=business_id, data=data)
+    return ProductIngredientResponse(
+        id=str(ing.id),
+        business_id=str(ing.business_id),
+        product_id=str(ing.product_id),
+        name=ing.name,
+        unit=ing.unit,
+        quantity=ing.quantity,
+        cost=ing.cost,
+        sort_order=ing.sort_order,
+        created_at=ing.created_at,
+        updated_at=ing.updated_at,
+    )
+
+
+@router.put("/{product_id}/ingredients/{ingredient_id}", response_model=ProductIngredientResponse)
+async def update_product_ingredient(
+    product_id: str,
+    ingredient_id: str,
+    data: ProductIngredientUpdate,
+    current_user: User = Depends(has_permission("products:edit")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    service = ProductService(db)
+    product = service.get_product(product_id, business_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    from app.models.product_ingredient import ProductIngredient
+
+    ingredient = db.query(ProductIngredient).filter(
+        ProductIngredient.id == ingredient_id,
+        ProductIngredient.product_id == product_id,
+        ProductIngredient.business_id == business_id,
+        ProductIngredient.deleted_at.is_(None),
+    ).first()
+    if not ingredient:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
+
+    ing = service.update_product_ingredient(ingredient, data)
+    return ProductIngredientResponse(
+        id=str(ing.id),
+        business_id=str(ing.business_id),
+        product_id=str(ing.product_id),
+        name=ing.name,
+        unit=ing.unit,
+        quantity=ing.quantity,
+        cost=ing.cost,
+        sort_order=ing.sort_order,
+        created_at=ing.created_at,
+        updated_at=ing.updated_at,
+    )
+
+
+@router.delete("/{product_id}/ingredients/{ingredient_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product_ingredient(
+    product_id: str,
+    ingredient_id: str,
+    current_user: User = Depends(has_permission("products:edit")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    service = ProductService(db)
+    product = service.get_product(product_id, business_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    from app.models.product_ingredient import ProductIngredient
+
+    ingredient = db.query(ProductIngredient).filter(
+        ProductIngredient.id == ingredient_id,
+        ProductIngredient.product_id == product_id,
+        ProductIngredient.business_id == business_id,
+        ProductIngredient.deleted_at.is_(None),
+    ).first()
+    if not ingredient:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
+
+    service.delete_product_ingredient(ingredient)
 
 
 @router.get("", response_model=ProductListResponse)

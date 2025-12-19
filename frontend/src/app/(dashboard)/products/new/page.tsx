@@ -16,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  ImageInput,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 
@@ -44,7 +43,6 @@ export default function NewProductPage() {
     is_taxable: true,
     track_inventory: true,
     status: 'active',
-    image_url: '',
     category_id: '',
   });
 
@@ -90,7 +88,6 @@ export default function NewProductPage() {
         is_taxable: formData.is_taxable,
         track_inventory: formData.track_inventory,
         status: formData.status,
-        image_url: formData.image_url || null,
         category_id: formData.category_id || null,
       };
 
@@ -479,20 +476,6 @@ export default function NewProductPage() {
                 <Link href="/categories" className="block mt-2 text-xs text-blue-400 hover:text-blue-300">
                   Manage Categories →
                 </Link>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Image</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ImageInput
-                  value={formData.image_url}
-                  onChange={(url) => setFormData({ ...formData, image_url: url })}
-                  maxSize={5}
-                  placeholder="Add product image"
-                />
               </CardContent>
             </Card>
 
