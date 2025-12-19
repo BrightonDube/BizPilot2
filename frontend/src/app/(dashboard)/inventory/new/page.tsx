@@ -21,7 +21,7 @@ interface Product {
   name: string
   sku: string
   price: number | string
-  cost_price: number | string
+  cost_price: number | string | null
 }
 
 interface ProductListResponse {
