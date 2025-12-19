@@ -56,6 +56,8 @@ class ProductBase(BaseModel):
     cost_price: Optional[Decimal] = Field(None, ge=0)
     selling_price: Decimal = Field(..., ge=0)
     compare_at_price: Optional[Decimal] = Field(None, ge=0)
+
+    labor_minutes: int = Field(0, ge=0)
     
     # Tax
     is_taxable: bool = True
@@ -78,7 +80,7 @@ class ProductBase(BaseModel):
 
 class ProductCreate(ProductBase):
     """Schema for creating a product."""
-    pass
+    ingredients: Optional[List["ProductIngredientCreate"]] = None
 
 
 class ProductUpdate(BaseModel):
@@ -99,6 +101,8 @@ class ProductUpdate(BaseModel):
     status: Optional[ProductStatus] = None
     image_url: Optional[str] = None
     category_id: Optional[str] = None
+    labor_minutes: Optional[int] = Field(None, ge=0)
+    ingredients: Optional[List["ProductIngredientCreate"]] = None
 
 
 class ProductResponse(ProductBase):
@@ -108,6 +112,9 @@ class ProductResponse(ProductBase):
     business_id: str
     is_low_stock: bool
     profit_margin: float
+    total_cost: Optional[Decimal] = None
+    has_ingredients: bool = False
+    ingredients: List["ProductIngredientResponse"] = []
     created_at: datetime
     updated_at: datetime
     
@@ -145,3 +152,38 @@ class ProductFilter(BaseModel):
     min_price: Optional[Decimal] = None
     max_price: Optional[Decimal] = None
     low_stock_only: bool = False
+
+
+class ProductIngredientBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    unit: str = Field("unit", min_length=1, max_length=50)
+    quantity: Decimal = Field(..., ge=0)
+    cost: Decimal = Field(..., ge=0)
+    sort_order: int = 0
+
+
+class ProductIngredientCreate(ProductIngredientBase):
+    pass
+
+
+class ProductIngredientUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    unit: Optional[str] = Field(None, min_length=1, max_length=50)
+    quantity: Optional[Decimal] = Field(None, ge=0)
+    cost: Optional[Decimal] = Field(None, ge=0)
+    sort_order: Optional[int] = None
+
+
+class ProductIngredientResponse(ProductIngredientBase):
+    id: str
+    business_id: str
+    product_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+ProductCreate.model_rebuild()
+ProductUpdate.model_rebuild()
+ProductResponse.model_rebuild()

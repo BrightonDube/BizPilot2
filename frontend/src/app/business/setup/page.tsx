@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Building2, ArrowRight, Loader2, CheckCircle } from 'lucide-react'
 import { Logo } from '@/components/common/Logo'
-import apiClient from '@/lib/api'
+import { apiClient } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 
 interface BusinessFormData {
