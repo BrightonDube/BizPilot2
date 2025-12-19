@@ -21,8 +21,15 @@ interface InventoryItem {
   reorder_quantity: number
   location: string | null
   bin_location: string | null
-  average_cost: number
+  average_cost: number | string | null
   is_low_stock: boolean
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (value === null || value === undefined) return fallback
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
 }
 
 type ExportFormat = 'csv' | 'xlsx'
@@ -79,7 +86,7 @@ export function BulkInventoryExport({ onClose }: BulkInventoryExportProps) {
         item.reorder_quantity.toString(),
         item.location || '',
         item.bin_location || '',
-        item.average_cost.toFixed(2),
+        toNumber(item.average_cost, 0).toFixed(2),
         item.is_low_stock ? 'Yes' : 'No'
       ])
 

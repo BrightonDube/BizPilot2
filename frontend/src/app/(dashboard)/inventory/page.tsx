@@ -43,7 +43,7 @@ interface InventoryItem {
   reorder_point: number
   location: string | null
   bin_location: string | null
-  average_cost: number
+  average_cost: number | string | null
   is_low_stock: boolean
   created_at: string
 }
@@ -62,6 +62,13 @@ function formatCurrency(amount: number): string {
     currency: 'ZAR',
     minimumFractionDigits: 2,
   }).format(amount)
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (value === null || value === undefined) return fallback
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
 }
 
 function InventoryCardSkeleton() {
@@ -136,7 +143,7 @@ export default function InventoryPage() {
   }, [page, searchTerm, showLowStockOnly])
 
   const totalItems = total
-  const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0)
+  const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * toNumber(i.average_cost, 0)), 0)
   const lowStockCount = inventoryItems.filter(i => i.is_low_stock).length
   const outOfStockCount = inventoryItems.filter(i => i.quantity_on_hand === 0).length
 
@@ -455,7 +462,7 @@ export default function InventoryPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {inventoryItems.map((item, index) => {
             const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved)
-            const value = item.quantity_on_hand * item.average_cost
+            const value = item.quantity_on_hand * toNumber(item.average_cost, 0)
             const isOutOfStock = item.quantity_on_hand === 0
 
             return (
