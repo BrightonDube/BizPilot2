@@ -11,7 +11,7 @@ import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui';
-import apiClient from '@/lib/api';
+import { apiClient } from '@/lib/api';
 
 interface AppLayoutProps {
   children: ReactNode;
