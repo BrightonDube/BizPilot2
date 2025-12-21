@@ -15,6 +15,7 @@ from app.schemas.category import (
     CategoryListResponse,
     CategoryTreeResponse,
     CategoryTreeNode,
+    CategoryReorderItem,
 )
 from app.services.category_service import CategoryService
 
@@ -135,7 +136,7 @@ async def delete_category(
 
 @router.post("/reorder", status_code=status.HTTP_200_OK)
 async def reorder_categories(
-    category_orders: List[dict],
+    category_orders: List[CategoryReorderItem],
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):

@@ -67,6 +67,8 @@ Thumbs.db
 .beads/*.db-*
 .beads/daemon.*
 .beads/bd.sock
+.beads/bd.sock.startlock
+.beads/deletions.jsonl
 
 # Secrets
 secrets.json

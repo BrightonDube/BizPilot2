@@ -12,6 +12,7 @@ from app.schemas.category import (
     CategoryUpdate,
     CategoryResponse,
     CategoryTreeNode,
+    CategoryReorderItem,
 )
 
 
@@ -204,7 +205,7 @@ class CategoryService:
         return True
 
     def reorder_categories(
-        self, category_orders: List[dict], user_id: UUID
+        self, category_orders: List[CategoryReorderItem], user_id: UUID
     ) -> bool:
         """Reorder categories by updating sort_order."""
         business_id = self._get_user_business_id(user_id)
@@ -212,9 +213,14 @@ class CategoryService:
             return False
 
         for item in category_orders:
-            category_id = item.get("id")
-            sort_order = item.get("sort_order", 0)
-            parent_id = item.get("parent_id")
+            if isinstance(item, dict):
+                category_id = item.get("id")
+                sort_order = item.get("sort_order", 0)
+                parent_id = item.get("parent_id")
+            else:
+                category_id = item.id
+                sort_order = item.sort_order
+                parent_id = item.parent_id
 
             category = self.db.query(ProductCategory).filter(
                 ProductCategory.id == category_id,
@@ -223,8 +229,7 @@ class CategoryService:
 
             if category:
                 category.sort_order = sort_order
-                if parent_id is not None:
-                    category.parent_id = parent_id
+                category.parent_id = parent_id
 
         self.db.commit()
         return True

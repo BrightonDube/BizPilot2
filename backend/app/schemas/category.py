@@ -44,8 +44,14 @@ class CategoryResponse(CategoryBase):
 
 class CategoryTreeNode(CategoryResponse):
     """Schema for category tree node with children."""
-    
-    children: List["CategoryTreeNode"] = []
+
+    children: List["CategoryTreeNode"] = Field(default_factory=list)
+
+
+class CategoryReorderItem(BaseModel):
+    id: UUID
+    sort_order: int = 0
+    parent_id: Optional[UUID] = None
 
 
 class CategoryListResponse(BaseModel):

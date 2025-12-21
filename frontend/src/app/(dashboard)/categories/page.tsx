@@ -34,6 +34,43 @@ interface Category {
   product_count: number;
 }
 
+function flattenCategoryTree(nodes: CategoryTreeNode[], parentId: string | null = null): CategoryReorderItem[] {
+  const items: CategoryReorderItem[] = []
+  nodes.forEach((node, idx) => {
+    items.push({ id: node.id, sort_order: idx, parent_id: parentId })
+    if (node.children && node.children.length > 0) {
+      items.push(...flattenCategoryTree(node.children, node.id))
+    }
+  })
+  return items
+}
+
+function reorderSiblings(nodes: CategoryTreeNode[], draggedId: string, targetId: string): CategoryTreeNode[] {
+  const draggedIdx = nodes.findIndex((n) => n.id === draggedId)
+  const targetIdx = nodes.findIndex((n) => n.id === targetId)
+  if (draggedIdx === -1 || targetIdx === -1) return nodes
+  if (draggedIdx === targetIdx) return nodes
+  const next = [...nodes]
+  const [dragged] = next.splice(draggedIdx, 1)
+  next.splice(targetIdx, 0, dragged)
+  return next
+}
+
+function updateTreeOrder(nodes: CategoryTreeNode[], draggedId: string, targetId: string): CategoryTreeNode[] {
+  const directIds = new Set(nodes.map((n) => n.id))
+  if (directIds.has(draggedId) && directIds.has(targetId)) {
+    return reorderSiblings(nodes, draggedId, targetId)
+  }
+
+  return nodes.map((node) => {
+    if (!node.children || node.children.length === 0) return node
+    return {
+      ...node,
+      children: updateTreeOrder(node.children, draggedId, targetId),
+    }
+  })
+}
+
 interface CategoryTreeNode extends Category {
   children: CategoryTreeNode[];
 }
@@ -46,6 +83,12 @@ interface CategoryListResponse {
 interface CategoryTreeResponse {
   items: CategoryTreeNode[];
   total: number;
+}
+
+interface CategoryReorderItem {
+  id: string;
+  sort_order: number;
+  parent_id: string | null;
 }
 
 function categoryMatchesQuery(category: Category, query: string): boolean {
@@ -82,12 +125,16 @@ function CategoryTreeItem({
   level = 0,
   onEdit,
   onDelete,
+  onReorderDrop,
+  onDragStart,
   deletingId,
 }: {
   category: CategoryTreeNode;
   level?: number;
   onEdit: (category: Category) => void;
   onDelete: (id: string, name: string) => void;
+  onReorderDrop: (targetId: string) => void;
+  onDragStart: (id: string) => void;
   deletingId: string | null;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -101,6 +148,10 @@ function CategoryTreeItem({
         }`}
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
+        draggable
+        onDragStart={() => onDragStart(category.id)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() => onReorderDrop(category.id)}
       >
         {hasChildren ? (
           <button
@@ -173,6 +224,8 @@ function CategoryTreeItem({
                 level={level + 1}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onReorderDrop={onReorderDrop}
+                onDragStart={onDragStart}
                 deletingId={deletingId}
               />
             ))}
@@ -189,6 +242,7 @@ export default function CategoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -224,6 +278,35 @@ export default function CategoriesPage() {
       setError('Failed to load categories');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  const persistReorder = async (nextTree: CategoryTreeNode[]) => {
+    const orders = flattenCategoryTree(nextTree)
+    await apiClient.post('/categories/reorder', orders)
+  }
+
+  const handleDragStart = (id: string) => {
+    setDraggingId(id)
+  }
+
+  const handleReorderDrop = async (targetId: string) => {
+    if (!draggingId) return
+    if (draggingId === targetId) return
+
+    const previous = categories
+    const nextTree = updateTreeOrder(categories, draggingId, targetId)
+    setCategories(nextTree)
+
+    try {
+      await persistReorder(nextTree)
+      await fetchCategories()
+    } catch (err) {
+      console.error('Failed to reorder categories:', err)
+      setError('Failed to reorder categories')
+      setCategories(previous)
+    } finally {
+      setDraggingId(null)
     }
   }
 
@@ -400,6 +483,8 @@ export default function CategoriesPage() {
                 category={category}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onReorderDrop={handleReorderDrop}
+                onDragStart={handleDragStart}
                 deletingId={deletingId}
               />
               ))
