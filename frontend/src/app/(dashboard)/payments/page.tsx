@@ -25,6 +25,39 @@ import { apiClient } from '@/lib/api'
 
 type PaymentStatus = 'pending' | 'processing' | 'succeeded' | 'completed' | 'failed' | 'refunded' | 'cancelled'
 
+const statColorClasses: Record<
+  string,
+  {
+    container: string
+    icon: string
+  }
+> = {
+  blue: {
+    container: 'bg-blue-500/20 border-blue-500/30',
+    icon: 'text-blue-400',
+  },
+  green: {
+    container: 'bg-green-500/20 border-green-500/30',
+    icon: 'text-green-400',
+  },
+  yellow: {
+    container: 'bg-yellow-500/20 border-yellow-500/30',
+    icon: 'text-yellow-400',
+  },
+  orange: {
+    container: 'bg-orange-500/20 border-orange-500/30',
+    icon: 'text-orange-400',
+  },
+  red: {
+    container: 'bg-red-500/20 border-red-500/30',
+    icon: 'text-red-400',
+  },
+  purple: {
+    container: 'bg-purple-500/20 border-purple-500/30',
+    icon: 'text-purple-400',
+  },
+}
+
 interface Payment {
   id: string
   payment_number: string
@@ -249,10 +282,10 @@ export default function PaymentsPage() {
           >
             <div className="flex items-center">
               <motion.div 
-                className={`p-2 bg-${stat.color}-500/20 rounded-lg border border-${stat.color}-500/30`}
+                className={`p-2 rounded-lg border ${statColorClasses[stat.color]?.container ?? 'bg-gray-500/20 border-gray-500/30'}`}
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
-                <stat.icon className={`h-6 w-6 text-${stat.color}-400`} />
+                <stat.icon className={`h-6 w-6 ${statColorClasses[stat.color]?.icon ?? 'text-gray-400'}`} />
               </motion.div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">{stat.label}</p>
