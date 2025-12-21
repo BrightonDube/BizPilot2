@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { Button, Input, Card, CardContent, Badge } from '@/components/ui'
 import { apiClient } from '@/lib/api'
+import { formatCurrency, toNumber } from '@/lib/utils'
 
 interface Customer {
   id: string
@@ -50,14 +51,6 @@ interface CustomerListResponse {
   page: number
   per_page: number
   pages: number
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-ZA', {
-    style: 'currency',
-    currency: 'ZAR',
-    minimumFractionDigits: 2,
-  }).format(amount)
 }
 
 function formatDate(dateString: string | undefined): string {
@@ -152,9 +145,9 @@ export default function CustomersPage() {
   }
 
   const totalCustomers = total
-  const totalRevenue = customers.reduce((sum, c) => sum + (c.total_spent || 0), 0)
+  const totalRevenue = customers.reduce((sum, c) => sum + toNumber(c.total_spent, 0), 0)
   const businessCustomers = customers.filter(c => c.customer_type === 'business').length
-  const totalOrders = customers.reduce((sum, c) => sum + (c.total_orders || 0), 0)
+  const totalOrders = customers.reduce((sum, c) => sum + toNumber(c.total_orders, 0), 0)
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
   // Loading state with skeletons

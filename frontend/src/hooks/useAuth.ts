@@ -11,7 +11,7 @@
  * - This prevents redirect loops caused by stale persisted state
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
@@ -59,17 +59,8 @@ export function useAuth() {
  * IMPORTANT: Only redirects after isInitialized is true to prevent loops.
  */
 export function useRequireAuth(redirectTo: string = '/auth/login') {
-  const { isAuthenticated, isLoading, isInitialized, fetchUser } = useAuthStore();
+  const { isAuthenticated, isLoading, isInitialized } = useAuthStore();
   const router = useRouter();
-  const hasCheckedAuth = useRef(false);
-
-  useEffect(() => {
-    // Only fetch user once on mount
-    if (!hasCheckedAuth.current && !isInitialized) {
-      hasCheckedAuth.current = true;
-      fetchUser();
-    }
-  }, [fetchUser, isInitialized]);
 
   useEffect(() => {
     // Only redirect after initialization completes and we know auth state
@@ -92,17 +83,8 @@ export function useRequireAuth(redirectTo: string = '/auth/login') {
  * IMPORTANT: Only redirects after isInitialized is true to prevent loops.
  */
 export function useGuestOnly(redirectTo: string = '/dashboard') {
-  const { isAuthenticated, isLoading, isInitialized, fetchUser } = useAuthStore();
+  const { isAuthenticated, isLoading, isInitialized } = useAuthStore();
   const router = useRouter();
-  const hasCheckedAuth = useRef(false);
-
-  useEffect(() => {
-    // Only fetch user once on mount
-    if (!hasCheckedAuth.current && !isInitialized) {
-      hasCheckedAuth.current = true;
-      fetchUser();
-    }
-  }, [fetchUser, isInitialized]);
 
   useEffect(() => {
     // Only redirect after initialization completes and we know auth state

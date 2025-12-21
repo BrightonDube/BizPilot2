@@ -132,6 +132,9 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
 
   const [bomEnabled, setBomEnabled] = useState(false)
 
+  const [targetMargin, setTargetMargin] = useState('30')
+  const [targetMarkup, setTargetMarkup] = useState('50')
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -244,6 +247,26 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
     return (profit / costPrice) * 100
   }, [profit, costPrice])
 
+  const suggestedPriceFromMargin = useMemo(() => {
+    const margin = toNumber(targetMargin, 0) / 100
+    if (costPrice <= 0) return 0
+    if (margin <= 0 || margin >= 1) return 0
+    return costPrice / (1 - margin)
+  }, [costPrice, targetMargin])
+
+  const suggestedPriceFromMarkup = useMemo(() => {
+    const markupPct = toNumber(targetMarkup, 0) / 100
+    if (costPrice <= 0) return 0
+    if (markupPct <= 0) return 0
+    return costPrice * (1 + markupPct)
+  }, [costPrice, targetMarkup])
+
+  const suggestedPrice = useMemo(() => {
+    const fromMargin = suggestedPriceFromMargin
+    if (fromMargin > 0) return fromMargin
+    return suggestedPriceFromMarkup
+  }, [suggestedPriceFromMargin, suggestedPriceFromMarkup])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
     if (type === 'checkbox') {
@@ -265,6 +288,22 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
       },
     ])
   }
+
+  useEffect(() => {
+    if (!bomEnabled) return
+    setIngredients((prev) => {
+      if (prev.length > 0) return prev
+      return [
+        {
+          name: '',
+          unit: 'unit',
+          quantity: '1',
+          cost: '0',
+          sort_order: 0,
+        },
+      ]
+    })
+  }, [bomEnabled])
 
   const removeIngredientRow = (index: number) => {
     setIngredients((prev) => prev.filter((_, i) => i !== index).map((ing, i) => ({ ...ing, sort_order: i })))
@@ -619,6 +658,51 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
                       <span className={`text-lg font-semibold ${markup > 0 ? 'text-purple-400' : 'text-gray-400'}`}>
                         {markup.toFixed(1)}%
                       </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Target Margin (%)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="99"
+                        step="0.1"
+                        value={targetMargin}
+                        onChange={(e) => setTargetMargin(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Target Markup (%)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={targetMarkup}
+                        onChange={(e) => setTargetMarkup(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Suggested Price</label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 text-sm text-gray-200 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700">
+                          R {suggestedPrice > 0 ? suggestedPrice.toFixed(2) : '0.00'}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={suggestedPrice <= 0}
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              selling_price: suggestedPrice > 0 ? suggestedPrice.toFixed(2) : prev.selling_price,
+                            }))
+                          }
+                        >
+                          Apply
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
