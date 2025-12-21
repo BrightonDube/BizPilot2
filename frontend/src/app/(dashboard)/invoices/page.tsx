@@ -88,6 +88,10 @@ export default function InvoicesPage() {
   const [pages, setPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [issueDateFrom, setIssueDateFrom] = useState('');
+  const [issueDateTo, setIssueDateTo] = useState('');
+  const [overdueOnly, setOverdueOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,6 +113,11 @@ export default function InvoicesPage() {
         if (selectedStatus !== 'all') {
           params.append('status', selectedStatus);
         }
+
+        if (issueDateFrom) params.append('date_from', issueDateFrom);
+        if (issueDateTo) params.append('date_to', issueDateTo);
+
+        if (overdueOnly) params.append('overdue_only', 'true');
         
         const response = await apiClient.get<InvoiceListResponse>(`/invoices?${params}`);
         setInvoices(response.data.items);
@@ -125,7 +134,7 @@ export default function InvoicesPage() {
     // Debounce search
     const timeoutId = setTimeout(fetchInvoices, 300);
     return () => clearTimeout(timeoutId);
-  }, [page, searchTerm, selectedStatus]);
+  }, [page, searchTerm, selectedStatus, issueDateFrom, issueDateTo, overdueOnly]);
 
   const filteredInvoices = invoices;
 
@@ -233,11 +242,83 @@ export default function InvoicesPage() {
           <option value="partial">Partial</option>
           <option value="overdue">Overdue</option>
         </select>
-        <Button variant="outline" className="border-gray-700">
+        <Button
+          variant="outline"
+          className="border-gray-700"
+          onClick={() => setShowFilters((v) => !v)}
+        >
           <Filter className="w-4 h-4 mr-2" />
-          More Filters
+          {showFilters ? 'Hide Filters' : 'More Filters'}
         </Button>
       </div>
+
+      {showFilters && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-medium text-white">Filters</div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-gray-700"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedStatus('all');
+                  setIssueDateFrom('');
+                  setIssueDateTo('');
+                  setOverdueOnly(false);
+                  setPage(1);
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Issue Date From</label>
+                <Input
+                  type="date"
+                  value={issueDateFrom}
+                  onChange={(e) => {
+                    setIssueDateFrom(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-gray-900 border-gray-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Issue Date To</label>
+                <Input
+                  type="date"
+                  value={issueDateTo}
+                  onChange={(e) => {
+                    setIssueDateTo(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-gray-900 border-gray-700"
+                />
+              </div>
+
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 text-sm text-gray-200">
+                  <input
+                    type="checkbox"
+                    checked={overdueOnly}
+                    onChange={(e) => {
+                      setOverdueOnly(e.target.checked);
+                      setPage(1);
+                    }}
+                    className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                  />
+                  Overdue only
+                </label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {filteredInvoices.length === 0 ? (
         <EmptyState

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
+  Search,
   Edit,
   Trash2,
   Loader2,
@@ -45,6 +46,28 @@ interface CategoryListResponse {
 interface CategoryTreeResponse {
   items: CategoryTreeNode[];
   total: number;
+}
+
+function categoryMatchesQuery(category: Category, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const name = (category.name || '').toLowerCase()
+  const desc = (category.description || '').toLowerCase()
+  return name.includes(q) || desc.includes(q)
+}
+
+function filterCategoryTree(nodes: CategoryTreeNode[], query: string): CategoryTreeNode[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return nodes
+
+  return nodes
+    .map((node) => {
+      const filteredChildren = filterCategoryTree(node.children || [], query)
+      const matches = categoryMatchesQuery(node, query)
+      if (!matches && filteredChildren.length === 0) return null
+      return { ...node, children: filteredChildren }
+    })
+    .filter((node): node is CategoryTreeNode => node !== null)
 }
 
 const colorOptions = [
@@ -166,6 +189,8 @@ export default function CategoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -313,6 +338,35 @@ export default function CategoriesPage() {
         </motion.div>
       )}
 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Categories', value: flatCategories.length },
+          { label: 'Top Level', value: flatCategories.filter((c) => !c.parent_id).length },
+          { label: 'Subcategories', value: flatCategories.filter((c) => Boolean(c.parent_id)).length },
+          { label: 'Products Tagged', value: flatCategories.reduce((sum, c) => sum + (c.product_count || 0), 0) },
+        ].map((stat) => (
+          <Card key={stat.label} className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-400">{stat.label}</div>
+              <div className="text-2xl font-semibold text-gray-100">{stat.value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <div className="relative">
+          <Search className="h-4 w-4 absolute left-3 top-3 text-gray-500" />
+          <Input
+            type="text"
+            placeholder="Search categories by name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-gray-900/50 border-gray-600"
+          />
+        </div>
+      </div>
+
       {categories.length === 0 ? (
         <motion.div
           className="text-center py-12"
@@ -333,7 +387,14 @@ export default function CategoriesPage() {
       ) : (
         <Card className="bg-gray-800/50 border-gray-700">
           <CardContent className="p-4">
-            {categories.map((category) => (
+            {filterCategoryTree(categories, searchTerm).length === 0 ? (
+              <div className="text-center py-10">
+                <FolderTree className="h-10 w-10 text-gray-500 mx-auto mb-3" />
+                <h3 className="text-base font-medium text-gray-100 mb-1">No matching categories</h3>
+                <p className="text-sm text-gray-400">Try a different search term.</p>
+              </div>
+            ) : (
+              filterCategoryTree(categories, searchTerm).map((category) => (
               <CategoryTreeItem
                 key={category.id}
                 category={category}
@@ -341,7 +402,8 @@ export default function CategoriesPage() {
                 onDelete={handleDelete}
                 deletingId={deletingId}
               />
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       )}

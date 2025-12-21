@@ -29,6 +29,8 @@ import {
 } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
+import { CurrencySelector } from '@/components/common/CurrencySelector';
+import { LanguageSelector } from '@/components/common/LanguageSelector';
 
 type SettingsTab = 'profile' | 'business' | 'notifications' | 'security' | 'billing' | 'appearance';
 
@@ -338,19 +340,13 @@ export default function SettingsPage() {
                     <label htmlFor="currency" className="block text-sm font-medium text-gray-400 mb-1">
                       Default Currency
                     </label>
-                    <select
-                      id="currency"
+                    <CurrencySelector
                       value={businessData.currency}
-                      onChange={(e) =>
-                        setBusinessData({ ...businessData, currency: e.target.value })
+                      onChange={(currencyCode) =>
+                        setBusinessData({ ...businessData, currency: currencyCode })
                       }
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                    >
-                      <option value="ZAR">South African Rand (ZAR)</option>
-                      <option value="USD">US Dollar (USD)</option>
-                      <option value="EUR">Euro (EUR)</option>
-                      <option value="GBP">British Pound (GBP)</option>
-                    </select>
+                      className="w-full"
+                    />
                   </div>
                 </div>
 
@@ -528,16 +524,7 @@ export default function SettingsPage() {
 
                 <div>
                   <h3 className="text-sm font-medium text-white mb-3">Language</h3>
-                  <label htmlFor="language-select" className="sr-only">Select language</label>
-                  <select
-                    id="language-select"
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                  </select>
+                  <LanguageSelector className="w-full" />
                 </div>
 
                 <div>

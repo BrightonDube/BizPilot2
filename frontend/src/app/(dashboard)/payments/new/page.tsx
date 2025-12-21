@@ -44,6 +44,13 @@ const PAYMENT_METHODS = [
   { value: 'snapscan', label: 'SnapScan', icon: Smartphone, description: 'QR code payment' },
 ]
 
+function toNumber(value: unknown, fallback = 0): number {
+  if (value === null || value === undefined) return fallback
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-ZA', {
     style: 'currency',
@@ -102,12 +109,16 @@ export default function NewPaymentPage() {
   )
 
   const handleSelectInvoice = (invoice: Invoice) => {
+    const total = toNumber(invoice.total, 0)
+    const paid = toNumber(invoice.amount_paid, 0)
+    const due = Math.max(0, total - paid)
+
     setSelectedInvoice(invoice)
     setFormData(prev => ({
       ...prev,
       invoice_id: invoice.id,
       customer_id: '', // Will be set from invoice
-      amount: (invoice.total - invoice.amount_paid).toFixed(2),
+      amount: due.toFixed(2),
     }))
     setSearchInvoice(invoice.invoice_number)
     setShowInvoiceDropdown(false)
@@ -119,8 +130,9 @@ export default function NewPaymentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+
+    const amount = toNumber(formData.amount, 0)
+    if (!amount || amount <= 0) {
       setError('Please enter a valid amount')
       return
     }
@@ -132,7 +144,7 @@ export default function NewPaymentPage() {
       await apiClient.post('/payments', {
         invoice_id: formData.invoice_id || null,
         customer_id: formData.customer_id || null,
-        amount: parseFloat(formData.amount),
+        amount,
         payment_method: formData.payment_method,
         payment_date: formData.payment_date,
         reference: formData.reference || null,

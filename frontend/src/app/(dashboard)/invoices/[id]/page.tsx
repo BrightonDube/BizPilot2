@@ -15,7 +15,9 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  CreditCard
+  CreditCard,
+  Download,
+  Printer
 } from 'lucide-react'
 import { Button, Card, CardContent } from '@/components/ui'
 import { Badge } from '@/components/ui/bizpilot'
@@ -77,6 +79,15 @@ function formatDate(dateString: string): string {
   })
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
 const statusConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode; label: string }> = {
   draft: { color: 'text-gray-400', bgColor: 'bg-gray-500/20', icon: <FileText className="w-4 h-4" />, label: 'Draft' },
   sent: { color: 'text-blue-400', bgColor: 'bg-blue-500/20', icon: <Send className="w-4 h-4" />, label: 'Sent' },
@@ -135,6 +146,151 @@ export default function InvoiceDetailPage() {
     } finally {
       setActionLoading(null)
     }
+  }
+
+  const handleDownloadPdf = async () => {
+    if (!invoice) return
+
+    setActionLoading('pdf')
+    try {
+      if (invoice.pdf_url) {
+        window.open(invoice.pdf_url, '_blank', 'noopener,noreferrer')
+        return
+      }
+
+      const response = await apiClient.get(`/invoices/${invoiceId}/pdf`, {
+        responseType: 'blob',
+      })
+
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${invoice.invoice_number}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err: unknown) {
+      console.error('Error downloading invoice PDF:', err)
+      const error = err as { response?: { data?: { detail?: string } } }
+      alert(error.response?.data?.detail || 'Failed to download PDF')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handlePrint = () => {
+    if (!invoice) return
+
+    const w = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700')
+    if (!w) {
+      alert('Pop-up blocked. Please allow pop-ups to print.')
+      return
+    }
+
+    const itemsHtml = invoice.items
+      .map(
+        (item) => `
+          <tr>
+            <td>${escapeHtml(String(item.description ?? ''))}</td>
+            <td style="text-align:right;">${escapeHtml(String(item.quantity ?? 0))}</td>
+            <td style="text-align:right;">${escapeHtml(formatCurrency(item.unit_price ?? 0))}</td>
+            <td style="text-align:right;">${escapeHtml(String(item.tax_rate ?? 0))}%</td>
+            <td style="text-align:right; font-weight:600;">${escapeHtml(formatCurrency(item.total ?? 0))}</td>
+          </tr>
+        `
+      )
+      .join('')
+
+    const notesHtml = invoice.notes
+      ? `<div class="section"><h3>Notes</h3><div class="muted" style="white-space: pre-wrap;">${escapeHtml(invoice.notes)}</div></div>`
+      : ''
+    const termsHtml = invoice.terms
+      ? `<div class="section"><h3>Payment Terms</h3><div class="muted">${escapeHtml(invoice.terms)}</div></div>`
+      : ''
+
+    w.document.open()
+    w.document.write(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(invoice.invoice_number)} - Print</title>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 32px; color: #111; }
+      .header { display:flex; justify-content:space-between; align-items:flex-start; gap: 24px; }
+      .title { font-size: 20px; font-weight: 700; margin: 0; }
+      .muted { color: #555; font-size: 12px; }
+      .badge { display:inline-block; padding: 4px 8px; border: 1px solid #ddd; border-radius: 999px; font-size: 12px; }
+      .section { margin-top: 20px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      th, td { padding: 10px 8px; border-bottom: 1px solid #e5e5e5; font-size: 12px; }
+      th { text-align: left; color: #444; }
+      .totals { width: 320px; margin-left: auto; margin-top: 16px; }
+      .totals-row { display:flex; justify-content:space-between; padding: 6px 0; font-size: 12px; }
+      .totals-row strong { font-size: 14px; }
+      @media print {
+        body { margin: 0.5in; }
+        a { color: inherit; text-decoration: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>
+        <p class="title">${escapeHtml(invoice.invoice_number)}</p>
+        <div class="muted">Issued: ${escapeHtml(formatDate(invoice.issue_date))}</div>
+        <div class="muted">Due: ${escapeHtml(formatDate(invoice.due_date))}</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="badge">${escapeHtml(String(invoice.status ?? ''))}</span>
+        <div style="margin-top:10px; font-size: 14px;"><strong>Total:</strong> ${escapeHtml(formatCurrency(invoice.total ?? 0))}</div>
+        <div class="muted">Paid: ${escapeHtml(formatCurrency(invoice.amount_paid ?? 0))}</div>
+        <div class="muted">Balance: ${escapeHtml(formatCurrency(invoice.balance_due ?? 0))}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 style="margin:0 0 6px 0; font-size: 14px;">Customer</h3>
+      <div class="muted">${escapeHtml(invoice.customer_name || 'Walk-in Customer')}</div>
+    </div>
+
+    <div class="section">
+      <h3 style="margin:0 0 6px 0; font-size: 14px;">Items</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th style="text-align:right;">Qty</th>
+            <th style="text-align:right;">Unit Price</th>
+            <th style="text-align:right;">VAT</th>
+            <th style="text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml}
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div class="totals-row"><span>Subtotal</span><span>${escapeHtml(formatCurrency(invoice.subtotal ?? 0))}</span></div>
+        ${invoice.discount_amount > 0 ? `<div class="totals-row"><span>Discount</span><span>-${escapeHtml(formatCurrency(invoice.discount_amount))}</span></div>` : ''}
+        <div class="totals-row"><span>VAT</span><span>${escapeHtml(formatCurrency(invoice.tax_amount ?? 0))}</span></div>
+        <div class="totals-row" style="border-top: 1px solid #e5e5e5; margin-top: 6px; padding-top: 10px;"><strong>Total</strong><strong>${escapeHtml(formatCurrency(invoice.total ?? 0))}</strong></div>
+      </div>
+    </div>
+
+    ${termsHtml}
+    ${notesHtml}
+
+    <script>
+      window.addEventListener('load', () => {
+        window.print();
+      });
+    </script>
+  </body>
+</html>`)
+    w.document.close()
   }
 
   const handleDeleteInvoice = async () => {
@@ -249,6 +405,31 @@ export default function InvoiceDetailPage() {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPdf}
+            disabled={actionLoading === 'pdf'}
+            className="border-gray-600"
+          >
+            {actionLoading === 'pdf' ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-1" />
+            )}
+            PDF
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrint}
+            className="border-gray-600"
+          >
+            <Printer className="h-4 w-4 mr-1" />
+            Print
+          </Button>
+
           {invoice.status === 'draft' && (
             <>
               <Button

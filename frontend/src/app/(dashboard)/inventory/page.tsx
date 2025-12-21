@@ -554,9 +554,15 @@ export default function InventoryPage() {
               </thead>
               <tbody>
                 {inventoryItems.map((item, index) => {
-                  const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved)
-                  const value = item.quantity_on_hand * item.average_cost
-                  const isOutOfStock = item.quantity_on_hand === 0
+                  const quantityOnHand = toNumber(item.quantity_on_hand ?? 0, 0)
+                  const quantityReserved = toNumber(item.quantity_reserved ?? 0, 0)
+                  const quantityAvailable =
+                    item.quantity_available !== null && item.quantity_available !== undefined
+                      ? toNumber(item.quantity_available, 0)
+                      : quantityOnHand - quantityReserved
+                  const averageCost = toNumber(item.average_cost, 0)
+                  const value = quantityOnHand * averageCost
+                  const isOutOfStock = quantityOnHand === 0
 
                   return (
                     <motion.tr 
@@ -616,11 +622,11 @@ export default function InventoryPage() {
                             }`}
                             title="Click to edit"
                           >
-                            {item.quantity_on_hand}
+                            {quantityOnHand}
                           </button>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right text-gray-400">{available}</td>
+                      <td className="py-3 px-4 text-right text-gray-400">{quantityAvailable}</td>
                       <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point}</td>
                       <td className="py-3 px-4">
                         <div className="text-white">{item.location || 'Not assigned'}</div>

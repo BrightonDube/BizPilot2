@@ -2,6 +2,7 @@
 
 from typing import List, Optional, Tuple
 from decimal import Decimal
+import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 
@@ -218,11 +219,25 @@ class ProductService:
         """Create multiple products at once."""
         products = []
         for data in products_data:
-            product = Product(
-                business_id=business_id,
-                **data.model_dump(),
-            )
+            ingredient_payloads = data.ingredients
+            data_dict = data.model_dump(exclude={"ingredients"})
+            product = Product(business_id=business_id, **data_dict)
+            if product.id is None:
+                product.id = uuid.uuid4()
             self.db.add(product)
+            self.db.flush()
+            if ingredient_payloads:
+                for i, ing in enumerate(ingredient_payloads):
+                    ing_dict = ing.model_dump()
+                    if "sort_order" not in ing_dict or ing_dict["sort_order"] is None:
+                        ing_dict["sort_order"] = i
+                    self.db.add(
+                        ProductIngredient(
+                            business_id=business_id,
+                            product_id=product.id,
+                            **ing_dict,
+                        )
+                    )
             products.append(product)
         
         self.db.commit()

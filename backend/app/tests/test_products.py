@@ -1,6 +1,7 @@
 """Tests for Product API."""
 
 from decimal import Decimal
+import uuid
 
 
 class TestProductModel:
@@ -142,6 +143,83 @@ class TestProductService:
         assert hasattr(ProductService, "create_category")
         assert hasattr(ProductService, "update_category")
         assert hasattr(ProductService, "delete_category")
+
+    def test_product_bom_costing_properties(self):
+        from app.models.product import Product
+        from app.models.product_ingredient import ProductIngredient
+
+        product = Product(
+            business_id=uuid.uuid4(),
+            name="Test",
+            selling_price=Decimal("100"),
+            cost_price=Decimal("10"),
+        )
+
+        product.ingredients = [
+            ProductIngredient(
+                business_id=product.business_id,
+                product_id=uuid.uuid4(),
+                name="Ing1",
+                unit="unit",
+                quantity=Decimal("2"),
+                cost=Decimal("3"),
+                sort_order=0,
+            ),
+            ProductIngredient(
+                business_id=product.business_id,
+                product_id=uuid.uuid4(),
+                name="Ing2",
+                unit="unit",
+                quantity=Decimal("1.5"),
+                cost=Decimal("4"),
+                sort_order=1,
+            ),
+        ]
+
+        assert product.has_ingredients is True
+        assert product.ingredients_total_cost == Decimal("12")
+        assert product.effective_cost == Decimal("12")
+        assert product.profit_margin == float((Decimal("100") - Decimal("12")) / Decimal("100") * 100)
+
+    def test_bulk_create_products_supports_ingredients_payload(self):
+        from app.schemas.product import ProductCreate, ProductIngredientCreate
+        from app.services.product_service import ProductService
+        from app.models.product_ingredient import ProductIngredient
+
+        class FakeSession:
+            def __init__(self):
+                self.added = []
+
+            def add(self, obj):
+                self.added.append(obj)
+
+            def flush(self):
+                return None
+
+            def commit(self):
+                return None
+
+            def refresh(self, obj):
+                return None
+
+        db = FakeSession()
+        service = ProductService(db)  # type: ignore[arg-type]
+
+        business_id = str(uuid.uuid4())
+        p = ProductCreate(
+            name="With BOM",
+            selling_price=Decimal("50"),
+            ingredients=[
+                ProductIngredientCreate(name="Sugar", unit="g", quantity=Decimal("10"), cost=Decimal("0.5"), sort_order=0),
+                ProductIngredientCreate(name="Milk", unit="ml", quantity=Decimal("20"), cost=Decimal("0.2"), sort_order=1),
+            ],
+        )
+
+        created = service.bulk_create_products(business_id=business_id, products_data=[p])
+        assert len(created) == 1
+
+        ing_rows = [x for x in db.added if isinstance(x, ProductIngredient)]
+        assert len(ing_rows) == 2
 
 
 class TestProductEndpoints:
