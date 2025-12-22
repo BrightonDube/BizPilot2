@@ -1,5 +1,6 @@
 """Product model for product management."""
 
+from decimal import Decimal
 from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -35,6 +36,8 @@ class Product(BaseModel):
     cost_price = Column(Numeric(12, 2), nullable=True)  # What you pay
     selling_price = Column(Numeric(12, 2), nullable=False)  # What customer pays
     compare_at_price = Column(Numeric(12, 2), nullable=True)  # Original price (for discounts)
+
+    labor_minutes = Column(Integer, default=0)
     
     # Tax
     is_taxable = Column(Boolean, default=True)
@@ -56,6 +59,13 @@ class Product(BaseModel):
     
     # Relationships
     # category = relationship("ProductCategory", back_populates="products")
+    ingredients = relationship(
+        "ProductIngredient",
+        back_populates="product",
+        lazy="selectin",
+        primaryjoin="and_(Product.id==ProductIngredient.product_id, ProductIngredient.deleted_at.is_(None))",
+        order_by="ProductIngredient.sort_order.asc()",
+    )
 
     def __repr__(self) -> str:
         return f"<Product {self.name}>"
@@ -68,9 +78,31 @@ class Product(BaseModel):
     @property
     def profit_margin(self) -> float:
         """Calculate profit margin percentage."""
-        if not self.cost_price or self.cost_price == 0:
+        effective_cost = self.effective_cost
+        if not effective_cost or effective_cost == 0:
             return 0.0
-        return float((self.selling_price - self.cost_price) / self.selling_price * 100)
+        return float((self.selling_price - effective_cost) / self.selling_price * 100)
+
+    @property
+    def ingredients_total_cost(self) -> float:
+        if not self.ingredients:
+            return Decimal("0")
+        return sum((ing.cost or Decimal("0")) * (ing.quantity or Decimal("0")) for ing in self.ingredients)
+
+    @property
+    def has_ingredients(self) -> bool:
+        return bool(self.ingredients)
+
+    @property
+    def effective_cost(self):
+        """Effective cost for margin calculations.
+
+        If ingredients exist, use ingredients total cost.
+        Otherwise fall back to cost_price.
+        """
+        if self.has_ingredients:
+            return self.ingredients_total_cost
+        return self.cost_price
 
 
 class ProductCategory(BaseModel):

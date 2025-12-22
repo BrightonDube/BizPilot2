@@ -320,17 +320,24 @@ export default function LoginPage() {
         </div>
       </motion.div>
 
-      <motion.p 
-        className="mt-6 text-center text-gray-400"
+      <motion.div 
+        className="text-center mt-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        Don&apos;t have an account?{' '}
-        <Link href="/auth/register" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">
-          Sign up
-        </Link>
-      </motion.p>
+        <p className="text-gray-400 text-sm">
+          Don&apos;t have an account?{' '}
+          <Link href="/auth/register" className="text-purple-400 hover:text-purple-300">
+            Sign up
+          </Link>
+        </p>
+        <p className="text-gray-500 text-xs mt-2">
+          <Link href="/auth/error" className="hover:text-gray-300">
+            Having trouble signing in?
+          </Link>
+        </p>
+      </motion.div>
     </motion.div>
   );
 }

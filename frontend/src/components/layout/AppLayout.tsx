@@ -11,7 +11,10 @@ import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui';
-import apiClient from '@/lib/api';
+import { apiClient } from '@/lib/api';
+import { GlobalAIChat } from '@/components/ai/GlobalAIChat';
+import { AuthInitializer } from '@/components/auth/AuthInitializer';
+import { SessionInactivityManager } from '@/components/auth/SessionInactivityManager';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -21,6 +24,38 @@ export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [checkingBusiness, setCheckingBusiness] = useState(true);
+
+  return (
+    <>
+      <AuthInitializer />
+      <AppLayoutInner
+        router={router}
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+        checkingBusiness={checkingBusiness}
+        setCheckingBusiness={setCheckingBusiness}
+      >
+        {children}
+      </AppLayoutInner>
+    </>
+  );
+}
+
+function AppLayoutInner({
+  children,
+  router,
+  sidebarCollapsed,
+  setSidebarCollapsed,
+  checkingBusiness,
+  setCheckingBusiness,
+}: {
+  children: ReactNode;
+  router: ReturnType<typeof useRouter>;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (v: boolean) => void;
+  checkingBusiness: boolean;
+  setCheckingBusiness: (v: boolean) => void;
+}) {
   const { isLoading } = useRequireAuth();
 
   useEffect(() => {
@@ -55,6 +90,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
+      <SessionInactivityManager />
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex">
         <Sidebar
@@ -72,6 +108,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Navigation */}
       <MobileNav />
+
+      <GlobalAIChat />
     </div>
   );
 }

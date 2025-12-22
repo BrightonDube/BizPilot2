@@ -16,7 +16,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AxiosError } from 'axios';
-import apiClient from '@/lib/api';
+import { apiClient } from '@/lib/api';
 
 export interface User {
   id: string;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
+  Search,
   Edit,
   Trash2,
   Loader2,
@@ -33,6 +34,43 @@ interface Category {
   product_count: number;
 }
 
+function flattenCategoryTree(nodes: CategoryTreeNode[], parentId: string | null = null): CategoryReorderItem[] {
+  const items: CategoryReorderItem[] = []
+  nodes.forEach((node, idx) => {
+    items.push({ id: node.id, sort_order: idx, parent_id: parentId })
+    if (node.children && node.children.length > 0) {
+      items.push(...flattenCategoryTree(node.children, node.id))
+    }
+  })
+  return items
+}
+
+function reorderSiblings(nodes: CategoryTreeNode[], draggedId: string, targetId: string): CategoryTreeNode[] {
+  const draggedIdx = nodes.findIndex((n) => n.id === draggedId)
+  const targetIdx = nodes.findIndex((n) => n.id === targetId)
+  if (draggedIdx === -1 || targetIdx === -1) return nodes
+  if (draggedIdx === targetIdx) return nodes
+  const next = [...nodes]
+  const [dragged] = next.splice(draggedIdx, 1)
+  next.splice(targetIdx, 0, dragged)
+  return next
+}
+
+function updateTreeOrder(nodes: CategoryTreeNode[], draggedId: string, targetId: string): CategoryTreeNode[] {
+  const directIds = new Set(nodes.map((n) => n.id))
+  if (directIds.has(draggedId) && directIds.has(targetId)) {
+    return reorderSiblings(nodes, draggedId, targetId)
+  }
+
+  return nodes.map((node) => {
+    if (!node.children || node.children.length === 0) return node
+    return {
+      ...node,
+      children: updateTreeOrder(node.children, draggedId, targetId),
+    }
+  })
+}
+
 interface CategoryTreeNode extends Category {
   children: CategoryTreeNode[];
 }
@@ -47,6 +85,34 @@ interface CategoryTreeResponse {
   total: number;
 }
 
+interface CategoryReorderItem {
+  id: string;
+  sort_order: number;
+  parent_id: string | null;
+}
+
+function categoryMatchesQuery(category: Category, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const name = (category.name || '').toLowerCase()
+  const desc = (category.description || '').toLowerCase()
+  return name.includes(q) || desc.includes(q)
+}
+
+function filterCategoryTree(nodes: CategoryTreeNode[], query: string): CategoryTreeNode[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return nodes
+
+  return nodes
+    .map((node) => {
+      const filteredChildren = filterCategoryTree(node.children || [], query)
+      const matches = categoryMatchesQuery(node, query)
+      if (!matches && filteredChildren.length === 0) return null
+      return { ...node, children: filteredChildren }
+    })
+    .filter((node): node is CategoryTreeNode => node !== null)
+}
+
 const colorOptions = [
   '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
   '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9',
@@ -59,12 +125,16 @@ function CategoryTreeItem({
   level = 0,
   onEdit,
   onDelete,
+  onReorderDrop,
+  onDragStart,
   deletingId,
 }: {
   category: CategoryTreeNode;
   level?: number;
   onEdit: (category: Category) => void;
   onDelete: (id: string, name: string) => void;
+  onReorderDrop: (targetId: string) => void;
+  onDragStart: (id: string) => void;
   deletingId: string | null;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -78,6 +148,10 @@ function CategoryTreeItem({
         }`}
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
+        draggable
+        onDragStart={() => onDragStart(category.id)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() => onReorderDrop(category.id)}
       >
         {hasChildren ? (
           <button
@@ -150,6 +224,8 @@ function CategoryTreeItem({
                 level={level + 1}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onReorderDrop={onReorderDrop}
+                onDragStart={onDragStart}
                 deletingId={deletingId}
               />
             ))}
@@ -166,6 +242,9 @@ export default function CategoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -199,6 +278,35 @@ export default function CategoriesPage() {
       setError('Failed to load categories');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  const persistReorder = async (nextTree: CategoryTreeNode[]) => {
+    const orders = flattenCategoryTree(nextTree)
+    await apiClient.post('/categories/reorder', orders)
+  }
+
+  const handleDragStart = (id: string) => {
+    setDraggingId(id)
+  }
+
+  const handleReorderDrop = async (targetId: string) => {
+    if (!draggingId) return
+    if (draggingId === targetId) return
+
+    const previous = categories
+    const nextTree = updateTreeOrder(categories, draggingId, targetId)
+    setCategories(nextTree)
+
+    try {
+      await persistReorder(nextTree)
+      await fetchCategories()
+    } catch (err) {
+      console.error('Failed to reorder categories:', err)
+      setError('Failed to reorder categories')
+      setCategories(previous)
+    } finally {
+      setDraggingId(null)
     }
   }
 
@@ -313,6 +421,35 @@ export default function CategoriesPage() {
         </motion.div>
       )}
 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Categories', value: flatCategories.length },
+          { label: 'Top Level', value: flatCategories.filter((c) => !c.parent_id).length },
+          { label: 'Subcategories', value: flatCategories.filter((c) => Boolean(c.parent_id)).length },
+          { label: 'Products Tagged', value: flatCategories.reduce((sum, c) => sum + (c.product_count || 0), 0) },
+        ].map((stat) => (
+          <Card key={stat.label} className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-400">{stat.label}</div>
+              <div className="text-2xl font-semibold text-gray-100">{stat.value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+        <div className="relative">
+          <Search className="h-4 w-4 absolute left-3 top-3 text-gray-500" />
+          <Input
+            type="text"
+            placeholder="Search categories by name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-gray-900/50 border-gray-600"
+          />
+        </div>
+      </div>
+
       {categories.length === 0 ? (
         <motion.div
           className="text-center py-12"
@@ -333,15 +470,25 @@ export default function CategoriesPage() {
       ) : (
         <Card className="bg-gray-800/50 border-gray-700">
           <CardContent className="p-4">
-            {categories.map((category) => (
+            {filterCategoryTree(categories, searchTerm).length === 0 ? (
+              <div className="text-center py-10">
+                <FolderTree className="h-10 w-10 text-gray-500 mx-auto mb-3" />
+                <h3 className="text-base font-medium text-gray-100 mb-1">No matching categories</h3>
+                <p className="text-sm text-gray-400">Try a different search term.</p>
+              </div>
+            ) : (
+              filterCategoryTree(categories, searchTerm).map((category) => (
               <CategoryTreeItem
                 key={category.id}
                 category={category}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onReorderDrop={handleReorderDrop}
+                onDragStart={handleDragStart}
                 deletingId={deletingId}
               />
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       )}

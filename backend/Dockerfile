@@ -19,6 +19,11 @@ COPY backend/ .
 COPY backend/alembic.ini .
 COPY backend/alembic ./alembic
 
+# Also keep a backend/ path for compatibility with scripts/jobs that reference it
+RUN mkdir -p ./backend
+COPY backend/alembic.ini ./backend/alembic.ini
+COPY backend/alembic ./backend/alembic
+
 # Expose port
 EXPOSE 8000
 

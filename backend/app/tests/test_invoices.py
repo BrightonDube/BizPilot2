@@ -208,6 +208,7 @@ class TestInvoiceAPI:
         assert "/invoices/{invoice_id}/send" in routes  # send
         assert "/invoices/{invoice_id}/payment" in routes  # payment
         assert "/invoices/{invoice_id}/items" in routes  # items
+        assert "/invoices/{invoice_id}/pdf" in routes  # pdf
 
 
 class TestInvoiceSummary:

@@ -28,6 +28,39 @@ import { apiClient } from '@/lib/api'
 import { useCallback } from 'react'
 import dynamic from 'next/dynamic'
 
+const statColorClasses: Record<
+  string,
+  {
+    container: string
+    icon: string
+  }
+> = {
+  blue: {
+    container: 'bg-blue-500/20 border-blue-500/30',
+    icon: 'text-blue-400',
+  },
+  green: {
+    container: 'bg-green-500/20 border-green-500/30',
+    icon: 'text-green-400',
+  },
+  yellow: {
+    container: 'bg-yellow-500/20 border-yellow-500/30',
+    icon: 'text-yellow-400',
+  },
+  red: {
+    container: 'bg-red-500/20 border-red-500/30',
+    icon: 'text-red-400',
+  },
+  orange: {
+    container: 'bg-orange-500/20 border-orange-500/30',
+    icon: 'text-orange-400',
+  },
+  purple: {
+    container: 'bg-purple-500/20 border-purple-500/30',
+    icon: 'text-purple-400',
+  },
+}
+
 const BulkInventoryExport = dynamic(() => import('@/components/inventory/BulkInventoryExport').then(mod => ({ default: mod.BulkInventoryExport })), { ssr: false })
 const BulkInventoryImport = dynamic(() => import('@/components/inventory/BulkInventoryImport').then(mod => ({ default: mod.BulkInventoryImport })), { ssr: false })
 const BulkEditModal = dynamic(() => import('@/components/inventory/BulkEditModal').then(mod => ({ default: mod.BulkEditModal })), { ssr: false })
@@ -43,7 +76,7 @@ interface InventoryItem {
   reorder_point: number
   location: string | null
   bin_location: string | null
-  average_cost: number
+  average_cost: number | string | null
   is_low_stock: boolean
   created_at: string
 }
@@ -62,6 +95,13 @@ function formatCurrency(amount: number): string {
     currency: 'ZAR',
     minimumFractionDigits: 2,
   }).format(amount)
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  if (value === null || value === undefined) return fallback
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
 }
 
 function InventoryCardSkeleton() {
@@ -136,7 +176,7 @@ export default function InventoryPage() {
   }, [page, searchTerm, showLowStockOnly])
 
   const totalItems = total
-  const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * i.average_cost), 0)
+  const totalValue = inventoryItems.reduce((sum, i) => sum + (i.quantity_on_hand * toNumber(i.average_cost, 0)), 0)
   const lowStockCount = inventoryItems.filter(i => i.is_low_stock).length
   const outOfStockCount = inventoryItems.filter(i => i.quantity_on_hand === 0).length
 
@@ -334,10 +374,10 @@ export default function InventoryPage() {
           >
             <div className="flex items-center">
               <motion.div 
-                className={`p-2 bg-${stat.color}-500/20 rounded-lg border border-${stat.color}-500/30`}
+                className={`p-2 rounded-lg border ${statColorClasses[stat.color]?.container ?? 'bg-gray-500/20 border-gray-500/30'}`}
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
-                <stat.icon className={`h-6 w-6 text-${stat.color}-400`} />
+                <stat.icon className={`h-6 w-6 ${statColorClasses[stat.color]?.icon ?? 'text-gray-400'}`} />
               </motion.div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">{stat.label}</p>
@@ -455,7 +495,7 @@ export default function InventoryPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {inventoryItems.map((item, index) => {
             const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved)
-            const value = item.quantity_on_hand * item.average_cost
+            const value = item.quantity_on_hand * toNumber(item.average_cost, 0)
             const isOutOfStock = item.quantity_on_hand === 0
 
             return (
@@ -547,9 +587,15 @@ export default function InventoryPage() {
               </thead>
               <tbody>
                 {inventoryItems.map((item, index) => {
-                  const available = item.quantity_available ?? (item.quantity_on_hand - item.quantity_reserved)
-                  const value = item.quantity_on_hand * item.average_cost
-                  const isOutOfStock = item.quantity_on_hand === 0
+                  const quantityOnHand = toNumber(item.quantity_on_hand ?? 0, 0)
+                  const quantityReserved = toNumber(item.quantity_reserved ?? 0, 0)
+                  const quantityAvailable =
+                    item.quantity_available !== null && item.quantity_available !== undefined
+                      ? toNumber(item.quantity_available, 0)
+                      : quantityOnHand - quantityReserved
+                  const averageCost = toNumber(item.average_cost, 0)
+                  const value = quantityOnHand * averageCost
+                  const isOutOfStock = quantityOnHand === 0
 
                   return (
                     <motion.tr 
@@ -609,11 +655,11 @@ export default function InventoryPage() {
                             }`}
                             title="Click to edit"
                           >
-                            {item.quantity_on_hand}
+                            {quantityOnHand}
                           </button>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right text-gray-400">{available}</td>
+                      <td className="py-3 px-4 text-right text-gray-400">{quantityAvailable}</td>
                       <td className="py-3 px-4 text-right text-gray-400">{item.reorder_point}</td>
                       <td className="py-3 px-4">
                         <div className="text-white">{item.location || 'Not assigned'}</div>

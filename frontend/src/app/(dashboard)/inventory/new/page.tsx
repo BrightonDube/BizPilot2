@@ -21,7 +21,7 @@ interface Product {
   name: string
   sku: string
   price: number | string
-  cost_price: number | string
+  cost_price: number | string | null
 }
 
 interface ProductListResponse {
@@ -218,7 +218,7 @@ export default function NewInventoryPage() {
                         <p className="text-sm text-gray-400">SKU: {product.sku || 'N/A'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-400">Cost: R{toNumber(product.cost_price).toFixed(2)}</p>
+                        <p className="text-sm text-gray-400">Cost: R{Number.isFinite(toNumber(product.cost_price)) ? toNumber(product.cost_price).toFixed(2) : '0.00'}</p>
                       </div>
                     </div>
                   </div>
