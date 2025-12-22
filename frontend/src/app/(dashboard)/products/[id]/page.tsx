@@ -170,18 +170,18 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <StatCard
           title="Selling Price"
-          value={`R ${sellingPrice.toFixed(2)}`}
-          description={compareAtPrice ? `Was R ${compareAtPrice.toFixed(2)}` : undefined}
+          value={`R ${Number.isFinite(sellingPrice) ? sellingPrice.toFixed(2) : '0.00'}`}
+          description={compareAtPrice ? `Was R ${Number.isFinite(compareAtPrice) ? compareAtPrice.toFixed(2) : '0.00'}` : undefined}
         />
         <StatCard
           title="Cost Price"
-          value={`R ${costPrice.toFixed(2)}`}
+          value={`R ${Number.isFinite(costPrice) ? costPrice.toFixed(2) : '0.00'}`}
           description="Per unit cost"
         />
         <StatCard
           title="Profit Margin"
           value={`${profitMargin}%`}
-          change={`R ${(sellingPrice - costPrice).toFixed(2)} per unit`}
+          change={`R ${Number.isFinite(sellingPrice - costPrice) ? (sellingPrice - costPrice).toFixed(2) : '0.00'} per unit`}
           changeType="positive"
           icon={<TrendingUp className="w-5 h-5" />}
         />
@@ -272,22 +272,22 @@ export default function ProductDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-400">Selling Price</span>
-                <span className="text-white font-medium">R {sellingPrice.toFixed(2)}</span>
+                <span className="text-white font-medium">R {Number.isFinite(sellingPrice) ? sellingPrice.toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Cost Price</span>
-                <span className="text-white">R {costPrice.toFixed(2)}</span>
+                <span className="text-white">R {Number.isFinite(costPrice) ? costPrice.toFixed(2) : '0.00'}</span>
               </div>
               {compareAtPrice && (
                 <div className="flex justify-between">
                   <span className="text-gray-400">Compare at</span>
-                  <span className="text-gray-500 line-through">R {compareAtPrice.toFixed(2)}</span>
+                  <span className="text-gray-500 line-through">R {Number.isFinite(compareAtPrice) ? compareAtPrice.toFixed(2) : '0.00'}</span>
                 </div>
               )}
               <div className="pt-3 border-t border-gray-700">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Profit</span>
-                  <span className="text-green-400 font-medium">R {(sellingPrice - costPrice).toFixed(2)}</span>
+                  <span className="text-green-400 font-medium">R {Number.isFinite(sellingPrice - costPrice) ? (sellingPrice - costPrice).toFixed(2) : '0.00'}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">

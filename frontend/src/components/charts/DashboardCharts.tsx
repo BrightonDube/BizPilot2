@@ -18,6 +18,10 @@ import {
   Legend
 } from 'recharts'
 import { apiClient } from '@/lib/api'
+import { ProfitMarginChart } from '@/components/charts/ProfitMarginChart'
+import { ProfitTrendChart } from '@/components/charts/ProfitTrendChart'
+import { InventoryStatusChart } from '@/components/charts/InventoryStatusChart'
+import { CostBreakdownChart } from '@/components/charts/CostBreakdownChart'
 
 interface RevenueData {
   name: string
@@ -56,6 +60,24 @@ interface DashboardChartsProps {
   }
 }
 
+interface ProductsListResponse {
+  items: Array<{
+    name: string
+    selling_price: number
+    total_cost: number | null
+    profit_margin: number
+    created_at: string
+  }>
+}
+
+interface InventoryListResponse {
+  items: Array<{
+    product_name: string | null
+    quantity_on_hand: number
+    reorder_point: number
+  }>
+}
+
 export function DashboardCharts({ data: propData }: DashboardChartsProps) {
   const [revenueData, setRevenueData] = useState<RevenueData[]>([])
   const [productData, setProductData] = useState<ProductData[]>([])
@@ -63,10 +85,31 @@ export function DashboardCharts({ data: propData }: DashboardChartsProps) {
   const [isLoading, setIsLoading] = useState(!propData)
   const [hasData, setHasData] = useState(false)
 
+  const [productsForCharts, setProductsForCharts] = useState<Array<{
+    name: string
+    selling_price: number
+    total_cost: number
+    profit_margin: number
+    created_at: string
+  }>>([])
+
+  const [inventoryForCharts, setInventoryForCharts] = useState<Array<{
+    name: string
+    current_quantity: number
+    low_stock_alert: number
+  }>>([])
+
+  const costBreakdown = {
+    materialCost: productsForCharts.reduce((sum, p) => sum + (Number.isFinite(p.total_cost) ? p.total_cost : 0), 0),
+    laborCost: 0,
+    totalCost: productsForCharts.reduce((sum, p) => sum + (Number.isFinite(p.total_cost) ? p.total_cost : 0), 0),
+  }
+
   useEffect(() => {
     // If data is passed as prop, use it directly (avoid duplicate API call)
     if (propData) {
       transformData(propData)
+      fetchAdditionalChartData()
       return
     }
     // Only fetch if no data provided
@@ -107,13 +150,66 @@ export function DashboardCharts({ data: propData }: DashboardChartsProps) {
   const fetchChartData = async () => {
     try {
       setIsLoading(true)
-      const response = await apiClient.get('/dashboard')
-      transformData(response.data)
+      const [dashboardResponse] = await Promise.all([
+        apiClient.get('/dashboard'),
+        fetchAdditionalChartData(),
+      ])
+      transformData(dashboardResponse.data)
     } catch (error) {
       console.error('Failed to fetch chart data:', error)
       setHasData(false)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchAdditionalChartData = async () => {
+    try {
+      const [productsResponse, inventoryResponse] = await Promise.all([
+        apiClient.get<ProductsListResponse>('/products', {
+          params: {
+            page: 1,
+            per_page: 100,
+            sort_by: 'created_at',
+            sort_order: 'asc',
+          },
+        }),
+        apiClient.get<InventoryListResponse>('/inventory', {
+          params: {
+            page: 1,
+            per_page: 100,
+            sort_by: 'created_at',
+            sort_order: 'desc',
+          },
+        }),
+      ])
+
+      const products = (productsResponse.data?.items ?? [])
+        .filter((p) => p && typeof p.name === 'string')
+        .map((p) => ({
+          name: p.name,
+          selling_price: Number(p.selling_price ?? 0),
+          total_cost: Number(p.total_cost ?? 0),
+          profit_margin: Number(p.profit_margin ?? 0),
+          created_at: p.created_at,
+        }))
+        .filter((p) => Number.isFinite(p.selling_price) && Number.isFinite(p.total_cost) && !!p.created_at)
+
+      const inventory = (inventoryResponse.data?.items ?? [])
+        .filter((i) => i)
+        .map((i) => ({
+          name: i.product_name ?? 'Unknown',
+          current_quantity: Number(i.quantity_on_hand ?? 0),
+          low_stock_alert: Number(i.reorder_point ?? 0),
+        }))
+        .filter((i) => Number.isFinite(i.current_quantity) && Number.isFinite(i.low_stock_alert))
+
+      setProductsForCharts(products)
+      setInventoryForCharts(inventory)
+    } catch (error) {
+      console.error('Failed to fetch additional chart data:', error)
+      setProductsForCharts([])
+      setInventoryForCharts([])
     }
   }
 
@@ -302,6 +398,84 @@ export function DashboardCharts({ data: propData }: DashboardChartsProps) {
           </BarChart>
         </ResponsiveContainer>
       </motion.div>
+
+      {/* Profit Margin Chart */}
+      {productsForCharts.length > 0 && (
+        <motion.div
+          className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-100">Profit Margins</h3>
+            <p className="text-sm text-gray-400">Margin distribution across products</p>
+          </div>
+          <ProfitMarginChart
+            products={productsForCharts.map((p) => ({
+              name: p.name,
+              profit_margin: p.profit_margin,
+              selling_price: p.selling_price,
+              total_cost: p.total_cost,
+            }))}
+          />
+        </motion.div>
+      )}
+
+      {/* Profit Trend Chart */}
+      {productsForCharts.length > 1 && (
+        <motion.div
+          className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-100">Profit Trend</h3>
+            <p className="text-sm text-gray-400">Cumulative profit potential by product creation</p>
+          </div>
+          <ProfitTrendChart
+            products={productsForCharts.map((p) => ({
+              name: p.name,
+              selling_price: p.selling_price,
+              total_cost: p.total_cost,
+              created_at: p.created_at,
+            }))}
+          />
+        </motion.div>
+      )}
+
+      {/* Inventory Health (Pie) */}
+      {inventoryForCharts.length > 0 && (
+        <motion.div
+          className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-100">Inventory Health</h3>
+            <p className="text-sm text-gray-400">In stock vs low/out of stock</p>
+          </div>
+          <InventoryStatusChart inventory={inventoryForCharts} />
+        </motion.div>
+      )}
+
+      {/* Cost Breakdown */}
+      {productsForCharts.length > 0 && costBreakdown.totalCost > 0 && (
+        <motion.div
+          className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-100">Cost Breakdown</h3>
+            <p className="text-sm text-gray-400">Material vs labor cost composition</p>
+          </div>
+          <CostBreakdownChart data={costBreakdown} />
+        </motion.div>
+      )}
     </div>
   )
 }

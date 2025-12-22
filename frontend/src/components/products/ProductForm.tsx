@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { apiClient } from '@/lib/api'
+import { toNumber, safeToFixed, safePercentage } from '@/lib/utils'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from '@/components/ui'
 
 type Mode = 'create' | 'edit'
@@ -98,12 +99,6 @@ type ProductUpsertPayload = {
   ingredients?: ProductUpsertIngredient[]
 }
 
-function toNumber(value: unknown, fallback = 0): number {
-  if (value === null || value === undefined) return fallback
-  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
 
 function safeTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -544,7 +539,7 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
                                     onChange={(e) => updateIngredientField(idx, 'cost', e.target.value)}
                                   />
                                 </td>
-                                <td className="p-3 text-gray-200">R {ingredientLineTotals[idx].toFixed(2)}</td>
+                                <td className="p-3 text-gray-200">R {safeToFixed(ingredientLineTotals[idx], 2)}</td>
                                 <td className="p-3">
                                   <Button
                                     type="button"
@@ -574,7 +569,7 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
                         type="number"
                         step="0.01"
                         min="0"
-                        value={bomEnabled ? ingredientsTotal.toFixed(2) : formData.cost_price}
+                        value={bomEnabled ? safeToFixed(ingredientsTotal, 2) : formData.cost_price}
                         onChange={handleChange}
                         placeholder="0.00"
                         className="pl-8"
@@ -644,19 +639,19 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
                     <div className="text-center p-2 bg-gray-800/50 rounded">
                       <div className="text-xs text-gray-400 mb-1">Profit</div>
                       <span className={`text-lg font-semibold ${profit > 0 ? 'text-green-400' : profit < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                        R {profit.toFixed(2)}
+                        R {safeToFixed(profit, 2)}
                       </span>
                     </div>
                     <div className="text-center p-2 bg-gray-800/50 rounded">
                       <div className="text-xs text-gray-400 mb-1">Margin</div>
                       <span className={`text-lg font-semibold ${profitMargin > 0 ? 'text-green-400' : 'text-gray-400'}`}>
-                        {profitMargin.toFixed(1)}%
+                        {safePercentage(profitMargin, 1)}
                       </span>
                     </div>
                     <div className="text-center p-2 bg-gray-800/50 rounded">
                       <div className="text-xs text-gray-400 mb-1">Markup</div>
                       <span className={`text-lg font-semibold ${markup > 0 ? 'text-purple-400' : 'text-gray-400'}`}>
-                        {markup.toFixed(1)}%
+                        {safePercentage(markup, 1)}
                       </span>
                     </div>
                   </div>
@@ -687,7 +682,7 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
                       <label className="block text-xs text-gray-400 mb-1">Suggested Price</label>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 text-sm text-gray-200 px-3 py-2 rounded-lg bg-gray-800/50 border border-gray-700">
-                          R {suggestedPrice > 0 ? suggestedPrice.toFixed(2) : '0.00'}
+                          R {suggestedPrice > 0 ? safeToFixed(suggestedPrice, 2) : '0.00'}
                         </div>
                         <Button
                           type="button"
@@ -696,7 +691,7 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
                           onClick={() =>
                             setFormData((prev) => ({
                               ...prev,
-                              selling_price: suggestedPrice > 0 ? suggestedPrice.toFixed(2) : prev.selling_price,
+                              selling_price: suggestedPrice > 0 ? safeToFixed(suggestedPrice, 2) : prev.selling_price,
                             }))
                           }
                         >

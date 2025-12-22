@@ -87,7 +87,7 @@ export function BulkInventoryExport({ onClose }: BulkInventoryExportProps) {
         item.reorder_quantity.toString(),
         item.location || '',
         item.bin_location || '',
-        toNumber(item.average_cost, 0).toFixed(2),
+        Number.isFinite(toNumber(item.average_cost, 0)) ? toNumber(item.average_cost, 0).toFixed(2) : '0.00',
         item.is_low_stock ? 'Yes' : 'No'
       ])
 

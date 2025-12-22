@@ -118,7 +118,7 @@ export default function NewPaymentPage() {
       ...prev,
       invoice_id: invoice.id,
       customer_id: '', // Will be set from invoice
-      amount: due.toFixed(2),
+      amount: Number.isFinite(due) ? due.toFixed(2) : '0.00',
     }))
     setSearchInvoice(invoice.invoice_number)
     setShowInvoiceDropdown(false)

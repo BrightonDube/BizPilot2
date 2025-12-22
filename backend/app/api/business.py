@@ -28,6 +28,23 @@ class BusinessCreate(BaseModel):
     currency: str = "ZAR"
 
 
+class BusinessUpdate(BaseModel):
+    """Schema for updating business settings."""
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    address_street: Optional[str] = None
+    address_city: Optional[str] = None
+    address_state: Optional[str] = None
+    address_postal_code: Optional[str] = None
+    address_country: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    website: Optional[str] = None
+    currency: Optional[str] = None
+    tax_number: Optional[str] = None
+    vat_number: Optional[str] = None
+
+
 class BusinessResponse(BaseModel):
     """Schema for business response."""
     id: str
@@ -254,3 +271,68 @@ async def get_current_business(
         website=business.website,
         currency=business.currency,
     )
+
+
+@router.put("/current", response_model=BusinessResponse)
+async def update_current_business(
+    business_data: BusinessUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Update the current user's primary business settings."""
+    # Get user's business association
+    business_user = db.query(BusinessUser).filter(
+        BusinessUser.user_id == current_user.id,
+        BusinessUser.status == BusinessUserStatus.ACTIVE
+    ).first()
+    
+    if not business_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No business found. Please complete business setup first."
+        )
+    
+    # Check if user has permission to edit business settings
+    if business_user.role:
+        user_permissions = business_user.role.permissions or []
+        if "businesses:edit" not in user_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to edit business settings"
+            )
+    
+    business = db.query(Business).filter(Business.id == business_user.business_id).first()
+    
+    if not business:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Business not found"
+        )
+    
+    try:
+        # Update only provided fields
+        update_data = business_data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(business, field, value)
+        
+        db.commit()
+        db.refresh(business)
+        
+        return BusinessResponse(
+            id=str(business.id),
+            name=business.name,
+            slug=business.slug,
+            description=business.description,
+            address_street=business.address_street,
+            phone=business.phone,
+            email=business.email,
+            website=business.website,
+            currency=business.currency,
+        )
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update business: {str(e)}"
+        )

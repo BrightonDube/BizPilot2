@@ -49,7 +49,7 @@ export function InventoryStatusChart({ inventory }: InventoryStatusChartProps) {
     const item = payload[0]
     const value = toNumber(item?.value, 0)
     const total = inventory.length
-    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0'
+    const percentage = total > 0 && Number.isFinite(value / total) ? ((value / total) * 100).toFixed(1) : '0'
 
     return (
       <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl">

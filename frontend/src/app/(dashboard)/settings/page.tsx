@@ -98,7 +98,7 @@ export default function SettingsPage() {
   const handleSaveBusiness = async () => {
     setIsSaving(true);
     try {
-      await apiClient.put('/businesses/current', businessData);
+      await apiClient.put('/business/current', businessData);
       // Show success message
     } catch (error) {
       // Handle error
