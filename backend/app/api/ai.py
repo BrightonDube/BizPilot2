@@ -1,7 +1,7 @@
 """AI Assistant API endpoints."""
 
-from typing import Optional
-from fastapi import APIRouter, Depends
+from typing import Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -9,6 +9,8 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.api.deps import get_current_active_user
 from app.models.user import User
+from app.models.user_settings import AIDataSharingLevel
+from app.services.ai_service import AIService
 
 router = APIRouter(prefix="/ai", tags=["AI Assistant"])
 
@@ -23,6 +25,32 @@ class ChatResponse(BaseModel):
     """Chat response schema."""
     response: str
     conversation_id: Optional[str] = None
+
+
+class ConversationCreateRequest(BaseModel):
+    title: Optional[str] = None
+
+
+class ConversationResponse(BaseModel):
+    id: str
+    title: str
+
+    model_config = {"from_attributes": True}
+
+
+class MessageResponse(BaseModel):
+    id: str
+    conversation_id: str
+    is_user: bool
+    content: str
+
+    model_config = {"from_attributes": True}
+
+
+class ContextResponse(BaseModel):
+    ai_data_sharing_level: str
+    app_context: dict[str, Any]
+    business_context: dict[str, Any]
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -41,36 +69,113 @@ async def chat(
     - Customer behavior analysis
     - Financial reporting questions
     """
-    # Check if AI is configured
+    # If AI isn't configured, return a clear client error.
+    # The frontend can handle this by showing a setup/config message.
     if not settings.OPENAI_API_KEY and not settings.GROQ_API_KEY:
-        # Return a helpful fallback response
-        return ChatResponse(
-            response=get_fallback_response(request.message),
-            conversation_id=request.conversation_id,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="AI is not configured. Set GROQ_API_KEY (recommended) or OPENAI_API_KEY on the backend.",
         )
-    
+
+    svc = AIService(db)
     try:
-        # In a full implementation, this would call OpenAI or Groq
-        # For now, we'll return intelligent fallback responses
-        response = await generate_ai_response(request.message, current_user.id, db)
-        return ChatResponse(
-            response=response,
+        resp = await svc.send_message(
+            user=current_user,
+            content=request.message,
             conversation_id=request.conversation_id,
         )
+        return ChatResponse(response=resp["response"], conversation_id=resp.get("conversation_id"))
     except Exception:
-        return ChatResponse(
-            response="I apologize, but I encountered an error processing your request. Please try again later.",
-            conversation_id=request.conversation_id,
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI provider error while processing request. Please try again later.",
         )
+
+
+@router.get("/conversations", response_model=list[ConversationResponse])
+async def list_conversations(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    svc = AIService(db)
+    convos = svc.list_conversations(current_user.id)
+    return [ConversationResponse(id=str(c.id), title=c.title) for c in convos]
+
+
+@router.post("/conversations", response_model=ConversationResponse)
+async def create_conversation(
+    payload: ConversationCreateRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    svc = AIService(db)
+    convo = svc.create_conversation(current_user.id, payload.title)
+    return ConversationResponse(id=str(convo.id), title=convo.title)
+
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    svc = AIService(db)
+    svc.delete_conversation(current_user.id, conversation_id)
+    return {"status": "ok"}
+
+
+@router.get("/conversations/{conversation_id}/messages", response_model=list[MessageResponse])
+async def list_messages(
+    conversation_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    svc = AIService(db)
+    msgs = svc.list_messages(current_user.id, conversation_id)
+    return [
+        MessageResponse(
+            id=str(m.id),
+            conversation_id=str(m.conversation_id),
+            is_user=bool(m.is_user),
+            content=m.content,
+        )
+        for m in msgs
+    ]
+
+
+@router.post("/conversations/{conversation_id}/messages", response_model=ChatResponse)
+async def send_message_to_conversation(
+    conversation_id: str,
+    request: ChatRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    svc = AIService(db)
+    resp = await svc.send_message(user=current_user, content=request.message, conversation_id=conversation_id)
+    return ChatResponse(response=resp["response"], conversation_id=resp.get("conversation_id"))
+
+
+@router.get("/context", response_model=ContextResponse)
+async def get_ai_context(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    svc = AIService(db)
+    settings_row = svc.get_or_create_user_settings(current_user.id)
+    level: AIDataSharingLevel = settings_row.ai_data_sharing_level
+    app_ctx = {} if level == AIDataSharingLevel.NONE else svc.build_app_help_context()
+    biz_ctx = {} if level in (AIDataSharingLevel.NONE, AIDataSharingLevel.APP_ONLY) else svc.build_business_context(current_user, level)
+    return ContextResponse(
+        ai_data_sharing_level=level.value,
+        app_context=app_ctx,
+        business_context=biz_ctx,
+    )
 
 
 async def generate_ai_response(message: str, user_id, db: Session) -> str:
-    """Generate an AI response based on the message."""
+    """Legacy keyword-based AI response used in tests and fallback mode."""
     message_lower = message.lower()
-    
-    # Simple keyword-based responses for demo
-    # In production, this would use OpenAI/Groq API
-    
+
     if any(word in message_lower for word in ["revenue", "sales", "income", "money"]):
         return """Based on your business data, I can see revenue patterns. To get detailed revenue insights:
         
@@ -127,7 +232,6 @@ How can I help you with your orders?"""
 
 Just ask me anything about your business, and I'll do my best to help!"""
 
-    # Default response
     return """I understand you're asking about your business. I can help you with:
 
 - Revenue and sales analytics

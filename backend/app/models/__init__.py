@@ -13,6 +13,9 @@ from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
 from app.models.payment import Payment, PaymentMethod
 from app.models.product_ingredient import ProductIngredient
+from app.models.ai_conversation import AIConversation
+from app.models.ai_message import AIMessage
+from app.models.user_settings import UserSettings, AIDataSharingLevel
 
 __all__ = [
     "BaseModel",
@@ -50,4 +53,8 @@ __all__ = [
     "Payment",
     "PaymentMethod",
     "ProductIngredient",
+    "AIConversation",
+    "AIMessage",
+    "UserSettings",
+    "AIDataSharingLevel",
 ]

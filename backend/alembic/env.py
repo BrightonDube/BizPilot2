@@ -16,6 +16,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 load_dotenv()
 
+# Alembic runs in CI/automation contexts where SECRET_KEY may be unset.
+# The application Settings validates SECRET_KEY on import, but migrations
+# don't require JWT functionality. Provide a safe default to allow env.py
+# to import app modules.
+if not os.getenv("SECRET_KEY"):
+    os.environ["SECRET_KEY"] = "0123456789abcdef"
+
 from app.core.database import Base
 from app.models import *  # Import all models to register them
 

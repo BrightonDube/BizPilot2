@@ -3,6 +3,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /repo
 
+# Next.js embeds NEXT_PUBLIC_* variables at build time.
+# DigitalOcean may provide env vars but for Docker multi-stage builds we
+# ensure they are available during the build step.
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
 # Install pnpm
 RUN npm install -g pnpm
 

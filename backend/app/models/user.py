@@ -39,6 +39,8 @@ class User(BaseModel):
     # Relationships
     business_users = relationship("BusinessUser", back_populates="user", cascade="all, delete-orphan")
     owned_organizations = relationship("Organization", back_populates="owner")
+    ai_conversations = relationship("AIConversation", back_populates="user", cascade="all, delete-orphan")
+    settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     @property
     def full_name(self) -> str:

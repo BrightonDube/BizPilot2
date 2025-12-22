@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 from app.core.database import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
+from app.models.user_settings import AIDataSharingLevel
+from app.services.ai_service import AIService
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -29,6 +31,18 @@ class UserResponseMe(BaseModel):
     status: str
     
     model_config = {"from_attributes": True}
+
+
+class UserSettingsResponse(BaseModel):
+    """Schema for user settings response."""
+
+    ai_data_sharing_level: str
+
+
+class UserSettingsUpdate(BaseModel):
+    """Schema for updating user settings."""
+
+    ai_data_sharing_level: AIDataSharingLevel
 
 
 @router.get("/me", response_model=UserResponseMe)
@@ -77,3 +91,26 @@ async def update_current_user_profile(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update user profile: {str(e)}"
         )
+
+
+@router.get("/me/settings", response_model=UserSettingsResponse)
+async def get_current_user_settings(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Get the current user's settings (including AI privacy controls)."""
+    svc = AIService(db)
+    settings_row = svc.get_or_create_user_settings(current_user.id)
+    return UserSettingsResponse(ai_data_sharing_level=settings_row.ai_data_sharing_level.value)
+
+
+@router.put("/me/settings", response_model=UserSettingsResponse)
+async def update_current_user_settings(
+    payload: UserSettingsUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Update the current user's settings (including AI privacy controls)."""
+    svc = AIService(db)
+    settings_row = svc.update_user_settings(current_user.id, payload.ai_data_sharing_level)
+    return UserSettingsResponse(ai_data_sharing_level=settings_row.ai_data_sharing_level.value)

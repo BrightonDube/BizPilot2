@@ -152,6 +152,75 @@ class TestBusinessUserModel:
         assert BusinessUserStatus.INACTIVE.value == "inactive"
 
 
+class TestAIModels:
+    """Tests for AI persistence models."""
+
+    def test_ai_conversation_model_exists(self):
+        """Test that AIConversation model can be imported."""
+        from app.models import AIConversation
+        assert AIConversation is not None
+
+    def test_ai_conversation_has_required_fields(self):
+        """Test that AIConversation has required fields."""
+        from app.models import AIConversation
+        from sqlalchemy import inspect
+
+        mapper = inspect(AIConversation)
+        columns = [c.key for c in mapper.columns]
+
+        required_fields = ["id", "user_id", "title", "created_at", "updated_at"]
+        for field in required_fields:
+            assert field in columns, f"Missing field: {field}"
+
+    def test_ai_message_model_exists(self):
+        """Test that AIMessage model can be imported."""
+        from app.models import AIMessage
+        assert AIMessage is not None
+
+    def test_ai_message_has_required_fields(self):
+        """Test that AIMessage has required fields."""
+        from app.models import AIMessage
+        from sqlalchemy import inspect
+
+        mapper = inspect(AIMessage)
+        columns = [c.key for c in mapper.columns]
+
+        required_fields = ["id", "conversation_id", "is_user", "content", "created_at", "updated_at"]
+        for field in required_fields:
+            assert field in columns, f"Missing field: {field}"
+
+
+class TestUserSettingsModel:
+    """Tests for user settings model."""
+
+    def test_user_settings_model_exists(self):
+        """Test that UserSettings model can be imported."""
+        from app.models import UserSettings
+        assert UserSettings is not None
+
+    def test_user_settings_has_required_fields(self):
+        """Test that UserSettings has required fields."""
+        from app.models import UserSettings
+        from sqlalchemy import inspect
+
+        mapper = inspect(UserSettings)
+        columns = [c.key for c in mapper.columns]
+
+        required_fields = ["id", "user_id", "ai_data_sharing_level", "created_at", "updated_at"]
+        for field in required_fields:
+            assert field in columns, f"Missing field: {field}"
+
+    def test_ai_data_sharing_level_enum_values(self):
+        """Test AIDataSharingLevel enum has expected values."""
+        from app.models import AIDataSharingLevel
+
+        assert AIDataSharingLevel.NONE.value == "none"
+        assert AIDataSharingLevel.APP_ONLY.value == "app_only"
+        assert AIDataSharingLevel.METRICS_ONLY.value == "metrics_only"
+        assert AIDataSharingLevel.FULL_BUSINESS.value == "full_business"
+        assert AIDataSharingLevel.FULL_BUSINESS_WITH_CUSTOMERS.value == "full_business_with_customers"
+
+
 class TestDatabaseConfiguration:
     """Tests for database configuration."""
 
