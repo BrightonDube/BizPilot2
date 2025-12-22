@@ -14,6 +14,7 @@ import {
   Shield,
   CreditCard,
   Palette,
+  Sparkles,
   Globe,
   Save,
   Camera,
@@ -32,7 +33,18 @@ import { apiClient } from '@/lib/api';
 import { CurrencySelector } from '@/components/common/CurrencySelector';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 
-type SettingsTab = 'profile' | 'business' | 'notifications' | 'security' | 'billing' | 'appearance';
+type SettingsTab = 'profile' | 'business' | 'ai' | 'notifications' | 'security' | 'billing' | 'appearance';
+
+type AISharingLevel =
+  | 'none'
+  | 'app_only'
+  | 'metrics_only'
+  | 'full_business'
+  | 'full_business_with_customers';
+
+type UserSettingsResponse = {
+  ai_data_sharing_level: AISharingLevel;
+};
 
 interface TabConfig {
   id: SettingsTab;
@@ -43,6 +55,7 @@ interface TabConfig {
 const tabs: TabConfig[] = [
   { id: 'profile', name: 'Profile', icon: <User className="w-4 h-4" /> },
   { id: 'business', name: 'Business', icon: <Building2 className="w-4 h-4" /> },
+  { id: 'ai', name: 'AI', icon: <Sparkles className="w-4 h-4" /> },
   { id: 'notifications', name: 'Notifications', icon: <Bell className="w-4 h-4" /> },
   { id: 'security', name: 'Security', icon: <Shield className="w-4 h-4" /> },
   { id: 'billing', name: 'Billing', icon: <CreditCard className="w-4 h-4" /> },
@@ -71,6 +84,42 @@ export default function SettingsPage() {
     tax_id: '',
     currency: 'ZAR',
   });
+
+  const [aiSharingLevel, setAiSharingLevel] = useState<AISharingLevel>('none');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSettings = async () => {
+      try {
+        const resp = await apiClient.get<UserSettingsResponse>('/users/me/settings');
+        const level = resp.data.ai_data_sharing_level;
+        if (isMounted) {
+          setAiSharingLevel(level || 'none');
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    loadSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSaveAISettings = async () => {
+    setIsSaving(true);
+    try {
+      await apiClient.put('/users/me/settings', {
+        ai_data_sharing_level: aiSharingLevel,
+      });
+    } catch {
+      // ignore
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -222,6 +271,51 @@ export default function SettingsPage() {
                 <div className="flex justify-end">
                   <Button
                     onClick={handleSaveProfile}
+                    disabled={isSaving}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* AI Settings */}
+          {activeTab === 'ai' && (
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  AI Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="p-4 bg-gray-900/50 rounded-lg">
+                  <h3 className="text-sm font-medium text-white mb-2">AI Data Sharing Level</h3>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Control how much of your business data BizPilot can share with the AI assistant.
+                  </p>
+
+                  <label htmlFor="ai-sharing" className="sr-only">AI Data Sharing Level</label>
+                  <select
+                    id="ai-sharing"
+                    value={aiSharingLevel}
+                    onChange={(e) => setAiSharingLevel(e.target.value as AISharingLevel)}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                  >
+                    <option value="none">None (no AI data)</option>
+                    <option value="app_only">App only (how-to guidance)</option>
+                    <option value="metrics_only">Metrics only (aggregated counts)</option>
+                    <option value="full_business">Full business (products + inventory)</option>
+                    <option value="full_business_with_customers">Full business + customers</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSaveAISettings}
                     disabled={isSaving}
                     className="bg-gradient-to-r from-blue-600 to-purple-600"
                   >

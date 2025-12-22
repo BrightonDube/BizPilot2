@@ -25,13 +25,20 @@ def upgrade() -> None:
 
     existing_tables = set(inspector.get_table_names())
 
-    existing_enums = {e["name"] for e in inspector.get_enums()}
-    if "aidatasharinglevel" not in existing_enums:
-        op.execute(
-            "CREATE TYPE aidatasharinglevel AS ENUM ("
-            "'none','app_only','metrics_only','full_business','full_business_with_customers'"
-            ")"
-        )
+    # Enum creation can race or appear missing depending on privileges/connection,
+    # so use a Postgres-safe idempotent block.
+    op.execute(
+        """
+DO $$
+BEGIN
+    CREATE TYPE aidatasharinglevel AS ENUM (
+        'none','app_only','metrics_only','full_business','full_business_with_customers'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+"""
+    )
 
     if "user_settings" not in existing_tables:
         op.create_table(
@@ -46,13 +53,14 @@ def upgrade() -> None:
             ),
             sa.Column(
                 "ai_data_sharing_level",
-                sa.Enum(
+                postgresql.ENUM(
                     "none",
                     "app_only",
                     "metrics_only",
                     "full_business",
                     "full_business_with_customers",
                     name="aidatasharinglevel",
+                    create_type=False,
                 ),
                 nullable=False,
                 server_default="none",
@@ -112,6 +120,5 @@ def downgrade() -> None:
         op.drop_index("ix_user_settings_user_id", table_name="user_settings")
         op.drop_table("user_settings")
 
-    existing_enums = {e["name"] for e in inspector.get_enums()}
-    if "aidatasharinglevel" in existing_enums:
-        op.execute("DROP TYPE aidatasharinglevel")
+    # Drop enum safely if it exists
+    op.execute("DROP TYPE IF EXISTS aidatasharinglevel")

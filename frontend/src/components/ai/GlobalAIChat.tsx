@@ -19,6 +19,7 @@ export function GlobalAIChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -61,8 +62,13 @@ export function GlobalAIChat() {
     try {
       const response = await apiClient.post('/ai/chat', {
         message: trimmed,
-        conversation_id: null,
+        conversation_id: conversationId,
       });
+
+      const returnedConversationId = response.data?.conversation_id;
+      if (typeof returnedConversationId === 'string' && returnedConversationId.length > 0) {
+        setConversationId(returnedConversationId);
+      }
 
       const assistantMessage: ChatMessage = {
         id: `${Date.now()}-assistant`,
