@@ -10,7 +10,7 @@ click==8.3.1
 dnspython==2.8.0
 ecdsa==0.19.1
 email-validator==2.3.0
-fastapi==0.124.2
+fastapi==0.127.0
 google-auth==2.43.0
 greenlet==3.3.0
 h11==0.16.0
