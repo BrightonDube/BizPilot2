@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { apiClient } from '@/lib/api'
 
 interface OAuthButtonsProps {
   onSuccess?: () => void
@@ -24,9 +25,32 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
     script.defer = true
     document.head.appendChild(script)
 
+    script.onerror = () => {
+      setError('Google sign-in is unavailable right now (failed to load Google script).')
+      setGoogleReady(false)
+    }
+
     script.onload = () => {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-      if (window.google && clientId) {
+      const initGoogle = async () => {
+        let clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+        // Fallback: fetch client_id from backend if it wasn't embedded at build time
+        // (common when Docker build-time env isn't injected in production builds).
+        if (!clientId) {
+          try {
+            const resp = await apiClient.get('/oauth/google/url')
+            clientId = resp.data?.client_id
+          } catch {
+            // ignore; handled below
+          }
+        }
+
+        if (!window.google || !clientId) {
+          setError('Google sign-in is not configured for this environment.')
+          setGoogleReady(false)
+          return
+        }
+
         googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
           client_id: clientId,
           scope: 'email profile openid',
@@ -52,8 +76,11 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
             }
           },
         })
+
         setGoogleReady(true)
       }
+
+      void initGoogle()
     }
 
     return () => {
