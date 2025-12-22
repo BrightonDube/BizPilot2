@@ -16,6 +16,7 @@ from app.models.inventory import InventoryItem
 from app.models.product import Product
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel, UserSettings
+from app.services.app_help_kb import AppHelpKnowledgeBase
 
 
 ChatRole = Literal["system", "user", "assistant"]
@@ -220,39 +221,14 @@ class AIService:
         return context
 
     def build_app_help_context(self) -> dict[str, Any]:
+        kb = AppHelpKnowledgeBase()
+        kb_ctx = kb.to_context()
+
+        # Keep stable keys for the client/LLM and extend with KB info
         return {
             "appName": settings.APP_NAME,
-            "routes": {
-                "dashboard": "/dashboard",
-                "products": "/products",
-                "create_product": "/products/new",
-                "inventory": "/inventory",
-                "create_inventory_item": "/inventory/new",
-                "customers": "/customers",
-                "create_customer": "/customers/new",
-                "invoices": "/invoices",
-                "create_invoice": "/invoices/new",
-                "payments": "/payments",
-                "record_payment": "/payments/new",
-                "reports": "/reports",
-                "settings": "/settings",
-            },
-            "commonTasks": {
-                "create_invoice": [
-                    "Go to Invoices",
-                    "Click New Invoice",
-                    "Select a customer",
-                    "Add line items",
-                    "Set due date and notes (optional)",
-                    "Save invoice",
-                ],
-                "record_payment": [
-                    "Open an invoice",
-                    "Click Record Payment",
-                    "Enter amount and method",
-                    "Save payment",
-                ],
-            },
+            "routes": kb_ctx.get("routes", {}),
+            "howTo": kb_ctx.get("howTo", {}),
         }
 
     def detect_context_mode(self, message: str) -> Literal["app_help", "business", "mixed"]:
