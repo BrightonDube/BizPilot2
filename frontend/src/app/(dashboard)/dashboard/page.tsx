@@ -116,7 +116,8 @@ function formatCurrency(amount: number, currency: string = 'ZAR'): string {
 }
 
 function formatPercentage(value: number): string {
-  return `${value.toFixed(1)}%`
+  const n = Number.isFinite(value) ? value : 0
+  return `${n.toFixed(1)}%`
 }
 
 function getStatusColor(status: string): string {

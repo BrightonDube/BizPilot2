@@ -20,3 +20,13 @@ export function formatCurrency(amount: unknown, currency: string = 'ZAR'): strin
     minimumFractionDigits: 2,
   }).format(n);
 }
+
+export function safeToFixed(value: unknown, decimals: number = 2): string {
+  const n = toNumber(value, 0);
+  return n.toFixed(decimals);
+}
+
+export function safePercentage(value: unknown, decimals: number = 1): string {
+  const n = toNumber(value, 0);
+  return `${n.toFixed(decimals)}%`;
+}

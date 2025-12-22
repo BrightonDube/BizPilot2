@@ -48,7 +48,7 @@ export function ProfitMarginChart({ products }: ProfitMarginChartProps) {
     return (
       <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl">
         <p className="text-gray-200 text-sm font-medium mb-1">{String(label ?? '')}</p>
-        <p className="text-gray-300 text-sm">Profit Margin: {value.toFixed(1)}%</p>
+        <p className="text-gray-300 text-sm">Profit Margin: {Number.isFinite(value) ? value.toFixed(1) : '0.0'}%</p>
       </div>
     )
   }
