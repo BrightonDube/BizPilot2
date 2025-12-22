@@ -87,7 +87,7 @@ export function ProductList() {
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
