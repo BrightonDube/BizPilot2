@@ -364,13 +364,17 @@ async def test_ai_chat_returns_fallback_when_not_configured(monkeypatch):
 
     import app.api.ai as ai
 
+    import fastapi
+
     monkeypatch.setattr(ai.settings, "OPENAI_API_KEY", "")
     monkeypatch.setattr(ai.settings, "GROQ_API_KEY", "")
 
     req = ai.ChatRequest(message="hello", conversation_id="c1")
-    resp = await ai.chat(request=req, current_user=SimpleNamespace(id="u1"), db=MagicMock())
-    assert resp.conversation_id == "c1"
-    assert "BizPilot" in resp.response
+    with pytest.raises(fastapi.HTTPException) as exc:
+        await ai.chat(request=req, current_user=SimpleNamespace(id="u1"), db=MagicMock())
+
+    assert exc.value.status_code == 400
+    assert "GROQ_API_KEY" in str(exc.value.detail)
 
 
 @pytest.mark.asyncio

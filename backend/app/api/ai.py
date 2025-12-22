@@ -1,7 +1,7 @@
 """AI Assistant API endpoints."""
 
 from typing import Any, Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -69,12 +69,12 @@ async def chat(
     - Customer behavior analysis
     - Financial reporting questions
     """
-    # Backwards compatibility: if AI isn't configured, return the historical fallback
-    # response and preserve the caller-provided conversation_id (even if it's not a UUID).
+    # If AI isn't configured, return a clear client error.
+    # The frontend can handle this by showing a setup/config message.
     if not settings.OPENAI_API_KEY and not settings.GROQ_API_KEY:
-        return ChatResponse(
-            response=get_fallback_response(request.message),
-            conversation_id=request.conversation_id,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="AI is not configured. Set GROQ_API_KEY (recommended) or OPENAI_API_KEY on the backend.",
         )
 
     svc = AIService(db)
@@ -86,9 +86,9 @@ async def chat(
         )
         return ChatResponse(response=resp["response"], conversation_id=resp.get("conversation_id"))
     except Exception:
-        return ChatResponse(
-            response="I apologize, but I encountered an error processing your request. Please try again later.",
-            conversation_id=request.conversation_id,
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI provider error while processing request. Please try again later.",
         )
 
 
