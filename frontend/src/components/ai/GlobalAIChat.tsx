@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { MessageSquare, Send, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { GripVertical, MessageSquare, Send, X } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button, Input } from '@/components/ui';
@@ -12,6 +12,8 @@ type ChatMessage = {
   content: string;
 };
 
+type Position = { x: number; y: number };
+
 export function GlobalAIChat() {
   const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
 
@@ -21,9 +23,65 @@ export function GlobalAIChat() {
   const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
+  // Draggable state
+  const [position, setPosition] = useState<Position>({ x: 24, y: 24 }); // bottom-right offset
+  const [isDragging, setIsDragging] = useState(false);
+  const dragOffset = useRef<Position>({ x: 0, y: 0 });
+  const chatRef = useRef<HTMLDivElement>(null);
+
   const endRef = useRef<HTMLDivElement>(null);
 
   const canUseChat = isInitialized && isAuthenticated;
+
+  // Drag handlers
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const rect = chatRef.current?.getBoundingClientRect();
+    if (rect) {
+      dragOffset.current = {
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const rect = chatRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      // Calculate new position (from bottom-right corner)
+      const newX = window.innerWidth - clientX - (rect.width - dragOffset.current.x);
+      const newY = window.innerHeight - clientY - (rect.height - dragOffset.current.y);
+
+      // Clamp to viewport
+      setPosition({
+        x: Math.max(8, Math.min(newX, window.innerWidth - rect.width - 8)),
+        y: Math.max(8, Math.min(newY, window.innerHeight - rect.height - 8)),
+      });
+    };
+
+    const handleEnd = () => setIsDragging(false);
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging]);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -96,34 +154,44 @@ export function GlobalAIChat() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:from-purple-700 hover:to-blue-700"
-        aria-label="Open AI Chat"
-      >
-        <MessageSquare className="h-5 w-5" />
-      </button>
+      {/* Floating trigger button - also draggable when chat is closed */}
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{ right: position.x, bottom: position.y }}
+          className="fixed z-50 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:from-purple-700 hover:to-blue-700 cursor-pointer"
+          aria-label="Open AI Chat"
+        >
+          <MessageSquare className="h-5 w-5" />
+        </button>
+      )}
 
       {open && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setOpen(false)}
-          />
-
-          <div className="absolute bottom-6 right-6 w-[min(420px,calc(100vw-3rem))] overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-              <div className="text-sm font-semibold text-white">AI Assistant</div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="text-slate-400 hover:text-white"
-                aria-label="Close"
-              >
-                <X className="h-4 w-4" />
-              </button>
+        <div
+          ref={chatRef}
+          style={{ right: position.x, bottom: position.y }}
+          className={`fixed z-50 w-[min(420px,calc(100vw-3rem))] overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl ${isDragging ? 'cursor-grabbing select-none' : ''}`}
+        >
+          {/* Drag handle header */}
+          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+            <div
+              onMouseDown={handleDragStart}
+              onTouchStart={handleDragStart}
+              className="flex items-center gap-2 cursor-grab active:cursor-grabbing select-none"
+            >
+              <GripVertical className="h-4 w-4 text-slate-500" />
+              <span className="text-sm font-semibold text-white">AI Assistant</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="text-slate-400 hover:text-white"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
             <div className="max-h-[55vh] overflow-y-auto px-4 py-3">
               {messages.length === 0 ? (

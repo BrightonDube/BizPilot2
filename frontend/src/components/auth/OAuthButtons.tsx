@@ -34,50 +34,76 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
       const initGoogle = async () => {
         let clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
+        // Debug logging for production troubleshooting
+        if (process.env.NODE_ENV === 'development' || !clientId) {
+          console.log('[OAuth] Build-time NEXT_PUBLIC_GOOGLE_CLIENT_ID:', clientId ? 'present' : 'missing')
+        }
+
         // Fallback: fetch client_id from backend if it wasn't embedded at build time
         // (common when Docker build-time env isn't injected in production builds).
         if (!clientId) {
           try {
+            console.log('[OAuth] Fetching client_id from backend...')
             const resp = await apiClient.get('/oauth/google/url')
             clientId = resp.data?.client_id
-          } catch {
-            // ignore; handled below
+            console.log('[OAuth] Backend client_id:', clientId ? 'received' : 'missing')
+          } catch (err) {
+            console.error('[OAuth] Failed to fetch client_id from backend:', err)
           }
         }
 
-        if (!window.google || !clientId) {
-          setError('Google sign-in is not configured for this environment.')
+        if (!window.google) {
+          console.error('[OAuth] Google Identity Services not loaded')
+          setError('Google sign-in script failed to load. Please refresh the page.')
           setGoogleReady(false)
           return
         }
 
-        googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
-          client_id: clientId,
-          scope: 'email profile openid',
-          ux_mode: 'popup',
-          callback: async (response: { code?: string; error?: string }) => {
-            if (response.error) {
-              setError('Google sign-in was cancelled.')
-              setLoading(false)
-              return
-            }
-            if (response.code) {
-              setLoading(true)
-              setError(null)
-              try {
-                await loginWithGoogle(response.code)
-                onSuccess?.()
-                router.push('/dashboard')
-              } catch {
-                setError('Google sign-in failed. Please try again.')
-              } finally {
-                setLoading(false)
-              }
-            }
-          },
-        })
+        if (!clientId) {
+          console.error('[OAuth] No Google client_id available')
+          setError('Google sign-in is not configured. Please contact support.')
+          setGoogleReady(false)
+          return
+        }
 
-        setGoogleReady(true)
+        try {
+          googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
+            client_id: clientId,
+            scope: 'email profile openid',
+            ux_mode: 'popup',
+            callback: async (response: { code?: string; error?: string; error_description?: string }) => {
+              console.log('[OAuth] Google callback received:', response.error || 'code present')
+              if (response.error) {
+                const errorMsg = response.error === 'access_denied' 
+                  ? 'Google sign-in was cancelled.'
+                  : `Google sign-in error: ${response.error_description || response.error}`
+                setError(errorMsg)
+                setLoading(false)
+                return
+              }
+              if (response.code) {
+                setLoading(true)
+                setError(null)
+                try {
+                  await loginWithGoogle(response.code)
+                  onSuccess?.()
+                  router.push('/dashboard')
+                } catch (err) {
+                  console.error('[OAuth] Backend login failed:', err)
+                  setError('Google sign-in failed. Please try again.')
+                } finally {
+                  setLoading(false)
+                }
+              }
+            },
+          })
+          console.log('[OAuth] Google client initialized successfully')
+          setGoogleReady(true)
+        } catch (err) {
+          console.error('[OAuth] Failed to initialize Google client:', err)
+          setError('Failed to initialize Google sign-in. Please refresh.')
+          setGoogleReady(false)
+        }
       }
 
       void initGoogle()
