@@ -345,7 +345,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
         {statCards.map((stat, index) => (
           <motion.div 
             key={stat.label}
@@ -355,7 +355,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.2 + index * 0.1 }}
             whileHover={{ scale: 1.02, y: -4 }}
           >
-            <div className="flex items-center">
+            <div className="flex items-center gap-3 min-w-0">
               <motion.div 
                 className={`p-2 rounded-lg border ${statColorClasses[stat.color]?.container ?? 'bg-gray-500/20 border-gray-500/30'}`}
                 whileHover={{ scale: 1.1, rotate: 5 }}
@@ -363,17 +363,17 @@ export default function DashboardPage() {
               >
                 <stat.icon className={`h-6 w-6 ${statColorClasses[stat.color]?.icon ?? 'text-gray-400'}`} />
               </motion.div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-400">{stat.label}</p>
+              <div className="min-w-0 space-y-1">
+                <p className="text-sm font-medium text-gray-400 whitespace-nowrap overflow-hidden text-ellipsis leading-snug">{stat.label}</p>
                 <motion.p 
-                  className="text-2xl font-bold text-gray-100"
+                  className="text-xl sm:text-2xl font-bold text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis leading-snug"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4 + index * 0.1, type: "spring", stiffness: 300 }}
                 >
                   {stat.value}
                 </motion.p>
-                <p className="text-xs text-gray-500 mt-1">{stat.subtext}</p>
+                <p className="text-xs text-gray-500 mt-1 whitespace-nowrap overflow-hidden text-ellipsis leading-snug">{stat.subtext}</p>
               </div>
             </div>
           </motion.div>

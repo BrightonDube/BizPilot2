@@ -12,6 +12,7 @@ from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
 from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
+from app.models.customer import Customer
 from app.models.inventory import InventoryItem
 from app.models.product import Product
 from app.models.user import User
@@ -106,7 +107,13 @@ class AIService:
         convo = self._require_conversation_for_user(conversation_id, user_id)
         msg = AIMessage(conversation_id=convo.id, content=content, is_user=is_user)
         self.db.add(msg)
-        convo.updated_at = msg.created_at
+        # Flush so timestamp defaults are populated before we copy to conversation
+        self.db.flush()
+        timestamp = msg.created_at
+        if timestamp is None:
+            from app.models.base import utc_now
+            timestamp = utc_now()
+        convo.updated_at = timestamp
         self.db.commit()
         self.db.refresh(msg)
         return msg
@@ -217,6 +224,29 @@ class AIService:
             }
             for i in low_stock_inventory
         ]
+
+        # Include customer insights only when allowed
+        if level == AIDataSharingLevel.FULL_BUSINESS_WITH_CUSTOMERS:
+            top_customers = (
+                self.db.query(Customer)
+                .filter(Customer.business_id == business.id, Customer.deleted_at.is_(None))
+                .order_by(Customer.total_spent.desc())
+                .limit(10)
+                .all()
+            )
+            context["topCustomers"] = [
+                {
+                    "id": str(c.id),
+                    "name": c.display_name,
+                    "email": c.email,
+                    "phone": c.phone,
+                    "total_spent": float(c.total_spent or 0),
+                    "total_orders": int(c.total_orders or 0),
+                    "average_order_value": float(c.average_order_value or 0),
+                    "type": c.customer_type.value if c.customer_type else None,
+                }
+                for c in top_customers
+            ]
 
         return context
 
@@ -370,7 +400,8 @@ class AIService:
         self.add_message(user.id, convo.id, assistant_text, False)
 
         user_msgs = [m for m in history if m.is_user]
-        if len(user_msgs) == 0:
+        # Generate title after the first user message (ignore the welcome system message)
+        if len(user_msgs) == 1 and convo.title in (None, "", "New Conversation"):
             title = await self.generate_conversation_title(content)
             convo.title = title
             self.db.commit()

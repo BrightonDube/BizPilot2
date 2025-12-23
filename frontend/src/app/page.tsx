@@ -7,6 +7,7 @@ import { Logo } from '@/components/common/Logo'
 import { HeroSection } from '@/components/home/HeroSection'
 import { ShaderBackground } from '@/components/ui'
 import { MarketingFooter } from '@/components/common/MarketingFooter'
+import { useGuestOnly } from '@/hooks/useAuth'
 import { 
   BarChart3, 
   Package, 
@@ -63,6 +64,7 @@ const benefits = [
 ]
 
 export default function HomePage() {
+  useGuestOnly('/dashboard')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -151,10 +153,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Everything You Need to Run Your Business
+              Everything you need to run and grow your business
             </h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              From cost calculations to AI insights, BizPilot gives you the tools to make smart business decisions.
+              Track costs, price with confidence, control inventory, and get AI guidance so every decision improves profit.
             </p>
           </div>
           
@@ -191,15 +193,19 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                Stop Guessing, Start Growing
+                Stop guessing. Start growing with clear, profitable decisions.
               </h2>
               <p className="text-lg text-gray-300 mb-8">
-                Make informed decisions with real-time cost tracking, intelligent pricing, 
-                and AI-powered business insights that help you maximize profits.
+                Make confident moves with live cost tracking, AI-powered pricing, and clear inventory signals that keep you in stock and in profit.
               </p>
               
               <div className="space-y-4">
-                {benefits.map((benefit, index) => (
+                {[
+                  'Know your true margins across products and channels.',
+                  'Price with confidence using AI and live cost data.',
+                  'Prevent stockouts and waste with smart inventory alerts.',
+                  'Get paid faster with invoices and payment tracking.',
+                ].map((benefit, index) => (
                   <motion.div 
                     key={index} 
                     className="flex items-center"
@@ -317,7 +323,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            Ready to Transform Your Business?
+            Ready to turn every product into profit?
           </motion.h2>
           <motion.p 
             className="text-xl text-gray-400 mb-8"
@@ -326,7 +332,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Join thousands of business owners who are making smarter decisions with BizPilot.
+            Join teams using BizPilot to turn their costs, prices, and inventory into an advantage.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
