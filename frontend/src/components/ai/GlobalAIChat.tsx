@@ -193,58 +193,57 @@ export function GlobalAIChat() {
             </button>
           </div>
 
-            <div className="max-h-[55vh] overflow-y-auto px-4 py-3">
-              {messages.length === 0 ? (
-                <div className="text-sm text-slate-400">
-                  Ask me anything about your business.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {messages.map((m) => (
-                    <div
-                      key={m.id}
-                      className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
-                          m.role === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-900 text-slate-100 border border-slate-800'
-                        }`}
-                      >
-                        {m.content}
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={endRef} />
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-slate-800 px-3 py-3">
-              <div className="flex items-center gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={placeholder}
-                  className="bg-slate-900 border-slate-700"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  disabled={isSending}
-                />
-                <Button
-                  type="button"
-                  onClick={sendMessage}
-                  disabled={isSending || input.trim().length === 0}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+          <div className="max-h-[55vh] overflow-y-auto px-4 py-3">
+            {messages.length === 0 ? (
+              <div className="text-sm text-slate-400">
+                Ask me anything about your business.
               </div>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
+                        m.role === 'user'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-900 text-slate-100 border border-slate-800'
+                      }`}
+                    >
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                <div ref={endRef} />
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-slate-800 px-3 py-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={placeholder}
+                className="bg-slate-900 border-slate-700"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                disabled={isSending}
+              />
+              <Button
+                type="button"
+                onClick={sendMessage}
+                disabled={isSending || input.trim().length === 0}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
