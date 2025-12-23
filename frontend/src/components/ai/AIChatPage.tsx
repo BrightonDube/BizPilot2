@@ -68,7 +68,8 @@ export function AIChatPage() {
 
   return (
     <motion.div
-      className="h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-6"
+      className="flex flex-col lg:flex-row gap-6 resize-y overflow-auto"
+      style={{ minHeight: '720px', maxHeight: 'calc(100vh - 4rem)' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -140,7 +141,7 @@ export function AIChatPage() {
           )}
         </div>
 
-        <div className="flex-1 flex flex-col bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
+        <div className="flex-1 flex flex-col bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden min-h-[560px]">
           {showQuickQuestions && (
             <div className="p-4 border-b border-gray-700">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Quick Questions</h3>

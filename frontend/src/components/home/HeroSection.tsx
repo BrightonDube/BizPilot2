@@ -20,7 +20,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          Smart Business Management for Modern Businesses
+          Smarter margins, pricing, and inventory—built for modern businesses
         </motion.h1>
         
         <motion.p 
@@ -29,8 +29,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          Calculate costs, optimize pricing, track inventory, and get AI insights 
-          to grow your business profitably. All in one intelligent platform.
+          Track true costs, price with confidence, stay in stock, and get AI guidance that turns every product into profit—all in one platform.
         </motion.p>
         
         <motion.div

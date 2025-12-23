@@ -61,6 +61,32 @@ DEFAULT_ARTICLES: tuple[HelpArticle, ...] = (
             "Save customer",
         ),
     ),
+    HelpArticle(
+        key="add_user",
+        title="Add a user",
+        triggers=("add user", "new user", "invite user", "create user", "user management"),
+        steps=(
+            "Go to Settings",
+            "Open the AI or main Settings page",
+            "Select the Users/User Management section",
+            "Click Add User",
+            "Enter name, email, role",
+            "Save user",
+        ),
+    ),
+    HelpArticle(
+        key="assign_role",
+        title="Assign or change a user role",
+        triggers=("assign role", "change role", "update role", "set role", "roles", "permissions"),
+        steps=(
+            "Go to Settings",
+            "Open the Users/User Management section",
+            "Click the user (or the three dots) you want to edit",
+            "Choose Edit User",
+            "Select the desired role",
+            "Save changes",
+        ),
+    ),
 )
 
 
