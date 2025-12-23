@@ -24,10 +24,12 @@ export function GlobalAIChat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   // Draggable state
-  const [position, setPosition] = useState<Position>({ x: 24, y: 24 }); // bottom-right offset
+  const [position, setPosition] = useState<Position>({ x: 24, y: 96 }); // bottom-right offset, above bottom tab bar
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
+  const dragSourceRect = useRef<DOMRect | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -39,11 +41,12 @@ export function GlobalAIChat() {
     setIsDragging(true);
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const rect = chatRef.current?.getBoundingClientRect();
-    if (rect) {
+    const activeRect = open ? chatRef.current?.getBoundingClientRect() : triggerRef.current?.getBoundingClientRect();
+    dragSourceRect.current = activeRect ?? null;
+    if (activeRect) {
       dragOffset.current = {
-        x: clientX - rect.left,
-        y: clientY - rect.top,
+        x: clientX - activeRect.left,
+        y: clientY - activeRect.top,
       };
     }
   }, []);
@@ -54,7 +57,7 @@ export function GlobalAIChat() {
     const handleMove = (e: MouseEvent | TouchEvent) => {
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      const rect = chatRef.current?.getBoundingClientRect();
+      const rect = dragSourceRect.current ?? chatRef.current?.getBoundingClientRect();
       if (!rect) return;
 
       // Calculate new position (from bottom-right corner)
@@ -157,8 +160,11 @@ export function GlobalAIChat() {
       {/* Floating trigger button - also draggable when chat is closed */}
       {!open && (
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => setOpen(true)}
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
           style={{ right: position.x, bottom: position.y }}
           className="fixed z-50 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:from-purple-700 hover:to-blue-700 cursor-pointer"
           aria-label="Open AI Chat"
@@ -193,58 +199,57 @@ export function GlobalAIChat() {
             </button>
           </div>
 
-            <div className="max-h-[55vh] overflow-y-auto px-4 py-3">
-              {messages.length === 0 ? (
-                <div className="text-sm text-slate-400">
-                  Ask me anything about your business.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {messages.map((m) => (
-                    <div
-                      key={m.id}
-                      className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
-                          m.role === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-900 text-slate-100 border border-slate-800'
-                        }`}
-                      >
-                        {m.content}
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={endRef} />
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-slate-800 px-3 py-3">
-              <div className="flex items-center gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={placeholder}
-                  className="bg-slate-900 border-slate-700"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  disabled={isSending}
-                />
-                <Button
-                  type="button"
-                  onClick={sendMessage}
-                  disabled={isSending || input.trim().length === 0}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+          <div className="max-h-[55vh] overflow-y-auto px-4 py-3">
+            {messages.length === 0 ? (
+              <div className="text-sm text-slate-400">
+                Ask me anything about your business.
               </div>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
+                        m.role === 'user'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-900 text-slate-100 border border-slate-800'
+                      }`}
+                    >
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                <div ref={endRef} />
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-slate-800 px-3 py-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={placeholder}
+                className="bg-slate-900 border-slate-700"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                disabled={isSending}
+              />
+              <Button
+                type="button"
+                onClick={sendMessage}
+                disabled={isSending || input.trim().length === 0}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
