@@ -24,10 +24,12 @@ export function GlobalAIChat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   // Draggable state
-  const [position, setPosition] = useState<Position>({ x: 24, y: 24 }); // bottom-right offset
+  const [position, setPosition] = useState<Position>({ x: 24, y: 96 }); // bottom-right offset, above bottom tab bar
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
+  const dragSourceRect = useRef<DOMRect | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -39,11 +41,12 @@ export function GlobalAIChat() {
     setIsDragging(true);
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const rect = chatRef.current?.getBoundingClientRect();
-    if (rect) {
+    const activeRect = open ? chatRef.current?.getBoundingClientRect() : triggerRef.current?.getBoundingClientRect();
+    dragSourceRect.current = activeRect ?? null;
+    if (activeRect) {
       dragOffset.current = {
-        x: clientX - rect.left,
-        y: clientY - rect.top,
+        x: clientX - activeRect.left,
+        y: clientY - activeRect.top,
       };
     }
   }, []);
@@ -54,7 +57,7 @@ export function GlobalAIChat() {
     const handleMove = (e: MouseEvent | TouchEvent) => {
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      const rect = chatRef.current?.getBoundingClientRect();
+      const rect = dragSourceRect.current ?? chatRef.current?.getBoundingClientRect();
       if (!rect) return;
 
       // Calculate new position (from bottom-right corner)
@@ -157,8 +160,11 @@ export function GlobalAIChat() {
       {/* Floating trigger button - also draggable when chat is closed */}
       {!open && (
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => setOpen(true)}
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
           style={{ right: position.x, bottom: position.y }}
           className="fixed z-50 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 hover:from-purple-700 hover:to-blue-700 cursor-pointer"
           aria-label="Open AI Chat"
