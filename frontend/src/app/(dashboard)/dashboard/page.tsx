@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
+  Plus,
   Package,
   Warehouse,
   TrendingUp,
@@ -309,7 +310,8 @@ export default function DashboardPage() {
       label: 'Total Orders', 
       value: stats?.total_orders || 0, 
       color: 'green',
-      subtext: `${stats?.orders_today || 0} today`
+      subtext: `${stats?.orders_today || 0} today`,
+      href: '/orders'
     },
     { 
       icon: Users, 
@@ -344,17 +346,10 @@ export default function DashboardPage() {
         <p className="text-gray-400">Welcome to your business command center</p>
       </motion.div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
-        {statCards.map((stat, index) => (
-          <motion.div 
-            key={stat.label}
-            className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 + index * 0.1 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-          >
+        {statCards.map((stat, index) => {
+          const statWithHref = stat as typeof stat & { href?: string };
+          const content = (
             <div className="flex items-center gap-3 min-w-0">
               <motion.div 
                 className={`p-2 rounded-lg border ${statColorClasses[stat.color]?.container ?? 'bg-gray-500/20 border-gray-500/30'}`}
@@ -376,8 +371,25 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-500 mt-1 whitespace-nowrap overflow-hidden text-ellipsis leading-snug">{stat.subtext}</p>
               </div>
             </div>
-          </motion.div>
-        ))}
+          );
+
+          return (
+            <motion.div 
+              key={stat.label}
+              className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all cursor-pointer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
+              whileHover={{ scale: 1.02, y: -4 }}
+            >
+              {statWithHref.href ? (
+                <Link href={statWithHref.href}>{content}</Link>
+              ) : (
+                content
+              )}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Quick Actions */}
@@ -388,8 +400,9 @@ export default function DashboardPage() {
         transition={{ delay: 0.6 }}
       >
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
+            { icon: ShoppingCart, title: 'New Order', desc: 'Create a new sale', href: '/orders/new' },
             { icon: Package, title: 'Add Product', desc: 'Create a new product', href: '/products/new' },
             { icon: Warehouse, title: 'Update Inventory', desc: 'Track your stock levels', href: '/inventory' },
             { icon: FileText, title: 'New Invoice', desc: 'Create customer invoice', href: '/invoices/new' },
@@ -438,7 +451,15 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {recentOrders.length === 0 ? (
-                <p className="text-gray-400 text-center py-4">No orders yet</p>
+                <div className="text-center py-6">
+                  <p className="text-gray-400 mb-4">No orders yet</p>
+                  <Link href="/orders/new">
+                    <Button variant="outline" size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create First Order
+                    </Button>
+                  </Link>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {recentOrders.slice(0, 5).map((order) => (

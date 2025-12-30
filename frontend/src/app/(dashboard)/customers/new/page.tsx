@@ -6,10 +6,13 @@ import { ArrowLeft, User, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { PageHeader } from '@/components/ui/bizpilot';
+import { apiClient } from '@/lib/api';
 
 export default function NewCustomerPage() {
   const router = useRouter();
   const [customerType, setCustomerType] = useState<'individual' | 'business'>('individual');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -29,8 +32,42 @@ export default function NewCustomerPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Creating customer:', { ...formData, customer_type: customerType });
-    router.push('/customers');
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const payload = {
+        customer_type: customerType,
+        first_name: formData.first_name || undefined,
+        last_name: formData.last_name || undefined,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        company_name: formData.company_name || undefined,
+        tax_number: formData.tax_number || undefined,
+        address_line1: formData.address_line1 || undefined,
+        address_line2: formData.address_line2 || undefined,
+        city: formData.city || undefined,
+        state: formData.state || undefined,
+        postal_code: formData.postal_code || undefined,
+        country: formData.country || undefined,
+        notes: formData.notes || undefined,
+        tags: formData.tags
+          ? formData.tags
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [],
+      };
+
+      await apiClient.post('/customers', payload);
+      router.push('/customers');
+    } catch (err) {
+      console.error('Failed to create customer:', err);
+      setError('Failed to create customer');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -51,6 +88,12 @@ export default function NewCustomerPage() {
           description="Create a new customer record"
         />
       </div>
+
+      {error && (
+        <div className="bg-red-900/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="bg-gray-800/50 border-gray-700">
@@ -173,7 +216,11 @@ export default function NewCustomerPage() {
           <Link href="/customers">
             <Button variant="outline" type="button">Cancel</Button>
           </Link>
-          <Button type="submit" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          >
             Create Customer
           </Button>
         </div>

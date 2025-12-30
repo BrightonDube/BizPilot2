@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Button, Input, Card, CardContent } from '@/components/ui';
 import { apiClient } from '@/lib/api';
+import { ProductSelector, Product } from '@/components/products/ProductSelector';
+import { CustomerSelector } from '@/components/customers/CustomerSelector';
 
 type OrderStatus =
   | 'draft'
@@ -23,6 +25,7 @@ interface OrderFormProps {
 
 interface Item {
   id: string;
+  product_id?: string;
   name: string;
   quantity: number;
   unit_price: number;
@@ -30,6 +33,13 @@ interface Item {
   discount_percent: number;
   notes?: string;
 }
+
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 11);
+};
 
 export function OrderForm({ onCreated }: OrderFormProps) {
   const router = useRouter();
@@ -39,37 +49,52 @@ export function OrderForm({ onCreated }: OrderFormProps) {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
   const [notes, setNotes] = useState<string>('');
   const [items, setItems] = useState<Item[]>([
-    { id: crypto.randomUUID(), name: '', quantity: 1, unit_price: 0, tax_rate: 0, discount_percent: 0 },
+    { id: generateId(), name: '', quantity: 1, unit_price: 0, tax_rate: 0, discount_percent: 0 },
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+    const subtotal = items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0), 0);
     const discount = items.reduce(
-      (sum, item) => sum + (item.quantity * item.unit_price * item.discount_percent) / 100,
+      (sum, item) => sum + ((Number(item.quantity) || 0) * (Number(item.unit_price) || 0) * (Number(item.discount_percent) || 0)) / 100,
       0,
     );
     const taxable = subtotal - discount;
     const tax = items.reduce(
       (sum, item) =>
-        sum + ((item.quantity * item.unit_price - (item.quantity * item.unit_price * item.discount_percent) / 100) * item.tax_rate) / 100,
+        sum + (((Number(item.quantity) || 0) * (Number(item.unit_price) || 0) - ((Number(item.quantity) || 0) * (Number(item.unit_price) || 0) * (Number(item.discount_percent) || 0)) / 100) * (Number(item.tax_rate) || 0)) / 100,
       0,
     );
     const total = taxable + tax;
     return { subtotal, discount, tax, total };
   }, [items]);
 
-  const updateItem = (id: string, field: keyof Item, value: string | number) => {
+  const updateItem = (id: string, field: keyof Item, value: string | number | undefined) => {
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
   };
 
+  const handleProductSelect = (id: string, product: Product) => {
+      setItems((prev) => prev.map((item) => {
+          if (item.id === id) {
+              return {
+                  ...item,
+                  product_id: product.id,
+                  name: product.name,
+                  unit_price: Number(product.selling_price),
+                  // Could also auto-fill tax_rate if product has it, but Product interface currently doesn't expose it
+              };
+          }
+          return item;
+      }));
+  };
+
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), name: '', quantity: 1, unit_price: 0, tax_rate: 0, discount_percent: 0 },
+      { id: generateId(), name: '', quantity: 1, unit_price: 0, tax_rate: 0, discount_percent: 0 },
     ]);
   };
 
@@ -92,6 +117,7 @@ export function OrderForm({ onCreated }: OrderFormProps) {
         payment_method: paymentMethod || undefined,
         notes: notes || undefined,
         items: items.map((item) => ({
+          product_id: item.product_id,
           name: item.name,
           unit_price: item.unit_price,
           quantity: item.quantity,
@@ -104,8 +130,18 @@ export function OrderForm({ onCreated }: OrderFormProps) {
       const orderId = resp.data?.id;
       if (onCreated) onCreated(orderId);
       router.push(`/orders/${orderId}`);
-    } catch (e: any) {
-      const message = e?.response?.data?.detail || 'Failed to create order';
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+      let message = 'Failed to create order';
+      
+      if (typeof detail === 'string') {
+        message = detail;
+      } else if (Array.isArray(detail)) {
+        message = detail.map(d => (d as { msg?: string }).msg || JSON.stringify(d)).join(', ');
+      } else if (detail && typeof detail === 'object') {
+        message = JSON.stringify(detail);
+      }
+      
       setError(message);
     } finally {
       setSubmitting(false);
@@ -118,11 +154,10 @@ export function OrderForm({ onCreated }: OrderFormProps) {
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-300">Customer ID (optional)</label>
-              <Input
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                placeholder="Customer ID"
+              <label className="text-sm text-gray-300">Customer</label>
+              <CustomerSelector
+                onSelect={(c) => setCustomerId(c.id)}
+                selectedCustomerId={customerId}
                 className="mt-1"
               />
             </div>
@@ -196,12 +231,14 @@ export function OrderForm({ onCreated }: OrderFormProps) {
               <div key={item.id} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 rounded-lg border border-gray-800 bg-gray-950/60">
                 <div className="md:col-span-2">
                   <label className="text-xs text-gray-400">Name</label>
-                  <Input
+                  <ProductSelector
                     value={item.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      updateItem(item.id, 'name', e.target.value)
-                    }
-                    placeholder="Item name"
+                    onInputChange={(val) => {
+                        updateItem(item.id, 'name', val);
+                        // If user types, we clear product_id because it's no longer the exact selected product
+                        if (item.product_id) updateItem(item.id, 'product_id', undefined);
+                    }}
+                    onSelect={(p) => handleProductSelect(item.id, p)}
                   />
                 </div>
                 <div>

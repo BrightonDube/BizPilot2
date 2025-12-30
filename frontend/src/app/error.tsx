@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react'
+import { AlertTriangle, RefreshCw, ArrowLeft, Home } from 'lucide-react'
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 
@@ -36,10 +36,10 @@ export default function GlobalError({
               <RefreshCw className="h-4 w-4 mr-2" />
               Try again
             </Button>
-            <Link href="/">
+            <Link href="/dashboard">
               <Button variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Go home
+                <Home className="h-4 w-4 mr-2" />
+                Dashboard
               </Button>
             </Link>
           </div>

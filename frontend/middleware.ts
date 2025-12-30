@@ -43,8 +43,6 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
 
     return res.ok;
   } catch {
-    // If the auth service is unreachable, do NOT redirect marketing pages.
-    // Fail-open here prevents users being trapped away from the public site.
     return false;
   }
 }
@@ -55,22 +53,33 @@ export async function middleware(request: NextRequest) {
   const isMarketingRoute = pathname === '/' || pathname === '/pricing';
   const isAuthRoute = pathname === '/auth' || pathname.startsWith('/auth/');
 
-  if (!isMarketingRoute && !isAuthRoute) {
+  // Never interfere with Next internals or static files
+  const isNextInternal = pathname.startsWith('/_next');
+  if (isNextInternal) {
     return NextResponse.next();
   }
 
   const authed = await hasValidSession(request);
-  if (!authed) {
-    return NextResponse.next();
+
+  // Authenticated users should not see public/auth pages.
+  if (authed && (isMarketingRoute || isAuthRoute)) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    url.search = '';
+    return NextResponse.redirect(url);
   }
 
-  const url = request.nextUrl.clone();
-  url.pathname = '/dashboard';
-  url.search = '';
+  // All remaining routes are protected.
+  if (!authed && !isMarketingRoute && !isAuthRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/login';
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
+  }
 
-  return NextResponse.redirect(url);
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/', '/pricing', '/auth/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg).*)'],
 };

@@ -85,8 +85,8 @@ export function AuthForm() {
               </p>
             )}
             <p className="mt-4">
-              <Link href="/" className="text-gray-500 hover:text-gray-400">
-                Back to home
+              <Link href={isAuthenticated ? '/dashboard' : '/'} className="text-gray-500 hover:text-gray-400">
+                Back
               </Link>
             </p>
           </div>

@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowLeft, SearchX } from 'lucide-react'
 
@@ -19,14 +21,11 @@ export default function NotFound() {
           </p>
 
           <div className="flex flex-wrap gap-3">
-            <Link href="/">
+            <Link href="/dashboard">
               <Button variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Go home
+                Go to dashboard
               </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="gradient">Go to dashboard</Button>
             </Link>
           </div>
         </CardContent>

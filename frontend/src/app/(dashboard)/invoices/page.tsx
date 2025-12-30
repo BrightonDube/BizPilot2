@@ -148,32 +148,6 @@ export default function InvoicesPage() {
     return sum + (toNumber(i.total) - toNumber(i.amount_paid));
   }, 0);
 
-  if (isLoading && invoices.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-          <p className="text-gray-400">Loading invoices...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && invoices.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <AlertTriangle className="w-12 h-12 text-yellow-500" />
-          <h2 className="text-xl font-semibold text-white">Unable to load invoices</h2>
-          <p className="text-gray-400 max-w-md">{error}</p>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -320,7 +294,25 @@ export default function InvoicesPage() {
         </Card>
       )}
 
-      {filteredInvoices.length === 0 ? (
+      {isLoading && invoices.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+            <p className="text-gray-400">Loading invoices...</p>
+          </div>
+        </div>
+      ) : error && invoices.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <AlertTriangle className="w-12 h-12 text-yellow-500" />
+            <h2 className="text-xl font-semibold text-white">Unable to load invoices</h2>
+            <p className="text-gray-400 max-w-md">{error}</p>
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      ) : filteredInvoices.length === 0 ? (
         <EmptyState
           title="No invoices found"
           description="Try adjusting your search or filters"

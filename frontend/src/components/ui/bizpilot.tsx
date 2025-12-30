@@ -49,6 +49,7 @@ interface StatCardProps {
   icon?: React.ReactNode;
   description?: string;
   trend?: { value: number; isPositive: boolean };
+  badge?: React.ReactNode;
 }
 
 export function StatCard({ 
@@ -58,7 +59,8 @@ export function StatCard({
   changeType = "neutral",
   icon,
   description,
-  trend 
+  trend,
+  badge
 }: StatCardProps) {
   const changeColors = {
     positive: "text-green-400",
@@ -78,6 +80,7 @@ export function StatCard({
       </div>
       <div className="mt-2 flex items-baseline gap-2">
         <p className="text-3xl font-semibold text-white">{value}</p>
+        {badge}
         {change && (
           <span className={cn("text-sm", changeColors[changeType])}>
             {change}
@@ -117,18 +120,24 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
 }
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
+  icon?: LucideIcon | React.ReactNode;
   title: string;
   description: string;
   action?: React.ReactNode;
 }
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      {Icon && (
+      {icon && (
         <div className="mb-4 rounded-full bg-gray-800 p-4">
-          <Icon className="h-8 w-8 text-gray-400" />
+          {typeof icon === 'function' ? (
+            // It's a component (LucideIcon)
+            React.createElement(icon as LucideIcon, { className: "h-8 w-8 text-gray-400" })
+          ) : (
+            // It's an element or other node
+            icon
+          )}
         </div>
       )}
       <h3 className="text-lg font-medium text-white">{title}</h3>
