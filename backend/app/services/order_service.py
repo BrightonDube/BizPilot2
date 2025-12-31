@@ -7,7 +7,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
-from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
+from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus, OrderDirection
 from app.models.base import utc_now
 from app.schemas.order import OrderCreate, OrderUpdate, OrderItemCreate
 
@@ -36,6 +36,8 @@ class OrderService:
         per_page: int = 20,
         search: Optional[str] = None,
         customer_id: Optional[str] = None,
+        supplier_id: Optional[str] = None,
+        direction: Optional[OrderDirection] = None,
         status: Optional[OrderStatus] = None,
         payment_status: Optional[PaymentStatus] = None,
         date_from: Optional[datetime] = None,
@@ -62,6 +64,14 @@ class OrderService:
         # Customer filter
         if customer_id:
             query = query.filter(Order.customer_id == customer_id)
+
+        # Supplier filter
+        if supplier_id:
+            query = query.filter(Order.supplier_id == supplier_id)
+
+        # Direction filter
+        if direction:
+            query = query.filter(Order.direction == direction)
         
         # Status filters
         if status:
@@ -114,6 +124,8 @@ class OrderService:
             business_id=business_id,
             order_number=self.generate_order_number(business_id),
             customer_id=data.customer_id,
+            supplier_id=data.supplier_id,
+            direction=data.direction,
             status=data.status,
             payment_status=data.payment_status,
             payment_method=data.payment_method,

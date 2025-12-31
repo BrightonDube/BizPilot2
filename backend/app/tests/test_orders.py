@@ -29,6 +29,13 @@ class TestOrderSchemas:
         assert PaymentStatus.REFUNDED.value == "refunded"
         assert PaymentStatus.FAILED.value == "failed"
 
+    def test_order_direction_enum(self):
+        """Test OrderDirection enum values."""
+        from app.models.order import OrderDirection
+
+        assert OrderDirection.INBOUND.value == "inbound"
+        assert OrderDirection.OUTBOUND.value == "outbound"
+
     def test_order_item_create_schema(self):
         """Test OrderItemCreate schema."""
         from app.schemas.order import OrderItemCreate
@@ -49,7 +56,7 @@ class TestOrderSchemas:
     def test_order_create_schema(self):
         """Test OrderCreate schema."""
         from app.schemas.order import OrderCreate, OrderItemCreate
-        from app.models.order import OrderStatus
+        from app.models.order import OrderStatus, OrderDirection
         
         items = [
             OrderItemCreate(name="Product 1", unit_price=Decimal("10.00")),
@@ -59,11 +66,26 @@ class TestOrderSchemas:
         data = OrderCreate(
             status=OrderStatus.DRAFT,
             notes="Test order",
+            direction=OrderDirection.INBOUND,
             items=items,
         )
         
         assert len(data.items) == 2
         assert data.status == OrderStatus.DRAFT
+
+    def test_order_create_outbound_schema(self):
+        """Test outbound OrderCreate schema."""
+        from app.schemas.order import OrderCreate
+        from app.models.order import OrderDirection
+
+        data = OrderCreate(
+            direction=OrderDirection.OUTBOUND,
+            supplier_id="supp-123",
+            items=[],
+        )
+
+        assert data.direction == OrderDirection.OUTBOUND
+        assert data.supplier_id == "supp-123"
 
     def test_address_schema(self):
         """Test AddressSchema."""

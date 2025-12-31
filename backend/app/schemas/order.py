@@ -5,7 +5,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from app.models.order import OrderStatus, PaymentStatus
+from app.models.order import OrderStatus, PaymentStatus, OrderDirection
 
 
 class AddressSchema(BaseModel):
@@ -68,6 +68,8 @@ class OrderBase(BaseModel):
     """Base schema for order."""
     
     customer_id: Optional[str] = None
+    supplier_id: Optional[str] = None
+    direction: OrderDirection = OrderDirection.INBOUND
     status: OrderStatus = OrderStatus.DRAFT
     payment_status: PaymentStatus = PaymentStatus.PENDING
     payment_method: Optional[str] = None
@@ -89,6 +91,8 @@ class OrderUpdate(BaseModel):
     """Schema for updating an order."""
     
     customer_id: Optional[str] = None
+    supplier_id: Optional[str] = None
+    direction: Optional[OrderDirection] = None
     status: Optional[OrderStatus] = None
     payment_status: Optional[PaymentStatus] = None
     payment_method: Optional[str] = None
@@ -108,6 +112,7 @@ class OrderResponse(OrderBase):
     business_id: str
     order_number: str
     customer_name: Optional[str] = None  # Computed from customer relationship
+    supplier_name: Optional[str] = None  # Computed from supplier relationship
     subtotal: Decimal
     tax_amount: Decimal
     discount_amount: Decimal

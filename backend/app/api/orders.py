@@ -10,7 +10,7 @@ from app.core.database import get_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
-from app.models.order import OrderStatus, PaymentStatus
+from app.models.order import OrderStatus, PaymentStatus, OrderDirection
 from app.schemas.order import (
     OrderCreate,
     OrderUpdate,
@@ -33,7 +33,10 @@ def _order_to_response(order, items=None, customer_name: str = None) -> OrderRes
         id=str(order.id),
         business_id=str(order.business_id),
         customer_id=str(order.customer_id) if order.customer_id else None,
+        supplier_id=str(order.supplier_id) if order.supplier_id else None,
+        direction=order.direction,
         customer_name=customer_name,
+        supplier_name=(order.supplier.name if getattr(order, "supplier", None) else None),
         order_number=order.order_number,
         status=order.status,
         payment_status=order.payment_status,
@@ -91,6 +94,8 @@ async def list_orders(
     per_page: int = Query(20, ge=1, le=100),
     search: Optional[str] = None,
     customer_id: Optional[str] = None,
+    supplier_id: Optional[str] = None,
+    direction: Optional[OrderDirection] = None,
     status: Optional[OrderStatus] = None,
     payment_status: Optional[PaymentStatus] = None,
     date_from: Optional[datetime] = None,
@@ -111,6 +116,8 @@ async def list_orders(
         per_page=per_page,
         search=search,
         customer_id=customer_id,
+        supplier_id=supplier_id,
+        direction=direction,
         status=status,
         payment_status=payment_status,
         date_from=date_from,

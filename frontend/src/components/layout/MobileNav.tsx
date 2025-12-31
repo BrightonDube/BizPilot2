@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   Warehouse,
   Users,
+  Truck,
   CreditCard,
   BarChart3,
   Settings,
@@ -36,13 +37,14 @@ const navigation = [
 const moreMenuItems = [
   { name: 'Inventory', href: '/inventory', icon: Warehouse, description: 'Manage stock levels' },
   { name: 'Customers', href: '/customers', icon: Users, description: 'Customer management' },
+  { name: 'Suppliers', href: '/suppliers', icon: Truck, description: 'Manage suppliers' },
   { name: 'Payments', href: '/payments', icon: CreditCard, description: 'Track payments' },
   { name: 'Reports', href: '/reports', icon: BarChart3, description: 'Business analytics' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'App preferences' },
 ];
 
 // Routes that should highlight the "More" tab
-const moreRoutes = ['/menu', '/inventory', '/customers', '/payments', '/reports', '/settings'];
+const moreRoutes = ['/menu', '/inventory', '/customers', '/suppliers', '/payments', '/reports', '/settings'];
 
 export function MobileNav() {
   const pathname = usePathname();

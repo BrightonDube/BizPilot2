@@ -31,6 +31,13 @@ class PaymentStatus(str, enum.Enum):
     FAILED = "failed"
 
 
+class OrderDirection(str, enum.Enum):
+    """Order direction."""
+
+    INBOUND = "inbound"  # customer orders (sales)
+    OUTBOUND = "outbound"  # supplier orders (purchasing)
+
+
 class Order(BaseModel):
     """Order model for sales management."""
 
@@ -38,6 +45,13 @@ class Order(BaseModel):
 
     business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True)
+    supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True, index=True)
+
+    direction = Column(
+        SQLEnum(OrderDirection, values_callable=lambda x: [e.value for e in x], name='orderdirection'),
+        default=OrderDirection.INBOUND,
+        nullable=False,
+    )
     
     # Order reference
     order_number = Column(String(50), nullable=False, unique=True, index=True)
@@ -83,6 +97,7 @@ class Order(BaseModel):
     # Relationships
     items = relationship("OrderItem", back_populates="order", lazy="selectin")
     customer = relationship("Customer", backref="orders", lazy="joined")
+    supplier = relationship("Supplier", backref="orders", lazy="joined")
 
     def __repr__(self) -> str:
         return f"<Order {self.order_number}>"

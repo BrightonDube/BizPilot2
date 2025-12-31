@@ -1,7 +1,12 @@
 """Test configuration and fixtures."""
 
+import os
+
 import pytest
 from fastapi.testclient import TestClient
+
+os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 
 from app.main import app
 
