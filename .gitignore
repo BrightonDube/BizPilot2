@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+package-lock.json
 
 # Python
 __pycache__/
@@ -56,6 +57,12 @@ pnpm-debug.log*
 .turbo
 *.pem
 Thumbs.db
+
+# Temporary files
+temp_*.tsx
+temp_*.ts
+temp_*.py
+*.tmp
 
 # Database
 *.db

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token
+from app.core.rate_limit import limiter, AUTH_RATE_LIMIT
 from app.schemas.oauth import GoogleOAuthToken, GoogleAuthResponse
 from app.services.google_oauth_service import GoogleOAuthService
 
@@ -51,9 +52,10 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
 
 
 @router.post("/google", response_model=GoogleAuthResponse)
+@limiter.limit(AUTH_RATE_LIMIT)
 async def google_oauth(
-    token_data: GoogleOAuthToken,
     request: Request,
+    token_data: GoogleOAuthToken,
     response: Response,
     db: Session = Depends(get_db),
 ):
