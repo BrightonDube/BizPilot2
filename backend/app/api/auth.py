@@ -16,6 +16,12 @@ from app.core.security import (
     decode_token,
     verify_password,
 )
+from app.core.rate_limit import (
+    limiter,
+    AUTH_RATE_LIMIT,
+    REGISTER_RATE_LIMIT,
+    PASSWORD_RESET_RATE_LIMIT,
+)
 from app.schemas.auth import (
     UserCreate,
     UserLogin,
@@ -89,7 +95,8 @@ def clear_auth_cookies(response: Response) -> None:
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit(REGISTER_RATE_LIMIT)
+async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user."""
     auth_service = AuthService(db)
     
@@ -121,9 +128,10 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit(AUTH_RATE_LIMIT)
 async def login(
-    credentials: UserLogin,
     request: Request,
+    credentials: UserLogin,
     response: Response,
     db: Session = Depends(get_db),
 ):
@@ -264,7 +272,8 @@ async def verify_email(data: EmailVerification, db: Session = Depends(get_db)):
 
 
 @router.post("/forgot-password")
-async def forgot_password(data: PasswordReset, db: Session = Depends(get_db)):
+@limiter.limit(PASSWORD_RESET_RATE_LIMIT)
+async def forgot_password(request: Request, data: PasswordReset, db: Session = Depends(get_db)):
     """Request password reset email."""
     auth_service = AuthService(db)
     user = auth_service.get_user_by_email(data.email)
@@ -280,7 +289,8 @@ async def forgot_password(data: PasswordReset, db: Session = Depends(get_db)):
 
 
 @router.post("/reset-password")
-async def reset_password(data: PasswordResetConfirm, db: Session = Depends(get_db)):
+@limiter.limit(PASSWORD_RESET_RATE_LIMIT)
+async def reset_password(request: Request, data: PasswordResetConfirm, db: Session = Depends(get_db)):
     """Reset password with token."""
     email = verify_password_reset_token(data.token)
     

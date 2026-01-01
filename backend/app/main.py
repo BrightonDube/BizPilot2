@@ -6,10 +6,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 import traceback
 
 from app.api import router as api_router
 from app.core.config import settings
+from app.core.rate_limit import limiter
 
 # Configure logging for performance monitoring
 logging.basicConfig(level=logging.INFO)
@@ -82,6 +85,10 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
 )
+
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add timing middleware FIRST (outermost - measures total request time)
 app.add_middleware(TimingMiddleware)

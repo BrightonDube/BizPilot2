@@ -591,7 +591,9 @@ async def test_auth_forgot_password_always_returns_success(monkeypatch):
 
     monkeypatch.setattr(auth, "AuthService", FakeAuthService)
 
-    res = await auth.forgot_password(data=SimpleNamespace(email="x@y.com"), db=MagicMock())
+    # Create a proper request object for rate limiter
+    request = _make_request()
+    res = await auth.forgot_password(request=request, data=SimpleNamespace(email="x@y.com"), db=MagicMock())
     assert "message" in res
 
 
