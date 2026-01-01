@@ -89,6 +89,7 @@ def _transaction_to_response(transaction) -> InventoryTransactionResponse:
 async def list_inventory(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
+    search: Optional[str] = None,
     low_stock_only: bool = False,
     location: Optional[str] = None,
     sort_by: str = Query("created_at", pattern="^(quantity_on_hand|location|created_at|updated_at)$"),
@@ -103,6 +104,7 @@ async def list_inventory(
         business_id=business_id,
         page=page,
         per_page=per_page,
+        search=search,
         low_stock_only=low_stock_only,
         location=location,
         sort_by=sort_by,
