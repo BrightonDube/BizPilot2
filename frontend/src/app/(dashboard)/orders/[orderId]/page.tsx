@@ -44,8 +44,8 @@ interface OrderResponse {
   status: OrderStatus;
   payment_status: PaymentStatus;
   payment_method?: string | null;
-  shipping_address?: Record<string, any> | null;
-  billing_address?: Record<string, any> | null;
+  shipping_address?: Record<string, string | null | undefined> | null;
+  billing_address?: Record<string, string | null | undefined> | null;
   notes?: string | null;
   internal_notes?: string | null;
   subtotal: number;
@@ -94,8 +94,8 @@ export default function OrderDetailPage() {
         setError(null);
         const response = await apiClient.get<OrderResponse>(`/orders/${orderId}`);
         setOrder(response.data);
-      } catch (err: any) {
-        const detail = err?.response?.data?.detail;
+      } catch (err: unknown) {
+        const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
         setError(detail || 'Failed to load order');
       } finally {
         setLoading(false);
@@ -112,7 +112,7 @@ export default function OrderDetailPage() {
       : order?.payment_status === 'refunded'
       ? 'secondary'
       : order?.payment_status === 'failed'
-      ? 'destructive'
+      ? 'danger'
       : order?.payment_status === 'partial'
       ? 'warning'
       : 'warning';
@@ -315,7 +315,7 @@ export default function OrderDetailPage() {
   );
 }
 
-function AddressBlock({ address }: { address?: Record<string, any> | null }) {
+function AddressBlock({ address }: { address?: Record<string, string | null | undefined> | null }) {
   if (!address || Object.keys(address || {}).length === 0) {
     return <p className="text-gray-500 text-sm">Not provided</p>;
   }

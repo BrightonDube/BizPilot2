@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth'
 import {
   Warehouse,
   Users,
+  Truck,
   CreditCard,
   BarChart3,
   Sparkles,
@@ -26,6 +27,7 @@ import {
 const menuItems = [
   { name: 'Inventory', href: '/inventory', icon: Warehouse, description: 'Manage stock levels' },
   { name: 'Customers', href: '/customers', icon: Users, description: 'Customer management' },
+  { name: 'Suppliers', href: '/suppliers', icon: Truck, description: 'Supplier management' },
   { name: 'Payments', href: '/payments', icon: CreditCard, description: 'Track payments' },
   { name: 'Reports', href: '/reports', icon: BarChart3, description: 'Business analytics' },
   { name: 'AI Assistant', href: '/ai', icon: Sparkles, description: 'Get AI-powered help' },

@@ -57,6 +57,7 @@ def clear_all_data(db: Session):
         "invoices",
         "order_items",
         "orders",
+        "product_ingredients",
         "products",
         "product_categories",
         "customers",
@@ -64,6 +65,9 @@ def clear_all_data(db: Session):
         "roles",
         "businesses",
         "organizations",
+        "ai_messages",
+        "ai_conversations",
+        "user_settings",
         "users",
     ]
     

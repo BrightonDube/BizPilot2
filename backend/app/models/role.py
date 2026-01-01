@@ -49,6 +49,12 @@ class Permission(str, enum.Enum):
     CUSTOMERS_EDIT = "customers:edit"
     CUSTOMERS_DELETE = "customers:delete"
 
+    # Supplier management
+    SUPPLIERS_VIEW = "suppliers:view"
+    SUPPLIERS_CREATE = "suppliers:create"
+    SUPPLIERS_EDIT = "suppliers:edit"
+    SUPPLIERS_DELETE = "suppliers:delete"
+
     # Invoice management
     INVOICES_VIEW = "invoices:view"
     INVOICES_CREATE = "invoices:create"

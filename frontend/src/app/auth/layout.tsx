@@ -4,12 +4,16 @@
  * Auth layout with BizPilot branding and dark theme.
  */
 
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { Logo } from '@/components/common/Logo';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useAuthStore } from '@/store/authStore';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuthStore();
+  const brandHref = useMemo(() => (isAuthenticated ? '/dashboard' : '/'), [isAuthenticated]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center p-4">
       {/* Animated background */}
@@ -23,7 +27,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Link href="/" className="inline-flex items-center justify-center gap-3 mb-4" suppressHydrationWarning>
+          <Link href={brandHref} className="inline-flex items-center justify-center gap-3 mb-4" suppressHydrationWarning>
             <Logo width={48} height={48} />
             <span className="text-3xl font-bold text-white">BizPilot</span>
           </Link>

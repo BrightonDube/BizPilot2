@@ -29,17 +29,26 @@ class TestOrderSchemas:
         assert PaymentStatus.REFUNDED.value == "refunded"
         assert PaymentStatus.FAILED.value == "failed"
 
+    def test_order_direction_enum(self):
+        """Test OrderDirection enum values."""
+        from app.models.order import OrderDirection
+
+        assert OrderDirection.INBOUND.value == "inbound"
+        assert OrderDirection.OUTBOUND.value == "outbound"
+
     def test_order_item_create_schema(self):
         """Test OrderItemCreate schema."""
         from app.schemas.order import OrderItemCreate
         
         data = OrderItemCreate(
+            product_id="prod-123",
             name="Test Product",
             unit_price=Decimal("29.99"),
             quantity=2,
             tax_rate=Decimal("15.0"),
         )
         
+        assert data.product_id == "prod-123"
         assert data.name == "Test Product"
         assert data.unit_price == Decimal("29.99")
         assert data.quantity == 2
@@ -47,7 +56,7 @@ class TestOrderSchemas:
     def test_order_create_schema(self):
         """Test OrderCreate schema."""
         from app.schemas.order import OrderCreate, OrderItemCreate
-        from app.models.order import OrderStatus
+        from app.models.order import OrderStatus, OrderDirection
         
         items = [
             OrderItemCreate(name="Product 1", unit_price=Decimal("10.00")),
@@ -57,11 +66,26 @@ class TestOrderSchemas:
         data = OrderCreate(
             status=OrderStatus.DRAFT,
             notes="Test order",
+            direction=OrderDirection.INBOUND,
             items=items,
         )
         
         assert len(data.items) == 2
         assert data.status == OrderStatus.DRAFT
+
+    def test_order_create_outbound_schema(self):
+        """Test outbound OrderCreate schema."""
+        from app.schemas.order import OrderCreate
+        from app.models.order import OrderDirection
+
+        data = OrderCreate(
+            direction=OrderDirection.OUTBOUND,
+            supplier_id="supp-123",
+            items=[],
+        )
+
+        assert data.direction == OrderDirection.OUTBOUND
+        assert data.supplier_id == "supp-123"
 
     def test_address_schema(self):
         """Test AddressSchema."""
@@ -195,6 +219,42 @@ class TestOrderService:
         parts = order_number.split("-")
         assert len(parts) == 3
         assert len(parts[1]) == 8  # YYYYMMDD
+
+    def test_create_order_item_internal(self):
+        """Test internal _create_order_item helper."""
+        from app.services.order_service import OrderService
+        from app.schemas.order import OrderItemCreate
+        from unittest.mock import MagicMock
+        import uuid
+        
+        mock_db = MagicMock()
+        service = OrderService(mock_db)
+        
+        order_id = uuid.uuid4()
+        data = OrderItemCreate(
+            product_id="prod-123",
+            name="Test Product",
+            unit_price=Decimal("100.00"),
+            quantity=2,
+            tax_rate=Decimal("10.0"),
+            discount_percent=Decimal("5.0"),
+        )
+        
+        item = service._create_order_item(order_id, data)
+        
+        assert item.order_id == order_id
+        assert item.product_id == "prod-123"
+        assert item.unit_price == Decimal("100.00")
+        assert item.quantity == 2
+        assert item.tax_rate == Decimal("10.0")
+        assert item.discount_percent == Decimal("5.0")
+        # discount = 200 * 0.05 = 10
+        assert item.discount_amount == Decimal("10.00")
+        # taxable = 200 - 10 = 190
+        # tax = 190 * 0.1 = 19
+        assert item.tax_amount == Decimal("19.00")
+        # total = 190 + 19 = 209
+        assert item.total == Decimal("209.00")
 
 
 class TestOrderAPI:

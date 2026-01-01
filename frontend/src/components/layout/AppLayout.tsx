@@ -68,9 +68,7 @@ function AppLayoutInner({
         }
       } catch (error) {
         console.error('Error checking business status:', error);
-        // If the check fails, redirect to setup to be safe
-        router.push('/business/setup');
-        return;
+        // Allow dashboard to render even if status check fails
       }
       setCheckingBusiness(false);
     };

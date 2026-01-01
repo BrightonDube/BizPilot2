@@ -15,6 +15,9 @@ type ChatMessage = {
 
 type Position = { x: number; y: number };
 
+const MOBILE_NAV_HEIGHT = 64;
+const MOBILE_NAV_CLEARANCE = MOBILE_NAV_HEIGHT + 5;
+
 export function GlobalAIChat() {
   const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
   const pathname = usePathname();
@@ -27,7 +30,7 @@ export function GlobalAIChat() {
   const [size] = useState<{ width: number; height: number }>({ width: 480, height: 640 });
 
   // Draggable state
-  const [position, setPosition] = useState<Position>({ x: 16, y: 16 }); // widget offset; modal anchor respects viewport clamps
+  const [position, setPosition] = useState<Position>({ x: 16, y: MOBILE_NAV_CLEARANCE }); // bottom offset clears mobile nav
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
   const dragSourceRect = useRef<DOMRect | null>(null);
@@ -71,7 +74,7 @@ export function GlobalAIChat() {
       // Clamp to viewport
       setPosition({
         x: Math.max(8, Math.min(newX, window.innerWidth - rect.width - 8)),
-        y: Math.max(8, Math.min(newY, window.innerHeight - rect.height - 8)),
+        y: Math.max(MOBILE_NAV_CLEARANCE, Math.min(newY, window.innerHeight - rect.height - 8)),
       });
     };
 
@@ -164,7 +167,7 @@ export function GlobalAIChat() {
     const height = Math.min(size.height, window.innerHeight - headerFooterAllowance - viewportPadding * 2);
     setPosition((prev) => ({
       x: Math.max(viewportPadding, Math.min(prev.x, window.innerWidth - width - viewportPadding)),
-      y: Math.max(viewportPadding, Math.min(prev.y, window.innerHeight - height - viewportPadding)),
+      y: Math.max(MOBILE_NAV_CLEARANCE, Math.min(prev.y, window.innerHeight - height - viewportPadding)),
     }));
   }, [open, size.height, size.width]);
 
@@ -179,7 +182,7 @@ export function GlobalAIChat() {
       const height = Math.min(size.height, window.innerHeight - headerFooterAllowance - viewportPadding * 2);
       setPosition((prev) => ({
         x: Math.max(viewportPadding, Math.min(prev.x, window.innerWidth - width - viewportPadding)),
-        y: Math.max(viewportPadding, Math.min(prev.y, window.innerHeight - height - viewportPadding)),
+        y: Math.max(MOBILE_NAV_CLEARANCE, Math.min(prev.y, window.innerHeight - height - viewportPadding)),
       }));
     };
     window.addEventListener('resize', handleResize);

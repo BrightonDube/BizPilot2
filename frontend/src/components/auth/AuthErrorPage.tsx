@@ -1,13 +1,18 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { AlertCircle, RefreshCw, Home } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useAuthStore } from '@/store/authStore'
 
 export function AuthErrorPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isAuthenticated } = useAuthStore()
+
+  const homeHref = useMemo(() => (isAuthenticated ? '/dashboard' : '/'), [isAuthenticated])
 
   const error = searchParams.get('error') || 'Authentication failed'
   const errorDescription =
@@ -41,11 +46,11 @@ export function AuthErrorPage() {
               Retry
             </button>
             <Link
-              href="/"
+              href={homeHref}
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-200 flex items-center gap-2 text-white"
             >
               <Home className="h-4 w-4" />
-              Home
+              {isAuthenticated ? 'Dashboard' : 'Home'}
             </Link>
           </div>
         </div>

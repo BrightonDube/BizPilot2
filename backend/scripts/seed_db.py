@@ -15,7 +15,7 @@ def main() -> int:
     parser.add_argument(
         "--preset",
         default="capetown",
-        choices=["capetown"],
+        choices=["capetown", "suppliers"],
     )
     args = parser.parse_args()
 
@@ -29,6 +29,15 @@ def main() -> int:
             return 0
 
         raise SystemExit("scripts.seed_capetown is missing a callable main()")
+
+    if args.preset == "suppliers":
+        module = importlib.import_module("scripts.seed_suppliers")
+        run = getattr(module, "main", None)
+        if callable(run):
+            run()
+            return 0
+
+        raise SystemExit("scripts.seed_suppliers is missing a callable main()")
 
     raise SystemExit(f"Unsupported preset: {args.preset}")
 

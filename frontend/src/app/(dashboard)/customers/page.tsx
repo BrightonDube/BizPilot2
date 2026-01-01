@@ -19,7 +19,9 @@ import {
   Edit,
   Trash2,
   MapPin,
-  Calendar
+  Calendar,
+  LayoutGrid,
+  List
 } from 'lucide-react'
 import { Button, Input, Card, CardContent, Badge } from '@/components/ui'
 import { apiClient } from '@/lib/api'
@@ -118,6 +120,7 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'name' | 'total_spent' | 'total_orders' | 'recent'>('name')
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -140,6 +143,23 @@ export default function CustomersPage() {
         if (selectedType !== 'all') {
           params.append('customer_type', selectedType)
         }
+
+        if (sortBy === 'name') {
+          params.append('sort_by', 'first_name')
+          params.append('sort_order', 'asc')
+        }
+        if (sortBy === 'total_spent') {
+          params.append('sort_by', 'total_spent')
+          params.append('sort_order', 'desc')
+        }
+        if (sortBy === 'total_orders') {
+          params.append('sort_by', 'total_orders')
+          params.append('sort_order', 'desc')
+        }
+        if (sortBy === 'recent') {
+          params.append('sort_by', 'updated_at')
+          params.append('sort_order', 'desc')
+        }
         
         const response = await apiClient.get<CustomerListResponse>(`/customers?${params}`)
         setCustomers(response.data.items)
@@ -155,7 +175,7 @@ export default function CustomersPage() {
 
     const timeoutId = setTimeout(fetchCustomers, 300)
     return () => clearTimeout(timeoutId)
-  }, [page, searchTerm, selectedType])
+  }, [page, searchTerm, selectedType, sortBy])
 
   const handleDeleteCustomer = async (customerId: string, customerName: string, e: React.MouseEvent) => {
     e.preventDefault()
@@ -242,12 +262,39 @@ export default function CustomersPage() {
           <h1 className="text-2xl font-bold text-gray-100">Customers</h1>
           <p className="text-gray-400">Manage your customer database ({totalCustomers} customers)</p>
         </div>
-        <Link href="/customers/new">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Customer
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center bg-gray-800/50 border border-gray-700 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                viewMode === 'list' ? 'bg-blue-600/20 text-blue-300' : 'text-gray-300 hover:text-white'
+              }`}
+              aria-label="List view"
+            >
+              <List className="h-4 w-4" />
+              List
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                viewMode === 'grid' ? 'bg-blue-600/20 text-blue-300' : 'text-gray-300 hover:text-white'
+              }`}
+              aria-label="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Grid
+            </button>
+          </div>
+
+          <Link href="/customers/new">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Customer
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       {/* Stats Cards */}
@@ -372,6 +419,128 @@ export default function CustomersPage() {
             </Link>
           )}
         </motion.div>
+      ) : viewMode === 'list' ? (
+        <div className="space-y-3">
+          {customers.map((customer, index) => {
+            const customerName = customer.company_name || `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+
+            return (
+              <motion.div
+                key={customer.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + index * 0.02 }}
+              >
+                <Link href={`/customers/${customer.id}`} className="block">
+                  <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                              customer.customer_type === 'business'
+                                ? 'bg-purple-500/20 text-purple-400'
+                                : 'bg-blue-500/20 text-blue-400'
+                            }`}
+                          >
+                            {customer.customer_type === 'business' ? (
+                              <Building2 className="w-5 h-5" />
+                            ) : (
+                              <User className="w-5 h-5" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <h3 className="text-sm sm:text-base font-semibold text-gray-100 truncate">
+                                {customerName || 'Unnamed Customer'}
+                              </h3>
+                              <span className="text-xs text-gray-500 shrink-0">
+                                {customer.customer_type === 'business' ? 'Business' : 'Individual'}
+                              </span>
+                            </div>
+
+                            <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap gap-x-4 gap-y-1 text-xs text-gray-300 min-w-0">
+                              {customer.email && (
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <Mail className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                                  <span className="truncate">{customer.email}</span>
+                                </div>
+                              )}
+                              {customer.phone && (
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <Phone className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                                  <span className="truncate">{customer.phone}</span>
+                                </div>
+                              )}
+                              {customer.city && (
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <MapPin className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                                  <span className="truncate">
+                                    {customer.city}
+                                    {customer.country ? `, ${customer.country}` : ''}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between sm:justify-end gap-3">
+                          <div className="flex items-center gap-4 text-sm">
+                            <div className="text-gray-300">
+                              <div className="text-xs text-gray-500">Orders</div>
+                              <div className="font-semibold">{customer.total_orders || 0}</div>
+                            </div>
+                            <div className="text-gray-300">
+                              <div className="text-xs text-gray-500">Spent</div>
+                              <div className="font-semibold text-green-400">
+                                {formatCurrency(customer.total_spent || 0)}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-1">
+                            <Link
+                              href={`/customers/${customer.id}/edit`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                            >
+                              <motion.button
+                                className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                                title="Edit"
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </motion.button>
+                            </Link>
+                            <motion.button
+                              onClick={(e) => handleDeleteCustomer(customer.id, customerName, e)}
+                              className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                              title="Delete"
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                              disabled={deletingId === customer.id}
+                            >
+                              {deletingId === customer.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            )
+          })}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {customers.map((customer, index) => {
@@ -386,11 +555,11 @@ export default function CustomersPage() {
                 whileHover={{ scale: 1.02, y: -4 }}
               >
                 <Link href={`/customers/${customer.id}`}>
-                  <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-all cursor-pointer h-full">
+                  <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-all cursor-pointer h-full overflow-hidden">
                     <CardContent className="p-6">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-3 flex-1">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
                             customer.customer_type === 'business' 
                               ? 'bg-purple-500/20 text-purple-400' 
@@ -407,7 +576,7 @@ export default function CustomersPage() {
                               {customerName || 'Unnamed Customer'}
                             </h3>
                             {customer.company_name && customer.first_name && (
-                              <p className="text-sm text-gray-400">
+                              <p className="text-sm text-gray-400 truncate">
                                 {customer.first_name} {customer.last_name}
                               </p>
                             )}
@@ -415,8 +584,14 @@ export default function CustomersPage() {
                         </div>
                         
                         {/* Actions */}
-                        <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
-                          <Link href={`/customers/${customer.id}/edit`}>
+                        <div className="flex items-center space-x-1 shrink-0">
+                          <Link
+                            href={`/customers/${customer.id}/edit`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
                             <motion.button
                               className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
                               title="Edit"
@@ -446,21 +621,21 @@ export default function CustomersPage() {
                       {/* Contact Info */}
                       <div className="space-y-2 mb-4">
                         {customer.email && (
-                          <div className="flex items-center space-x-2 text-sm text-gray-300">
+                          <div className="flex items-center space-x-2 text-sm text-gray-300 min-w-0">
                             <Mail className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="truncate">{customer.email}</span>
+                            <span className="truncate min-w-0">{customer.email}</span>
                           </div>
                         )}
                         {customer.phone && (
-                          <div className="flex items-center space-x-2 text-sm text-gray-300">
+                          <div className="flex items-center space-x-2 text-sm text-gray-300 min-w-0">
                             <Phone className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span>{customer.phone}</span>
+                            <span className="truncate min-w-0">{customer.phone}</span>
                           </div>
                         )}
                         {customer.city && (
-                          <div className="flex items-center space-x-2 text-sm text-gray-300">
+                          <div className="flex items-center space-x-2 text-sm text-gray-300 min-w-0">
                             <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="truncate">{customer.city}{customer.country ? `, ${customer.country}` : ''}</span>
+                            <span className="truncate min-w-0">{customer.city}{customer.country ? `, ${customer.country}` : ''}</span>
                           </div>
                         )}
                       </div>
@@ -499,11 +674,11 @@ export default function CustomersPage() {
 
                       {/* Tags */}
                       {customer.tags && customer.tags.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1">
+                        <div className="mt-3 flex flex-wrap gap-1 min-w-0">
                           {customer.tags.slice(0, 3).map((tag, i) => (
                             <span
                               key={i}
-                              className="px-2 py-0.5 text-xs rounded-full bg-blue-900/30 text-blue-400 border border-blue-500/30"
+                              className="px-2 py-0.5 text-xs rounded-full bg-blue-900/30 text-blue-400 border border-blue-500/30 max-w-full truncate"
                             >
                               {tag}
                             </span>
