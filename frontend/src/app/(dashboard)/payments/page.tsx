@@ -221,22 +221,8 @@ export default function PaymentsPage() {
   }
 
   // Error state
-  if (error && payments.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-red-900/20 border border-red-500/30 rounded-xl p-8 text-center"
-      >
-        <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-        <h3 className="font-medium text-lg mb-2 text-white">Unable to load payments</h3>
-        <p className="text-sm mb-4 text-gray-400">{error}</p>
-        <Button onClick={() => fetchPayments()} className="bg-gradient-to-r from-blue-600 to-purple-600">
-          Try Again
-        </Button>
-      </motion.div>
-    )
-  }
+  // Do not block the page with an error state. If there are no payments,
+  // show the empty state instead. Any error will be shown as a non-blocking banner.
 
   return (
     <motion.div 
@@ -263,6 +249,29 @@ export default function PaymentsPage() {
           </Button>
         </Link>
       </motion.div>
+
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-900/20 border border-red-500/30 rounded-xl p-4"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-white">Payments may be temporarily unavailable</p>
+              <p className="text-sm text-gray-400">{error}</p>
+            </div>
+            <Button
+              onClick={() => fetchPayments()}
+              variant="outline"
+              className="border-red-500/30 text-red-200 hover:bg-red-500/10"
+            >
+              Try Again
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

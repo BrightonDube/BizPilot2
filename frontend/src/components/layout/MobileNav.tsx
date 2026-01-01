@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
+  ShoppingBag,
   FileText,
   Sparkles,
   MoreHorizontal,
@@ -38,13 +39,14 @@ const moreMenuItems = [
   { name: 'Inventory', href: '/inventory', icon: Warehouse, description: 'Manage stock levels' },
   { name: 'Customers', href: '/customers', icon: Users, description: 'Customer management' },
   { name: 'Suppliers', href: '/suppliers', icon: Truck, description: 'Manage suppliers' },
+  { name: 'Purchases', href: '/purchases', icon: ShoppingBag, description: 'Orders to suppliers' },
   { name: 'Payments', href: '/payments', icon: CreditCard, description: 'Track payments' },
   { name: 'Reports', href: '/reports', icon: BarChart3, description: 'Business analytics' },
   { name: 'Settings', href: '/settings', icon: Settings, description: 'App preferences' },
 ];
 
 // Routes that should highlight the "More" tab
-const moreRoutes = ['/menu', '/inventory', '/customers', '/suppliers', '/payments', '/reports', '/settings'];
+const moreRoutes = ['/menu', '/inventory', '/customers', '/suppliers', '/purchases', '/payments', '/reports', '/settings'];
 
 export function MobileNav() {
   const pathname = usePathname();

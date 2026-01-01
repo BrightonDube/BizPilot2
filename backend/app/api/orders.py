@@ -4,13 +4,16 @@ import math
 from typing import Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_active_user, get_current_business_id
+from app.core.config import settings
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.order import OrderStatus, PaymentStatus, OrderDirection
+from app.models.supplier import Supplier
 from app.schemas.order import (
     OrderCreate,
     OrderUpdate,
@@ -23,8 +26,65 @@ from app.schemas.order import (
     OrderSummary,
 )
 from app.services.order_service import OrderService
+from app.services.email_service import EmailService, EmailAttachment
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
+
+
+def _escape_pdf_text(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def _build_simple_pdf(lines: list[str]) -> bytes:
+    font_obj_num = 4
+
+    content_lines = ["BT", "/F1 11 Tf", "50 770 Td"]
+    for line in lines:
+        content_lines.append(f"({_escape_pdf_text(line)}) Tj")
+        content_lines.append("0 -14 Td")
+    content_lines.append("ET")
+    content_stream = "\n".join(content_lines).encode("utf-8")
+
+    objects: list[bytes] = []
+    objects.append(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n")
+    objects.append(b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n")
+    objects.append(
+        f"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 {font_obj_num} 0 R >> >> /Contents 5 0 R >>\nendobj\n".encode(
+            "utf-8"
+        )
+    )
+    objects.append(b"4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n")
+    objects.append(
+        f"5 0 obj\n<< /Length {len(content_stream)} >>\nstream\n".encode("utf-8")
+        + content_stream
+        + b"\nendstream\nendobj\n"
+    )
+
+    header = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
+    out = bytearray()
+    out.extend(header)
+
+    offsets: list[int] = [0]
+    for obj in objects:
+        offsets.append(len(out))
+        out.extend(obj)
+
+    xref_start = len(out)
+    out.extend(f"xref\n0 {len(objects) + 1}\n".encode("utf-8"))
+    out.extend(b"0000000000 65535 f \n")
+    for off in offsets[1:]:
+        out.extend(f"{off:010d} 00000 n \n".encode("utf-8"))
+
+    out.extend(
+        (
+            "trailer\n"
+            f"<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
+            "startxref\n"
+            f"{xref_start}\n"
+            "%%EOF\n"
+        ).encode("utf-8")
+    )
+    return bytes(out)
 
 
 def _order_to_response(order, items=None, customer_name: str = None) -> OrderResponse:
@@ -181,6 +241,55 @@ async def get_order(
     return _order_to_response(order, items)
 
 
+@router.get("/{order_id}/pdf")
+async def get_order_pdf(
+    order_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    service = OrderService(db)
+    order = service.get_order(order_id, business_id)
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found",
+        )
+
+    items = service.get_order_items(str(order.id))
+
+    lines: list[str] = []
+    lines.append(f"Order: {order.order_number}")
+    lines.append(f"Direction: {order.direction}")
+    lines.append(f"Status: {order.status}")
+    lines.append(f"Order Date: {order.order_date}")
+    if order.direction == OrderDirection.INBOUND:
+        lines.append(f"Customer: {order.customer.company_name if order.customer else ''}")
+    else:
+        lines.append(f"Supplier: {order.supplier.name if order.supplier else ''}")
+
+    lines.append("")
+    lines.append("Items:")
+    for it in items:
+        lines.append(f"- {it.name} | Qty: {it.quantity} | Unit: {it.unit_price} | Total: {it.total}")
+
+    lines.append("")
+    lines.append(f"Subtotal: {order.subtotal}")
+    lines.append(f"VAT: {order.tax_amount}")
+    lines.append(f"Discount: {order.discount_amount or 0}")
+    lines.append(f"Shipping: {order.shipping_amount or 0}")
+    lines.append(f"Total: {order.total}")
+
+    pdf_bytes = _build_simple_pdf(lines)
+    filename = f"{order.order_number}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def create_order(
     data: OrderCreate,
@@ -191,6 +300,60 @@ async def create_order(
     """Create a new order."""
     service = OrderService(db)
     order = service.create_order(business_id, data)
+
+    if order.direction == OrderDirection.OUTBOUND and order.supplier_id:
+        supplier = db.query(Supplier).filter(
+            Supplier.id == order.supplier_id,
+            Supplier.business_id == business_id,
+            Supplier.deleted_at.is_(None),
+        ).first()
+
+        if not supplier:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier not found for outbound order",
+            )
+
+        if settings.EMAILS_ENABLED and not supplier.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier has no email address",
+            )
+
+        items_for_pdf = service.get_order_items(str(order.id))
+        pdf_lines: list[str] = []
+        pdf_lines.append(f"Purchase Order: {order.order_number}")
+        pdf_lines.append(f"Supplier: {supplier.name}")
+        pdf_lines.append(f"Date: {order.order_date}")
+        pdf_lines.append("")
+        pdf_lines.append("Items:")
+        for it in items_for_pdf:
+            pdf_lines.append(f"- {it.name} | Qty: {it.quantity} | Unit: {it.unit_price} | Total: {it.total}")
+        pdf_lines.append("")
+        pdf_lines.append(f"Total: {order.total}")
+        pdf_bytes = _build_simple_pdf(pdf_lines)
+
+        if settings.EMAILS_ENABLED and supplier.email:
+            email_service = EmailService()
+            try:
+                email_service.send_email(
+                    to_email=supplier.email,
+                    subject=f"Purchase Order {order.order_number}",
+                    body_text=f"Please find attached purchase order {order.order_number}.",
+                    attachments=[
+                        EmailAttachment(
+                            filename=f"{order.order_number}.pdf",
+                            content=pdf_bytes,
+                            content_type="application/pdf",
+                        )
+                    ],
+                )
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to send supplier email",
+                )
+
     items = service.get_order_items(str(order.id))
     return _order_to_response(order, items)
 

@@ -57,19 +57,22 @@ export default function ReportsPage() {
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [dateRange, setDateRange] = useState('30d');
+  const [category, setCategory] = useState<'all' | 'sales' | 'purchases'>('sales');
 
   useEffect(() => {
     fetchReportData();
-  }, [dateRange]);
+  }, [dateRange, category]);
 
   const fetchReportData = async () => {
     setIsLoading(true);
     try {
+      const direction = category === 'sales' ? 'inbound' : category === 'purchases' ? 'outbound' : undefined;
       const [statsRes, productsRes, customersRes] = await Promise.all([
-        apiClient.get('/reports/stats', { params: { range: dateRange } }),
-        apiClient.get('/reports/top-products', { params: { range: dateRange, limit: 5 } }),
-        apiClient.get('/reports/top-customers', { params: { range: dateRange, limit: 5 } }),
+        apiClient.get('/reports/stats', { params: { range: dateRange, direction } }),
+        apiClient.get('/reports/top-products', { params: { range: dateRange, limit: 5, direction } }),
+        apiClient.get('/reports/top-customers', { params: { range: dateRange, limit: 5, direction } }),
       ]);
       setStats(statsRes.data);
       setTopProducts(productsRes.data || []);
@@ -99,6 +102,47 @@ export default function ReportsPage() {
     { value: '1y', label: 'Last year' },
   ];
 
+  const categoryOptions = [
+    { value: 'sales', label: 'Sales report' },
+    { value: 'purchases', label: 'Purchases report' },
+    { value: 'all', label: 'All activity' },
+  ] as const;
+
+  const extractFilenameFromContentDisposition = (value?: string) => {
+    if (!value) return null;
+    const match = value.match(/filename="?([^\";]+)"?/i);
+    return match?.[1] || null;
+  };
+
+  const handleExportPdf = async () => {
+    setIsExporting(true);
+    try {
+      const direction = category === 'sales' ? 'inbound' : category === 'purchases' ? 'outbound' : undefined;
+      const res = await apiClient.get('/reports/export/pdf', {
+        params: { range: dateRange, direction },
+        responseType: 'blob',
+      });
+
+      const contentDisposition = res.headers?.['content-disposition'] as string | undefined;
+      const filename =
+        extractFilenameFromContentDisposition(contentDisposition) || `report_${dateRange}.pdf`;
+
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -106,6 +150,19 @@ export default function ReportsPage() {
         description="Business analytics and insights"
         actions={
           <div className="flex items-center gap-3">
+            <label htmlFor="report-category-select" className="sr-only">Select report category</label>
+            <select
+              id="report-category-select"
+              value={category}
+              onChange={(e) => setCategory(e.target.value as 'all' | 'sales' | 'purchases')}
+              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+            >
+              {categoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
             <label htmlFor="date-range-select" className="sr-only">Select date range</label>
             <select
               id="date-range-select"
@@ -119,9 +176,14 @@ export default function ReportsPage() {
                 </option>
               ))}
             </select>
-            <Button variant="outline" className="border-gray-700">
+            <Button
+              variant="outline"
+              className="border-gray-700"
+              onClick={handleExportPdf}
+              disabled={isExporting}
+            >
               <Download className="w-4 h-4 mr-2" />
-              Export
+              {isExporting ? 'Exporting…' : 'Export'}
             </Button>
           </div>
         }
