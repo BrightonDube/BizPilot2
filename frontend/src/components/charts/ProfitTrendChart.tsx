@@ -42,31 +42,21 @@ export function ProfitTrendChart({ products }: ProfitTrendChartProps) {
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
 
-  const trendData = sortedProducts.reduce(
-    (acc, product) => {
-      const dailyProfit = product.selling_price - product.total_cost
-      const cumulativeProfit = acc.cumulativeProfit + dailyProfit
+  let cumulativeProfit = 0
+  const trendData: Array<{ date: string; profit: number; dailyProfit: number }> = []
+  for (const product of sortedProducts) {
+    const dailyProfit = product.selling_price - product.total_cost
+    cumulativeProfit += dailyProfit
 
-      return {
-        cumulativeProfit,
-        data: [
-          ...acc.data,
-          {
-            date: new Date(product.created_at).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            }),
-            profit: cumulativeProfit,
-            dailyProfit,
-          },
-        ],
-      }
-    },
-    {
-      cumulativeProfit: 0,
-      data: [] as Array<{ date: string; profit: number; dailyProfit: number }>,
-    }
-  ).data
+    trendData.push({
+      date: new Date(product.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      profit: cumulativeProfit,
+      dailyProfit,
+    })
+  }
 
   const renderTooltip = ({ active, payload, label }: TooltipContentProps<ChartValue, ChartName>) => {
     if (!active || !payload?.length) return null

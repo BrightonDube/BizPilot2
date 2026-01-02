@@ -193,6 +193,21 @@ async def get_order_pdf(
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
+    """Return a PDF document for a given order.
+
+    Parameters:
+        order_id: The order ID to render.
+        current_user: Authenticated user (required).
+        business_id: Current business scope (required).
+
+    Returns:
+        A PDF response (`application/pdf`) as an attachment with filename
+        "{order_number}.pdf".
+
+    Raises:
+        HTTPException: 404 if the order is not found. Authentication/authorization
+        errors may also be raised by dependencies.
+    """
     service = OrderService(db)
     order = service.get_order(order_id, business_id)
 
@@ -367,36 +382,28 @@ async def record_payment(
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
-    supplier = None
-    if data.direction == OrderDirection.OUTBOUND:
-        if not data.supplier_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Supplier is required for outbound order",
-            )
-
-        supplier = db.query(Supplier).filter(
-            Supplier.id == data.supplier_id,
-            Supplier.business_id == business_id,
-            Supplier.deleted_at.is_(None),
-        ).first()
-
-        if not supplier:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Supplier not found for outbound order",
-            )
-
-        if settings.EMAILS_ENABLED and not supplier.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Supplier has no email address",
-            )
-
     """Record a payment for an order."""
     service = OrderService(db)
     order = service.get_order(order_id, business_id)
-    if order.direction == OrderDirection.OUTBOUND and supplier:
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found",
+        )
+
+    if data.amount > order.balance_due:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment amount exceeds balance due",
+        )
+
+    order = service.record_payment(order, data.amount, data.payment_method)
+    items = service.get_order_items(str(order.id))
+    return _order_to_response(order, items)
+
+
+@router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_order(
     order_id: str,
     current_user: User = Depends(has_permission("orders:delete")),

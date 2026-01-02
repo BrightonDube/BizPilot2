@@ -1,7 +1,5 @@
 """Unit tests for EmailService."""
 
-from types import SimpleNamespace
-
 import pytest
 
 

@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 from datetime import date, timedelta
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -157,7 +157,10 @@ async def get_top_products(
         return []
 
     if direction and direction != OrderDirection.INBOUND:
-        return []
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported direction: only INBOUND is allowed",
+        )
 
     start_date, end_date = get_date_range(range)
 
@@ -209,7 +212,10 @@ async def get_top_customers(
         return []
 
     if direction and direction != OrderDirection.INBOUND:
-        return []
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported direction: only INBOUND is allowed",
+        )
 
     start_date, end_date = get_date_range(range)
 
