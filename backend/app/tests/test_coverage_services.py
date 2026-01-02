@@ -598,14 +598,114 @@ async def test_auth_forgot_password_always_returns_success(monkeypatch):
 
 
 def test_invoice_pdf_helpers_escape_and_build_pdf():
-    import app.api.invoices as inv_api
+    from app.core.pdf import escape_pdf_text, build_simple_pdf
 
-    assert inv_api._escape_pdf_text("a(b)c") == "a\\(b\\)c"
-    assert inv_api._escape_pdf_text("a\\b") == "a\\\\b"
+    assert escape_pdf_text("a(b)c") == "a\\(b\\)c"
+    assert escape_pdf_text("a\\b") == "a\\\\b"
 
-    pdf = inv_api._build_simple_pdf(["Hello", "World"])
+    pdf = build_simple_pdf(["Hello", "World"])
     assert pdf.startswith(b"%PDF-1.4")
     assert b"%%EOF" in pdf
+
+
+@pytest.mark.asyncio
+async def test_orders_create_outbound_validates_supplier_before_creation(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+
+    import app.api.orders as orders_api
+    from app.models.order import OrderDirection
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    called = {"create_order": False}
+
+    class FakeService:
+        def __init__(self, db):
+            self.db = db
+
+        def create_order(self, business_id: str, data):
+            called["create_order"] = True
+            raise AssertionError("create_order should not be called when supplier is invalid")
+
+    monkeypatch.setattr(orders_api, "OrderService", FakeService)
+
+    db = MagicMock()
+    q = MagicMock()
+    db.query.return_value = q
+    q.filter.return_value = q
+    q.first.return_value = None
+
+    with pytest.raises(Exception):
+        await orders_api.create_order(
+            data=SimpleNamespace(direction=OrderDirection.OUTBOUND, supplier_id="supp-1", items=[]),
+            current_user=SimpleNamespace(id="u"),
+            business_id="b",
+            db=db,
+        )
+
+    assert called["create_order"] is False
+
+
+def test_email_service_requires_password_when_user_set(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+
+    from app.core.config import settings
+    from app.services.email_service import EmailService
+
+    monkeypatch.setattr(settings, "SMTP_USER", "user")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "")
+
+    service = EmailService()
+    with pytest.raises(ValueError):
+        service.send_email(to_email="a@b.com", subject="s", body_text="t")
+
+
+def test_email_service_uses_timeout_and_starttls(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+
+    from app.core.config import settings
+    from app.services.email_service import EmailService
+
+    monkeypatch.setattr(settings, "SMTP_HOST", "smtp")
+    monkeypatch.setattr(settings, "SMTP_PORT", 587)
+    monkeypatch.setattr(settings, "SMTP_TIMEOUT", 12)
+    monkeypatch.setattr(settings, "SMTP_STARTTLS", True)
+    monkeypatch.setattr(settings, "SMTP_USER", "")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "")
+
+    calls = {"timeout": None, "starttls": 0}
+
+    class FakeSMTP:
+        def __init__(self, host, port, timeout=None):
+            calls["timeout"] = timeout
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ehlo(self):
+            return None
+
+        def starttls(self):
+            calls["starttls"] += 1
+
+        def login(self, user, password):
+            return None
+
+        def send_message(self, msg):
+            return None
+
+    import app.services.email_service as email_mod
+
+    monkeypatch.setattr(email_mod.smtplib, "SMTP", FakeSMTP)
+
+    service = EmailService()
+    service.send_email(to_email="a@b.com", subject="s", body_text="t")
+
+    assert calls["timeout"] == 12
+    assert calls["starttls"] == 1
 
 
 @pytest.mark.asyncio

@@ -15,6 +15,8 @@ from app.models.order import Order, OrderDirection
 from app.models.customer import Customer
 from app.models.product import Product
 from app.models.business_user import BusinessUser
+from app.models.order import OrderItem
+from app.core.pdf import build_simple_pdf
 from app.schemas.report import (
     ReportStats,
     TopProduct,
@@ -22,62 +24,6 @@ from app.schemas.report import (
 )
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
-
-
-def _escape_pdf_text(value: str) -> str:
-    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-
-
-def _build_simple_pdf(lines: list[str]) -> bytes:
-    font_obj_num = 4
-
-    content_lines = ["BT", "/F1 11 Tf", "50 770 Td"]
-    for line in lines:
-        content_lines.append(f"({_escape_pdf_text(line)}) Tj")
-        content_lines.append("0 -14 Td")
-    content_lines.append("ET")
-    content_stream = "\n".join(content_lines).encode("utf-8")
-
-    objects: list[bytes] = []
-    objects.append(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n")
-    objects.append(b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n")
-    objects.append(
-        f"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 {font_obj_num} 0 R >> >> /Contents 5 0 R >>\nendobj\n".encode(
-            "utf-8"
-        )
-    )
-    objects.append(b"4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n")
-    objects.append(
-        f"5 0 obj\n<< /Length {len(content_stream)} >>\nstream\n".encode("utf-8")
-        + content_stream
-        + b"\nendstream\nendobj\n"
-    )
-
-    header = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
-    out = bytearray()
-    out.extend(header)
-
-    offsets: list[int] = [0]
-    for obj in objects:
-        offsets.append(len(out))
-        out.extend(obj)
-
-    xref_start = len(out)
-    out.extend(f"xref\n0 {len(objects) + 1}\n".encode("utf-8"))
-    out.extend(b"0000000000 65535 f \n")
-    for off in offsets[1:]:
-        out.extend(f"{off:010d} 00000 n \n".encode("utf-8"))
-
-    out.extend(
-        (
-            "trailer\n"
-            f"<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
-            "startxref\n"
-            f"{xref_start}\n"
-            "%%EOF\n"
-        ).encode("utf-8")
-    )
-    return bytes(out)
 
 
 def get_date_range(range_str: str) -> tuple[date, date]:
@@ -213,21 +159,38 @@ async def get_top_products(
     if direction and direction != OrderDirection.INBOUND:
         return []
 
-    # For now, return products by their sales from order items
-    # In a real implementation, you'd join with order_items
-    products = db.query(Product).filter(
-        Product.business_id == business_id,
-        Product.status == "active"
-    ).limit(limit).all()
+    start_date, end_date = get_date_range(range)
+
+    rows = (
+        db.query(
+            OrderItem.product_id.label("product_id"),
+            OrderItem.name.label("name"),
+            func.coalesce(func.sum(OrderItem.quantity), 0).label("sales"),
+            func.coalesce(func.sum(OrderItem.total), 0).label("revenue"),
+        )
+        .join(Order, Order.id == OrderItem.order_id)
+        .filter(
+            Order.business_id == business_id,
+            Order.direction == OrderDirection.INBOUND,
+            Order.created_at >= start_date,
+            Order.created_at <= end_date,
+            Order.deleted_at.is_(None),
+            OrderItem.deleted_at.is_(None),
+        )
+        .group_by(OrderItem.product_id, OrderItem.name)
+        .order_by(func.coalesce(func.sum(OrderItem.total), 0).desc())
+        .limit(limit)
+        .all()
+    )
 
     return [
         TopProduct(
-            id=str(p.id),
-            name=p.name,
-            sales=0,  # Would calculate from order_items
-            revenue=float(p.selling_price or 0) * 10,  # Placeholder
+            id=str(r.product_id) if r.product_id else "",
+            name=r.name,
+            sales=int(r.sales or 0),
+            revenue=float(r.revenue or 0),
         )
-        for p in products
+        for r in rows
     ]
 
 
@@ -248,35 +211,50 @@ async def get_top_customers(
     if direction and direction != OrderDirection.INBOUND:
         return []
 
-    # Get customers with their order totals
-    customers = db.query(Customer).filter(
-        Customer.business_id == business_id
-    ).limit(limit).all()
+    start_date, end_date = get_date_range(range)
 
-    result = []
-    for customer in customers:
-        order_count = db.query(func.count(Order.id)).filter(
-            Order.customer_id == customer.id,
+    rows = (
+        db.query(
+            Customer.id.label("customer_id"),
+            Customer.first_name.label("first_name"),
+            Customer.last_name.label("last_name"),
+            Customer.company_name.label("company_name"),
+            func.count(Order.id).label("orders"),
+            func.coalesce(func.sum(Order.total), 0).label("total_spent"),
+        )
+        .join(Order, Order.customer_id == Customer.id)
+        .filter(
+            Order.business_id == business_id,
+            Customer.business_id == business_id,
             Order.direction == OrderDirection.INBOUND,
-        ).scalar() or 0
-        
-        total_spent = db.query(func.sum(Order.total)).filter(
-            Order.customer_id == customer.id,
-            Order.direction == OrderDirection.INBOUND,
-        ).scalar() or 0
+            Order.created_at >= start_date,
+            Order.created_at <= end_date,
+            Order.deleted_at.is_(None),
+            Customer.deleted_at.is_(None),
+        )
+        .group_by(Customer.id, Customer.first_name, Customer.last_name, Customer.company_name)
+        .order_by(func.coalesce(func.sum(Order.total), 0).desc())
+        .limit(limit)
+        .all()
+    )
 
-        name = f"{customer.first_name} {customer.last_name}" if customer.first_name else customer.company_name
-        
-        result.append(TopCustomer(
-            id=str(customer.id),
-            name=name or "Unknown",
-            orders=order_count,
-            total_spent=float(total_spent),
-        ))
+    result: list[TopCustomer] = []
+    for r in rows:
+        if r.company_name:
+            name = r.company_name
+        else:
+            name = f"{r.first_name or ''} {r.last_name or ''}".strip() or "Unknown"
 
-    # Sort by total spent descending
-    result.sort(key=lambda x: x.total_spent, reverse=True)
-    return result[:limit]
+        result.append(
+            TopCustomer(
+                id=str(r.customer_id),
+                name=name,
+                orders=int(r.orders or 0),
+                total_spent=float(r.total_spent or 0),
+            )
+        )
+
+    return result
 
 
 @router.get("/export/pdf")
@@ -298,7 +276,7 @@ async def export_reports_pdf(
 
     if not business_id:
         lines.append("No business selected.")
-        pdf_bytes = _build_simple_pdf(lines)
+        pdf_bytes = build_simple_pdf(lines)
         filename = f"report_{range}.pdf"
         return Response(
             content=pdf_bytes,
@@ -333,7 +311,7 @@ async def export_reports_pdf(
         for idx, c in enumerate(top_customers, start=1):
             lines.append(f"{idx}. {c.name} | Orders: {c.orders} | Total Spent: R {c.total_spent}")
 
-    pdf_bytes = _build_simple_pdf(lines)
+    pdf_bytes = build_simple_pdf(lines)
     direction_str = f"_{direction}" if direction else ""
     filename = f"report{direction_str}_{range}_{start_date}_to_{end_date}.pdf"
     return Response(

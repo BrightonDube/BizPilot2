@@ -140,7 +140,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
     try {
       const products: { id: string; sku: string; name: string }[] = []
       let page = 1
-      let pages = 1
+      let pages: number
       do {
         const productsRes = await apiClient.get<{ items: { id: string; sku: string; name: string }[]; pages?: number }>(
           `/products?page=${page}&per_page=100`,

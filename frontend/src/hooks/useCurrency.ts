@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 export interface CurrencyConfig {
   code: string
@@ -39,14 +39,11 @@ export function getCurrencyConfig(code: string | null | undefined) {
 }
 
 export function useCurrency() {
-  const [currency, setCurrencyState] = useState<string>('ZAR')
-
-  useEffect(() => {
+  const [currency, setCurrencyState] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'ZAR'
     const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      setCurrencyState(stored)
-    }
-  }, [])
+    return stored ? stored.toUpperCase() : 'ZAR'
+  })
 
   const setCurrency = useCallback((currencyCode: string) => {
     const normalized = currencyCode.toUpperCase()

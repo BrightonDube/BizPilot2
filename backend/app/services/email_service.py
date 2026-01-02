@@ -30,6 +30,9 @@ class EmailService:
         attachments: Optional[Iterable[EmailAttachment]] = None,
         reply_to: Optional[str] = None,
     ) -> None:
+        if settings.SMTP_USER and not settings.SMTP_PASSWORD:
+            raise ValueError("SMTP_PASSWORD must be set when SMTP_USER is configured")
+
         msg = EmailMessage()
         msg["Subject"] = subject
         msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
@@ -48,7 +51,13 @@ class EmailService:
             maintype, subtype = ctype.split("/", 1)
             msg.add_attachment(att.content, maintype=maintype, subtype=subtype, filename=att.filename)
 
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as smtp:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=settings.SMTP_TIMEOUT) as smtp:
+            if settings.SMTP_STARTTLS:
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.ehlo()
+
             if settings.SMTP_USER:
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+
             smtp.send_message(msg)

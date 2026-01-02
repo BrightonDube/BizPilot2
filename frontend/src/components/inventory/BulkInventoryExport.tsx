@@ -51,7 +51,7 @@ export function BulkInventoryExport({ onClose }: BulkInventoryExportProps) {
       // Fetch all inventory items
       const items: InventoryItem[] = []
       let page = 1
-      let pages = 1
+      let pages: number
       do {
         const params = new URLSearchParams({
           page: page.toString(),

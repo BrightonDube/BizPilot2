@@ -27,64 +27,9 @@ from app.schemas.order import (
 )
 from app.services.order_service import OrderService
 from app.services.email_service import EmailService, EmailAttachment
+from app.core.pdf import build_simple_pdf
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
-
-
-def _escape_pdf_text(value: str) -> str:
-    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-
-
-def _build_simple_pdf(lines: list[str]) -> bytes:
-    font_obj_num = 4
-
-    content_lines = ["BT", "/F1 11 Tf", "50 770 Td"]
-    for line in lines:
-        content_lines.append(f"({_escape_pdf_text(line)}) Tj")
-        content_lines.append("0 -14 Td")
-    content_lines.append("ET")
-    content_stream = "\n".join(content_lines).encode("utf-8")
-
-    objects: list[bytes] = []
-    objects.append(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n")
-    objects.append(b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n")
-    objects.append(
-        f"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 {font_obj_num} 0 R >> >> /Contents 5 0 R >>\nendobj\n".encode(
-            "utf-8"
-        )
-    )
-    objects.append(b"4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n")
-    objects.append(
-        f"5 0 obj\n<< /Length {len(content_stream)} >>\nstream\n".encode("utf-8")
-        + content_stream
-        + b"\nendstream\nendobj\n"
-    )
-
-    header = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
-    out = bytearray()
-    out.extend(header)
-
-    offsets: list[int] = [0]
-    for obj in objects:
-        offsets.append(len(out))
-        out.extend(obj)
-
-    xref_start = len(out)
-    out.extend(f"xref\n0 {len(objects) + 1}\n".encode("utf-8"))
-    out.extend(b"0000000000 65535 f \n")
-    for off in offsets[1:]:
-        out.extend(f"{off:010d} 00000 n \n".encode("utf-8"))
-
-    out.extend(
-        (
-            "trailer\n"
-            f"<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
-            "startxref\n"
-            f"{xref_start}\n"
-            "%%EOF\n"
-        ).encode("utf-8")
-    )
-    return bytes(out)
 
 
 def _order_to_response(order, items=None, customer_name: str = None) -> OrderResponse:
@@ -281,7 +226,7 @@ async def get_order_pdf(
     lines.append(f"Shipping: {order.shipping_amount or 0}")
     lines.append(f"Total: {order.total}")
 
-    pdf_bytes = _build_simple_pdf(lines)
+    pdf_bytes = build_simple_pdf(lines)
     filename = f"{order.order_number}.pdf"
     return Response(
         content=pdf_bytes,
@@ -299,11 +244,11 @@ async def create_order(
 ):
     """Create a new order."""
     service = OrderService(db)
-    order = service.create_order(business_id, data)
 
-    if order.direction == OrderDirection.OUTBOUND and order.supplier_id:
+    supplier = None
+    if data.direction == OrderDirection.OUTBOUND and data.supplier_id:
         supplier = db.query(Supplier).filter(
-            Supplier.id == order.supplier_id,
+            Supplier.id == data.supplier_id,
             Supplier.business_id == business_id,
             Supplier.deleted_at.is_(None),
         ).first()
@@ -320,10 +265,20 @@ async def create_order(
                 detail="Supplier has no email address",
             )
 
+    order = service.create_order(business_id, data)
+
+    if order.direction == OrderDirection.OUTBOUND and order.supplier_id:
+        if not supplier:
+            supplier = db.query(Supplier).filter(
+                Supplier.id == order.supplier_id,
+                Supplier.business_id == business_id,
+                Supplier.deleted_at.is_(None),
+            ).first()
+
         items_for_pdf = service.get_order_items(str(order.id))
         pdf_lines: list[str] = []
         pdf_lines.append(f"Purchase Order: {order.order_number}")
-        pdf_lines.append(f"Supplier: {supplier.name}")
+        pdf_lines.append(f"Supplier: {supplier.name if supplier else ''}")
         pdf_lines.append(f"Date: {order.order_date}")
         pdf_lines.append("")
         pdf_lines.append("Items:")
@@ -331,7 +286,7 @@ async def create_order(
             pdf_lines.append(f"- {it.name} | Qty: {it.quantity} | Unit: {it.unit_price} | Total: {it.total}")
         pdf_lines.append("")
         pdf_lines.append(f"Total: {order.total}")
-        pdf_bytes = _build_simple_pdf(pdf_lines)
+        pdf_bytes = build_simple_pdf(pdf_lines)
 
         if settings.EMAILS_ENABLED and supplier.email:
             email_service = EmailService()
@@ -412,28 +367,36 @@ async def record_payment(
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
+    supplier = None
+    if data.direction == OrderDirection.OUTBOUND:
+        if not data.supplier_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier is required for outbound order",
+            )
+
+        supplier = db.query(Supplier).filter(
+            Supplier.id == data.supplier_id,
+            Supplier.business_id == business_id,
+            Supplier.deleted_at.is_(None),
+        ).first()
+
+        if not supplier:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier not found for outbound order",
+            )
+
+        if settings.EMAILS_ENABLED and not supplier.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier has no email address",
+            )
+
     """Record a payment for an order."""
     service = OrderService(db)
     order = service.get_order(order_id, business_id)
-    
-    if not order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Order not found",
-        )
-    
-    if data.amount > order.balance_due:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Payment amount exceeds balance due",
-        )
-    
-    order = service.record_payment(order, data.amount, data.payment_method)
-    items = service.get_order_items(str(order.id))
-    return _order_to_response(order, items)
-
-
-@router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
+    if order.direction == OrderDirection.OUTBOUND and supplier:
 async def delete_order(
     order_id: str,
     current_user: User = Depends(has_permission("orders:delete")),
