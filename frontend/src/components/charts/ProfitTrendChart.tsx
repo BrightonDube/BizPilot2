@@ -43,18 +43,20 @@ export function ProfitTrendChart({ products }: ProfitTrendChartProps) {
   )
 
   let cumulativeProfit = 0
-  const trendData = sortedProducts.map((product) => {
-    const profit = product.selling_price - product.total_cost
-    cumulativeProfit += profit
-    return {
+  const trendData: Array<{ date: string; profit: number; dailyProfit: number }> = []
+  for (const product of sortedProducts) {
+    const dailyProfit = product.selling_price - product.total_cost
+    cumulativeProfit += dailyProfit
+
+    trendData.push({
       date: new Date(product.created_at).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
       }),
       profit: cumulativeProfit,
-      dailyProfit: profit,
-    }
-  })
+      dailyProfit,
+    })
+  }
 
   const renderTooltip = ({ active, payload, label }: TooltipContentProps<ChartValue, ChartName>) => {
     if (!active || !payload?.length) return null

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Button, Input, Card, CardContent } from '@/components/ui';
@@ -21,6 +21,13 @@ type PaymentStatus = 'pending' | 'partial' | 'paid' | 'refunded' | 'failed';
 
 interface OrderFormProps {
   onCreated?: (orderId: string) => void;
+  mode?: 'inbound' | 'outbound';
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  email?: string | null;
 }
 
 interface Item {
@@ -41,9 +48,12 @@ const generateId = () => {
   return Math.random().toString(36).substring(2, 11);
 };
 
-export function OrderForm({ onCreated }: OrderFormProps) {
+export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
   const router = useRouter();
   const [customerId, setCustomerId] = useState<string>('');
+  const [supplierId, setSupplierId] = useState<string>('');
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [status, setStatus] = useState<OrderStatus>('pending');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
@@ -53,6 +63,24 @@ export function OrderForm({ onCreated }: OrderFormProps) {
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (mode !== 'outbound') return;
+
+    const fetchSuppliers = async () => {
+      setSuppliersLoading(true);
+      try {
+        const res = await apiClient.get('/suppliers', { params: { page: 1, per_page: 100 } });
+        setSuppliers(res.data?.items || []);
+      } catch {
+        setSuppliers([]);
+      } finally {
+        setSuppliersLoading(false);
+      }
+    };
+
+    fetchSuppliers();
+  }, [mode]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0), 0);
@@ -107,11 +135,19 @@ export function OrderForm({ onCreated }: OrderFormProps) {
       setError('Each item needs a name.');
       return;
     }
+
+    if (mode === 'outbound' && !supplierId) {
+      setError('Select a supplier.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
       const payload = {
-        customer_id: customerId ? customerId : null,
+        direction: mode,
+        customer_id: mode === 'inbound' ? (customerId ? customerId : null) : null,
+        supplier_id: mode === 'outbound' ? (supplierId ? supplierId : null) : null,
         status,
         payment_status: paymentStatus,
         payment_method: paymentMethod || undefined,
@@ -153,14 +189,33 @@ export function OrderForm({ onCreated }: OrderFormProps) {
       <Card className="bg-gray-900/60 border-gray-800">
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-300">Customer</label>
-              <CustomerSelector
-                onSelect={(c) => setCustomerId(c.id)}
-                selectedCustomerId={customerId}
-                className="mt-1"
-              />
-            </div>
+            {mode === 'inbound' ? (
+              <div>
+                <label className="text-sm text-gray-300">Customer</label>
+                <CustomerSelector
+                  onSelect={(c) => setCustomerId(c.id)}
+                  selectedCustomerId={customerId}
+                  className="mt-1"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="text-sm text-gray-300">Supplier</label>
+                <select
+                  value={supplierId}
+                  onChange={(e) => setSupplierId(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2"
+                  disabled={suppliersLoading}
+                >
+                  <option value="">{suppliersLoading ? 'Loading…' : 'Select supplier'}</option>
+                  {suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}{s.email ? ` (${s.email})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="text-sm text-gray-300">Payment Method</label>
               <Input
@@ -331,7 +386,7 @@ export function OrderForm({ onCreated }: OrderFormProps) {
                   Saving...
                 </>
               ) : (
-                'Save Order'
+                mode === 'outbound' ? 'Send Purchase Order' : 'Save Order'
               )}
             </Button>
           </div>

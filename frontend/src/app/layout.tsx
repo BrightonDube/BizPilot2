@@ -16,6 +16,12 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "BizPilot - Multi-Business Management Platform",
   description: "Modern business management platform for inventory, orders, invoicing, and more.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg" },
+    ],
+  },
 };
 
 export default function RootLayout({

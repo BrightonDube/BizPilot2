@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.product import Product
 from app.models.base import utc_now
 from app.schemas.inventory import InventoryItemCreate, InventoryItemUpdate, InventoryAdjustment
 
@@ -43,6 +44,14 @@ class InventoryService:
             InventoryItem.business_id == business_id,
             InventoryItem.deleted_at.is_(None),
         )
+
+        if search:
+            term = f"%{search.strip()}%"
+            query = query.join(Product, Product.id == InventoryItem.product_id).filter(
+                Product.deleted_at.is_(None),
+                func.lower(Product.name).like(func.lower(term))
+                | func.lower(Product.sku).like(func.lower(term)),
+            )
         
         if low_stock_only:
             query = query.filter(

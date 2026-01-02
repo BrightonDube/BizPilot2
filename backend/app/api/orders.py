@@ -4,13 +4,16 @@ import math
 from typing import Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_active_user, get_current_business_id
+from app.core.config import settings
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.order import OrderStatus, PaymentStatus, OrderDirection
+from app.models.supplier import Supplier
 from app.schemas.order import (
     OrderCreate,
     OrderUpdate,
@@ -23,6 +26,8 @@ from app.schemas.order import (
     OrderSummary,
 )
 from app.services.order_service import OrderService
+from app.services.email_service import EmailService, EmailAttachment
+from app.core.pdf import build_simple_pdf
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -181,6 +186,70 @@ async def get_order(
     return _order_to_response(order, items)
 
 
+@router.get("/{order_id}/pdf")
+async def get_order_pdf(
+    order_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """Return a PDF document for a given order.
+
+    Parameters:
+        order_id: The order ID to render.
+        current_user: Authenticated user (required).
+        business_id: Current business scope (required).
+
+    Returns:
+        A PDF response (`application/pdf`) as an attachment with filename
+        "{order_number}.pdf".
+
+    Raises:
+        HTTPException: 404 if the order is not found. Authentication/authorization
+        errors may also be raised by dependencies.
+    """
+    service = OrderService(db)
+    order = service.get_order(order_id, business_id)
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found",
+        )
+
+    items = service.get_order_items(str(order.id))
+
+    lines: list[str] = []
+    lines.append(f"Order: {order.order_number}")
+    lines.append(f"Direction: {order.direction}")
+    lines.append(f"Status: {order.status}")
+    lines.append(f"Order Date: {order.order_date}")
+    if order.direction == OrderDirection.INBOUND:
+        lines.append(f"Customer: {order.customer.company_name if order.customer else ''}")
+    else:
+        lines.append(f"Supplier: {order.supplier.name if order.supplier else ''}")
+
+    lines.append("")
+    lines.append("Items:")
+    for it in items:
+        lines.append(f"- {it.name} | Qty: {it.quantity} | Unit: {it.unit_price} | Total: {it.total}")
+
+    lines.append("")
+    lines.append(f"Subtotal: {order.subtotal}")
+    lines.append(f"VAT: {order.tax_amount}")
+    lines.append(f"Discount: {order.discount_amount or 0}")
+    lines.append(f"Shipping: {order.shipping_amount or 0}")
+    lines.append(f"Total: {order.total}")
+
+    pdf_bytes = build_simple_pdf(lines)
+    filename = f"{order.order_number}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def create_order(
     data: OrderCreate,
@@ -190,7 +259,71 @@ async def create_order(
 ):
     """Create a new order."""
     service = OrderService(db)
+
+    supplier = None
+    if data.direction == OrderDirection.OUTBOUND and data.supplier_id:
+        supplier = db.query(Supplier).filter(
+            Supplier.id == data.supplier_id,
+            Supplier.business_id == business_id,
+            Supplier.deleted_at.is_(None),
+        ).first()
+
+        if not supplier:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier not found for outbound order",
+            )
+
+        if settings.EMAILS_ENABLED and not supplier.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier has no email address",
+            )
+
     order = service.create_order(business_id, data)
+
+    if order.direction == OrderDirection.OUTBOUND and order.supplier_id:
+        if not supplier:
+            supplier = db.query(Supplier).filter(
+                Supplier.id == order.supplier_id,
+                Supplier.business_id == business_id,
+                Supplier.deleted_at.is_(None),
+            ).first()
+
+        items_for_pdf = service.get_order_items(str(order.id))
+        pdf_lines: list[str] = []
+        pdf_lines.append(f"Purchase Order: {order.order_number}")
+        pdf_lines.append(f"Supplier: {supplier.name if supplier else ''}")
+        pdf_lines.append(f"Date: {order.order_date}")
+        pdf_lines.append("")
+        pdf_lines.append("Items:")
+        for it in items_for_pdf:
+            pdf_lines.append(f"- {it.name} | Qty: {it.quantity} | Unit: {it.unit_price} | Total: {it.total}")
+        pdf_lines.append("")
+        pdf_lines.append(f"Total: {order.total}")
+        pdf_bytes = build_simple_pdf(pdf_lines)
+
+        if settings.EMAILS_ENABLED and supplier.email:
+            email_service = EmailService()
+            try:
+                email_service.send_email(
+                    to_email=supplier.email,
+                    subject=f"Purchase Order {order.order_number}",
+                    body_text=f"Please find attached purchase order {order.order_number}.",
+                    attachments=[
+                        EmailAttachment(
+                            filename=f"{order.order_number}.pdf",
+                            content=pdf_bytes,
+                            content_type="application/pdf",
+                        )
+                    ],
+                )
+            except Exception:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to send supplier email",
+                )
+
     items = service.get_order_items(str(order.id))
     return _order_to_response(order, items)
 
@@ -252,19 +385,19 @@ async def record_payment(
     """Record a payment for an order."""
     service = OrderService(db)
     order = service.get_order(order_id, business_id)
-    
+
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Order not found",
         )
-    
+
     if data.amount > order.balance_due:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Payment amount exceeds balance due",
         )
-    
+
     order = service.record_payment(order, data.amount, data.payment_method)
     items = service.get_order_items(str(order.id))
     return _order_to_response(order, items)
