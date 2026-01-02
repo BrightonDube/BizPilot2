@@ -590,7 +590,7 @@ def create_payments(db: Session, business: Business, invoices: list, customers: 
                                   amount, payment_method, status, payment_date, reference,
                                   created_at, updated_at)
             VALUES (:id, :business_id, :invoice_id, :customer_id, :payment_number,
-                    :amount, '{method}'::paymentmethod, 'completed'::paymentstatus, 
+                    :amount, '{method}'::paymentmethod, 'paid'::paymentstatus, 
                     :payment_date, :reference, :created_at, :updated_at)
         """
         
