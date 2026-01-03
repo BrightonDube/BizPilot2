@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 function resolveApiBaseUrl(request: NextRequest): string {
+  // In production on DigitalOcean App Platform, use internal service URL
+  // to avoid routing through the public ingress (which would hit Next.js again)
+  const internalApiUrl = process.env.INTERNAL_API_URL;
+  if (internalApiUrl && internalApiUrl.trim().length > 0) {
+    return internalApiUrl;
+  }
+
   const configured = process.env.NEXT_PUBLIC_API_URL;
   if (configured && configured.trim().length > 0) {
     // If NEXT_PUBLIC_API_URL is relative (e.g. "/api/v1"), make it absolute.
