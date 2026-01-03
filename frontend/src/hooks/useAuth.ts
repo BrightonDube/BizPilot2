@@ -12,7 +12,7 @@
  */
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
 export function useAuth() {
@@ -61,13 +61,17 @@ export function useAuth() {
 export function useRequireAuth(redirectTo: string = '/auth/login') {
   const { isAuthenticated, isLoading, isInitialized } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Only redirect after initialization completes and we know auth state
     if (isInitialized && !isLoading && !isAuthenticated) {
-      router.push(redirectTo);
+      const qs = typeof window !== 'undefined' ? window.location.search : '';
+      const currentPath = `${pathname}${qs || ''}`;
+      const separator = redirectTo.includes('?') ? '&' : '?';
+      router.push(`${redirectTo}${separator}next=${encodeURIComponent(currentPath)}`);
     }
-  }, [isAuthenticated, isLoading, isInitialized, router, redirectTo]);
+  }, [isAuthenticated, isLoading, isInitialized, pathname, router, redirectTo]);
 
   // Show loading until initialized
   return { 
