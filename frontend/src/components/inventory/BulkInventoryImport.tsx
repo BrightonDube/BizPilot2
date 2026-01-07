@@ -38,10 +38,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<'upload' | 'preview' | 'result'>('upload')
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
-
+  const handleFile = async (selectedFile: File) => {
     if (!selectedFile.name.endsWith('.csv')) {
       setError('Please upload a CSV file')
       return
@@ -54,7 +51,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
     try {
       const text = await selectedFile.text()
       const rows = parseCSV(text)
-      
+
       if (rows.length === 0) {
         setError('No data found in the file')
         setIsProcessing(false)
@@ -141,8 +138,17 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
 
     // First, get existing products to map SKUs to product IDs
     try {
-      const productsRes = await apiClient.get<{ items: { id: string; sku: string; name: string }[] }>('/products?per_page=1000')
-      const products = productsRes.data.items
+      const products: { id: string; sku: string; name: string }[] = []
+      let page = 1
+      let pages: number
+      do {
+        const productsRes = await apiClient.get<{ items: { id: string; sku: string; name: string }[]; pages?: number }>(
+          `/products?page=${page}&per_page=100`,
+        )
+        products.push(...(productsRes.data.items || []))
+        pages = productsRes.data.pages ?? 1
+        page += 1
+      } while (page <= pages)
       const skuToProduct = new Map(products.map(p => [p.sku?.toLowerCase(), p]))
       const nameToProduct = new Map(products.map(p => [p.name?.toLowerCase(), p]))
 
@@ -266,13 +272,30 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
                 {/* Upload Area */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const dropped = e.dataTransfer.files?.[0]
+                    if (dropped) {
+                      await handleFile(dropped)
+                    }
+                  }}
                   className="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-500/5 transition-colors"
                 >
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept=".csv"
-                    onChange={handleFileSelect}
+                    onChange={async (e) => {
+                      const selected = e.target.files?.[0]
+                      if (selected) {
+                        await handleFile(selected)
+                      }
+                    }}
                     className="hidden"
                   />
                   {isProcessing ? (

@@ -26,7 +26,10 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await login(email, password);
-      router.push('/dashboard');
+      const qs = typeof window !== 'undefined' ? window.location.search : '';
+      const next = qs ? new URLSearchParams(qs).get('next') : null;
+      const target = next && next.startsWith('/') ? next : '/dashboard';
+      router.push(target);
     } catch {
       // Error is handled by the store
     }

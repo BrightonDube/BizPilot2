@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import AuthInitializer from "@/components/auth/AuthInitializer";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -16,6 +17,12 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "BizPilot - Multi-Business Management Platform",
   description: "Modern business management platform for inventory, orders, invoicing, and more.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -28,6 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <AuthInitializer />
         {children}
       </body>
     </html>

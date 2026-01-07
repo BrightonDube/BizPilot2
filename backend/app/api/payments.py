@@ -53,8 +53,14 @@ async def create_payment(
 ):
     """Create a new payment record."""
     payment_service = PaymentService(db)
-    payment = payment_service.create_payment(payment_data, current_user.id)
-    return payment
+    try:
+        payment = payment_service.create_payment(payment_data, current_user.id)
+        return payment
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 @router.get("/{payment_id}", response_model=PaymentResponse)

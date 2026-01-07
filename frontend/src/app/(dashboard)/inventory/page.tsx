@@ -150,13 +150,13 @@ export default function InventoryPage() {
           page: page.toString(),
           per_page: '20',
         })
-        
+
         if (searchTerm) {
           params.append('search', searchTerm)
         }
-        
+
         if (showLowStockOnly) {
-          params.append('low_stock', 'true')
+          params.append('low_stock_only', 'true')
         }
         
         const response = await apiClient.get<InventoryListResponse>(`/inventory?${params}`)

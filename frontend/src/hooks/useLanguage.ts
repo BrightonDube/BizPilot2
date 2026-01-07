@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 export interface LanguageConfig {
   code: string
@@ -42,14 +42,11 @@ export function getLanguageConfig(code: string | null | undefined) {
 }
 
 export function useLanguage() {
-  const [language, setLanguageState] = useState<string>('en')
-
-  useEffect(() => {
+  const [language, setLanguageState] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'en'
     const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      setLanguageState(stored)
-    }
-  }, [])
+    return stored ? stored.toLowerCase() : 'en'
+  })
 
   const setLanguage = useCallback((languageCode: string) => {
     const normalized = languageCode.toLowerCase()

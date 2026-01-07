@@ -49,13 +49,23 @@ export function BulkInventoryExport({ onClose }: BulkInventoryExportProps) {
       setError(null)
 
       // Fetch all inventory items
-      const params = new URLSearchParams({ per_page: '1000' })
-      if (lowStockOnly) {
-        params.append('low_stock', 'true')
-      }
+      const items: InventoryItem[] = []
+      let page = 1
+      let pages: number
+      do {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          per_page: '100',
+        })
+        if (lowStockOnly) {
+          params.append('low_stock_only', 'true')
+        }
 
-      const response = await apiClient.get<{ items: InventoryItem[] }>(`/inventory?${params}`)
-      const items = response.data.items
+        const response = await apiClient.get<{ items: InventoryItem[]; pages?: number }>(`/inventory?${params}`)
+        items.push(...(response.data.items || []))
+        pages = response.data.pages ?? 1
+        page += 1
+      } while (page <= pages)
 
       if (items.length === 0) {
         setError('No inventory items to export')
