@@ -78,6 +78,13 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
 
+    # Paystack (South Africa Payment Gateway)
+    PAYSTACK_SECRET_KEY: str = ""
+    PAYSTACK_PUBLIC_KEY: str = ""
+    
+    # Frontend URL for callbacks
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # Cookie settings for web auth
     COOKIE_DOMAIN: str = ""  # Leave empty for localhost
     COOKIE_SECURE: bool = False  # Set to True in production (HTTPS)

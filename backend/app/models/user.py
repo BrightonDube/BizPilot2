@@ -1,7 +1,9 @@
 """User model for authentication and profile."""
 
-from sqlalchemy import Column, String, Boolean, Enum as SQLEnum
+from sqlalchemy import Column, String, Boolean, Enum as SQLEnum, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
+from datetime import datetime
 import enum
 
 from app.models.base import BaseModel
@@ -14,6 +16,17 @@ class UserStatus(str, enum.Enum):
     INACTIVE = "inactive"
     PENDING = "pending"
     SUSPENDED = "suspended"
+
+
+class SubscriptionStatus(str, enum.Enum):
+    """User subscription status."""
+
+    ACTIVE = "active"
+    PAUSED = "paused"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+    TRIAL = "trial"
+    NONE = "none"  # For free tier users
 
 
 class User(BaseModel):
@@ -36,11 +49,29 @@ class User(BaseModel):
     # OAuth fields
     google_id = Column(String(255), unique=True, nullable=True, index=True)
 
+    # Admin and Subscription fields
+    is_admin = Column(Boolean, default=False, nullable=False)
+    subscription_status = Column(
+        SQLEnum(SubscriptionStatus, values_callable=lambda x: [e.value for e in x], create_constraint=False, native_enum=True, name='subscriptionstatus'),
+        default=SubscriptionStatus.NONE
+    )
+    current_tier_id = Column(UUID(as_uuid=True), ForeignKey("subscription_tiers.id"), nullable=True)
+    subscription_started_at = Column(DateTime, nullable=True)
+    subscription_expires_at = Column(DateTime, nullable=True)
+    trial_ends_at = Column(DateTime, nullable=True)
+    paystack_customer_code = Column(String(100), nullable=True, index=True)
+    paystack_subscription_code = Column(String(100), nullable=True)
+    
+    # Feature overrides - admin can enable/disable specific features for a user regardless of tier
+    feature_overrides = Column(JSONB, nullable=True, default={})
+
     # Relationships
     business_users = relationship("BusinessUser", back_populates="user", cascade="all, delete-orphan")
     owned_organizations = relationship("Organization", back_populates="owner")
     ai_conversations = relationship("AIConversation", back_populates="user", cascade="all, delete-orphan")
     settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    current_tier = relationship("SubscriptionTier", back_populates="users")
+    subscription_transactions = relationship("SubscriptionTransaction", back_populates="user", cascade="all, delete-orphan")
 
     @property
     def full_name(self) -> str:
