@@ -214,10 +214,8 @@ def upgrade() -> None:
                existing_nullable=False)
     op.drop_index(op.f('ix_products_business_inventory'), table_name='products')
     op.drop_index(op.f('ix_products_business_status'), table_name='products')
-    op.alter_column('roles', 'permissions',
-               existing_type=sa.VARCHAR(length=2000),
-               type_=postgresql.JSONB(astext_type=sa.Text()),
-               existing_nullable=True)
+    # Use raw SQL with USING clause for VARCHAR to JSONB conversion
+    op.execute("ALTER TABLE roles ALTER COLUMN permissions TYPE JSONB USING permissions::jsonb")
     op.alter_column('roles', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -229,8 +227,13 @@ def upgrade() -> None:
     op.drop_constraint(op.f('user_settings_user_id_key'), 'user_settings', type_='unique')
     op.drop_index(op.f('ix_user_settings_user_id'), table_name='user_settings')
     op.create_index(op.f('ix_user_settings_user_id'), 'user_settings', ['user_id'], unique=True)
-    op.add_column('users', sa.Column('is_admin', sa.Boolean(), nullable=False))
-    op.add_column('users', sa.Column('subscription_status', sa.Enum('active', 'paused', 'cancelled', 'expired', 'trial', 'none', name='subscriptionstatus'), nullable=True))
+    # Add is_admin with default False for existing rows
+    op.add_column('users', sa.Column('is_admin', sa.Boolean(), nullable=True, server_default=sa.text('false')))
+    op.execute("UPDATE users SET is_admin = false WHERE is_admin IS NULL")
+    op.alter_column('users', 'is_admin', nullable=False)
+    # Create the subscriptionstatus enum type first
+    op.execute("CREATE TYPE subscriptionstatus AS ENUM ('active', 'paused', 'cancelled', 'expired', 'trial', 'none')")
+    op.add_column('users', sa.Column('subscription_status', sa.Enum('active', 'paused', 'cancelled', 'expired', 'trial', 'none', name='subscriptionstatus', create_type=False), nullable=True))
     op.add_column('users', sa.Column('current_tier_id', sa.UUID(), nullable=True))
     op.add_column('users', sa.Column('subscription_started_at', sa.DateTime(), nullable=True))
     op.add_column('users', sa.Column('subscription_expires_at', sa.DateTime(), nullable=True))
