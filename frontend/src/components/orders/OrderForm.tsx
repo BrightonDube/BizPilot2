@@ -59,7 +59,7 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
   const [notes, setNotes] = useState<string>('');
   const [items, setItems] = useState<Item[]>([
-    { id: generateId(), name: '', quantity: 1, unit_price: 0, tax_rate: 0, discount_percent: 0 },
+    { id: generateId(), name: '', quantity: 1, unit_price: 0, tax_rate: 15, discount_percent: 0 },
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +122,7 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: generateId(), name: '', quantity: 1, unit_price: 0, tax_rate: 0, discount_percent: 0 },
+      { id: generateId(), name: '', quantity: 1, unit_price: 0, tax_rate: 15, discount_percent: 0 },
     ]);
   };
 
@@ -218,12 +218,22 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
             )}
             <div>
               <label className="text-sm text-gray-300">Payment Method</label>
-              <Input
+              <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                placeholder="e.g. card, cash"
-                className="mt-1"
-              />
+                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2"
+              >
+                <option value="">Select payment method</option>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="eft">EFT</option>
+                <option value="check">Check</option>
+                <option value="payfast">PayFast</option>
+                <option value="yoco">Yoco</option>
+                <option value="snapscan">SnapScan</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <div>
               <label className="text-sm text-gray-300">Order Status</label>

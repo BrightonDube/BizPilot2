@@ -820,7 +820,11 @@ async def test_invoices_get_invoice_pdf_builds_response(monkeypatch):
     q = MagicMock()
     db.query.return_value = q
     q.filter.return_value = q
-    q.first.return_value = SimpleNamespace(first_name="John", last_name="Doe", company_name=None)
+    # Return business first, then customer on subsequent calls
+    q.first.side_effect = [
+        SimpleNamespace(name="Test Business"),  # Business query
+        SimpleNamespace(first_name="John", last_name="Doe", company_name=None),  # Customer query
+    ]
 
     resp = await inv_api.get_invoice_pdf(
         invoice_id="i1",

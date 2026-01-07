@@ -80,6 +80,8 @@ export async function middleware(request: NextRequest) {
   if (!authed && !isMarketingRoute && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
+    // Prevent leaking Next.js internal params (e.g. ?_rsc=...) into the login URL.
+    url.search = '';
     url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);
   }

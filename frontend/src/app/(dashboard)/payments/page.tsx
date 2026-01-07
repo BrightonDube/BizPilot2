@@ -16,6 +16,7 @@ import {
   Calendar,
   RefreshCw,
   Eye,
+  Edit,
   FileText,
   AlertTriangle,
   Loader2
@@ -493,16 +494,28 @@ export default function PaymentsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <Link href={`/payments/${payment.id}`}>
-                          <motion.button
-                            className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
-                            title="View Details"
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </motion.button>
-                        </Link>
+                        <div className="flex items-center gap-1">
+                          <Link href={`/payments/${payment.id}`}>
+                            <motion.button
+                              className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                              title="View Details"
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </motion.button>
+                          </Link>
+                          <Link href={`/payments/${payment.id}/edit`}>
+                            <motion.button
+                              className="p-1 text-gray-400 hover:text-green-400 transition-colors"
+                              title="Edit Payment"
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </motion.button>
+                          </Link>
+                        </div>
                       </td>
                     </motion.tr>
                   )
