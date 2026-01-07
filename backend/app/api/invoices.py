@@ -13,7 +13,7 @@ from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.invoice import InvoiceStatus
 from app.models.customer import Customer
-from app.core.pdf import build_simple_pdf
+from app.core.pdf import build_simple_pdf, build_invoice_pdf
 from app.schemas.invoice import (
     InvoiceCreate,
     InvoiceUpdate,
@@ -178,6 +178,9 @@ async def get_invoice_pdf(
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
+    """Generate a professionally styled PDF invoice."""
+    from app.models.business import Business
+    
     service = InvoiceService(db)
     invoice = service.get_invoice(invoice_id, business_id)
 
@@ -188,6 +191,12 @@ async def get_invoice_pdf(
         )
 
     items = service.get_invoice_items(str(invoice.id))
+    
+    # Get business name
+    business = db.query(Business).filter(Business.id == business_id).first()
+    business_name = business.name if business else "BizPilot"
+    
+    # Get customer name
     customer_name = None
     if invoice.customer_id:
         customer = db.query(Customer).filter(Customer.id == invoice.customer_id).first()
@@ -196,31 +205,38 @@ async def get_invoice_pdf(
             if customer.company_name:
                 customer_name = customer.company_name
 
-    lines: list[str] = []
-    lines.append(f"Invoice: {invoice.invoice_number}")
-    lines.append(f"Status: {invoice.status}")
-    lines.append(f"Issue Date: {invoice.issue_date}")
-    lines.append(f"Due Date: {invoice.due_date or ''}")
-    lines.append(f"Customer: {customer_name or ''}")
-    lines.append("")
-    lines.append("Items:")
+    # Convert items to dict format for PDF builder
+    items_data = [
+        {
+            "description": it.description or "",
+            "quantity": it.quantity,
+            "unit_price": it.unit_price,
+            "tax_amount": it.tax_amount,
+            "total": it.total,
+        }
+        for it in items
+    ]
 
-    for it in items:
-        qty = it.quantity
-        unit = it.unit_price
-        total = it.total
-        desc = it.description or ""
-        lines.append(f"- {desc} | Qty: {qty} | Unit: {unit} | Total: {total}")
-
-    lines.append("")
-    lines.append(f"Subtotal: {invoice.subtotal}")
-    lines.append(f"VAT: {invoice.tax_amount}")
-    lines.append(f"Discount: {invoice.discount_amount or 0}")
-    lines.append(f"Total: {invoice.total}")
-    lines.append(f"Paid: {invoice.amount_paid}")
-    lines.append(f"Balance Due: {invoice.balance_due}")
-
-    pdf_bytes = build_simple_pdf(lines)
+    pdf_bytes = build_invoice_pdf(
+        business_name=business_name,
+        invoice_number=invoice.invoice_number,
+        status=invoice.status.value if hasattr(invoice.status, 'value') else str(invoice.status),
+        customer_name=customer_name,
+        billing_address=invoice.billing_address,
+        issue_date=invoice.issue_date,
+        due_date=invoice.due_date,
+        items=items_data,
+        subtotal=invoice.subtotal,
+        tax_amount=invoice.tax_amount,
+        discount_amount=invoice.discount_amount or 0,
+        total=invoice.total,
+        amount_paid=invoice.amount_paid,
+        balance_due=invoice.balance_due,
+        notes=invoice.notes,
+        terms=invoice.terms,
+        currency="ZAR",
+    )
+    
     filename = f"{invoice.invoice_number}.pdf"
     return Response(
         content=pdf_bytes,

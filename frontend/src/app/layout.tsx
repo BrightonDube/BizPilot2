@@ -19,8 +19,7 @@ export const metadata: Metadata = {
   description: "Modern business management platform for inventory, orders, invoicing, and more.",
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/favicon.svg" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
   },
 };

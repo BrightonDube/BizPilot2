@@ -27,7 +27,7 @@ from app.schemas.order import (
 )
 from app.services.order_service import OrderService
 from app.services.email_service import EmailService, EmailAttachment
-from app.core.pdf import build_simple_pdf
+from app.core.pdf import build_simple_pdf, build_invoice_pdf
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -193,7 +193,7 @@ async def get_order_pdf(
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
-    """Return a PDF document for a given order.
+    """Return a professionally styled PDF document for a given order.
 
     Parameters:
         order_id: The order ID to render.
@@ -208,6 +208,8 @@ async def get_order_pdf(
         HTTPException: 404 if the order is not found. Authentication/authorization
         errors may also be raised by dependencies.
     """
+    from app.models.business import Business
+    
     service = OrderService(db)
     order = service.get_order(order_id, business_id)
 
@@ -218,30 +220,53 @@ async def get_order_pdf(
         )
 
     items = service.get_order_items(str(order.id))
-
-    lines: list[str] = []
-    lines.append(f"Order: {order.order_number}")
-    lines.append(f"Direction: {order.direction}")
-    lines.append(f"Status: {order.status}")
-    lines.append(f"Order Date: {order.order_date}")
+    
+    # Get business name
+    business = db.query(Business).filter(Business.id == business_id).first()
+    business_name = business.name if business else "BizPilot"
+    
+    # Get customer/supplier name
     if order.direction == OrderDirection.INBOUND:
-        lines.append(f"Customer: {order.customer.company_name if order.customer else ''}")
+        party_name = order.customer.company_name if order.customer else None
+        if not party_name and order.customer:
+            party_name = f"{order.customer.first_name} {order.customer.last_name}".strip()
+        doc_type = "Sales Order"
     else:
-        lines.append(f"Supplier: {order.supplier.name if order.supplier else ''}")
+        party_name = order.supplier.name if order.supplier else None
+        doc_type = "Purchase Order"
 
-    lines.append("")
-    lines.append("Items:")
-    for it in items:
-        lines.append(f"- {it.name} | Qty: {it.quantity} | Unit: {it.unit_price} | Total: {it.total}")
+    # Convert items to dict format for PDF builder
+    items_data = [
+        {
+            "description": it.name or "",
+            "quantity": it.quantity,
+            "unit_price": it.unit_price,
+            "tax_amount": it.tax_amount or 0,
+            "total": it.total,
+        }
+        for it in items
+    ]
 
-    lines.append("")
-    lines.append(f"Subtotal: {order.subtotal}")
-    lines.append(f"VAT: {order.tax_amount}")
-    lines.append(f"Discount: {order.discount_amount or 0}")
-    lines.append(f"Shipping: {order.shipping_amount or 0}")
-    lines.append(f"Total: {order.total}")
-
-    pdf_bytes = build_simple_pdf(lines)
+    pdf_bytes = build_invoice_pdf(
+        business_name=business_name,
+        invoice_number=order.order_number,
+        status=order.status.value if hasattr(order.status, 'value') else str(order.status),
+        customer_name=party_name,
+        billing_address=order.billing_address,
+        issue_date=order.order_date,
+        due_date=None,
+        items=items_data,
+        subtotal=order.subtotal,
+        tax_amount=order.tax_amount,
+        discount_amount=order.discount_amount or 0,
+        total=order.total,
+        amount_paid=order.amount_paid,
+        balance_due=order.balance_due,
+        notes=order.notes,
+        terms=None,
+        currency="ZAR",
+    )
+    
     filename = f"{order.order_number}.pdf"
     return Response(
         content=pdf_bytes,

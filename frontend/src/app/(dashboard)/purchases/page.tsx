@@ -15,6 +15,8 @@ import {
   ShoppingCart,
   Loader2,
   AlertTriangle,
+  Eye,
+  Edit,
 } from 'lucide-react';
 import { Button, Input, Card, CardContent } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
@@ -220,37 +222,55 @@ export default function PurchasesPage() {
             const status = statusConfig[purchase.status] || statusConfig.pending;
             const totalValue = toNumber(purchase.total);
             return (
-              <Link key={purchase.id} href={`/orders/${purchase.id}`}>
-                <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-10 h-10 rounded-full ${status.color} bg-opacity-20 flex items-center justify-center`}
-                        >
-                          <span className={`${status.color.replace('bg-', 'text-')}`}>{status.icon}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-white">{purchase.order_number}</h3>
-                            <Badge variant={purchase.payment_status === 'paid' ? 'success' : 'warning'}>
-                              {purchase.payment_status}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-400">{purchase.supplier_name || 'Supplier'}</p>
-                          <p className="text-xs text-gray-500">
-                            {purchase.items_count || 0} items • {formatDate(purchase.order_date || purchase.created_at)}
-                          </p>
-                        </div>
+              <Card key={purchase.id} className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <Link href={`/purchases/${purchase.id}`} className="flex items-center gap-4 flex-1 cursor-pointer">
+                      <div
+                        className={`w-10 h-10 rounded-full ${status.color} bg-opacity-20 flex items-center justify-center`}
+                      >
+                        <span className={`${status.color.replace('bg-', 'text-')}`}>{status.icon}</span>
                       </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-white">{purchase.order_number}</h3>
+                          <Badge variant={purchase.payment_status === 'paid' ? 'success' : 'warning'}>
+                            {purchase.payment_status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-400">{purchase.supplier_name || 'Supplier'}</p>
+                        <p className="text-xs text-gray-500">
+                          {purchase.items_count || 0} items • {formatDate(purchase.order_date || purchase.created_at)}
+                        </p>
+                      </div>
+                    </Link>
+                    <div className="flex items-center gap-4">
                       <div className="text-right">
                         <div className="text-lg font-semibold text-white">{formatCurrency(totalValue)}</div>
                         <Badge variant="secondary">{status.label}</Badge>
                       </div>
+                      <div className="flex items-center gap-1">
+                        <Link href={`/purchases/${purchase.id}`}>
+                          <button
+                            className="p-2 text-gray-400 hover:text-blue-400 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </Link>
+                        <Link href={`/purchases/${purchase.id}/edit`}>
+                          <button
+                            className="p-2 text-gray-400 hover:text-green-400 transition-colors"
+                            title="Edit Purchase"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        </Link>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

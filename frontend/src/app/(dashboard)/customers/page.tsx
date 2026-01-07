@@ -504,7 +504,6 @@ export default function CustomersPage() {
                             <Link
                               href={`/customers/${customer.id}/edit`}
                               onClick={(e) => {
-                                e.preventDefault();
                                 e.stopPropagation();
                               }}
                             >
@@ -588,7 +587,6 @@ export default function CustomersPage() {
                           <Link
                             href={`/customers/${customer.id}/edit`}
                             onClick={(e) => {
-                              e.preventDefault();
                               e.stopPropagation();
                             }}
                           >

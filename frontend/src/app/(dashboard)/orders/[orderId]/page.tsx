@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, AlertTriangle, ShoppingBag, CreditCard, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, ShoppingBag, CreditCard, CalendarDays, Edit } from 'lucide-react';
 import { Badge, PageHeader, StatCard, EmptyState } from '@/components/ui/bizpilot';
 import { Card, CardContent, Button } from '@/components/ui';
 import { apiClient } from '@/lib/api';
@@ -169,12 +169,20 @@ export default function OrderDetailPage() {
         title={order.order_number}
         description={order.customer_name ? `Order for ${order.customer_name}` : 'Order details'}
         actions={
-          <Link href="/orders">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Orders
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/orders">
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Orders
+              </Button>
+            </Link>
+            <Link href={`/orders/${orderId}/edit`}>
+              <Button variant="secondary">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            </Link>
+          </div>
         }
       />
 
