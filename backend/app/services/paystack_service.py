@@ -4,7 +4,7 @@ import os
 import hmac
 import hashlib
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import httpx
 from pydantic import BaseModel
 
@@ -224,7 +224,7 @@ class PaystackService:
     def generate_reference(prefix: str = "BP") -> str:
         """Generate a unique transaction reference."""
         import uuid
-        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         unique = uuid.uuid4().hex[:8].upper()
         return f"{prefix}-{timestamp}-{unique}"
 

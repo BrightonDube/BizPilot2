@@ -33,6 +33,7 @@ from app.services.email_service import EmailService, EmailAttachment
 from app.core.pdf import build_simple_pdf, build_invoice_pdf
 from app.models.product import Product
 from app.models.order import Order, OrderItem
+from app.models.base import utc_now
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -622,7 +623,7 @@ async def receive_purchase_order(
     
     # Update order status to received
     order.status = OrderStatus.RECEIVED
-    order.delivered_date = datetime.utcnow()
+    order.delivered_date = utc_now()
     
     # Add receiving notes if provided
     if data.notes:

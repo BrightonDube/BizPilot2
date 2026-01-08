@@ -168,122 +168,8 @@ async def list_transactions(
     return [_transaction_to_response(t) for t in transactions]
 
 
-@router.get("/{item_id}", response_model=InventoryItemResponse)
-async def get_inventory_item(
-    item_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
-    business_id: str = Depends(get_current_business_id),
-):
-    """Get an inventory item by ID."""
-    service = InventoryService(db)
-    item = service.get_inventory_item(item_id, business_id)
-    
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Inventory item not found",
-        )
-    
-    return _item_to_response(item, db)
-
-
-@router.get("/product/{product_id}", response_model=InventoryItemResponse)
-async def get_inventory_by_product(
-    product_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
-    business_id: str = Depends(get_current_business_id),
-):
-    """Get inventory for a specific product."""
-    service = InventoryService(db)
-    item = service.get_inventory_by_product(product_id, business_id)
-    
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Inventory not found for this product",
-        )
-    
-    return _item_to_response(item, db)
-
-
-@router.post("", response_model=InventoryItemResponse, status_code=status.HTTP_201_CREATED)
-async def create_inventory_item(
-    data: InventoryItemCreate,
-    current_user: User = Depends(has_permission("inventory:create")),
-    db: Session = Depends(get_db),
-    business_id: str = Depends(get_current_business_id),
-):
-    """Create a new inventory item."""
-    service = InventoryService(db)
-    
-    # Check if product already has inventory
-    existing = service.get_inventory_by_product(data.product_id, business_id)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inventory item already exists for this product",
-        )
-    
-    item = service.create_inventory_item(business_id, data)
-    return _item_to_response(item, db)
-
-
-@router.put("/{item_id}", response_model=InventoryItemResponse)
-async def update_inventory_item(
-    item_id: str,
-    data: InventoryItemUpdate,
-    current_user: User = Depends(has_permission("inventory:edit")),
-    db: Session = Depends(get_db),
-    business_id: str = Depends(get_current_business_id),
-):
-    """Update an inventory item."""
-    service = InventoryService(db)
-    item = service.get_inventory_item(item_id, business_id)
-    
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Inventory item not found",
-        )
-    
-    item = service.update_inventory_item(item, data)
-    return _item_to_response(item, db)
-
-
-@router.post("/{item_id}/adjust", response_model=InventoryTransactionResponse)
-async def adjust_inventory(
-    item_id: str,
-    data: InventoryAdjustment,
-    current_user: User = Depends(has_permission("inventory:edit")),
-    db: Session = Depends(get_db),
-    business_id: str = Depends(get_current_business_id),
-):
-    """Adjust inventory quantity."""
-    service = InventoryService(db)
-    item = service.get_inventory_item(item_id, business_id)
-    
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Inventory item not found",
-        )
-    
-    try:
-        transaction = service.adjust_inventory(item, data, str(current_user.id))
-        return _transaction_to_response(transaction)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e) if settings.DEBUG else "Failed to adjust inventory",
-        )
-
+# ==================== Excel Import/Export Routes ====================
+# NOTE: These must be defined BEFORE /{item_id} to avoid route conflicts
 
 @router.get("/export/excel")
 async def export_inventory_excel(
@@ -425,3 +311,122 @@ async def import_inventory_excel(
         "skipped": result["skipped"],
         "errors": result["errors"],
     }
+
+
+# ==================== Item-specific Routes ====================
+
+@router.get("/{item_id}", response_model=InventoryItemResponse)
+async def get_inventory_item(
+    item_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Get an inventory item by ID."""
+    service = InventoryService(db)
+    item = service.get_inventory_item(item_id, business_id)
+    
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Inventory item not found",
+        )
+    
+    return _item_to_response(item, db)
+
+
+@router.get("/product/{product_id}", response_model=InventoryItemResponse)
+async def get_inventory_by_product(
+    product_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Get inventory for a specific product."""
+    service = InventoryService(db)
+    item = service.get_inventory_by_product(product_id, business_id)
+    
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Inventory not found for this product",
+        )
+    
+    return _item_to_response(item, db)
+
+
+@router.post("", response_model=InventoryItemResponse, status_code=status.HTTP_201_CREATED)
+async def create_inventory_item(
+    data: InventoryItemCreate,
+    current_user: User = Depends(has_permission("inventory:create")),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Create a new inventory item."""
+    service = InventoryService(db)
+    
+    # Check if product already has inventory
+    existing = service.get_inventory_by_product(data.product_id, business_id)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inventory item already exists for this product",
+        )
+    
+    item = service.create_inventory_item(business_id, data)
+    return _item_to_response(item, db)
+
+
+@router.put("/{item_id}", response_model=InventoryItemResponse)
+async def update_inventory_item(
+    item_id: str,
+    data: InventoryItemUpdate,
+    current_user: User = Depends(has_permission("inventory:edit")),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Update an inventory item."""
+    service = InventoryService(db)
+    item = service.get_inventory_item(item_id, business_id)
+    
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Inventory item not found",
+        )
+    
+    item = service.update_inventory_item(item, data)
+    return _item_to_response(item, db)
+
+
+@router.post("/{item_id}/adjust", response_model=InventoryTransactionResponse)
+async def adjust_inventory(
+    item_id: str,
+    data: InventoryAdjustment,
+    current_user: User = Depends(has_permission("inventory:edit")),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Adjust inventory quantity."""
+    service = InventoryService(db)
+    item = service.get_inventory_item(item_id, business_id)
+    
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Inventory item not found",
+        )
+    
+    try:
+        transaction = service.adjust_inventory(item, data, str(current_user.id))
+        return _transaction_to_response(transaction)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e) if settings.DEBUG else "Failed to adjust inventory",
+        )
