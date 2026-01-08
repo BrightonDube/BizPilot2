@@ -24,10 +24,16 @@ from app.schemas.order import (
     OrderStatusUpdate,
     PaymentRecord,
     OrderSummary,
+    ReceivePurchaseOrder,
+    ReceivePurchaseOrderResponse,
 )
 from app.services.order_service import OrderService
+from app.services.inventory_service import InventoryService
 from app.services.email_service import EmailService, EmailAttachment
 from app.core.pdf import build_simple_pdf, build_invoice_pdf
+from app.models.product import Product
+from app.models.order import Order, OrderItem
+from app.models.base import utc_now
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -511,3 +517,132 @@ async def remove_order_item(
         )
     
     service.remove_order_item(order, item_id)
+
+
+@router.post("/{order_id}/receive", response_model=ReceivePurchaseOrderResponse)
+async def receive_purchase_order(
+    order_id: str,
+    data: ReceivePurchaseOrder,
+    current_user: User = Depends(has_permission("orders:edit")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Receive a purchase order and update inventory.
+    
+    This endpoint:
+    1. Validates the order is a purchase order (outbound direction)
+    2. Updates quantities and prices for each item
+    3. Updates inventory with received quantities
+    4. Updates product costs if price changed
+    5. Marks the order as received
+    """
+    order_service = OrderService(db)
+    inventory_service = InventoryService(db)
+    
+    # Get the order
+    order = order_service.get_order(order_id, business_id)
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found",
+        )
+    
+    # Validate it's a purchase order (outbound)
+    if order.direction != OrderDirection.OUTBOUND:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only receive purchase orders (outbound orders)",
+        )
+    
+    # Check order isn't already received or cancelled
+    if order.status in [OrderStatus.RECEIVED, OrderStatus.CANCELLED]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Order is already {order.status.value}",
+        )
+    
+    # Get order items
+    order_items = order_service.get_order_items(str(order.id))
+    item_map = {str(item.id): item for item in order_items}
+    
+    items_received = 0
+    total_quantity_received = 0
+    inventory_updated = True
+    errors = []
+    
+    for receive_item in data.items:
+        item = item_map.get(receive_item.item_id)
+        if not item:
+            errors.append(f"Item {receive_item.item_id} not found in order")
+            continue
+        
+        if receive_item.quantity_received <= 0:
+            continue
+        
+        # Update item price if changed
+        new_price = receive_item.unit_price if receive_item.unit_price is not None else item.unit_price
+        if receive_item.unit_price is not None and receive_item.unit_price != item.unit_price:
+            item.unit_price = receive_item.unit_price
+            # Recalculate item total (handle nullable discount_amount and tax_amount)
+            discount = item.discount_amount or 0
+            tax = item.tax_amount or 0
+            item.total = item.unit_price * item.quantity - discount + tax
+        
+        # Update inventory if product exists
+        if item.product_id:
+            try:
+                # Record purchase in inventory (updates quantity and average cost)
+                inventory_service.record_purchase(
+                    product_id=str(item.product_id),
+                    business_id=business_id,
+                    quantity=receive_item.quantity_received,
+                    unit_cost=new_price,
+                    purchase_order_id=str(order.id),
+                )
+                
+                # Update product cost price if changed (verify product belongs to current business)
+                if receive_item.unit_price is not None:
+                    product = db.query(Product).filter(
+                        Product.id == item.product_id,
+                        Product.business_id == business_id,
+                        Product.deleted_at.is_(None),
+                    ).first()
+                    if product:
+                        product.cost_price = receive_item.unit_price
+                
+            except ValueError as e:
+                errors.append(f"Failed to update inventory for {item.name}: {str(e)}")
+                inventory_updated = False
+            except Exception as e:
+                errors.append(f"Error updating inventory for {item.name}: {str(e)}")
+                inventory_updated = False
+        
+        items_received += 1
+        total_quantity_received += receive_item.quantity_received
+    
+    # Update order status to received
+    order.status = OrderStatus.RECEIVED
+    order.delivered_date = utc_now()
+    
+    # Add receiving notes if provided
+    if data.notes:
+        existing_notes = order.internal_notes or ""
+        order.internal_notes = f"{existing_notes}\n[Received] {data.notes}".strip()
+    
+    db.commit()
+    
+    message = f"Successfully received {items_received} items ({total_quantity_received} units)"
+    if errors:
+        message += f". Warnings: {'; '.join(errors)}"
+    
+    return ReceivePurchaseOrderResponse(
+        success=True,
+        order_id=str(order.id),
+        order_number=order.order_number,
+        status=order.status.value,
+        items_received=items_received,
+        total_quantity_received=total_quantity_received,
+        inventory_updated=inventory_updated,
+        message=message,
+    )

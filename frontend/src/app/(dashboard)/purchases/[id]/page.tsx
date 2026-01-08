@@ -18,6 +18,7 @@ import {
   Loader2,
   FileText,
   Download,
+  PackageCheck,
 } from 'lucide-react'
 import { Button, Card, CardContent, Badge, PageHeader } from '@/components/ui'
 import { apiClient } from '@/lib/api'
@@ -94,7 +95,6 @@ export default function PurchaseDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
   useEffect(() => {
     async function fetchPurchase() {
@@ -130,20 +130,6 @@ export default function PurchaseDetailPage() {
       console.error('Error deleting purchase:', err)
       setError('Failed to delete purchase order')
       setIsDeleting(false)
-    }
-  }
-
-  const handleMarkReceived = async () => {
-    if (!purchase) return
-    try {
-      setIsUpdatingStatus(true)
-      await apiClient.patch(`/orders/${purchaseId}/status`, { status: 'delivered' })
-      setPurchase({ ...purchase, status: 'delivered' })
-    } catch (err) {
-      console.error('Error updating status:', err)
-      setError('Failed to update status')
-    } finally {
-      setIsUpdatingStatus(false)
     }
   }
 
@@ -213,14 +199,12 @@ export default function PurchaseDetailPage() {
               PDF
             </Button>
             {purchase.status !== 'delivered' && purchase.status !== 'received' && purchase.status !== 'cancelled' && (
-              <Button 
-                variant="secondary" 
-                onClick={handleMarkReceived}
-                disabled={isUpdatingStatus}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                {isUpdatingStatus ? 'Updating...' : 'Mark Received'}
-              </Button>
+              <Link href={`/purchases/${purchase.id}/receive`}>
+                <Button className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700">
+                  <PackageCheck className="h-4 w-4 mr-2" />
+                  Receive Order
+                </Button>
+              </Link>
             )}
             <Link href={`/purchases/${purchase.id}/edit`}>
               <Button variant="secondary">

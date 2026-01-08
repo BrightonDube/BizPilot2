@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from app.core.database import get_db
+from app.models.base import utc_now
 from app.api.deps import get_current_active_user, get_optional_user
 from app.models.user import User, SubscriptionStatus
 from app.models.subscription_tier import SubscriptionTier
@@ -212,7 +213,7 @@ async def start_trial(
     
     # Set trial (14 days)
     from datetime import timedelta
-    now = datetime.utcnow()
+    now = utc_now()
     current_user.current_tier_id = pro_tier.id
     current_user.subscription_status = SubscriptionStatus.TRIAL
     current_user.subscription_started_at = now

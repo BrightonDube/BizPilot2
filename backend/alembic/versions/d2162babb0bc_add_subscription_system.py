@@ -87,9 +87,10 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_index(op.f('ix_business_users_business_id'), table_name='business_users')
-    op.drop_index(op.f('ix_business_users_user_id'), table_name='business_users')
-    op.drop_index(op.f('ix_business_users_user_status'), table_name='business_users')
+    # Drop indexes if they exist (may not exist on fresh databases)
+    op.execute("DROP INDEX IF EXISTS ix_business_users_business_id")
+    op.execute("DROP INDEX IF EXISTS ix_business_users_user_id")
+    op.execute("DROP INDEX IF EXISTS ix_business_users_user_status")
     op.alter_column('businesses', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -131,7 +132,15 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_constraint(op.f('inventory_transactions_performed_by_fkey'), 'inventory_transactions', type_='foreignkey')
+    # Drop foreign key if it exists
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'inventory_transactions_performed_by_fkey') THEN
+                ALTER TABLE inventory_transactions DROP CONSTRAINT inventory_transactions_performed_by_fkey;
+            END IF;
+        END $$;
+    """)
     op.create_foreign_key(None, 'inventory_transactions', 'users', ['user_id'], ['id'])
     op.drop_column('inventory_transactions', 'quantity')
     op.drop_column('inventory_transactions', 'performed_at')
@@ -152,7 +161,7 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_index(op.f('ix_invoices_business_status'), table_name='invoices')
+    op.execute("DROP INDEX IF EXISTS ix_invoices_business_status")
     op.alter_column('order_items', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -181,7 +190,7 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_index(op.f('ix_orders_business_created'), table_name='orders')
+    op.execute("DROP INDEX IF EXISTS ix_orders_business_created")
     op.alter_column('organizations', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -190,8 +199,20 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_constraint(op.f('payments_payment_number_key'), 'payments', type_='unique')
-    op.create_index(op.f('ix_payments_payment_number'), 'payments', ['payment_number'], unique=True)
+    # Drop the unique constraint if it exists (name may vary between databases)
+    # Use raw SQL with IF EXISTS to handle cases where constraint doesn't exist
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payments_payment_number_key') THEN
+                ALTER TABLE payments DROP CONSTRAINT payments_payment_number_key;
+            END IF;
+        END $$;
+    """)
+    # Create index only if it doesn't already exist
+    op.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS ix_payments_payment_number ON payments (payment_number);
+    """)
     op.alter_column('product_categories', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -212,10 +233,18 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_index(op.f('ix_products_business_inventory'), table_name='products')
-    op.drop_index(op.f('ix_products_business_status'), table_name='products')
-    # Use raw SQL with USING clause for VARCHAR to JSONB conversion
-    op.execute("ALTER TABLE roles ALTER COLUMN permissions TYPE JSONB USING permissions::jsonb")
+    op.execute("DROP INDEX IF EXISTS ix_products_business_inventory")
+    op.execute("DROP INDEX IF EXISTS ix_products_business_status")
+    # Use raw SQL with USING clause for VARCHAR to JSONB conversion (idempotent)
+    op.execute("""
+        DO $$
+        BEGIN
+            IF (SELECT data_type FROM information_schema.columns 
+                WHERE table_name = 'roles' AND column_name = 'permissions') != 'jsonb' THEN
+                ALTER TABLE roles ALTER COLUMN permissions TYPE JSONB USING permissions::jsonb;
+            END IF;
+        END $$;
+    """)
     op.alter_column('roles', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -224,15 +253,30 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_constraint(op.f('user_settings_user_id_key'), 'user_settings', type_='unique')
-    op.drop_index(op.f('ix_user_settings_user_id'), table_name='user_settings')
-    op.create_index(op.f('ix_user_settings_user_id'), 'user_settings', ['user_id'], unique=True)
+    # Drop constraint if exists
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_settings_user_id_key') THEN
+                ALTER TABLE user_settings DROP CONSTRAINT user_settings_user_id_key;
+            END IF;
+        END $$;
+    """)
+    op.execute("DROP INDEX IF EXISTS ix_user_settings_user_id")
+    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS ix_user_settings_user_id ON user_settings (user_id)")
     # Add is_admin with default False for existing rows
     op.add_column('users', sa.Column('is_admin', sa.Boolean(), nullable=True, server_default=sa.text('false')))
     op.execute("UPDATE users SET is_admin = false WHERE is_admin IS NULL")
     op.alter_column('users', 'is_admin', nullable=False)
-    # Create the subscriptionstatus enum type first
-    op.execute("CREATE TYPE subscriptionstatus AS ENUM ('active', 'paused', 'cancelled', 'expired', 'trial', 'none')")
+    # Create the subscriptionstatus enum type if it doesn't exist
+    op.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'subscriptionstatus') THEN
+                CREATE TYPE subscriptionstatus AS ENUM ('active', 'paused', 'cancelled', 'expired', 'trial', 'none');
+            END IF;
+        END $$;
+    """)
     op.add_column('users', sa.Column('subscription_status', sa.Enum('active', 'paused', 'cancelled', 'expired', 'trial', 'none', name='subscriptionstatus', create_type=False), nullable=True))
     op.add_column('users', sa.Column('current_tier_id', sa.UUID(), nullable=True))
     op.add_column('users', sa.Column('subscription_started_at', sa.DateTime(), nullable=True))

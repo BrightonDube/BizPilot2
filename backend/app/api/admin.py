@@ -9,6 +9,7 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 from app.core.database import get_db
+from app.models.base import utc_now
 from app.core.admin import require_admin
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
@@ -479,7 +480,7 @@ async def delete_tier(
             detail=f"Cannot delete tier: {users_on_tier} users are currently on this tier"
         )
     
-    tier.deleted_at = datetime.utcnow()
+    tier.deleted_at = utc_now()
     tier.is_active = False
     db.commit()
     

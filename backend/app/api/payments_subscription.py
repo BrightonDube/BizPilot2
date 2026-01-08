@@ -3,7 +3,7 @@
 import os
 from typing import Optional
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -18,6 +18,7 @@ from app.models.subscription_transaction import (
     TransactionType,
 )
 from app.services.paystack_service import paystack_service, PaystackService
+from app.models.base import utc_now
 
 router = APIRouter(prefix="/payments", tags=["payments-subscription"])
 
@@ -178,7 +179,7 @@ async def verify_payment(
         # Update transaction
         transaction.status = TransactionStatus.SUCCESS
         transaction.paystack_transaction_id = str(paystack_data.get("id"))
-        transaction.paid_at = datetime.utcnow()
+        transaction.paid_at = utc_now()
         transaction.raw_response = paystack_data
         
         # Extract card info if available
@@ -195,15 +196,15 @@ async def verify_payment(
         if tier:
             current_user.current_tier_id = tier.id
             current_user.subscription_status = SubscriptionStatus.ACTIVE
-            current_user.subscription_started_at = datetime.utcnow()
+            current_user.subscription_started_at = utc_now()
             
             # Set expiry based on billing cycle (from metadata)
             metadata = paystack_data.get("metadata", {})
             billing_cycle = metadata.get("billing_cycle", "monthly")
             if billing_cycle == "yearly":
-                current_user.subscription_expires_at = datetime.utcnow() + timedelta(days=365)
+                current_user.subscription_expires_at = utc_now() + timedelta(days=365)
             else:
-                current_user.subscription_expires_at = datetime.utcnow() + timedelta(days=30)
+                current_user.subscription_expires_at = utc_now() + timedelta(days=30)
         
         db.commit()
         
@@ -294,7 +295,7 @@ async def handle_charge_success(data: dict, db: Session):
     # Update transaction
     transaction.status = TransactionStatus.SUCCESS
     transaction.paystack_transaction_id = str(data.get("id"))
-    transaction.paid_at = datetime.utcnow()
+    transaction.paid_at = utc_now()
     transaction.raw_response = data
     
     # Extract card info
@@ -308,15 +309,15 @@ async def handle_charge_success(data: dict, db: Session):
     if user and transaction.tier_id:
         user.current_tier_id = transaction.tier_id
         user.subscription_status = SubscriptionStatus.ACTIVE
-        user.subscription_started_at = datetime.utcnow()
+        user.subscription_started_at = utc_now()
         
         # Set expiry
         metadata = data.get("metadata", {})
         billing_cycle = metadata.get("billing_cycle", "monthly")
         if billing_cycle == "yearly":
-            user.subscription_expires_at = datetime.utcnow() + timedelta(days=365)
+            user.subscription_expires_at = utc_now() + timedelta(days=365)
         else:
-            user.subscription_expires_at = datetime.utcnow() + timedelta(days=30)
+            user.subscription_expires_at = utc_now() + timedelta(days=30)
     
     db.commit()
 

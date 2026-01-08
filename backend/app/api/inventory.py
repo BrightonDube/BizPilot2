@@ -2,7 +2,8 @@
 
 import math
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -21,6 +22,7 @@ from app.schemas.inventory import (
     InventorySummary,
 )
 from app.services.inventory_service import InventoryService
+from app.services.inventory_excel_service import InventoryExcelService
 from app.core.config import settings
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
@@ -165,6 +167,153 @@ async def list_transactions(
     )
     return [_transaction_to_response(t) for t in transactions]
 
+
+# ==================== Excel Import/Export Routes ====================
+# NOTE: These must be defined BEFORE /{item_id} to avoid route conflicts
+
+@router.get("/export/excel")
+async def export_inventory_excel(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """
+    Export all inventory items to Excel spreadsheet (.xlsx).
+    
+    The exported file contains:
+    - SKU, Product Name
+    - Quantity fields (on hand, reserved, incoming)
+    - Reorder settings (point, quantity)
+    - Location info
+    - Cost data (average cost, last cost)
+    """
+    excel_service = InventoryExcelService(db)
+    output = excel_service.export_inventory(business_id)
+    
+    filename = f"inventory_export_{business_id[:8]}.xlsx"
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+@router.get("/template/excel")
+async def get_inventory_template(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Download an empty Excel template for inventory import.
+    
+    The template includes:
+    - Correct column headers matching database schema
+    - Instructions sheet with column descriptions
+    - Required vs optional field indicators
+    """
+    excel_service = InventoryExcelService(db)
+    output = excel_service.generate_template()
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": "attachment; filename=inventory_template.xlsx",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+@router.post("/import/excel")
+async def import_inventory_excel(
+    file: UploadFile = File(...),
+    current_user: User = Depends(has_permission("inventory:edit")),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """
+    Import inventory data from Excel spreadsheet (.xlsx).
+    
+    Requirements:
+    - File must be .xlsx format (Excel 2007+)
+    - Must have columns: SKU (required), Quantity On Hand (required)
+    - SKU must match existing products in the business
+    - Updates existing inventory items or creates new ones
+    
+    Returns:
+    - success: Whether import completed without critical errors
+    - updated: Count of updated inventory items
+    - created: Count of newly created inventory items
+    - skipped: Count of rows that were skipped
+    - errors: List of error messages for problematic rows
+    """
+    # Validate file type
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No file provided",
+        )
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be an Excel spreadsheet (.xlsx or .xls)",
+        )
+    
+    # Read file content
+    try:
+        content = await file.read()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to read file: {str(e)}",
+        )
+    
+    if len(content) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File is empty",
+        )
+    
+    # File size limit: 10MB max to prevent DoS
+    max_file_size = 10 * 1024 * 1024  # 10MB
+    if len(content) > max_file_size:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File too large. Maximum size is 10MB, received {len(content) / (1024*1024):.2f}MB",
+        )
+    
+    # Process import
+    excel_service = InventoryExcelService(db)
+    result = excel_service.import_inventory(business_id, content, str(current_user.id))
+    
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Import failed",
+                "errors": result["errors"],
+                "updated": result["updated"],
+                "created": result["created"],
+                "skipped": result["skipped"],
+            },
+        )
+    
+    return {
+        "success": True,
+        "message": f"Successfully imported inventory data",
+        "updated": result["updated"],
+        "created": result["created"],
+        "skipped": result["skipped"],
+        "errors": result["errors"],
+    }
+
+
+# ==================== Item-specific Routes ====================
 
 @router.get("/{item_id}", response_model=InventoryItemResponse)
 async def get_inventory_item(

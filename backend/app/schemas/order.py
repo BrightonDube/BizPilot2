@@ -165,3 +165,31 @@ class OrderSummary(BaseModel):
     average_order_value: Decimal
     pending_orders: int
     completed_orders: int
+
+
+class ReceiveItemData(BaseModel):
+    """Schema for individual item receiving data."""
+    
+    item_id: str
+    quantity_received: int = Field(..., ge=0)
+    unit_price: Optional[Decimal] = Field(None, ge=0)  # Updated price if changed
+
+
+class ReceivePurchaseOrder(BaseModel):
+    """Schema for receiving a purchase order."""
+    
+    items: List[ReceiveItemData]
+    notes: Optional[str] = None
+
+
+class ReceivePurchaseOrderResponse(BaseModel):
+    """Response after receiving a purchase order."""
+    
+    success: bool
+    order_id: str
+    order_number: str
+    status: str
+    items_received: int
+    total_quantity_received: int
+    inventory_updated: bool
+    message: str
