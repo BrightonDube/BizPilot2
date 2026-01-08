@@ -91,7 +91,7 @@ export default function NewPaymentPage() {
     try {
       setIsLoading(true)
       const [invoicesRes, customersRes] = await Promise.all([
-        apiClient.get('/invoices?status=sent&status=viewed&status=partial&per_page=100'),
+        apiClient.get('/invoices/unpaid?per_page=100'),
         apiClient.get('/customers?per_page=100'),
       ])
       setInvoices(invoicesRes.data.items || [])
