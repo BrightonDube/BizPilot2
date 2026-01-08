@@ -19,6 +19,22 @@ interface ImportResult {
   errors: string[]
 }
 
+interface ImportErrorDetail {
+  message?: string
+  errors?: string[]
+  updated?: number
+  created?: number
+  skipped?: number
+}
+
+interface ApiErrorResponse {
+  response?: {
+    data?: {
+      detail?: ImportErrorDetail | string
+    }
+  }
+}
+
 export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -70,16 +86,18 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
       }
     } catch (err: unknown) {
       console.error('Import failed:', err)
-      // Try to extract error details from response
-      const axiosError = err as { response?: { data?: { detail?: { errors?: string[]; message?: string } | string } } }
-      if (axiosError.response?.data?.detail) {
-        const detail = axiosError.response.data.detail
+      // Try to extract error details from response using typed interface
+      const axiosError = err as ApiErrorResponse
+      const detail = axiosError.response?.data?.detail
+      
+      if (detail) {
         if (typeof detail === 'object' && detail.errors) {
+          // Structured error response with details
           setImportResult({
             success: false,
-            updated: (detail as { updated?: number }).updated || 0,
-            created: (detail as { created?: number }).created || 0,
-            skipped: (detail as { skipped?: number }).skipped || 0,
+            updated: detail.updated ?? 0,
+            created: detail.created ?? 0,
+            skipped: detail.skipped ?? 0,
             errors: detail.errors,
           })
           setStep('result')

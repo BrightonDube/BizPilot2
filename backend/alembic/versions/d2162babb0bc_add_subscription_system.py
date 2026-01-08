@@ -235,8 +235,16 @@ def upgrade() -> None:
                existing_nullable=False)
     op.execute("DROP INDEX IF EXISTS ix_products_business_inventory")
     op.execute("DROP INDEX IF EXISTS ix_products_business_status")
-    # Use raw SQL with USING clause for VARCHAR to JSONB conversion
-    op.execute("ALTER TABLE roles ALTER COLUMN permissions TYPE JSONB USING permissions::jsonb")
+    # Use raw SQL with USING clause for VARCHAR to JSONB conversion (idempotent)
+    op.execute("""
+        DO $$
+        BEGIN
+            IF (SELECT data_type FROM information_schema.columns 
+                WHERE table_name = 'roles' AND column_name = 'permissions') != 'jsonb' THEN
+                ALTER TABLE roles ALTER COLUMN permissions TYPE JSONB USING permissions::jsonb;
+            END IF;
+        END $$;
+    """)
     op.alter_column('roles', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),

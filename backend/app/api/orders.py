@@ -583,8 +583,10 @@ async def receive_purchase_order(
         new_price = receive_item.unit_price if receive_item.unit_price is not None else item.unit_price
         if receive_item.unit_price is not None and receive_item.unit_price != item.unit_price:
             item.unit_price = receive_item.unit_price
-            # Recalculate item total
-            item.total = item.unit_price * item.quantity - item.discount_amount + item.tax_amount
+            # Recalculate item total (handle nullable discount_amount and tax_amount)
+            discount = item.discount_amount or 0
+            tax = item.tax_amount or 0
+            item.total = item.unit_price * item.quantity - discount + tax
         
         # Update inventory if product exists
         if item.product_id:
@@ -598,10 +600,11 @@ async def receive_purchase_order(
                     purchase_order_id=str(order.id),
                 )
                 
-                # Update product cost price if changed
+                # Update product cost price if changed (verify product belongs to current business)
                 if receive_item.unit_price is not None:
                     product = db.query(Product).filter(
                         Product.id == item.product_id,
+                        Product.business_id == business_id,
                         Product.deleted_at.is_(None),
                     ).first()
                     if product:

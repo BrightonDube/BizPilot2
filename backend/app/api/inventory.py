@@ -393,6 +393,14 @@ async def import_inventory_excel(
             detail="File is empty",
         )
     
+    # File size limit: 10MB max to prevent DoS
+    max_file_size = 10 * 1024 * 1024  # 10MB
+    if len(content) > max_file_size:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File too large. Maximum size is 10MB, received {len(content) / (1024*1024):.2f}MB",
+        )
+    
     # Process import
     excel_service = InventoryExcelService(db)
     result = excel_service.import_inventory(business_id, content, str(current_user.id))

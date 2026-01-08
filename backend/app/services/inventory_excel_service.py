@@ -1,12 +1,13 @@
 """Excel export/import service for inventory management."""
 
 from io import BytesIO
-from datetime import datetime
-from typing import Optional, List, Dict, Any, Tuple
+from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
 from uuid import UUID
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.cell import Cell
 from openpyxl.utils import get_column_letter
 from sqlalchemy.orm import Session
 
@@ -36,7 +37,7 @@ class InventoryExcelService:
     def __init__(self, db: Session):
         self.db = db
 
-    def _apply_header_style(self, cell):
+    def _apply_header_style(self, cell: Cell) -> None:
         """Apply styling to header cells."""
         cell.font = Font(bold=True, color="FFFFFF")
         cell.fill = PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
@@ -48,7 +49,7 @@ class InventoryExcelService:
             bottom=Side(style="thin"),
         )
 
-    def _apply_data_style(self, cell, is_alternate: bool = False):
+    def _apply_data_style(self, cell: Cell, is_alternate: bool = False) -> None:
         """Apply styling to data cells."""
         if is_alternate:
             cell.fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
@@ -154,7 +155,7 @@ class InventoryExcelService:
         # Add metadata sheet
         meta = wb.create_sheet("Export Info")
         meta["A1"] = "Export Date:"
-        meta["B1"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        meta["B1"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         meta["A2"] = "Total Items:"
         meta["B2"] = len(items)
         meta["A3"] = "Business ID:"
@@ -166,10 +167,15 @@ class InventoryExcelService:
         return output
 
     def import_inventory(
-        self, business_id: str, file_content: bytes, user_id: str
+        self, business_id: str, file_content: bytes, user_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Import inventory from Excel spreadsheet.
+        
+        Args:
+            business_id: The business ID to import inventory for
+            file_content: The Excel file content as bytes
+            user_id: Optional user ID for audit tracking (reserved for future use)
         
         Returns dict with:
         - success: bool
@@ -178,7 +184,7 @@ class InventoryExcelService:
         - errors: list of error messages
         - skipped: int (count of skipped rows)
         """
-        result = {
+        result: Dict[str, Any] = {
             "success": True,
             "updated": 0,
             "created": 0,
@@ -193,12 +199,21 @@ class InventoryExcelService:
             result["errors"].append(f"Failed to read Excel file: {str(e)}")
             return result
 
-        # Find the inventory sheet
+        # Find the inventory sheet (handle empty workbooks)
         ws = None
-        for sheet_name in ["Inventory", "Sheet1", wb.sheetnames[0]]:
+        if not wb.sheetnames:
+            result["success"] = False
+            result["errors"].append("Excel file contains no sheets")
+            return result
+            
+        for sheet_name in ["Inventory", "Sheet1"]:
             if sheet_name in wb.sheetnames:
                 ws = wb[sheet_name]
                 break
+        
+        # Fall back to first sheet if neither found
+        if ws is None:
+            ws = wb[wb.sheetnames[0]]
 
         if ws is None:
             result["success"] = False
@@ -206,7 +221,7 @@ class InventoryExcelService:
             return result
 
         # Get header row and map columns
-        headers = {}
+        headers: Dict[str, int] = {}
         for col_idx, cell in enumerate(ws[1], 1):
             if cell.value:
                 header_lower = str(cell.value).lower().strip().replace(" ", "_")
@@ -219,6 +234,30 @@ class InventoryExcelService:
             result["success"] = False
             result["errors"].append(f"Missing required columns: {', '.join(missing)}")
             return result
+
+        # Pre-fetch all products for this business to avoid N+1 queries
+        products = (
+            self.db.query(Product)
+            .filter(
+                Product.business_id == business_id,
+                Product.deleted_at.is_(None),
+            )
+            .all()
+        )
+        product_by_sku: Dict[str, Product] = {p.sku: p for p in products if p.sku}
+        
+        # Pre-fetch all inventory items for this business
+        inventory_items = (
+            self.db.query(InventoryItem)
+            .filter(
+                InventoryItem.business_id == business_id,
+                InventoryItem.deleted_at.is_(None),
+            )
+            .all()
+        )
+        inventory_by_product_id: Dict[str, InventoryItem] = {
+            str(item.product_id): item for item in inventory_items
+        }
 
         # Process data rows
         for row_idx, row in enumerate(ws.iter_rows(min_row=2), 2):
@@ -233,32 +272,16 @@ class InventoryExcelService:
 
                 sku = str(sku).strip()
 
-                # Find product by SKU
-                product = (
-                    self.db.query(Product)
-                    .filter(
-                        Product.business_id == business_id,
-                        Product.sku == sku,
-                        Product.deleted_at.is_(None),
-                    )
-                    .first()
-                )
+                # Find product by SKU (O(1) lookup from pre-fetched dict)
+                product = product_by_sku.get(sku)
 
                 if not product:
                     result["errors"].append(f"Row {row_idx}: Product with SKU '{sku}' not found")
                     result["skipped"] += 1
                     continue
 
-                # Get or create inventory item
-                inventory_item = (
-                    self.db.query(InventoryItem)
-                    .filter(
-                        InventoryItem.business_id == business_id,
-                        InventoryItem.product_id == product.id,
-                        InventoryItem.deleted_at.is_(None),
-                    )
-                    .first()
-                )
+                # Get or create inventory item (O(1) lookup from pre-fetched dict)
+                inventory_item = inventory_by_product_id.get(str(product.id))
 
                 is_new = inventory_item is None
                 if is_new:
@@ -304,11 +327,13 @@ class InventoryExcelService:
 
                 location = get_cell_value("location")
                 if location is not None:
-                    inventory_item.location = str(location).strip() if location else None
+                    # Convert empty strings to None
+                    inventory_item.location = str(location).strip() or None
 
                 bin_location = get_cell_value("bin_location")
                 if bin_location is not None:
-                    inventory_item.bin_location = str(bin_location).strip() if bin_location else None
+                    # Convert empty strings to None
+                    inventory_item.bin_location = str(bin_location).strip() or None
 
                 avg_cost = get_cell_value("average_cost")
                 if avg_cost is not None:
@@ -320,8 +345,22 @@ class InventoryExcelService:
 
                 if is_new:
                     result["created"] += 1
+                    # Add to cache for subsequent lookups within batch
+                    inventory_by_product_id[str(product.id)] = inventory_item
                 else:
                     result["updated"] += 1
+
+                # Batch commit every 100 rows to reduce memory pressure
+                # and allow partial success on large files
+                batch_size = 100
+                processed = result["created"] + result["updated"]
+                if processed > 0 and processed % batch_size == 0:
+                    try:
+                        self.db.commit()
+                    except Exception as e:
+                        self.db.rollback()
+                        result["errors"].append(f"Batch commit failed at row {row_idx}: {str(e)}")
+                        # Continue processing - already committed items are saved
 
             except ValueError as e:
                 result["errors"].append(f"Row {row_idx}: Invalid value - {str(e)}")
@@ -330,7 +369,7 @@ class InventoryExcelService:
                 result["errors"].append(f"Row {row_idx}: {str(e)}")
                 result["skipped"] += 1
 
-        # Commit changes
+        # Final commit for remaining rows
         try:
             self.db.commit()
         except Exception as e:
