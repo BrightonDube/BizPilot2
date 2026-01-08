@@ -150,6 +150,59 @@ async def get_invoice_stats(
     return InvoiceSummary(**stats)
 
 
+@router.get("/unpaid", response_model=InvoiceListResponse)
+async def get_unpaid_invoices(
+    per_page: int = Query(100, ge=1, le=200),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all unpaid or partially paid invoices for payment linking.
+    Returns invoices with status: sent, viewed, partial, or overdue.
+    """
+    from app.models.invoice import Invoice
+    
+    query = db.query(Invoice).filter(
+        Invoice.business_id == business_id,
+        Invoice.deleted_at.is_(None),
+        Invoice.status.in_([
+            InvoiceStatus.SENT,
+            InvoiceStatus.VIEWED,
+            InvoiceStatus.PARTIAL,
+            InvoiceStatus.OVERDUE,
+        ])
+    ).order_by(Invoice.created_at.desc()).limit(per_page)
+    
+    invoices = query.all()
+    
+    # Build customer names
+    customer_ids = [str(inv.customer_id) for inv in invoices if inv.customer_id]
+    customer_names = {}
+    if customer_ids:
+        customers = db.query(Customer).filter(Customer.id.in_(customer_ids)).all()
+        for customer in customers:
+            name = f"{customer.first_name} {customer.last_name}"
+            if customer.company_name:
+                name = customer.company_name
+            customer_names[str(customer.id)] = name
+    
+    service = InvoiceService(db)
+    invoice_responses = []
+    for invoice in invoices:
+        items = service.get_invoice_items(str(invoice.id))
+        customer_name = customer_names.get(str(invoice.customer_id)) if invoice.customer_id else None
+        invoice_responses.append(_invoice_to_response(invoice, items, customer_name))
+    
+    return InvoiceListResponse(
+        items=invoice_responses,
+        total=len(invoice_responses),
+        page=1,
+        per_page=per_page,
+        pages=1,
+    )
+
+
 @router.get("/{invoice_id}", response_model=InvoiceResponse)
 async def get_invoice(
     invoice_id: str,
