@@ -376,3 +376,63 @@ async def handle_payment_failed(data: dict, db: Session):
         # Log failed payment but don't immediately cancel
         # Could send notification email here
         pass
+
+
+# ==================== Billing History Endpoint ====================
+
+class TransactionResponse(BaseModel):
+    id: str
+    amount_cents: int
+    currency: str
+    status: str
+    created_at: str
+    tier_name: Optional[str] = None
+    payment_method: Optional[str] = None
+    card_last_four: Optional[str] = None
+
+
+class TransactionListResponse(BaseModel):
+    items: list[TransactionResponse]
+    total: int
+
+
+@router.get("/transactions/me", response_model=TransactionListResponse)
+async def get_my_transactions(
+    limit: int = 10,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get the current user's subscription transaction history.
+    """
+    transactions = db.query(SubscriptionTransaction).filter(
+        SubscriptionTransaction.user_id == current_user.id,
+    ).order_by(SubscriptionTransaction.created_at.desc()).limit(limit).all()
+    
+    # Get tier names
+    tier_ids = [str(tx.tier_id) for tx in transactions if tx.tier_id]
+    tier_names = {}
+    if tier_ids:
+        tiers = db.query(SubscriptionTier).filter(
+            SubscriptionTier.id.in_(tier_ids)
+        ).all()
+        for tier in tiers:
+            tier_names[str(tier.id)] = tier.display_name
+    
+    items = []
+    for tx in transactions:
+        items.append(TransactionResponse(
+            id=str(tx.id),
+            amount_cents=tx.amount_cents,
+            currency=tx.currency,
+            status=tx.status.value if tx.status else "unknown",
+            created_at=tx.created_at.isoformat() if tx.created_at else "",
+            tier_name=tier_names.get(str(tx.tier_id)) if tx.tier_id else None,
+            payment_method=tx.payment_method,
+            card_last_four=tx.card_last_four,
+        ))
+    
+    return TransactionListResponse(
+        items=items,
+        total=len(items),
+    )

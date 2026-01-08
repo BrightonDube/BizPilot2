@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Settings as SettingsIcon,
   User,
@@ -18,6 +18,15 @@ import {
   Globe,
   Save,
   Camera,
+  Check,
+  AlertTriangle,
+  Loader2,
+  Eye,
+  EyeOff,
+  Crown,
+  Zap,
+  ExternalLink,
+  Receipt,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -32,6 +41,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
 import { CurrencySelector } from '@/components/common/CurrencySelector';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
+import { useTheme } from '@/components/common/ThemeProvider';
+import { subscriptionApi, SubscriptionTier, UserSubscription } from '@/lib/subscription-api';
 
 type SettingsTab = 'profile' | 'business' | 'ai' | 'notifications' | 'security' | 'billing' | 'appearance';
 
@@ -62,12 +73,26 @@ const tabs: TabConfig[] = [
   { id: 'appearance', name: 'Appearance', icon: <Palette className="w-4 h-4" /> },
 ];
 
+interface BillingTransaction {
+  id: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  created_at: string;
+  tier_name?: string;
+}
+
 export default function SettingsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { theme, setTheme } = useTheme();
   const tabParam = searchParams.get('tab') as SettingsTab | null;
   const [activeTab, setActiveTab] = useState<SettingsTab>(tabParam || 'profile');
   const [isSaving, setIsSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
   const [profileData, setProfileData] = useState({
     first_name: '',
     last_name: '',
@@ -86,6 +111,41 @@ export default function SettingsPage() {
   });
 
   const [aiSharingLevel, setAiSharingLevel] = useState<AISharingLevel>('none');
+  
+  // Security state
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: '',
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  
+  // Billing state
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [tiers, setTiers] = useState<SubscriptionTier[]>([]);
+  const [billingHistory, setBillingHistory] = useState<BillingTransaction[]>([]);
+  const [loadingBilling, setLoadingBilling] = useState(false);
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
+  // Clear messages after timeout
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
 
   useEffect(() => {
     let isMounted = true;
@@ -108,17 +168,149 @@ export default function SettingsPage() {
     };
   }, []);
 
+  // Load billing data when billing tab is active
+  useEffect(() => {
+    if (activeTab === 'billing') {
+      loadBillingData();
+    }
+  }, [activeTab]);
+
+  const loadBillingData = async () => {
+    setLoadingBilling(true);
+    try {
+      const [subData, tiersData] = await Promise.all([
+        subscriptionApi.getMySubscription(),
+        subscriptionApi.getTiers(),
+      ]);
+      setSubscription(subData);
+      setTiers(tiersData);
+      
+      // Try to load billing history
+      try {
+        const historyResp = await apiClient.get('/payments/transactions/me?limit=10');
+        setBillingHistory(historyResp.data.items || []);
+      } catch {
+        // Billing history endpoint might not exist yet
+        setBillingHistory([]);
+      }
+    } catch (err) {
+      console.error('Failed to load billing data:', err);
+    } finally {
+      setLoadingBilling(false);
+    }
+  };
+
   const handleSaveAISettings = async () => {
     setIsSaving(true);
     try {
       await apiClient.put('/users/me/settings', {
         ai_data_sharing_level: aiSharingLevel,
       });
+      setSuccessMessage('AI settings saved successfully');
     } catch {
-      // ignore
+      setErrorMessage('Failed to save AI settings');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Password validation
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = [];
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+    return errors;
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordErrors([]);
+    
+    // Validate new password
+    const validationErrors = validatePassword(passwordData.new_password);
+    if (validationErrors.length > 0) {
+      setPasswordErrors(validationErrors);
+      return;
+    }
+    
+    // Check passwords match
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      setPasswordErrors(['New passwords do not match']);
+      return;
+    }
+    
+    // Check not same as current
+    if (passwordData.current_password === passwordData.new_password) {
+      setPasswordErrors(['New password must be different from current password']);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await apiClient.post('/auth/change-password', {
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password,
+      });
+      setSuccessMessage('Password changed successfully');
+      setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      setErrorMessage(error.response?.data?.detail || 'Failed to change password');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle tier upgrade
+  const handleUpgrade = async (tier: SubscriptionTier) => {
+    try {
+      const response = await subscriptionApi.selectTier(tier.id, selectedBillingCycle);
+      
+      if (response.requires_payment) {
+        // Initiate Paystack checkout
+        const checkoutResp = await apiClient.post('/payments/checkout/initiate', {
+          tier_id: tier.id,
+          billing_cycle: selectedBillingCycle,
+        });
+        
+        // Redirect to Paystack
+        if (checkoutResp.data.authorization_url) {
+          window.location.href = checkoutResp.data.authorization_url;
+        }
+      } else {
+        // Free tier - reload subscription data
+        setSuccessMessage(`Successfully switched to ${tier.display_name}`);
+        await loadBillingData();
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      setErrorMessage(error.response?.data?.detail || 'Failed to upgrade subscription');
+    }
+  };
+
+  const formatPrice = (cents: number) => {
+    if (cents === 0) return 'Free';
+    return `R${(cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-ZA', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   useEffect(() => {
@@ -162,6 +354,22 @@ export default function SettingsPage() {
         title="Settings"
         description="Manage your account and business settings"
       />
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 flex items-center gap-3">
+          <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+          <p className="text-green-400">{successMessage}</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <p className="text-red-400">{errorMessage}</p>
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Navigation */}
@@ -501,24 +709,83 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div className="p-4 bg-gray-900/50 rounded-lg">
                   <h3 className="text-sm font-medium text-white mb-2">Change Password</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Password must be at least 8 characters with uppercase, lowercase, number, and special character.
+                  </p>
+                  
+                  {passwordErrors.length > 0 && (
+                    <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                      <ul className="text-sm text-red-400 list-disc list-inside space-y-1">
+                        {passwordErrors.map((error, idx) => (
+                          <li key={idx}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
                   <div className="space-y-3">
-                    <Input
-                      type="password"
-                      placeholder="Current password"
-                      className="bg-gray-800 border-gray-700"
-                    />
-                    <Input
-                      type="password"
-                      placeholder="New password"
-                      className="bg-gray-800 border-gray-700"
-                    />
-                    <Input
-                      type="password"
-                      placeholder="Confirm new password"
-                      className="bg-gray-800 border-gray-700"
-                    />
-                    <Button variant="outline" className="border-gray-700">
-                      Update Password
+                    <div className="relative">
+                      <Input
+                        type={showPasswords.current ? 'text' : 'password'}
+                        placeholder="Current password"
+                        value={passwordData.current_password}
+                        onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
+                        className="bg-gray-800 border-gray-700 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      >
+                        {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        type={showPasswords.new ? 'text' : 'password'}
+                        placeholder="New password"
+                        value={passwordData.new_password}
+                        onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                        className="bg-gray-800 border-gray-700 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      >
+                        {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        type={showPasswords.confirm ? 'text' : 'password'}
+                        placeholder="Confirm new password"
+                        value={passwordData.confirm_password}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                        className="bg-gray-800 border-gray-700 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      >
+                        {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="border-gray-700"
+                      onClick={handleChangePassword}
+                      disabled={isSaving || !passwordData.current_password || !passwordData.new_password || !passwordData.confirm_password}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Update Password'
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -548,44 +815,235 @@ export default function SettingsPage() {
 
           {/* Billing Settings */}
           {activeTab === 'billing' && (
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Billing & Subscription
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="p-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-white">Free Plan</h3>
-                      <p className="text-sm text-gray-400">You are currently on the free plan</p>
-                    </div>
-                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
-                      Upgrade
-                    </Button>
-                  </div>
+            <div className="space-y-6">
+              {loadingBilling ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                 </div>
+              ) : (
+                <>
+                  {/* Current Plan */}
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CreditCard className="w-5 h-5" />
+                        Current Plan
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="p-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {subscription?.tier?.name === 'professional' ? (
+                              <Crown className="w-8 h-8 text-yellow-400" />
+                            ) : (
+                              <Zap className="w-8 h-8 text-blue-400" />
+                            )}
+                            <div>
+                              <h3 className="text-lg font-medium text-white">
+                                {subscription?.tier?.display_name || 'Free Plan'}
+                              </h3>
+                              <p className="text-sm text-gray-400">
+                                Status: <span className={`font-medium ${
+                                  subscription?.subscription_status === 'active' ? 'text-green-400' :
+                                  subscription?.subscription_status === 'trial' ? 'text-yellow-400' :
+                                  'text-gray-400'
+                                }`}>
+                                  {subscription?.subscription_status || 'Free'}
+                                </span>
+                              </p>
+                              {subscription?.subscription_expires_at && (
+                                <p className="text-xs text-gray-500">
+                                  Expires: {formatDate(subscription.subscription_expires_at)}
+                                </p>
+                              )}
+                              {subscription?.trial_ends_at && (
+                                <p className="text-xs text-yellow-400">
+                                  Trial ends: {formatDate(subscription.trial_ends_at)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                <div className="p-4 bg-gray-900/50 rounded-lg">
-                  <h3 className="text-sm font-medium text-white mb-2">Payment Methods</h3>
-                  <p className="text-xs text-gray-400 mb-3">
-                    No payment methods added
-                  </p>
-                  <Button variant="outline" className="border-gray-700">
-                    Add Payment Method
-                  </Button>
-                </div>
+                  {/* Available Plans */}
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>Available Plans</span>
+                        <div className="flex bg-gray-900 rounded-lg p-1">
+                          <button
+                            onClick={() => setSelectedBillingCycle('monthly')}
+                            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                              selectedBillingCycle === 'monthly'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            Monthly
+                          </button>
+                          <button
+                            onClick={() => setSelectedBillingCycle('yearly')}
+                            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                              selectedBillingCycle === 'yearly'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            Yearly <span className="text-green-400 text-xs">Save 20%</span>
+                          </button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {tiers.map((tier) => {
+                          const price = selectedBillingCycle === 'monthly' 
+                            ? tier.price_monthly_cents 
+                            : tier.price_yearly_cents;
+                          const monthlyEquivalent = selectedBillingCycle === 'yearly' 
+                            ? Math.round(tier.price_yearly_cents / 12) 
+                            : tier.price_monthly_cents;
+                          const isCurrentTier = subscription?.tier?.id === tier.id;
+                          const isProfessional = tier.name === 'professional';
+                          
+                          return (
+                            <div
+                              key={tier.id}
+                              className={`relative p-4 rounded-lg border transition-all ${
+                                isCurrentTier
+                                  ? 'border-green-500 bg-green-900/10'
+                                  : isProfessional
+                                  ? 'border-purple-500/50 bg-purple-900/10 hover:border-purple-400'
+                                  : 'border-gray-700 bg-gray-900/50 hover:border-gray-600'
+                              }`}
+                            >
+                              {isProfessional && (
+                                <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+                                  <span className="bg-gradient-to-r from-purple-600 to-blue-600 px-2 py-0.5 text-xs font-medium text-white rounded-full">
+                                    Popular
+                                  </span>
+                                </div>
+                              )}
+                              {isCurrentTier && (
+                                <div className="absolute top-2 right-2">
+                                  <Check className="w-5 h-5 text-green-400" />
+                                </div>
+                              )}
+                              
+                              <h4 className="font-medium text-white mb-1">{tier.display_name}</h4>
+                              <div className="mb-2">
+                                <span className="text-2xl font-bold text-white">
+                                  {formatPrice(monthlyEquivalent)}
+                                </span>
+                                {monthlyEquivalent > 0 && (
+                                  <span className="text-gray-400 text-sm">/mo</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-400 mb-3">{tier.description}</p>
+                              
+                              <Button
+                                size="sm"
+                                className={`w-full ${
+                                  isCurrentTier
+                                    ? 'bg-green-600/20 text-green-400 border border-green-500/30 cursor-default'
+                                    : isProfessional
+                                    ? 'bg-gradient-to-r from-purple-600 to-blue-600'
+                                    : 'bg-gray-700 hover:bg-gray-600'
+                                }`}
+                                onClick={() => !isCurrentTier && handleUpgrade(tier)}
+                                disabled={isCurrentTier}
+                              >
+                                {isCurrentTier ? 'Current Plan' : price === 0 ? 'Select' : 'Upgrade'}
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                <div className="p-4 bg-gray-900/50 rounded-lg">
-                  <h3 className="text-sm font-medium text-white mb-2">Billing History</h3>
-                  <p className="text-xs text-gray-400">
-                    No billing history available
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                  {/* Payment Methods */}
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CreditCard className="w-5 h-5" />
+                        Payment Methods
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-400 mb-3">
+                        Payment methods are managed through Paystack. When you upgrade, you&apos;ll be redirected to securely add your payment details.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="border-gray-700"
+                        onClick={() => {
+                          // Find a paid tier to start checkout
+                          const paidTier = tiers.find(t => t.price_monthly_cents > 0);
+                          if (paidTier) {
+                            handleUpgrade(paidTier);
+                          }
+                        }}
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Add Payment Method
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Billing History */}
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Receipt className="w-5 h-5" />
+                        Billing History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {billingHistory.length > 0 ? (
+                        <div className="space-y-2">
+                          {billingHistory.map((tx) => (
+                            <div
+                              key={tx.id}
+                              className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg"
+                            >
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {tx.tier_name || 'Subscription Payment'}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {formatDate(tx.created_at)}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-white">
+                                  {formatPrice(tx.amount_cents)}
+                                </p>
+                                <p className={`text-xs ${
+                                  tx.status === 'success' ? 'text-green-400' :
+                                  tx.status === 'pending' ? 'text-yellow-400' :
+                                  'text-red-400'
+                                }`}>
+                                  {tx.status}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No billing history available yet. Your transaction history will appear here once you make a purchase.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           )}
 
           {/* Appearance Settings */}
@@ -601,19 +1059,39 @@ export default function SettingsPage() {
                 <div>
                   <h3 className="text-sm font-medium text-white mb-3">Theme</h3>
                   <div className="grid grid-cols-3 gap-3">
-                    {['Dark', 'Light', 'System'].map((theme) => (
+                    {(['dark', 'light', 'system'] as const).map((themeOption) => (
                       <button
-                        key={theme}
+                        key={themeOption}
+                        onClick={() => setTheme(themeOption)}
                         className={`p-4 rounded-lg border transition-colors ${
-                          theme === 'Dark'
+                          theme === themeOption
                             ? 'bg-blue-600/20 border-blue-500'
                             : 'bg-gray-900/50 border-gray-700 hover:border-gray-600'
                         }`}
                       >
-                        <span className="text-sm text-white">{theme}</span>
+                        <div className="flex flex-col items-center gap-2">
+                          {themeOption === 'dark' && (
+                            <div className="w-8 h-8 rounded-full bg-gray-900 border border-gray-600" />
+                          )}
+                          {themeOption === 'light' && (
+                            <div className="w-8 h-8 rounded-full bg-white border border-gray-300" />
+                          )}
+                          {themeOption === 'system' && (
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-900 to-white border border-gray-500" />
+                          )}
+                          <span className="text-sm text-white capitalize">{themeOption}</span>
+                        </div>
+                        {theme === themeOption && (
+                          <Check className="w-4 h-4 text-blue-400 mx-auto mt-2" />
+                        )}
                       </button>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    {theme === 'system' 
+                      ? 'Theme will automatically match your system preferences.'
+                      : `Using ${theme} theme.`}
+                  </p>
                 </div>
 
                 <div>
