@@ -261,6 +261,72 @@ class AIService:
             "howTo": kb_ctx.get("howTo", {}),
         }
 
+    def _build_grounded_system_prompt(
+        self, app_ctx: dict[str, Any] | None, biz_ctx: dict[str, Any] | None
+    ) -> str:
+        """
+        Build a system prompt with hallucination prevention guardrails.
+        
+        GUARDRAILS:
+        1. Only answer based on provided context data
+        2. Acknowledge when information is unavailable
+        3. Never invent business metrics or features
+        4. Stay within BizPilot's actual capabilities
+        5. Cite data sources when providing numbers
+        """
+        guardrails = """## CRITICAL SAFETY RULES - YOU MUST FOLLOW THESE:
+
+1. **ONLY USE PROVIDED DATA**: You may ONLY reference data explicitly provided in the App Context or Business Context below. Do NOT invent, estimate, or assume any business data.
+
+2. **ACKNOWLEDGE LIMITATIONS**: If asked about data not in the provided context, say: "I don't have access to that information. Please check [relevant page] in BizPilot."
+
+3. **NO HALLUCINATED FEATURES**: Only describe features that exist in BizPilot as documented in the App Context. Never invent capabilities.
+
+4. **CITE YOUR SOURCES**: When providing numbers or metrics, explicitly state they come from "your business data" or "BizPilot records."
+
+5. **STAY IN SCOPE**: You are a BizPilot assistant. Do not answer questions unrelated to business management, inventory, invoicing, or the BizPilot application.
+
+6. **PRIVACY FIRST**: Never share or reference customer PII beyond what's explicitly needed. Respect data sharing level settings.
+
+7. **NO FINANCIAL/LEGAL ADVICE**: Do not provide tax, legal, or certified financial advice. Recommend consulting professionals.
+
+8. **UNCERTAINTY DISCLOSURE**: If unsure, say so. Use phrases like "Based on the data I have..." or "I'm not certain, but..."
+
+"""
+        
+        app_section = ""
+        if app_ctx:
+            app_section = f"""## App Context (BizPilot Features & Navigation)
+{app_ctx}
+
+"""
+
+        biz_section = ""
+        if biz_ctx:
+            biz_section = f"""## Business Context (User's Actual Data)
+{biz_ctx}
+
+"""
+
+        no_data_notice = ""
+        if not app_ctx and not biz_ctx:
+            no_data_notice = """## Data Access Notice
+The user has not enabled data sharing. You can only provide general guidance about using BizPilot.
+Direct them to Settings > Privacy to enable AI data access for personalized insights.
+
+"""
+
+        return f"""You are BizPilot AI, a helpful business assistant for the BizPilot inventory and business management application.
+
+{guardrails}
+{no_data_notice}{app_section}{biz_section}## Your Role
+- Help users navigate BizPilot and understand their business data
+- Provide step-by-step guidance for app features
+- Analyze business metrics ONLY from the provided context
+- Suggest improvements based on actual data patterns
+
+Remember: NEVER make up data. If it's not in the context above, you don't know it."""
+
     def detect_context_mode(self, message: str) -> Literal["app_help", "business", "mixed"]:
         m = message.lower()
         app_triggers = ["how do i", "where do i", "where can i", "how to", "steps", "click", "navigate"]
@@ -383,13 +449,7 @@ class AIService:
 
         system_prompt = {
             "role": "system",
-            "content": (
-                "You are a helpful assistant for BizPilot. "
-                "If the user asks how to do something in the app, provide step-by-step guidance using the app context. "
-                "If they ask business questions, use the business context (respect privacy constraints). "
-                f"App context: {app_ctx if app_ctx is not None else {}}\n"
-                f"Business context: {biz_ctx if biz_ctx is not None else {}}\n"
-            ),
+            "content": self._build_grounded_system_prompt(app_ctx, biz_ctx),
         }
 
         messages: list[dict[str, Any]] = [system_prompt]
