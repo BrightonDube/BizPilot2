@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Eye,
   Edit,
+  PackageCheck,
 } from 'lucide-react';
 import { Button, Input, Card, CardContent } from '@/components/ui';
 import { PageHeader, Badge, StatCard, EmptyState } from '@/components/ui/bizpilot';
@@ -78,6 +79,7 @@ const statusConfig: Record<string, { color: string; icon: React.ReactNode; label
   processing: { color: 'bg-purple-500', icon: <Package className="w-3 h-3" />, label: 'Processing' },
   shipped: { color: 'bg-indigo-500', icon: <Truck className="w-3 h-3" />, label: 'Shipped' },
   delivered: { color: 'bg-green-500', icon: <CheckCircle className="w-3 h-3" />, label: 'Delivered' },
+  received: { color: 'bg-green-500', icon: <PackageCheck className="w-3 h-3" />, label: 'Received' },
   cancelled: { color: 'bg-red-500', icon: <XCircle className="w-3 h-3" />, label: 'Cancelled' },
 };
 
@@ -258,6 +260,16 @@ export default function PurchasesPage() {
                             <Eye className="h-4 w-4" />
                           </button>
                         </Link>
+                        {purchase.status !== 'received' && purchase.status !== 'cancelled' && (
+                          <Link href={`/purchases/${purchase.id}/receive`}>
+                            <button
+                              className="p-2 text-gray-400 hover:text-emerald-400 transition-colors"
+                              title="Receive Order"
+                            >
+                              <PackageCheck className="h-4 w-4" />
+                            </button>
+                          </Link>
+                        )}
                         <Link href={`/purchases/${purchase.id}/edit`}>
                           <button
                             className="p-2 text-gray-400 hover:text-green-400 transition-colors"
