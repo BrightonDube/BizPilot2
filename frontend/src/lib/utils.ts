@@ -41,5 +41,6 @@ export function formatDate(dateString: string | Date | null | undefined): string
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Africa/Johannesburg',
   }).format(date);
 }
