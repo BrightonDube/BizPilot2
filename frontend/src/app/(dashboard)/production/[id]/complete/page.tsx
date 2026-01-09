@@ -90,7 +90,7 @@ export default function CompleteProductionPage() {
   if (!order) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400">Production order not found</p>
+        <p className="text-muted-foreground">Production order not found</p>
         <Link href="/production">
           <Button variant="outline" className="mt-4">
             Back to Production
@@ -129,12 +129,12 @@ export default function CompleteProductionPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Product</label>
-                <p className="text-white">{order.product_name}</p>
+                <label className="block text-sm font-medium text-card-foreground mb-1">Product</label>
+                <p className="text-foreground">{order.product_name}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-card-foreground mb-1">
                   Quantity Produced *
                 </label>
                 <Input
@@ -146,17 +146,17 @@ export default function CompleteProductionPage() {
                   onChange={handleChange}
                   required
                 />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Target: {order.quantity_to_produce} units
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-card-foreground mb-1">
                   Actual Cost
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R</span>
                   <Input
                     name="actual_cost"
                     type="number"
@@ -167,7 +167,7 @@ export default function CompleteProductionPage() {
                     className="pl-8"
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Estimated: R {safeToFixed(order.estimated_cost, 2)}
                 </p>
               </div>
@@ -179,7 +179,7 @@ export default function CompleteProductionPage() {
                 </Button>
               </div>
 
-              <p className="text-xs text-gray-400 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 This will add the produced quantity to inventory and deduct ingredients.
               </p>
             </form>

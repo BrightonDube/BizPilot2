@@ -33,7 +33,7 @@ interface ProductionListResponse {
 }
 
 const statusColors: Record<string, string> = {
-  draft: 'bg-gray-500/20 text-gray-300',
+  draft: 'bg-muted/50 text-muted-foreground',
   pending: 'bg-yellow-500/20 text-yellow-300',
   in_progress: 'bg-blue-500/20 text-blue-300',
   completed: 'bg-green-500/20 text-green-300',
@@ -139,7 +139,7 @@ export default function ProductionPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+          className="px-4 py-2 bg-card border border-border rounded-lg text-foreground"
         >
           <option value="">All Status</option>
           <option value="draft">Draft</option>
@@ -153,9 +153,9 @@ export default function ProductionPage() {
       {orders.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Factory className="h-12 w-12 mx-auto text-gray-500 mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No production orders yet</h3>
-            <p className="text-gray-400 mb-4">
+            <Factory className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No production orders yet</h3>
+            <p className="text-muted-foreground mb-4">
               Create your first production order to start manufacturing products from ingredients.
             </p>
             <Link href="/production/new">
@@ -169,18 +169,18 @@ export default function ProductionPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <Card key={order.id} className="hover:border-gray-600 transition-colors">
+            <Card key={order.id} className="hover:border-border transition-colors">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-lg font-semibold text-white">{order.order_number}</span>
+                      <span className="text-lg font-semibold text-foreground">{order.order_number}</span>
                       <Badge className={statusColors[order.status]}>
                         {statusLabels[order.status]}
                       </Badge>
                     </div>
-                    <p className="text-gray-300">{order.product_name || 'Unknown Product'}</p>
-                    <div className="flex gap-6 mt-2 text-sm text-gray-400">
+                    <p className="text-card-foreground">{order.product_name || 'Unknown Product'}</p>
+                    <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
                       <span>Qty: {order.quantity_produced}/{order.quantity_to_produce}</span>
                       <span>Est. Cost: R {order.estimated_cost?.toFixed(2) || '0.00'}</span>
                       {order.status === 'completed' && (
@@ -192,13 +192,13 @@ export default function ProductionPage() {
                     </div>
                     {order.status === 'in_progress' && (
                       <div className="mt-2">
-                        <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="w-full bg-muted rounded-full h-2">
                           <div
                             className="bg-blue-500 h-2 rounded-full transition-all"
                             style={{ width: `${order.completion_percentage}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-400 mt-1">
+                        <span className="text-xs text-muted-foreground mt-1">
                           {order.completion_percentage.toFixed(0)}% complete
                         </span>
                       </div>
@@ -266,7 +266,7 @@ export default function ProductionPage() {
               >
                 Previous
               </Button>
-              <span className="px-4 py-2 text-gray-400">
+              <span className="px-4 py-2 text-muted-foreground">
                 Page {page} of {totalPages}
               </span>
               <Button

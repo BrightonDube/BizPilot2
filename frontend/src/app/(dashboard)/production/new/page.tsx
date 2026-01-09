@@ -129,7 +129,7 @@ export default function NewProductionPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-card-foreground mb-1">
                     Product to Manufacture *
                   </label>
                   <select
@@ -137,7 +137,7 @@ export default function NewProductionPage() {
                     value={formData.product_id}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a product...</option>
                     {products.map((product) => (
@@ -155,7 +155,7 @@ export default function NewProductionPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Quantity to Produce *
                     </label>
                     <Input
@@ -168,7 +168,7 @@ export default function NewProductionPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Scheduled Date
                     </label>
                     <Input
@@ -181,14 +181,14 @@ export default function NewProductionPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+                  <label className="block text-sm font-medium text-card-foreground mb-1">Notes</label>
                   <textarea
                     name="notes"
                     value={formData.notes}
                     onChange={handleChange}
                     rows={3}
                     placeholder="Optional notes for this production order..."
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </CardContent>
@@ -200,10 +200,10 @@ export default function NewProductionPage() {
                   <CardTitle>Bill of Materials</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto rounded-lg border border-gray-700">
+                  <div className="overflow-x-auto rounded-lg border border-border">
                     <table className="min-w-full text-sm">
-                      <thead className="bg-gray-800">
-                        <tr className="text-left text-gray-300">
+                      <thead className="bg-muted">
+                        <tr className="text-left text-card-foreground">
                           <th className="p-3">Ingredient</th>
                           <th className="p-3">Unit</th>
                           <th className="p-3">Qty per Unit</th>
@@ -212,13 +212,13 @@ export default function NewProductionPage() {
                           <th className="p-3">Total Cost</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-800 bg-gray-900/30">
+                      <tbody className="divide-y divide-border bg-card/30">
                         {selectedProduct.ingredients.map((ing) => {
                           const totalQty = ing.quantity * toNumber(formData.quantity_to_produce, 1)
                           const totalCost = ing.cost * totalQty
                           return (
                             <tr key={ing.id}>
-                              <td className="p-3 text-gray-200">
+                              <td className="p-3 text-foreground">
                                 {ing.name}
                                 {ing.source_product_name && (
                                   <span className="text-xs text-blue-400 ml-2">
@@ -226,18 +226,18 @@ export default function NewProductionPage() {
                                   </span>
                                 )}
                               </td>
-                              <td className="p-3 text-gray-400">{ing.unit}</td>
-                              <td className="p-3 text-gray-400">{safeToFixed(ing.quantity, 2)}</td>
-                              <td className="p-3 text-gray-200">{safeToFixed(totalQty, 2)}</td>
-                              <td className="p-3 text-gray-400">R {safeToFixed(ing.cost, 2)}</td>
-                              <td className="p-3 text-gray-200">R {safeToFixed(totalCost, 2)}</td>
+                              <td className="p-3 text-muted-foreground">{ing.unit}</td>
+                              <td className="p-3 text-muted-foreground">{safeToFixed(ing.quantity, 2)}</td>
+                              <td className="p-3 text-foreground">{safeToFixed(totalQty, 2)}</td>
+                              <td className="p-3 text-muted-foreground">R {safeToFixed(ing.cost, 2)}</td>
+                              <td className="p-3 text-foreground">R {safeToFixed(totalCost, 2)}</td>
                             </tr>
                           )
                         })}
                       </tbody>
-                      <tfoot className="bg-gray-800">
+                      <tfoot className="bg-muted">
                         <tr>
-                          <td colSpan={5} className="p-3 text-right font-medium text-gray-200">
+                          <td colSpan={5} className="p-3 text-right font-medium text-foreground">
                             Estimated Total Cost:
                           </td>
                           <td className="p-3 font-semibold text-green-400">
@@ -259,20 +259,20 @@ export default function NewProductionPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Product:</span>
-                  <span className="text-white">{selectedProduct?.name || '-'}</span>
+                  <span className="text-muted-foreground">Product:</span>
+                  <span className="text-foreground">{selectedProduct?.name || '-'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Quantity:</span>
-                  <span className="text-white">{formData.quantity_to_produce || '0'}</span>
+                  <span className="text-muted-foreground">Quantity:</span>
+                  <span className="text-foreground">{formData.quantity_to_produce || '0'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Ingredients:</span>
-                  <span className="text-white">{selectedProduct?.ingredients.length || 0}</span>
+                  <span className="text-muted-foreground">Ingredients:</span>
+                  <span className="text-foreground">{selectedProduct?.ingredients.length || 0}</span>
                 </div>
-                <div className="border-t border-gray-700 pt-4">
+                <div className="border-t border-border pt-4">
                   <div className="flex justify-between">
-                    <span className="font-medium text-gray-300">Estimated Cost:</span>
+                    <span className="font-medium text-card-foreground">Estimated Cost:</span>
                     <span className="font-semibold text-green-400">R {safeToFixed(estimatedCost, 2)}</span>
                   </div>
                 </div>
