@@ -221,6 +221,100 @@ class TestProductService:
         ing_rows = [x for x in db.added if isinstance(x, ProductIngredient)]
         assert len(ing_rows) == 2
 
+    def test_create_product_checks_existing_inventory_item(self):
+        """Test that create_product checks for existing inventory items before creating a new one."""
+        from app.schemas.product import ProductCreate
+        from app.services.product_service import ProductService
+        from app.models.inventory import InventoryItem
+        from app.models.product import Product
+        from sqlalchemy.exc import IntegrityError
+        from fastapi import HTTPException
+        import pytest
+
+        class FakeSession:
+            def __init__(self):
+                self.added = []
+                self.queried_types = []
+                self.should_raise_integrity_error = False
+                self.existing_inventory = None
+
+            def add(self, obj):
+                self.added.append(obj)
+
+            def flush(self):
+                return None
+
+            def commit(self):
+                if self.should_raise_integrity_error:
+                    raise IntegrityError("test", "test", "test")
+                return None
+
+            def refresh(self, obj):
+                return None
+
+            def rollback(self):
+                return None
+
+            def query(self, model):
+                self.queried_types.append(model)
+                return self
+
+            def filter(self, *args):
+                return self
+
+            def first(self):
+                if InventoryItem in self.queried_types:
+                    return self.existing_inventory
+                return None
+
+        # Test 1: When track_inventory is True and no existing inventory, should create new one
+        db = FakeSession()
+        service = ProductService(db)  # type: ignore[arg-type]
+        business_id = str(uuid.uuid4())
+        
+        product_data = ProductCreate(
+            name="Test Product",
+            selling_price=Decimal("100"),
+            track_inventory=True,
+            quantity=50,
+        )
+        
+        service.create_product(business_id=business_id, data=product_data)
+        
+        # Should have queried for existing inventory
+        assert InventoryItem in db.queried_types
+        # Should have added a new inventory item
+        inventory_items = [x for x in db.added if isinstance(x, InventoryItem)]
+        assert len(inventory_items) == 1
+
+        # Test 2: When existing inventory item exists, should not create a new one
+        db2 = FakeSession()
+        db2.existing_inventory = InventoryItem(
+            business_id=business_id,
+            product_id=str(uuid.uuid4()),
+            quantity_on_hand=10,
+        )
+        service2 = ProductService(db2)  # type: ignore[arg-type]
+        
+        service2.create_product(business_id=business_id, data=product_data)
+        
+        # Should have queried for existing inventory
+        assert InventoryItem in db2.queried_types
+        # Should NOT have added a new inventory item
+        inventory_items2 = [x for x in db2.added if isinstance(x, InventoryItem)]
+        assert len(inventory_items2) == 0
+
+        # Test 3: When IntegrityError occurs, should raise HTTPException
+        db3 = FakeSession()
+        db3.should_raise_integrity_error = True
+        service3 = ProductService(db3)  # type: ignore[arg-type]
+        
+        with pytest.raises(HTTPException) as exc_info:
+            service3.create_product(business_id=business_id, data=product_data)
+        
+        assert exc_info.value.status_code == 400
+        assert "constraint was violated" in exc_info.value.detail.lower()
+
 
 class TestProductEndpoints:
     """Tests for Product API endpoints."""

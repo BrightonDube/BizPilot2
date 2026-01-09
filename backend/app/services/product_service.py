@@ -5,6 +5,8 @@ from decimal import Decimal
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 
 from app.models.product import Product, ProductCategory, ProductStatus
 from app.models.product_ingredient import ProductIngredient
@@ -120,18 +122,34 @@ class ProductService:
 
         # Auto-create inventory item for the product
         if product.track_inventory:
-            inventory_item = InventoryItem(
-                business_id=business_id,
-                product_id=product.id,
-                quantity_on_hand=product.quantity or 0,
-                reorder_point=product.low_stock_threshold or 10,
-                reorder_quantity=50,
-                average_cost=product.cost_price or Decimal("0"),
-                last_cost=product.cost_price or Decimal("0"),
-            )
-            self.db.add(inventory_item)
+            # Check if an inventory item already exists for this product
+            existing_inventory = self.db.query(InventoryItem).filter(
+                InventoryItem.business_id == business_id,
+                InventoryItem.product_id == product.id,
+            ).first()
+            
+            if not existing_inventory:
+                inventory_item = InventoryItem(
+                    business_id=business_id,
+                    product_id=product.id,
+                    quantity_on_hand=product.quantity or 0,
+                    reorder_point=product.low_stock_threshold or 10,
+                    reorder_quantity=50,
+                    average_cost=product.cost_price or Decimal("0"),
+                    last_cost=product.cost_price or Decimal("0"),
+                )
+                self.db.add(inventory_item)
 
-        self.db.commit()
+        try:
+            self.db.commit()
+        except IntegrityError as e:
+            self.db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail="Failed to create product: A database constraint was violated. "
+                       "This may be due to a duplicate inventory item or invalid data."
+            )
+        
         self.db.refresh(product)
         return product
 
