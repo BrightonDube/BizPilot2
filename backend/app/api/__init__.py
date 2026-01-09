@@ -20,6 +20,7 @@ from app.api.categories import router as categories_router
 from app.api.admin import router as admin_router
 from app.api.subscriptions import router as subscriptions_router
 from app.api.payments_subscription import router as payments_subscription_router
+from app.api.production import router as production_router
 
 router = APIRouter()
 
@@ -42,6 +43,7 @@ router.include_router(categories_router)
 router.include_router(admin_router)
 router.include_router(subscriptions_router)
 router.include_router(payments_subscription_router)
+router.include_router(production_router)
 
 
 @router.get("/")

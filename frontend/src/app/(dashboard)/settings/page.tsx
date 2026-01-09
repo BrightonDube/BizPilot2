@@ -87,6 +87,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
+  const billingProvider: 'payfast' | 'paystack' = 'payfast';
   const tabParam = searchParams.get('tab') as SettingsTab | null;
   const [activeTab, setActiveTab] = useState<SettingsTab>(tabParam || 'profile');
   const [isSaving, setIsSaving] = useState(false);
@@ -276,6 +277,11 @@ export default function SettingsPage() {
   // Handle tier upgrade
   const handleUpgrade = async (tier: SubscriptionTier) => {
     try {
+      if (billingProvider === 'payfast' && tier.price_monthly_cents > 0) {
+        setErrorMessage('Subscription upgrades are not available yet. Payfast integration is coming soon.');
+        return;
+      }
+
       const response = await subscriptionApi.selectTier(tier.id, selectedBillingCycle);
       
       if (response.requires_payment) {
@@ -374,7 +380,7 @@ export default function SettingsPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Navigation */}
         <div className="w-full lg:w-64 flex-shrink-0">
-          <Card className="bg-gray-800/50 border-gray-700">
+          <Card>
             <CardContent className="p-2">
               <nav className="space-y-1">
                 {tabs.map((tab) => (
@@ -384,7 +390,7 @@ export default function SettingsPage() {
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
                       activeTab === tab.id
                         ? 'bg-blue-600/20 text-blue-400'
-                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     {tab.icon}
@@ -400,7 +406,7 @@ export default function SettingsPage() {
         <div className="flex-1">
           {/* Profile Settings */}
           {activeTab === 'profile' && (
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
@@ -410,10 +416,10 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
-                    <User className="w-8 h-8 text-gray-400" />
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                    <User className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <Button variant="outline" className="border-gray-700">
+                  <Button variant="outline">
                     <Camera className="w-4 h-4 mr-2" />
                     Change Avatar
                   </Button>
@@ -421,7 +427,7 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="first_name" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="first_name" className="block text-sm font-medium text-muted-foreground mb-1">
                       First Name
                     </label>
                     <Input
@@ -430,11 +436,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setProfileData({ ...profileData, first_name: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="last_name" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="last_name" className="block text-sm font-medium text-muted-foreground mb-1">
                       Last Name
                     </label>
                     <Input
@@ -443,11 +448,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setProfileData({ ...profileData, last_name: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-muted-foreground mb-1">
                       Email
                     </label>
                     <Input
@@ -457,12 +461,11 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setProfileData({ ...profileData, email: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                       disabled
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="phone" className="block text-sm font-medium text-muted-foreground mb-1">
                       Phone
                     </label>
                     <Input
@@ -471,7 +474,6 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setProfileData({ ...profileData, phone: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                 </div>
@@ -492,7 +494,7 @@ export default function SettingsPage() {
 
           {/* AI Settings */}
           {activeTab === 'ai' && (
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5" />
@@ -500,9 +502,9 @@ export default function SettingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="p-4 bg-gray-900/50 rounded-lg">
-                  <h3 className="text-sm font-medium text-white mb-2">AI Data Sharing Level</h3>
-                  <p className="text-xs text-gray-400 mb-3">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="text-sm font-medium text-foreground mb-2">AI Data Sharing Level</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
                     Control how much of your business data BizPilot can share with the AI assistant.
                   </p>
 
@@ -511,7 +513,7 @@ export default function SettingsPage() {
                     id="ai-sharing"
                     value={aiSharingLevel}
                     onChange={(e) => setAiSharingLevel(e.target.value as AISharingLevel)}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
                   >
                     <option value="none">None (no AI data)</option>
                     <option value="app_only">App only (how-to guidance)</option>
@@ -537,7 +539,7 @@ export default function SettingsPage() {
 
           {/* Business Settings */}
           {activeTab === 'business' && (
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
@@ -547,7 +549,7 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label htmlFor="business_name" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="business_name" className="block text-sm font-medium text-muted-foreground mb-1">
                       Business Name
                     </label>
                     <Input
@@ -556,11 +558,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setBusinessData({ ...businessData, name: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="business_email" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="business_email" className="block text-sm font-medium text-muted-foreground mb-1">
                       Business Email
                     </label>
                     <Input
@@ -570,11 +571,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setBusinessData({ ...businessData, email: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="business_phone" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="business_phone" className="block text-sm font-medium text-muted-foreground mb-1">
                       Business Phone
                     </label>
                     <Input
@@ -583,11 +583,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setBusinessData({ ...businessData, phone: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="address" className="block text-sm font-medium text-muted-foreground mb-1">
                       Address
                     </label>
                     <Input
@@ -596,11 +595,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setBusinessData({ ...businessData, address: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="city" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="city" className="block text-sm font-medium text-muted-foreground mb-1">
                       City
                     </label>
                     <Input
@@ -609,11 +607,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setBusinessData({ ...businessData, city: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="country" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="country" className="block text-sm font-medium text-muted-foreground mb-1">
                       Country
                     </label>
                     <Input
@@ -622,11 +619,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setBusinessData({ ...businessData, country: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="tax_id" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="tax_id" className="block text-sm font-medium text-muted-foreground mb-1">
                       Tax ID / VAT Number
                     </label>
                     <Input
@@ -635,11 +631,10 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setBusinessData({ ...businessData, tax_id: e.target.value })
                       }
-                      className="bg-gray-800 border-gray-700"
                     />
                   </div>
                   <div>
-                    <label htmlFor="currency" className="block text-sm font-medium text-gray-400 mb-1">
+                    <label htmlFor="currency" className="block text-sm font-medium text-muted-foreground mb-1">
                       Default Currency
                     </label>
                     <CurrencySelector
@@ -668,7 +663,7 @@ export default function SettingsPage() {
 
           {/* Notifications Settings */}
           {activeTab === 'notifications' && (
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="w-5 h-5" />
@@ -682,14 +677,14 @@ export default function SettingsPage() {
                   { id: 'email_inventory', label: 'Low stock alerts', description: 'Receive email when inventory is running low' },
                   { id: 'email_reports', label: 'Weekly reports', description: 'Receive weekly business summary reports' },
                 ].map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg">
+                  <div key={item.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-white">{item.label}</p>
-                      <p className="text-xs text-gray-400">{item.description}</p>
+                      <p className="text-sm font-medium text-foreground">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-gray-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-200 after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-border peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-background after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
                 ))}
@@ -699,7 +694,7 @@ export default function SettingsPage() {
 
           {/* Security Settings */}
           {activeTab === 'security' && (
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-5 h-5" />
@@ -707,9 +702,9 @@ export default function SettingsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="p-4 bg-gray-900/50 rounded-lg">
-                  <h3 className="text-sm font-medium text-white mb-2">Change Password</h3>
-                  <p className="text-xs text-gray-400 mb-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="text-sm font-medium text-foreground mb-2">Change Password</h3>
+                  <p className="text-xs text-muted-foreground mb-4">
                     Password must be at least 8 characters with uppercase, lowercase, number, and special character.
                   </p>
                   
@@ -730,12 +725,12 @@ export default function SettingsPage() {
                         placeholder="Current password"
                         value={passwordData.current_password}
                         onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
-                        className="bg-gray-800 border-gray-700 pr-10"
+                        className="pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -746,12 +741,12 @@ export default function SettingsPage() {
                         placeholder="New password"
                         value={passwordData.new_password}
                         onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                        className="bg-gray-800 border-gray-700 pr-10"
+                        className="pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -762,19 +757,18 @@ export default function SettingsPage() {
                         placeholder="Confirm new password"
                         value={passwordData.confirm_password}
                         onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
-                        className="bg-gray-800 border-gray-700 pr-10"
+                        className="pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     <Button 
                       variant="outline" 
-                      className="border-gray-700"
                       onClick={handleChangePassword}
                       disabled={isSaving || !passwordData.current_password || !passwordData.new_password || !passwordData.confirm_password}
                     >
@@ -790,22 +784,22 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-gray-900/50 rounded-lg">
-                  <h3 className="text-sm font-medium text-white mb-2">Two-Factor Authentication</h3>
-                  <p className="text-xs text-gray-400 mb-3">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="text-sm font-medium text-foreground mb-2">Two-Factor Authentication</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
                     Add an extra layer of security to your account
                   </p>
-                  <Button variant="outline" className="border-gray-700">
+                  <Button variant="outline">
                     Enable 2FA
                   </Button>
                 </div>
 
-                <div className="p-4 bg-gray-900/50 rounded-lg">
-                  <h3 className="text-sm font-medium text-white mb-2">Active Sessions</h3>
-                  <p className="text-xs text-gray-400 mb-3">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="text-sm font-medium text-foreground mb-2">Active Sessions</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
                     Manage devices that are logged into your account
                   </p>
-                  <Button variant="outline" className="border-gray-700">
+                  <Button variant="outline">
                     View Sessions
                   </Button>
                 </div>
@@ -823,7 +817,7 @@ export default function SettingsPage() {
               ) : (
                 <>
                   {/* Current Plan */}
-                  <Card className="bg-gray-800/50 border-gray-700">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5" />
@@ -840,20 +834,20 @@ export default function SettingsPage() {
                               <Zap className="w-8 h-8 text-blue-400" />
                             )}
                             <div>
-                              <h3 className="text-lg font-medium text-white">
+                              <h3 className="text-lg font-medium text-foreground">
                                 {subscription?.tier?.display_name || 'Free Plan'}
                               </h3>
-                              <p className="text-sm text-gray-400">
+                              <p className="text-sm text-muted-foreground">
                                 Status: <span className={`font-medium ${
                                   subscription?.subscription_status === 'active' ? 'text-green-400' :
                                   subscription?.subscription_status === 'trial' ? 'text-yellow-400' :
-                                  'text-gray-400'
+                                  'text-muted-foreground'
                                 }`}>
                                   {subscription?.subscription_status || 'Free'}
                                 </span>
                               </p>
                               {subscription?.subscription_expires_at && (
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-muted-foreground">
                                   Expires: {formatDate(subscription.subscription_expires_at)}
                                 </p>
                               )}
@@ -870,17 +864,17 @@ export default function SettingsPage() {
                   </Card>
 
                   {/* Available Plans */}
-                  <Card className="bg-gray-800/50 border-gray-700">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span>Available Plans</span>
-                        <div className="flex bg-gray-900 rounded-lg p-1">
+                        <div className="flex bg-muted rounded-lg p-1">
                           <button
                             onClick={() => setSelectedBillingCycle('monthly')}
                             className={`px-3 py-1 text-sm rounded-md transition-colors ${
                               selectedBillingCycle === 'monthly'
                                 ? 'bg-blue-600 text-white'
-                                : 'text-gray-400 hover:text-white'
+                                : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
                             Monthly
@@ -890,7 +884,7 @@ export default function SettingsPage() {
                             className={`px-3 py-1 text-sm rounded-md transition-colors ${
                               selectedBillingCycle === 'yearly'
                                 ? 'bg-blue-600 text-white'
-                                : 'text-gray-400 hover:text-white'
+                                : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
                             Yearly <span className="text-green-400 text-xs">Save 20%</span>
@@ -909,6 +903,8 @@ export default function SettingsPage() {
                             : tier.price_monthly_cents;
                           const isCurrentTier = subscription?.tier?.id === tier.id;
                           const isProfessional = tier.name === 'professional';
+                          const isPaid = price > 0;
+                          const paidUpgradeDisabled = billingProvider === 'payfast' && isPaid;
                           
                           return (
                             <div
@@ -918,7 +914,7 @@ export default function SettingsPage() {
                                   ? 'border-green-500 bg-green-900/10'
                                   : isProfessional
                                   ? 'border-purple-500/50 bg-purple-900/10 hover:border-purple-400'
-                                  : 'border-gray-700 bg-gray-900/50 hover:border-gray-600'
+                                  : 'border-border bg-muted hover:opacity-90'
                               }`}
                             >
                               {isProfessional && (
@@ -934,16 +930,16 @@ export default function SettingsPage() {
                                 </div>
                               )}
                               
-                              <h4 className="font-medium text-white mb-1">{tier.display_name}</h4>
+                              <h4 className="font-medium text-foreground mb-1">{tier.display_name}</h4>
                               <div className="mb-2">
-                                <span className="text-2xl font-bold text-white">
+                                <span className="text-2xl font-bold text-foreground">
                                   {formatPrice(monthlyEquivalent)}
                                 </span>
                                 {monthlyEquivalent > 0 && (
-                                  <span className="text-gray-400 text-sm">/mo</span>
+                                  <span className="text-muted-foreground text-sm">/mo</span>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-400 mb-3">{tier.description}</p>
+                              <p className="text-xs text-muted-foreground mb-3">{tier.description}</p>
                               
                               <Button
                                 size="sm"
@@ -952,12 +948,18 @@ export default function SettingsPage() {
                                     ? 'bg-green-600/20 text-green-400 border border-green-500/30 cursor-default'
                                     : isProfessional
                                     ? 'bg-gradient-to-r from-purple-600 to-blue-600'
-                                    : 'bg-gray-700 hover:bg-gray-600'
+                                    : 'bg-muted hover:opacity-90'
                                 }`}
-                                onClick={() => !isCurrentTier && handleUpgrade(tier)}
-                                disabled={isCurrentTier}
+                                onClick={() => !isCurrentTier && !paidUpgradeDisabled && handleUpgrade(tier)}
+                                disabled={isCurrentTier || paidUpgradeDisabled}
                               >
-                                {isCurrentTier ? 'Current Plan' : price === 0 ? 'Select' : 'Upgrade'}
+                                {isCurrentTier
+                                  ? 'Current Plan'
+                                  : price === 0
+                                  ? 'Select'
+                                  : paidUpgradeDisabled
+                                  ? 'Upgrade (Coming soon)'
+                                  : 'Upgrade'}
                               </Button>
                             </div>
                           );
@@ -966,37 +968,8 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Payment Methods */}
-                  <Card className="bg-gray-800/50 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <CreditCard className="w-5 h-5" />
-                        Payment Methods
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-400 mb-3">
-                        Payment methods are managed through Paystack. When you upgrade, you&apos;ll be redirected to securely add your payment details.
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        className="border-gray-700"
-                        onClick={() => {
-                          // Find a paid tier to start checkout
-                          const paidTier = tiers.find(t => t.price_monthly_cents > 0);
-                          if (paidTier) {
-                            handleUpgrade(paidTier);
-                          }
-                        }}
-                      >
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Add Payment Method
-                      </Button>
-                    </CardContent>
-                  </Card>
-
                   {/* Billing History */}
-                  <Card className="bg-gray-800/50 border-gray-700">
+                  <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Receipt className="w-5 h-5" />
@@ -1009,18 +982,18 @@ export default function SettingsPage() {
                           {billingHistory.map((tx) => (
                             <div
                               key={tx.id}
-                              className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg"
+                              className="flex items-center justify-between p-3 bg-muted rounded-lg"
                             >
                               <div>
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-foreground">
                                   {tx.tier_name || 'Subscription Payment'}
                                 </p>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-muted-foreground">
                                   {formatDate(tx.created_at)}
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-foreground">
                                   {formatPrice(tx.amount_cents)}
                                 </p>
                                 <p className={`text-xs ${
@@ -1035,7 +1008,7 @@ export default function SettingsPage() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           No billing history available yet. Your transaction history will appear here once you make a purchase.
                         </p>
                       )}
@@ -1048,7 +1021,7 @@ export default function SettingsPage() {
 
           {/* Appearance Settings */}
           {activeTab === 'appearance' && (
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="w-5 h-5" />
@@ -1057,7 +1030,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="text-sm font-medium text-white mb-3">Theme</h3>
+                  <h3 className="text-sm font-medium text-foreground mb-3">Theme</h3>
                   <div className="grid grid-cols-3 gap-3">
                     {(['dark', 'light', 'system'] as const).map((themeOption) => (
                       <button
@@ -1066,20 +1039,20 @@ export default function SettingsPage() {
                         className={`p-4 rounded-lg border transition-colors ${
                           theme === themeOption
                             ? 'bg-blue-600/20 border-blue-500'
-                            : 'bg-gray-900/50 border-gray-700 hover:border-gray-600'
+                            : 'bg-muted border-border hover:opacity-90'
                         }`}
                       >
                         <div className="flex flex-col items-center gap-2">
                           {themeOption === 'dark' && (
-                            <div className="w-8 h-8 rounded-full bg-gray-900 border border-gray-600" />
+                            <div className="w-8 h-8 rounded-full bg-card border border-border" />
                           )}
                           {themeOption === 'light' && (
-                            <div className="w-8 h-8 rounded-full bg-white border border-gray-300" />
+                            <div className="w-8 h-8 rounded-full bg-card border border-border" />
                           )}
                           {themeOption === 'system' && (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-900 to-white border border-gray-500" />
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-900 to-white border border-border" />
                           )}
-                          <span className="text-sm text-white capitalize">{themeOption}</span>
+                          <span className="text-sm text-foreground capitalize">{themeOption}</span>
                         </div>
                         {theme === themeOption && (
                           <Check className="w-4 h-4 text-blue-400 mx-auto mt-2" />
@@ -1087,7 +1060,7 @@ export default function SettingsPage() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     {theme === 'system' 
                       ? 'Theme will automatically match your system preferences.'
                       : `Using ${theme} theme.`}
@@ -1095,16 +1068,16 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-white mb-3">Language</h3>
+                  <h3 className="text-sm font-medium text-foreground mb-3">Language</h3>
                   <LanguageSelector className="w-full" />
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-white mb-3">Date Format</h3>
+                  <h3 className="text-sm font-medium text-foreground mb-3">Date Format</h3>
                   <label htmlFor="date-format-select" className="sr-only">Select date format</label>
                   <select
                     id="date-format-select"
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
                   >
                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                     <option value="DD/MM/YYYY">DD/MM/YYYY</option>

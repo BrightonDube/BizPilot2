@@ -16,6 +16,7 @@ import {
 import { apiClient } from '@/lib/api'
 import { toNumber, safeToFixed, safePercentage } from '@/lib/utils'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from '@/components/ui'
+import { IngredientSuggestions } from '@/components/products/IngredientSuggestions'
 
 type Mode = 'create' | 'edit'
 
@@ -32,6 +33,7 @@ interface ProductIngredient {
   quantity: string
   cost: string
   sort_order?: number
+  source_product_id?: string | null
 }
 
 interface ProductApiResponse {
@@ -79,6 +81,7 @@ type ProductUpsertIngredient = {
   quantity: number
   cost: number
   sort_order: number
+  source_product_id?: string | null
 }
 
 type ProductUpsertPayload = {
@@ -313,6 +316,26 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
     )
   }
 
+  const handleIngredientSuggestionSelect = (index: number, suggestion: {
+    id: string
+    name: string
+    unit: string
+    cost_price: number | null
+  }) => {
+    setIngredients((prev) =>
+      prev.map((ing, i) => {
+        if (i !== index) return ing
+        return {
+          ...ing,
+          name: suggestion.name,
+          unit: suggestion.unit || 'unit',
+          cost: suggestion.cost_price?.toString() || '0',
+          source_product_id: suggestion.id,
+        }
+      })
+    )
+  }
+
   const generateSku = () => {
     if (!formData.name) return
     const prefix = formData.name
@@ -339,6 +362,7 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
               quantity: toNumber(ing.quantity, 0),
               cost: toNumber(ing.cost, 0),
               sort_order: typeof ing.sort_order === 'number' ? ing.sort_order : idx,
+              source_product_id: ing.source_product_id || null,
             }))
             .filter((ing) => ing.name)
         : undefined
@@ -508,10 +532,11 @@ export function ProductForm({ mode, productId }: { mode: Mode; productId?: strin
                             ingredients.map((ing, idx) => (
                               <tr key={ing.id || idx}>
                                 <td className="p-3">
-                                  <Input
+                                  <IngredientSuggestions
                                     value={ing.name}
-                                    onChange={(e) => updateIngredientField(idx, 'name', e.target.value)}
-                                    placeholder="e.g., Flour"
+                                    onChange={(value) => updateIngredientField(idx, 'name', value)}
+                                    onSelect={(suggestion) => handleIngredientSuggestionSelect(idx, suggestion)}
+                                    placeholder="Search ingredients..."
                                   />
                                 </td>
                                 <td className="p-3">

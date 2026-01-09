@@ -8,6 +8,7 @@ from sqlalchemy import or_, and_
 
 from app.models.product import Product, ProductCategory, ProductStatus
 from app.models.product_ingredient import ProductIngredient
+from app.models.inventory import InventoryItem
 from app.schemas.product import (
     ProductCreate,
     ProductUpdate,
@@ -100,7 +101,7 @@ class ProductService:
         return products, total
 
     def create_product(self, business_id: str, data: ProductCreate) -> Product:
-        """Create a new product."""
+        """Create a new product and automatically create an inventory item."""
         ingredient_payloads = data.ingredients
         data_dict = data.model_dump(exclude={"ingredients"})
         product = Product(
@@ -116,6 +117,20 @@ class ProductService:
                 business_id=business_id,
                 ingredients=ingredient_payloads,
             )
+
+        # Auto-create inventory item for the product
+        if product.track_inventory:
+            inventory_item = InventoryItem(
+                business_id=business_id,
+                product_id=product.id,
+                quantity_on_hand=product.quantity or 0,
+                reorder_point=product.low_stock_threshold or 10,
+                reorder_quantity=50,
+                average_cost=product.cost_price or Decimal("0"),
+                last_cost=product.cost_price or Decimal("0"),
+            )
+            self.db.add(inventory_item)
+
         self.db.commit()
         self.db.refresh(product)
         return product

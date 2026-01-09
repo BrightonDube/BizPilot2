@@ -59,8 +59,8 @@ def require_feature(feature: str):
         current_user: User = Depends(get_current_active_user),
         db: Session = Depends(get_db),
     ) -> User:
-        # Admins bypass feature checks
-        if current_user.is_admin:
+        # Platform superadmin bypasses feature checks
+        if getattr(current_user, "is_superadmin", False):
             return current_user
         
         # Get effective features
@@ -85,7 +85,7 @@ def require_any_feature(features: List[str]):
         current_user: User = Depends(get_current_active_user),
         db: Session = Depends(get_db),
     ) -> User:
-        if current_user.is_admin:
+        if getattr(current_user, "is_superadmin", False):
             return current_user
         
         user_features = get_user_effective_features(current_user, db)
@@ -108,7 +108,7 @@ def require_active_subscription():
     async def subscription_checker(
         current_user: User = Depends(get_current_active_user),
     ) -> User:
-        if current_user.is_admin:
+        if getattr(current_user, "is_superadmin", False):
             return current_user
         
         if not check_subscription_active(current_user):
@@ -140,7 +140,7 @@ def check_limit(limit_name: str, current_count: int):
         current_user: User = Depends(get_current_active_user),
         db: Session = Depends(get_db),
     ) -> User:
-        if current_user.is_admin:
+        if getattr(current_user, "is_superadmin", False):
             return current_user
         
         # Get tier limits
@@ -184,7 +184,7 @@ class RequireFeature:
         current_user: User = Depends(get_current_active_user),
         db: Session = Depends(get_db),
     ) -> User:
-        if current_user.is_admin:
+        if getattr(current_user, "is_superadmin", False):
             return current_user
         
         features = get_user_effective_features(current_user, db)

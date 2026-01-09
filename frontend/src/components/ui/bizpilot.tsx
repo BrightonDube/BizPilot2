@@ -28,7 +28,7 @@ export function GradientButton({
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all",
         "bg-gradient-to-r text-white px-4 py-2",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "disabled:pointer-events-none disabled:opacity-50",
         "shadow-lg hover:shadow-xl",
         gradients[variant],
@@ -65,21 +65,21 @@ export function StatCard({
   const changeColors = {
     positive: "text-green-400",
     negative: "text-red-400",
-    neutral: "text-gray-400",
+    neutral: "text-muted-foreground",
   };
 
   return (
-    <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+    <div className="rounded-xl border border-border bg-card text-card-foreground p-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-400">{title}</p>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
         {icon && (
-          <div className="rounded-lg bg-gray-700 p-2 text-blue-400">
+          <div className="rounded-lg bg-muted p-2 text-primary">
             {icon}
           </div>
         )}
       </div>
       <div className="mt-2 flex items-baseline gap-2">
-        <p className="text-3xl font-semibold text-white">{value}</p>
+        <p className="text-3xl font-semibold text-foreground">{value}</p>
         {badge}
         {change && (
           <span className={cn("text-sm", changeColors[changeType])}>
@@ -93,7 +93,7 @@ export function StatCard({
         )}
       </div>
       {description && (
-        <p className="mt-1 text-sm text-gray-400">{description}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       )}
     </div>
   );
@@ -109,9 +109,9 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
     <div className="mb-8 flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-white">{title}</h1>
+        <h1 className="text-3xl font-bold text-foreground">{title}</h1>
         {description && (
-          <p className="mt-1 text-gray-400">{description}</p>
+          <p className="mt-1 text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && <div className="flex items-center gap-3">{actions}</div>}
@@ -130,18 +130,18 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {icon && (
-        <div className="mb-4 rounded-full bg-gray-800 p-4">
+        <div className="mb-4 rounded-full bg-muted p-4">
           {typeof icon === 'function' ? (
             // It's a component (LucideIcon)
-            React.createElement(icon as LucideIcon, { className: "h-8 w-8 text-gray-400" })
+            React.createElement(icon as LucideIcon, { className: "h-8 w-8 text-muted-foreground" })
           ) : (
             // It's an element or other node
             icon
           )}
         </div>
       )}
-      <h3 className="text-lg font-medium text-white">{title}</h3>
-      <p className="mt-1 max-w-sm text-gray-400">{description}</p>
+      <h3 className="text-lg font-medium text-foreground">{title}</h3>
+      <p className="mt-1 max-w-sm text-muted-foreground">{description}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
@@ -159,7 +159,7 @@ export function LoadingSpinner({ size = "md" }: LoadingSpinnerProps) {
   };
 
   return (
-    <div className={cn("animate-spin rounded-full border-2 border-gray-600 border-t-blue-500", sizes[size])} />
+    <div className={cn("animate-spin rounded-full border-2 border-border border-t-primary", sizes[size])} />
   );
 }
 
@@ -171,8 +171,8 @@ interface BadgeProps {
 
 export function Badge({ variant = "default", children, className }: BadgeProps) {
   const variants = {
-    default: "bg-gray-700 text-gray-300",
-    secondary: "bg-gray-600 text-gray-300",
+    default: "bg-muted text-muted-foreground",
+    secondary: "bg-muted text-muted-foreground",
     success: "bg-green-500/10 text-green-400 border border-green-500/20",
     warning: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
     danger: "bg-red-500/10 text-red-400 border border-red-500/20",

@@ -124,8 +124,8 @@ async def check_feature_access(
     db: Session = Depends(get_db),
 ):
     """Check if the current user has access to a specific feature."""
-    if current_user.is_admin:
-        return {"feature": feature, "has_access": True, "reason": "admin"}
+    if getattr(current_user, "is_superadmin", False):
+        return {"feature": feature, "has_access": True, "reason": "superadmin"}
     
     features = get_user_effective_features(current_user, db)
     has_access = features.get(feature, False)
