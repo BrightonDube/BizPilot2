@@ -123,12 +123,12 @@ class ProductService:
         # Auto-create inventory item for the product
         if product.track_inventory:
             # Check if an inventory item already exists for this product
-            existing_inventory = self.db.query(InventoryItem).filter(
+            inventory_exists = self.db.query(InventoryItem).filter(
                 InventoryItem.business_id == business_id,
                 InventoryItem.product_id == product.id,
-            ).first()
+            ).first() is not None
             
-            if not existing_inventory:
+            if not inventory_exists:
                 inventory_item = InventoryItem(
                     business_id=business_id,
                     product_id=product.id,
@@ -142,7 +142,7 @@ class ProductService:
 
         try:
             self.db.commit()
-        except IntegrityError as e:
+        except IntegrityError:
             self.db.rollback()
             raise HTTPException(
                 status_code=400,
