@@ -82,9 +82,9 @@ def confirm_data_deletion(force: bool = False):
     print("  • Reset all auto-increment IDs")
     print("  • Cannot be undone")
     
-    response = input("\nAre you sure you want to continue? (yes/no): ").strip().lower()
+    response = input("\nType 'yes' to confirm (anything else cancels): ").strip().lower()
     
-    if response not in ["yes", "y"]:
+    if response != "yes":
         print("\n❌ Seeding cancelled by user")
         return False
     

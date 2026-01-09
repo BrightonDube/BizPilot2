@@ -48,7 +48,16 @@ def main() -> int:
         module = importlib.import_module("scripts.seed_suppliers")
         run = getattr(module, "main", None)
         if callable(run):
-            run()
+            # If --force is specified, temporarily modify sys.argv
+            if args.force:
+                original_argv = sys.argv[:]
+                sys.argv = [sys.argv[0], "--force"]
+                try:
+                    run()
+                finally:
+                    sys.argv = original_argv
+            else:
+                run()
             return 0
 
         raise SystemExit("scripts.seed_suppliers is missing a callable main()")
@@ -57,7 +66,16 @@ def main() -> int:
         module = importlib.import_module("scripts.seed_purchases_payments")
         run = getattr(module, "main", None)
         if callable(run):
-            run()
+            # If --force is specified, temporarily modify sys.argv
+            if args.force:
+                original_argv = sys.argv[:]
+                sys.argv = [sys.argv[0], "--force"]
+                try:
+                    run()
+                finally:
+                    sys.argv = original_argv
+            else:
+                run()
             return 0
 
         raise SystemExit("scripts.seed_purchases_payments is missing a callable main()")
