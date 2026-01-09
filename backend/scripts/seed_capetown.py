@@ -100,7 +100,8 @@ def clear_all_data(db: Session):
 
     # Use TRUNCATE ... CASCADE to reliably clear data even when there are
     # foreign keys or additional dependent tables.
-    # Tables listed in dependency order (child tables first, parent tables last)
+    # Tables are listed in the order they should be truncated (children before parents).
+    # This order is intentionally maintained for the CASCADE fallback to work correctly.
     tables = [
         "payments",
         "inventory_transactions",
