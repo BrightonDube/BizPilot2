@@ -13,10 +13,12 @@ This script seeds ALL data needed for every UI component:
 - Reports: uses data from orders, customers, products
 
 Run: python -m scripts.seed_capetown
+     python -m scripts.seed_capetown --force  (skip confirmation prompt)
 """
 
 import sys
 import os
+import argparse
 from decimal import Decimal
 from datetime import date, datetime, timedelta
 from uuid import uuid4
@@ -43,6 +45,53 @@ from app.models.inventory import InventoryItem, InventoryTransaction, Transactio
 from app.models.payment import Payment, PaymentStatus, PaymentMethod
 
 
+def check_environment_safety():
+    """Check if we're running in a safe environment and warn if not."""
+    env = os.getenv("ENVIRONMENT", os.getenv("ENV", "development")).lower()
+    
+    if env not in ["development", "dev", "local"]:
+        print("\n" + "⚠" * 30)
+        print(f"WARNING: Current environment is '{env}'")
+        print("This script will DELETE ALL DATA in the database!")
+        print("It should typically only be run in development environments.")
+        print("⚠" * 30 + "\n")
+        return False
+    return True
+
+
+def confirm_data_deletion(force: bool = False):
+    """
+    Prompt user to confirm data deletion unless --force flag is used.
+    
+    Args:
+        force: If True, skip confirmation prompt
+        
+    Returns:
+        bool: True if user confirms or force=True, False otherwise
+    """
+    if force:
+        print("⚡ --force flag detected, skipping confirmation prompt")
+        return True
+    
+    print("\n" + "!" * 60)
+    print("⚠️  WARNING: This will DELETE ALL DATA from the database!")
+    print("!" * 60)
+    print("\nThis action will:")
+    print("  • Truncate all tables")
+    print("  • Delete all users, businesses, products, orders, etc.")
+    print("  • Reset all auto-increment IDs")
+    print("  • Cannot be undone")
+    
+    response = input("\nAre you sure you want to continue? (yes/no): ").strip().lower()
+    
+    if response not in ["yes", "y"]:
+        print("\n❌ Seeding cancelled by user")
+        return False
+    
+    print("\n✅ Confirmed. Proceeding with data deletion...\n")
+    return True
+
+
 def clear_all_data(db: Session):
     """Clear all data in correct order respecting foreign keys."""
     print("Clearing all existing data...")
@@ -51,6 +100,7 @@ def clear_all_data(db: Session):
 
     # Use TRUNCATE ... CASCADE to reliably clear data even when there are
     # foreign keys or additional dependent tables.
+    # Tables listed in dependency order (child tables first, parent tables last)
     tables = [
         "payments",
         "inventory_transactions",
@@ -85,8 +135,10 @@ def clear_all_data(db: Session):
         print("  ✓ All data cleared")
     except Exception:
         db.rollback()
-        # Fall back to per-table TRUNCATE in case some tables don't exist in a given environment
-        for table in tables:
+        # Fall back to per-table TRUNCATE in case some tables don't exist in a given environment.
+        # Process tables in reverse order to respect foreign key dependencies
+        # (delete child records before parent records)
+        for table in reversed(tables):
             try:
                 db.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE"))
                 db.commit()
@@ -692,9 +744,31 @@ def update_customer_metrics(db: Session, business: Business):
 
 def main():
     """Run seed script."""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Seed BizPilot database with Cape Town demo data",
+        epilog="WARNING: This script will DELETE ALL existing data!"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Skip confirmation prompt and proceed with data deletion"
+    )
+    args = parser.parse_args()
+    
     print("\n" + "=" * 60)
     print("BizPilot Cape Town Seed Script")
     print("=" * 60 + "\n")
+    
+    # Check environment safety
+    is_dev_env = check_environment_safety()
+    if not is_dev_env:
+        # Still allow continuation but with extra warning
+        pass
+    
+    # Confirm data deletion
+    if not confirm_data_deletion(force=args.force):
+        sys.exit(0)
     
     db = SessionLocal()
     
