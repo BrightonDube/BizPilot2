@@ -111,7 +111,7 @@ export function IngredientSuggestions({
   return (
     <div ref={wrapperRef} className={cn('relative', className)}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
           ref={inputRef}
           type="text"
@@ -120,16 +120,16 @@ export function IngredientSuggestions({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {isLoading ? (
-            <div className="p-3 text-center text-gray-400 text-sm">Loading suggestions...</div>
+            <div className="p-3 text-center text-muted-foreground text-sm">Loading suggestions...</div>
           ) : suggestions.length === 0 ? (
-            <div className="p-3 text-center text-gray-400 text-sm">
+            <div className="p-3 text-center text-muted-foreground text-sm">
               {value ? 'No matching products found' : 'Start typing to search products'}
             </div>
           ) : (
@@ -139,14 +139,14 @@ export function IngredientSuggestions({
                 type="button"
                 onClick={() => handleSelect(suggestion)}
                 className={cn(
-                  'w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-gray-700 transition-colors',
-                  index === selectedIndex && 'bg-gray-700'
+                  'w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-muted transition-colors',
+                  index === selectedIndex && 'bg-muted'
                 )}
               >
-                <Package className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white truncate">{suggestion.name}</div>
-                  <div className="flex gap-2 text-xs text-gray-400">
+                  <div className="text-sm text-foreground truncate">{suggestion.name}</div>
+                  <div className="flex gap-2 text-xs text-muted-foreground">
                     {suggestion.sku && <span>SKU: {suggestion.sku}</span>}
                     {suggestion.cost_price !== null && (
                       <span>Cost: R {suggestion.cost_price.toFixed(2)}</span>
