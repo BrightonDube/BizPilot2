@@ -80,14 +80,14 @@ function AppLayoutInner({
 
   if (isLoading || checkingBusiness) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex">
+    <div className="min-h-screen bg-background text-foreground flex">
       <SessionInactivityManager />
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex">

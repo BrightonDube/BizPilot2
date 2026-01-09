@@ -31,12 +31,12 @@ function StatCard({
   const content = (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
-      className={`bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 ${href ? 'cursor-pointer' : ''}`}
+      className={`bg-card border border-border rounded-xl p-6 ${href ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-400 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-white">{value}</p>
+          <p className="text-sm text-muted-foreground mb-1">{title}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${color}`}>
           <Icon className="w-6 h-6 text-white" />
@@ -95,11 +95,11 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Shield className="w-7 h-7 text-purple-500" />
             Admin Dashboard
           </h1>
-          <p className="text-gray-400 mt-1">Manage users, subscriptions, and system settings</p>
+          <p className="text-muted-foreground mt-1">Manage users, subscriptions, and system settings</p>
         </div>
       </div>
 
@@ -140,8 +140,8 @@ export default function AdminDashboardPage() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-400 mb-1">Revenue This Month</p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-sm text-muted-foreground mb-1">Revenue This Month</p>
+            <p className="text-3xl font-bold text-foreground">
               {formatCurrency(stats?.revenue_this_month_cents || 0)}
             </p>
           </div>
@@ -156,33 +156,33 @@ export default function AdminDashboardPage() {
         <Link href="/admin/users">
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 cursor-pointer hover:border-purple-500/50 transition-colors"
+            className="bg-card border border-border rounded-xl p-6 cursor-pointer hover:border-purple-500/50 transition-colors"
           >
             <Users className="w-8 h-8 text-purple-500 mb-3" />
-            <h3 className="text-lg font-semibold text-white">User Management</h3>
-            <p className="text-sm text-gray-400 mt-1">View, edit, and manage all users</p>
+            <h3 className="text-lg font-semibold text-foreground">User Management</h3>
+            <p className="text-sm text-muted-foreground mt-1">View, edit, and manage all users</p>
           </motion.div>
         </Link>
 
         <Link href="/admin/tiers">
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 cursor-pointer hover:border-purple-500/50 transition-colors"
+            className="bg-card border border-border rounded-xl p-6 cursor-pointer hover:border-purple-500/50 transition-colors"
           >
             <TrendingUp className="w-8 h-8 text-blue-500 mb-3" />
-            <h3 className="text-lg font-semibold text-white">Subscription Tiers</h3>
-            <p className="text-sm text-gray-400 mt-1">Manage pricing tiers and features</p>
+            <h3 className="text-lg font-semibold text-foreground">Subscription Tiers</h3>
+            <p className="text-sm text-muted-foreground mt-1">Manage pricing tiers and features</p>
           </motion.div>
         </Link>
 
         <Link href="/admin/transactions">
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 cursor-pointer hover:border-purple-500/50 transition-colors"
+            className="bg-card border border-border rounded-xl p-6 cursor-pointer hover:border-purple-500/50 transition-colors"
           >
             <CreditCard className="w-8 h-8 text-green-500 mb-3" />
-            <h3 className="text-lg font-semibold text-white">Transactions</h3>
-            <p className="text-sm text-gray-400 mt-1">View payment history</p>
+            <h3 className="text-lg font-semibold text-foreground">Transactions</h3>
+            <p className="text-sm text-muted-foreground mt-1">View payment history</p>
           </motion.div>
         </Link>
       </div>
@@ -193,15 +193,15 @@ export default function AdminDashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
+          className="bg-card border border-border rounded-xl p-6"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Users by Tier</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Users by Tier</h3>
           <div className="space-y-3">
             {Object.entries(stats.users_by_tier).map(([tier, count]) => (
               <div key={tier} className="flex items-center justify-between">
-                <span className="text-gray-300 capitalize">{tier}</span>
+                <span className="text-muted-foreground capitalize">{tier}</span>
                 <div className="flex items-center gap-3">
-                  <div className="w-32 bg-slate-700 rounded-full h-2">
+                  <div className="w-32 bg-muted rounded-full h-2">
                     <div
                       className="bg-purple-500 h-2 rounded-full"
                       style={{ 
@@ -209,7 +209,7 @@ export default function AdminDashboardPage() {
                       }}
                     />
                   </div>
-                  <span className="text-white font-medium w-12 text-right">{count}</span>
+                  <span className="text-foreground font-medium w-12 text-right">{count}</span>
                 </div>
               </div>
             ))}
@@ -223,23 +223,23 @@ export default function AdminDashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
+          className="bg-card border border-border rounded-xl p-6"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Users by Status</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Users by Status</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(stats.users_by_status).map(([status, count]) => {
               const statusColors: Record<string, string> = {
                 active: 'text-green-400',
                 pending: 'text-yellow-400',
-                inactive: 'text-gray-400',
+                inactive: 'text-muted-foreground',
                 suspended: 'text-red-400',
               }
               return (
                 <div key={status} className="text-center">
-                  <p className={`text-2xl font-bold ${statusColors[status] || 'text-white'}`}>
+                  <p className={`text-2xl font-bold ${statusColors[status] || 'text-foreground'}`}>
                     {count}
                   </p>
-                  <p className="text-sm text-gray-400 capitalize">{status}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{status}</p>
                 </div>
               )
             })}

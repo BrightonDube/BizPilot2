@@ -21,6 +21,7 @@ from decimal import Decimal
 from datetime import date, datetime, timedelta
 from uuid import uuid4
 import random
+import secrets
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -45,10 +46,11 @@ from app.models.payment import Payment, PaymentStatus, PaymentMethod
 def clear_all_data(db: Session):
     """Clear all data in correct order respecting foreign keys."""
     print("Clearing all existing data...")
-    
+
     from sqlalchemy import text
-    
-    # Delete in reverse dependency order using raw SQL for reliability
+
+    # Use TRUNCATE ... CASCADE to reliably clear data even when there are
+    # foreign keys or additional dependent tables.
     tables = [
         "payments",
         "inventory_transactions",
@@ -70,35 +72,88 @@ def clear_all_data(db: Session):
         "user_settings",
         "users",
     ]
-    
-    for table in tables:
-        try:
-            db.execute(text(f"DELETE FROM {table}"))
-            db.commit()
-        except Exception:
-            db.rollback()  # Table might not exist
-    
-    print("  ✓ All data cleared")
+
+    try:
+        db.execute(
+            text(
+                "TRUNCATE TABLE "
+                + ", ".join(tables)
+                + " RESTART IDENTITY CASCADE"
+            )
+        )
+        db.commit()
+        print("  ✓ All data cleared")
+    except Exception:
+        db.rollback()
+        # Fall back to per-table TRUNCATE in case some tables don't exist in a given environment
+        for table in tables:
+            try:
+                db.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE"))
+                db.commit()
+            except Exception:
+                db.rollback()
+        print("  ✓ All data cleared")
 
 
 def create_user(db: Session) -> User:
     """Create demo user."""
     print("Creating demo user...")
-    
-    user = User(
-        email="demo@bizpilot.co.za",
-        hashed_password=get_password_hash("Demo@2024"),
-        first_name="Sipho",
-        last_name="Nkosi",
-        phone="+27 21 555 0100",
-        is_email_verified=True,
-        status=UserStatus.ACTIVE,
-    )
-    db.add(user)
+
+    email = "demo@bizpilot.co.za"
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        user = User(email=email)
+        db.add(user)
+
+    user.hashed_password = get_password_hash("Demo@2024")
+    user.first_name = "Sipho"
+    user.last_name = "Nkosi"
+    user.phone = "+27 21 555 0100"
+    user.is_email_verified = True
+    user.status = UserStatus.ACTIVE
+    user.is_admin = True
+    user.is_superadmin = False
+
     db.commit()
     db.refresh(user)
     print(f"  ✓ User: {user.email}")
     return user
+
+
+def create_superadmin(db: Session) -> tuple[User, str]:
+    """Create the single BizPilot superadmin user."""
+    print("Creating superadmin user...")
+
+    password = os.getenv("BIZPILOT_SUPERADMIN_PASSWORD")
+    if not password:
+        password = secrets.token_urlsafe(24)
+
+    email = "admin@bizpilot.co.za"
+
+    # Ensure only this account can be superadmin
+    db.query(User).filter(User.is_superadmin == True, User.email != email).update(
+        {User.is_superadmin: False},
+        synchronize_session=False,
+    )
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        user = User(email=email)
+        db.add(user)
+
+    user.hashed_password = get_password_hash(password)
+    user.first_name = "BizPilot"
+    user.last_name = "Admin"
+    user.phone = None
+    user.is_email_verified = True
+    user.status = UserStatus.ACTIVE
+    user.is_admin = False
+    user.is_superadmin = True
+
+    db.commit()
+    db.refresh(user)
+    print(f"  ✓ Superadmin: {user.email}")
+    return user, password
 
 
 def create_organization(db: Session, user: User) -> Organization:
@@ -648,10 +703,12 @@ def main():
         
         # Core entities
         user = create_user(db)
+        superadmin_user, superadmin_password = create_superadmin(db)
         org = create_organization(db, user)
         business = create_business(db, org)
         roles = create_roles(db, business)
         link_user_business(db, user, business, roles["admin"])
+        link_user_business(db, superadmin_user, business, roles["admin"])
         
         # Business data
         categories = create_categories(db, business)
@@ -679,6 +736,12 @@ def main():
         print(f"\n📧 Demo Login:")
         print(f"   Email: demo@bizpilot.co.za")
         print(f"   Password: Demo@2024")
+
+        print(f"\n🔐 Superadmin Login (BizPilot platform admin):")
+        print(f"   Email: admin@bizpilot.co.za")
+        print(f"   Password: {superadmin_password}")
+        if not os.getenv("BIZPILOT_SUPERADMIN_PASSWORD"):
+            print("   NOTE: Password was generated. Set BIZPILOT_SUPERADMIN_PASSWORD to control it.")
         print(f"\n🏢 Business: {business.name}")
         print(f"   Location: Cape Town, Western Cape")
         print(f"   Currency: ZAR | VAT: 15%")

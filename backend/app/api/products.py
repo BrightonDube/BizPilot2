@@ -34,6 +34,8 @@ def _product_to_response(product: Product) -> ProductResponse:
             id=str(ing.id),
             business_id=str(ing.business_id),
             product_id=str(ing.product_id),
+            source_product_id=str(ing.source_product_id) if ing.source_product_id else None,
+            source_product_name=ing.source_product.name if ing.source_product else None,
             name=ing.name,
             unit=ing.unit,
             quantity=ing.quantity,

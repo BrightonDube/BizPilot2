@@ -160,6 +160,7 @@ class ProductIngredientBase(BaseModel):
     quantity: Decimal = Field(..., ge=0)
     cost: Decimal = Field(..., ge=0)
     sort_order: int = 0
+    source_product_id: Optional[str] = None  # Link to inventory product
 
 
 class ProductIngredientCreate(ProductIngredientBase):
@@ -172,12 +173,15 @@ class ProductIngredientUpdate(BaseModel):
     quantity: Optional[Decimal] = Field(None, ge=0)
     cost: Optional[Decimal] = Field(None, ge=0)
     sort_order: Optional[int] = None
+    source_product_id: Optional[str] = None
 
 
 class ProductIngredientResponse(ProductIngredientBase):
     id: str
     business_id: str
     product_id: str
+    source_product_id: Optional[str] = None
+    source_product_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

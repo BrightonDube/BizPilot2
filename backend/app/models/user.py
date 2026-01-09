@@ -51,6 +51,7 @@ class User(BaseModel):
 
     # Admin and Subscription fields
     is_admin = Column(Boolean, default=False, nullable=False)
+    is_superadmin = Column(Boolean, default=False, nullable=False)
     subscription_status = Column(
         SQLEnum(SubscriptionStatus, values_callable=lambda x: [e.value for e in x], create_constraint=False, native_enum=True, name='subscriptionstatus'),
         default=SubscriptionStatus.NONE

@@ -48,6 +48,7 @@ class UserAdminResponse(BaseModel):
     is_email_verified: bool
     status: UserStatus
     is_admin: bool
+    is_superadmin: bool
     subscription_status: Optional[SubscriptionStatus]
     current_tier_id: Optional[UUID]
     current_tier: Optional[TierResponse]

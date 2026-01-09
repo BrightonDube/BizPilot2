@@ -30,3 +30,16 @@ export function safePercentage(value: unknown, decimals: number = 1): string {
   const n = toNumber(value, 0);
   return `${n.toFixed(decimals)}%`;
 }
+
+export function formatDate(dateString: string | Date | null | undefined): string {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('en-ZA', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}

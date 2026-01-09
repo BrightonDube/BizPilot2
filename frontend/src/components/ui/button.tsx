@@ -4,16 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-blue-600 text-white hover:bg-blue-700",
+        default: "bg-primary text-primary-foreground hover:opacity-90",
         destructive: "bg-red-600 text-white hover:bg-red-700",
-        outline: "border border-gray-600 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white",
-        secondary: "bg-gray-700 text-white hover:bg-gray-600",
-        ghost: "text-gray-300 hover:bg-gray-800 hover:text-white",
-        link: "text-blue-400 underline-offset-4 hover:underline",
+        outline: "border border-border bg-transparent text-foreground hover:bg-muted",
+        secondary: "bg-muted text-foreground hover:opacity-90",
+        ghost: "text-foreground hover:bg-muted",
+        link: "text-primary underline-offset-4 hover:underline",
         gradient: "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700",
       },
       size: {
