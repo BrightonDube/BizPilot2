@@ -761,10 +761,7 @@ def main():
     print("=" * 60 + "\n")
     
     # Check environment safety
-    is_dev_env = check_environment_safety()
-    if not is_dev_env:
-        # Still allow continuation but with extra warning
-        pass
+    check_environment_safety()
     
     # Confirm data deletion
     if not confirm_data_deletion(force=args.force):
