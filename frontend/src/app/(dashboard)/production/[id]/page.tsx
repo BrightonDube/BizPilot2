@@ -42,7 +42,7 @@ interface ProductionOrder {
 }
 
 const statusColors: Record<string, string> = {
-  draft: 'bg-gray-500/20 text-gray-300',
+  draft: 'bg-muted/50 text-muted-foreground',
   pending: 'bg-yellow-500/20 text-yellow-300',
   in_progress: 'bg-blue-500/20 text-blue-300',
   completed: 'bg-green-500/20 text-green-300',
@@ -121,7 +121,7 @@ export default function ProductionDetailPage() {
   if (!order) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400">Production order not found</p>
+        <p className="text-muted-foreground">Production order not found</p>
         <Link href="/production">
           <Button variant="outline" className="mt-4">
             Back to Production
@@ -195,7 +195,7 @@ export default function ProductionDetailPage() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-gray-400">Status</span>
+                  <span className="text-sm text-muted-foreground">Status</span>
                   <div className="mt-1">
                     <Badge className={statusColors[order.status]}>
                       {statusLabels[order.status]}
@@ -203,46 +203,46 @@ export default function ProductionDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Product</span>
-                  <p className="text-white">{order.product_name}</p>
+                  <span className="text-sm text-muted-foreground">Product</span>
+                  <p className="text-foreground">{order.product_name}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Quantity to Produce</span>
-                  <p className="text-white font-medium">{order.quantity_to_produce}</p>
+                  <span className="text-sm text-muted-foreground">Quantity to Produce</span>
+                  <p className="text-foreground font-medium">{order.quantity_to_produce}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Quantity Produced</span>
-                  <p className="text-white font-medium">{order.quantity_produced}</p>
+                  <span className="text-sm text-muted-foreground">Quantity Produced</span>
+                  <p className="text-foreground font-medium">{order.quantity_produced}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Scheduled Date</span>
-                  <p className="text-white">{order.scheduled_date ? formatDate(order.scheduled_date) : '-'}</p>
+                  <span className="text-sm text-muted-foreground">Scheduled Date</span>
+                  <p className="text-foreground">{order.scheduled_date ? formatDate(order.scheduled_date) : '-'}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Started At</span>
-                  <p className="text-white">{order.started_at ? formatDate(order.started_at) : '-'}</p>
+                  <span className="text-sm text-muted-foreground">Started At</span>
+                  <p className="text-foreground">{order.started_at ? formatDate(order.started_at) : '-'}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Completed At</span>
-                  <p className="text-white">{order.completed_at ? formatDate(order.completed_at) : '-'}</p>
+                  <span className="text-sm text-muted-foreground">Completed At</span>
+                  <p className="text-foreground">{order.completed_at ? formatDate(order.completed_at) : '-'}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Created</span>
-                  <p className="text-white">{formatDate(order.created_at)}</p>
+                  <span className="text-sm text-muted-foreground">Created</span>
+                  <p className="text-foreground">{formatDate(order.created_at)}</p>
                 </div>
               </div>
 
               {order.status === 'in_progress' && (
                 <div className="mt-4">
-                  <span className="text-sm text-gray-400">Progress</span>
+                  <span className="text-sm text-muted-foreground">Progress</span>
                   <div className="mt-2">
-                    <div className="w-full bg-gray-700 rounded-full h-3">
+                    <div className="w-full bg-muted rounded-full h-3">
                       <div
                         className="bg-blue-500 h-3 rounded-full transition-all"
                         style={{ width: `${order.completion_percentage}%` }}
                       />
                     </div>
-                    <span className="text-sm text-gray-400 mt-1">
+                    <span className="text-sm text-muted-foreground mt-1">
                       {order.completion_percentage.toFixed(0)}% complete
                     </span>
                   </div>
@@ -251,8 +251,8 @@ export default function ProductionDetailPage() {
 
               {order.notes && (
                 <div className="mt-4">
-                  <span className="text-sm text-gray-400">Notes</span>
-                  <p className="text-white mt-1">{order.notes}</p>
+                  <span className="text-sm text-muted-foreground">Notes</span>
+                  <p className="text-foreground mt-1">{order.notes}</p>
                 </div>
               )}
             </CardContent>
@@ -263,10 +263,10 @@ export default function ProductionDetailPage() {
               <CardTitle>Bill of Materials</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto rounded-lg border border-gray-700">
+              <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-gray-800">
-                    <tr className="text-left text-gray-300">
+                  <thead className="bg-muted">
+                    <tr className="text-left text-card-foreground">
                       <th className="p-3">Ingredient</th>
                       <th className="p-3">Unit</th>
                       <th className="p-3">Required</th>
@@ -275,10 +275,10 @@ export default function ProductionDetailPage() {
                       <th className="p-3">Total</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800 bg-gray-900/30">
+                  <tbody className="divide-y divide-border bg-card/30">
                     {order.items.map((item) => (
                       <tr key={item.id}>
-                        <td className="p-3 text-gray-200">
+                        <td className="p-3 text-foreground">
                           {item.name}
                           {item.source_product_name && (
                             <span className="text-xs text-blue-400 ml-2">
@@ -286,11 +286,11 @@ export default function ProductionDetailPage() {
                             </span>
                           )}
                         </td>
-                        <td className="p-3 text-gray-400">{item.unit}</td>
-                        <td className="p-3 text-gray-200">{safeToFixed(item.quantity_required, 2)}</td>
-                        <td className="p-3 text-gray-200">{safeToFixed(item.quantity_used, 2)}</td>
-                        <td className="p-3 text-gray-400">R {safeToFixed(item.unit_cost, 2)}</td>
-                        <td className="p-3 text-gray-200">R {safeToFixed(item.line_total, 2)}</td>
+                        <td className="p-3 text-muted-foreground">{item.unit}</td>
+                        <td className="p-3 text-foreground">{safeToFixed(item.quantity_required, 2)}</td>
+                        <td className="p-3 text-foreground">{safeToFixed(item.quantity_used, 2)}</td>
+                        <td className="p-3 text-muted-foreground">R {safeToFixed(item.unit_cost, 2)}</td>
+                        <td className="p-3 text-foreground">R {safeToFixed(item.line_total, 2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -307,16 +307,16 @@ export default function ProductionDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Estimated Cost:</span>
-                <span className="text-white">R {safeToFixed(order.estimated_cost, 2)}</span>
+                <span className="text-muted-foreground">Estimated Cost:</span>
+                <span className="text-foreground">R {safeToFixed(order.estimated_cost, 2)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Actual Cost:</span>
-                <span className="text-white">R {safeToFixed(order.actual_cost, 2)}</span>
+                <span className="text-muted-foreground">Actual Cost:</span>
+                <span className="text-foreground">R {safeToFixed(order.actual_cost, 2)}</span>
               </div>
               {order.status === 'completed' && order.actual_cost !== order.estimated_cost && (
-                <div className="flex justify-between text-sm border-t border-gray-700 pt-4">
-                  <span className="text-gray-400">Variance:</span>
+                <div className="flex justify-between text-sm border-t border-border pt-4">
+                  <span className="text-muted-foreground">Variance:</span>
                   <span className={order.actual_cost > order.estimated_cost ? 'text-red-400' : 'text-green-400'}>
                     R {safeToFixed(order.actual_cost - order.estimated_cost, 2)}
                   </span>
