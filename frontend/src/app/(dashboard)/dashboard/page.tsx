@@ -376,7 +376,7 @@ export default function DashboardPage() {
           return (
             <motion.div 
               key={stat.label}
-              className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all cursor-pointer"
+              className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
@@ -394,7 +394,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <motion.div 
-        className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+        className="bg-slate-800/50 border border-slate-700 rounded-xl p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
@@ -418,13 +418,13 @@ export default function DashboardPage() {
             >
               <Link 
                 href={action.href}
-                className="block p-4 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors text-left group"
+                className="block p-4 border border-slate-700 rounded-lg hover:bg-slate-800/50 hover:border-purple-500/50 transition-all text-left group"
               >
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <action.icon className="h-8 w-8 text-blue-400 mb-2 group-hover:text-blue-300 transition-colors" />
+                  <action.icon className="h-8 w-8 text-purple-400 mb-2 group-hover:text-purple-300 transition-colors" />
                 </motion.div>
                 <h3 className="font-medium text-gray-100">{action.title}</h3>
                 <p className="text-sm text-gray-400">{action.desc}</p>
@@ -442,10 +442,10 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <Card className="bg-gray-800/50 border-gray-700">
+          <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-white">Recent Orders</CardTitle>
-              <Link href="/orders" className="text-sm text-blue-400 hover:text-blue-300 flex items-center">
+              <Link href="/orders" className="text-sm text-purple-400 hover:text-purple-300 flex items-center">
                 View all <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </CardHeader>
@@ -488,10 +488,10 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
         >
-          <Card className="bg-gray-800/50 border-gray-700">
+          <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-white">Top Products</CardTitle>
-              <Link href="/products" className="text-sm text-blue-400 hover:text-blue-300 flex items-center">
+              <Link href="/products" className="text-sm text-purple-400 hover:text-purple-300 flex items-center">
                 View all <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </CardHeader>

@@ -4,17 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:opacity-90",
         destructive: "bg-red-600 text-white hover:bg-red-700",
-        outline: "border border-border bg-transparent text-foreground hover:bg-muted",
-        secondary: "bg-muted text-foreground hover:opacity-90",
-        ghost: "text-foreground hover:bg-muted",
-        link: "text-primary underline-offset-4 hover:underline",
-        gradient: "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700",
+        outline: "border border-slate-600 bg-transparent text-foreground hover:bg-slate-800 hover:border-slate-500",
+        secondary: "bg-slate-700 text-white hover:bg-slate-600",
+        ghost: "text-foreground hover:bg-slate-800",
+        link: "text-purple-400 underline-offset-4 hover:underline hover:text-purple-300",
+        gradient: "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/50",
       },
       size: {
         default: "h-10 px-4 py-2",

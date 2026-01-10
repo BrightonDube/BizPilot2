@@ -64,6 +64,7 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     phone: Optional[str] = None
+    avatar_url: Optional[str] = None
     is_email_verified: bool
     status: str
 
