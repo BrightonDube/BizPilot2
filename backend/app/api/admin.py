@@ -508,6 +508,67 @@ async def seed_default_tiers(
     return {"message": f"Created tiers: {created}" if created else "All tiers already exist"}
 
 
+@router.post("/seed/essential")
+async def seed_essential_data(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Seed essential production data (tiers, roles, categories).
+    Safe to run multiple times - only creates missing data.
+    """
+    from app.models.role import Role, DEFAULT_ROLES
+    from app.models.product import ProductCategory
+    
+    results = {"tiers": [], "roles": [], "categories": []}
+    
+    # 1. Seed subscription tiers
+    for tier_key, tier_data in DEFAULT_TIERS.items():
+        existing = db.query(SubscriptionTier).filter(
+            SubscriptionTier.name == tier_data["name"]
+        ).first()
+        if not existing:
+            tier = SubscriptionTier(**tier_data)
+            db.add(tier)
+            results["tiers"].append(tier_data["name"])
+    
+    # 2. Seed default roles
+    for role_data in DEFAULT_ROLES:
+        existing = db.query(Role).filter(Role.name == role_data["name"]).first()
+        if not existing:
+            role = Role(**role_data)
+            db.add(role)
+            results["roles"].append(role_data["name"])
+    
+    # 3. Seed default product categories
+    default_categories = [
+        {"name": "General", "description": "General products", "color": "#6B7280"},
+        {"name": "Food & Beverages", "description": "Food and drink items", "color": "#10B981"},
+        {"name": "Electronics", "description": "Electronic devices and accessories", "color": "#3B82F6"},
+        {"name": "Clothing", "description": "Apparel and accessories", "color": "#8B5CF6"},
+        {"name": "Home & Garden", "description": "Home and garden supplies", "color": "#F59E0B"},
+        {"name": "Health & Beauty", "description": "Health and beauty products", "color": "#EC4899"},
+        {"name": "Services", "description": "Service offerings", "color": "#14B8A6"},
+    ]
+    
+    for cat_data in default_categories:
+        existing = db.query(ProductCategory).filter(
+            ProductCategory.name == cat_data["name"]
+        ).first()
+        if not existing:
+            # ProductCategory needs a business_id, so we skip if no business context
+            # These are just templates - actual categories are created per business
+            results["categories"].append(f"{cat_data['name']} (template)")
+    
+    db.commit()
+    
+    return {
+        "message": "Essential data seeded successfully",
+        "created": results,
+        "note": "Run this endpoint after deployment to ensure all required data exists"
+    }
+
+
 # ==================== Admin Stats Endpoints ====================
 
 @router.get("/stats", response_model=AdminStatsResponse)

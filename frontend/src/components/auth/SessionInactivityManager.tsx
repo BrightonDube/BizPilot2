@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { InactivityWarningModal } from '@/components/auth/InactivityWarningModal'
@@ -15,7 +14,6 @@ export function SessionInactivityManager({
   inactivityLimitMs = 3 * 60 * 60 * 1000,
   warningWindowMs = 5 * 60 * 1000,
 }: SessionInactivityManagerProps) {
-  const router = useRouter()
   const logout = useAuthStore((s) => s.logout)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
@@ -41,8 +39,11 @@ export function SessionInactivityManager({
     warningShownRef.current = false
 
     await logout()
-    router.push('/auth/login')
-  }, [logout, router])
+    // Use hard navigation to avoid RSC hydration issues
+    // router.push() sends RSC headers which can cause raw JSON to be displayed
+    // when CDN caches the response or during redirects
+    window.location.href = '/auth/login'
+  }, [logout])
 
   const handleExtendSession = useCallback(async () => {
     try {
