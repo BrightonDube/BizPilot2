@@ -15,11 +15,11 @@ function Benefit({ text, checked }: BenefitProps) {
   return (
     <div className="flex items-center gap-3">
       {checked ? (
-        <span className="grid size-4 place-content-center rounded-full bg-blue-600 text-sm text-white">
+        <span className="grid size-4 place-content-center rounded-full bg-purple-600 text-sm text-white">
           <Check className="size-3" />
         </span>
       ) : (
-        <span className="grid size-4 place-content-center rounded-full bg-gray-800 text-sm text-gray-500">
+        <span className="grid size-4 place-content-center rounded-full bg-slate-800 text-sm text-gray-500">
           <X className="size-3" />
         </span>
       )}
@@ -59,19 +59,19 @@ export function PricingCard({
         className={cn(
           'relative h-full w-full overflow-hidden border p-6',
           featured
-            ? 'border-blue-500/50 bg-gradient-to-br from-blue-900/20 to-purple-900/20 shadow-xl shadow-blue-500/20'
-            : 'border-gray-700/50 bg-gray-900',
+            ? 'border-purple-500/50 bg-gradient-to-br from-purple-900/20 to-blue-900/20 shadow-xl shadow-purple-500/20'
+            : 'border-slate-700/50 bg-slate-900',
           className
         )}
       >
         {featured && (
           <div className="absolute -top-px left-1/2 -translate-x-1/2">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-1 text-xs font-medium text-white rounded-b-md">
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-3 py-1 text-xs font-medium text-white rounded-b-md">
               Most Popular
             </div>
           </div>
         )}
-        <div className="flex flex-col items-center border-b pb-6 border-gray-700">
+        <div className="flex flex-col items-center border-b pb-6 border-slate-700">
           <span className="mb-6 inline-block text-gray-100 font-medium">{tier}</span>
           <span className="mb-3 inline-block text-4xl font-bold text-gray-100">{price}</span>
           <span className="bg-gradient-to-br from-gray-300 to-gray-500 bg-clip-text text-center text-transparent">
@@ -83,7 +83,7 @@ export function PricingCard({
             <Benefit key={index} {...benefit} />
           ))}
         </div>
-        <Button className="w-full" variant={featured ? 'default' : 'secondary'} onClick={onCTAClick}>
+        <Button className="w-full" variant={featured ? 'gradient' : 'secondary'} onClick={onCTAClick}>
           {CTA}
         </Button>
       </Card>

@@ -6,7 +6,8 @@
  */
 
 import { useState, ReactNode, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { useRequireAuth } from '@/hooks/useAuth';
@@ -22,6 +23,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [checkingBusiness, setCheckingBusiness] = useState(true);
 
@@ -30,6 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <AuthInitializer />
       <AppLayoutInner
         router={router}
+        pathname={pathname}
         sidebarCollapsed={sidebarCollapsed}
         setSidebarCollapsed={setSidebarCollapsed}
         checkingBusiness={checkingBusiness}
@@ -44,6 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 function AppLayoutInner({
   children,
   router,
+  pathname,
   sidebarCollapsed,
   setSidebarCollapsed,
   checkingBusiness,
@@ -51,6 +55,7 @@ function AppLayoutInner({
 }: {
   children: ReactNode;
   router: ReturnType<typeof useRouter>;
+  pathname: string;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (v: boolean) => void;
   checkingBusiness: boolean;
@@ -100,7 +105,15 @@ function AppLayoutInner({
       {/* Main Content */}
       <main className="flex-1 overflow-auto pb-16 lg:pb-0">
         <div className="p-4 lg:p-8">
-          {children}
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="min-h-[calc(100vh-6rem)]"
+          >
+            {children}
+          </motion.div>
         </div>
       </main>
 

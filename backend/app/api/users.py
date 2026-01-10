@@ -19,6 +19,7 @@ class UserUpdateMe(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
+    avatar_url: Optional[str] = Field(None, max_length=500)
 
 
 class UserResponseMe(BaseModel):
@@ -28,6 +29,7 @@ class UserResponseMe(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
+    avatar_url: Optional[str] = None
     status: str
     
     model_config = {"from_attributes": True}
@@ -56,6 +58,7 @@ async def get_current_user_profile(
         first_name=current_user.first_name,
         last_name=current_user.last_name,
         phone=current_user.phone,
+        avatar_url=current_user.avatar_url,
         status=current_user.status.value,
     )
 
@@ -82,6 +85,7 @@ async def update_current_user_profile(
             first_name=current_user.first_name,
             last_name=current_user.last_name,
             phone=current_user.phone,
+            avatar_url=current_user.avatar_url,
             status=current_user.status.value,
         )
         

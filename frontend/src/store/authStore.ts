@@ -24,6 +24,7 @@ export interface User {
   first_name: string;
   last_name: string;
   phone?: string;
+  avatar_url?: string | null;
   is_email_verified: boolean;
   status: string;
 }

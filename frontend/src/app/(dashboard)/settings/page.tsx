@@ -83,7 +83,7 @@ interface BillingTransaction {
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
@@ -334,21 +334,82 @@ export default function SettingsPage() {
     setIsSaving(true);
     try {
       await apiClient.put('/users/me', profileData);
-      // Show success message
-    } catch (error) {
-      // Handle error
+      setSuccessMessage('Profile updated successfully');
+      await fetchUser();
+    } catch {
+      setErrorMessage('Failed to update profile');
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleChangeAvatar = async () => {
+    const current = user?.avatar_url || '';
+    const next = window.prompt('Paste an image URL for your avatar', current);
+    if (next === null) return;
+
+    const trimmed = next.trim();
+    if (!trimmed) {
+      setErrorMessage('Avatar URL cannot be empty');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await apiClient.put('/users/me', { avatar_url: trimmed });
+      await fetchUser();
+      setSuccessMessage('Avatar updated successfully');
+    } catch {
+      setErrorMessage('Failed to update avatar');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadBusinessData = async () => {
+    try {
+      const resp = await apiClient.get('/business/current');
+      const business = resp.data;
+
+      setBusinessData((prev) => ({
+        ...prev,
+        name: business?.name || '',
+        email: business?.email || '',
+        phone: business?.phone || '',
+        address: business?.address_street || '',
+        city: business?.address_city || '',
+        country: business?.address_country || '',
+        tax_id: business?.tax_number || business?.vat_number || '',
+        currency: business?.currency || prev.currency || 'ZAR',
+      }));
+    } catch {
+      // If user has no business yet, leave defaults
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'business') {
+      loadBusinessData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   const handleSaveBusiness = async () => {
     setIsSaving(true);
     try {
-      await apiClient.put('/business/current', businessData);
-      // Show success message
-    } catch (error) {
-      // Handle error
+      await apiClient.put('/business/current', {
+        name: businessData.name,
+        email: businessData.email || null,
+        phone: businessData.phone || null,
+        address_street: businessData.address || null,
+        address_city: businessData.city || null,
+        address_country: businessData.country || null,
+        currency: businessData.currency,
+        tax_number: businessData.tax_id || null,
+      });
+      setSuccessMessage('Business settings updated successfully');
+    } catch {
+      setErrorMessage('Failed to update business settings');
     } finally {
       setIsSaving(false);
     }
@@ -389,8 +450,8 @@ export default function SettingsPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
                       activeTab === tab.id
-                        ? 'bg-blue-600/20 text-blue-400'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        ? 'bg-purple-600/20 text-purple-400'
+                        : 'text-muted-foreground hover:bg-slate-800 hover:text-foreground'
                     }`}
                   >
                     {tab.icon}
@@ -416,10 +477,15 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-                    <User className="w-8 h-8 text-muted-foreground" />
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                    {user?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="w-8 h-8 text-muted-foreground" />
+                    )}
                   </div>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={handleChangeAvatar} disabled={isSaving}>
                     <Camera className="w-4 h-4 mr-2" />
                     Change Avatar
                   </Button>
@@ -651,7 +717,7 @@ export default function SettingsPage() {
                   <Button
                     onClick={handleSaveBusiness}
                     disabled={isSaving}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600"
+                    variant="gradient"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {isSaving ? 'Saving...' : 'Save Changes'}
@@ -789,7 +855,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-muted-foreground mb-3">
                     Add an extra layer of security to your account
                   </p>
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    disabled
+                    onClick={() => setErrorMessage('Two-factor authentication is coming soon.')}
+                  >
                     Enable 2FA
                   </Button>
                 </div>
@@ -799,7 +869,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-muted-foreground mb-3">
                     Manage devices that are logged into your account
                   </p>
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    disabled
+                    onClick={() => setErrorMessage('Session management is coming soon.')}
+                  >
                     View Sessions
                   </Button>
                 </div>
@@ -870,20 +944,30 @@ export default function SettingsPage() {
                         <span>Available Plans</span>
                         <div className="flex bg-muted rounded-lg p-1">
                           <button
-                            onClick={() => setSelectedBillingCycle('monthly')}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedBillingCycle('monthly');
+                            }}
                             className={`px-3 py-1 text-sm rounded-md transition-colors ${
                               selectedBillingCycle === 'monthly'
-                                ? 'bg-blue-600 text-white'
+                                ? 'bg-purple-600 text-white'
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >
                             Monthly
                           </button>
                           <button
-                            onClick={() => setSelectedBillingCycle('yearly')}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedBillingCycle('yearly');
+                            }}
                             className={`px-3 py-1 text-sm rounded-md transition-colors ${
                               selectedBillingCycle === 'yearly'
-                                ? 'bg-blue-600 text-white'
+                                ? 'bg-purple-600 text-white'
                                 : 'text-muted-foreground hover:text-foreground'
                             }`}
                           >

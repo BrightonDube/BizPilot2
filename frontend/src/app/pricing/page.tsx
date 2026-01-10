@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Logo } from '@/components/common/Logo'
 import { MarketingFooter } from '@/components/common/MarketingFooter'
 import { Check, X } from 'lucide-react'
+import { subscriptionApi, type SubscriptionTier } from '@/lib/subscription-api'
 
 interface Benefit {
   text: string
@@ -87,6 +89,34 @@ function PricingCard({ tier, price, bestFor, cta, benefits, featured = false }: 
 }
 
 export default function PricingPage() {
+  const [tiers, setTiers] = useState<SubscriptionTier[]>([])
+  const [loading, setLoading] = useState(true)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+
+  useEffect(() => {
+    subscriptionApi
+      .getTiers()
+      .then((data) => {
+        const sorted = [...data].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+        setTiers(sorted)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const formatCents = (cents: number, currency: string) => {
+    if (!cents) return 'Free'
+    if (currency === 'ZAR') {
+      return `R${(cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`
+    }
+    return `${currency} ${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0 })}`
+  }
+
+  const displayTiers = useMemo(() => {
+    // Pricing page expects 3 plans; fall back gracefully if fewer.
+    return tiers.slice(0, 3)
+  }, [tiers])
+
   return (
     <motion.section 
       className="min-h-screen relative overflow-hidden bg-slate-950 text-gray-100"
@@ -143,61 +173,74 @@ export default function PricingPage() {
           </motion.p>
         </motion.div>
 
+        <motion.div
+          className="mb-8 flex justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35, ease: "easeOut" }}
+        >
+          <div className="bg-slate-800 rounded-lg p-1 flex">
+            <button
+              type="button"
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                billingCycle === 'monthly'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                billingCycle === 'yearly'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Yearly
+              <span className="ml-1 text-xs text-green-400">Save 20%</span>
+            </button>
+          </div>
+        </motion.div>
+
         <motion.div 
           className="grid grid-cols-1 gap-6 md:grid-cols-3"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
         >
-          <PricingCard
-            tier="Starter"
-            price="Free"
-            bestFor="Perfect for getting started"
-            cta="Get Started Free"
-            benefits={[
-              { text: "Up to 5 products", checked: true },
-              { text: "Basic inventory tracking", checked: true },
-              { text: "Cost calculations", checked: true },
-              { text: "Email support", checked: true },
-              { text: "Advanced analytics", checked: false },
-              { text: "AI business insights", checked: false },
-              { text: "Custom categories", checked: false },
-              { text: "Priority support", checked: false }
-            ]}
-          />
-          <PricingCard
-            tier="Professional"
-            price="$29/mo"
-            bestFor="Best for growing businesses"
-            cta="Start Free Trial"
-            featured={true}
-            benefits={[
-              { text: "Unlimited products", checked: true },
-              { text: "Advanced inventory management", checked: true },
-              { text: "Smart pricing calculator", checked: true },
-              { text: "Email support", checked: true },
-              { text: "Advanced analytics", checked: true },
-              { text: "AI business insights", checked: true },
-              { text: "Custom categories & suppliers", checked: true },
-              { text: "Priority support", checked: false }
-            ]}
-          />
-          <PricingCard
-            tier="Enterprise"
-            price="$99/mo"
-            bestFor="For established businesses"
-            cta="Contact Sales"
-            benefits={[
-              { text: "Everything in Professional", checked: true },
-              { text: "Multi-location support", checked: true },
-              { text: "Team collaboration", checked: true },
-              { text: "API access", checked: true },
-              { text: "Custom integrations", checked: true },
-              { text: "Advanced reporting", checked: true },
-              { text: "Custom categories & suppliers", checked: true },
-              { text: "Priority support", checked: true }
-            ]}
-          />
+          {loading ? (
+            <div className="md:col-span-3 text-center text-gray-400">Loading plans...</div>
+          ) : (
+            displayTiers.map((tier) => {
+              const isFeatured = tier.name === 'professional'
+              const cents = billingCycle === 'monthly' ? tier.price_monthly_cents : tier.price_yearly_cents
+              const priceLabel = cents === 0 ? 'Free' : `${formatCents(cents, tier.currency)}/${billingCycle === 'monthly' ? 'mo' : 'yr'}`
+
+              // If tier has feature flags, show a small list; otherwise show an empty list.
+              const benefits = Object.entries(tier.feature_flags || {})
+                .slice(0, 8)
+                .map(([key, enabled]) => ({
+                  text: key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+                  checked: Boolean(enabled),
+                }))
+
+              return (
+                <PricingCard
+                  key={tier.id}
+                  tier={tier.display_name}
+                  price={priceLabel}
+                  bestFor={tier.description || ''}
+                  cta={tier.price_monthly_cents === 0 ? 'Get Started Free' : 'Get Started'}
+                  featured={isFeatured}
+                  benefits={benefits}
+                />
+              )
+            })
+          )}
         </motion.div>
 
         {/* FAQ Section */}

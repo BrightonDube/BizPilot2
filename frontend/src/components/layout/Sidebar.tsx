@@ -61,12 +61,12 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex flex-col h-screen sticky top-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300",
+        "flex flex-col h-screen sticky top-0 bg-slate-900 text-sidebar-foreground border-r border-slate-700 transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
+      <div className="flex h-16 items-center justify-between px-4 border-b border-slate-700">
         {!collapsed && (
           <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Logo width={32} height={32} />
@@ -80,7 +80,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
         )}
         <button
           onClick={onToggle}
-          className="p-1 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="p-1 rounded-lg text-muted-foreground hover:bg-slate-800 hover:text-foreground transition-colors"
         >
           {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
         </button>
@@ -88,8 +88,8 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
       {/* Business Switcher */}
       {!collapsed && (
-        <div className="px-3 py-3 border-b border-sidebar-border">
-          <button className="flex items-center gap-2 w-full p-2 rounded-lg bg-muted hover:opacity-90 transition-colors">
+        <div className="px-3 py-3 border-b border-slate-700">
+          <button className="flex items-center gap-2 w-full p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
             <Building2 className="h-5 w-5 text-muted-foreground" />
             <div className="flex-1 text-left">
               <p className="text-sm font-medium text-foreground truncate">Demo Business</p>
@@ -110,8 +110,8 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
                 isActive
-                  ? "bg-blue-600/10 text-blue-500"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "bg-purple-600/20 text-purple-400"
+                  : "text-muted-foreground hover:bg-slate-800 hover:text-foreground",
                 collapsed && "justify-center"
               )}
               title={collapsed ? item.name : undefined}
@@ -124,7 +124,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
       </nav>
 
       {/* Bottom Navigation */}
-      <div className="px-2 py-4 border-t border-sidebar-border space-y-1">
+      <div className="px-2 py-4 border-t border-slate-700 space-y-1">
         {bottomNavigation.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -134,8 +134,8 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
                 isActive
-                  ? "bg-blue-600/10 text-blue-500"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "bg-purple-600/20 text-purple-400"
+                  : "text-muted-foreground hover:bg-slate-800 hover:text-foreground",
                 collapsed && "justify-center"
               )}
               title={collapsed ? item.name : undefined}
@@ -148,7 +148,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
       </div>
 
       {/* User Menu */}
-      <div className="px-2 py-4 border-t border-sidebar-border">
+      <div className="px-2 py-4 border-t border-slate-700">
         <div className={cn(
           "flex items-center gap-3 px-3 py-2 rounded-lg",
           collapsed && "justify-center"
@@ -166,7 +166,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
           )}
           <button
             onClick={logout}
-            className="p-1 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="p-1 rounded-lg text-muted-foreground hover:bg-slate-800 hover:text-foreground transition-colors"
             title="Sign out"
           >
             <LogOut className="h-4 w-4" />
