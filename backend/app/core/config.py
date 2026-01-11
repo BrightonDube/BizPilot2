@@ -2,7 +2,7 @@
 
 import json
 from typing import List, Union
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +35,14 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/bizpilot"
+    DO_DATABASE_URL: str = ""
+
+    @model_validator(mode="after")
+    def _prefer_do_database_url_in_production(self):
+        do_url = (self.DO_DATABASE_URL or "").strip()
+        if do_url and (not self.DATABASE_URL or self.DATABASE_URL.startswith("postgresql://postgres:postgres@localhost")):
+            object.__setattr__(self, "DATABASE_URL", do_url)
+        return self
 
     # Redis (Optional - for caching and sessions when implemented)
     REDIS_URL: str = "redis://localhost:6379/0"
