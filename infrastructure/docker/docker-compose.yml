@@ -83,6 +83,27 @@ services:
       retries: 3
       start_period: 40s
 
+  # Run Alembic migrations (one-off)
+  migrate:
+    build:
+      context: ../../backend
+      dockerfile: ../infrastructure/docker/Dockerfile.api
+    container_name: bizpilot-migrate
+    restart: "no"
+    command: ["python", "-m", "alembic", "-c", "alembic.ini", "upgrade", "head"]
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/bizpilot
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env file}
+      - ENVIRONMENT=development
+      - DEBUG=true
+    volumes:
+      - ../../backend/app:/app/app:cached
+      - ../../backend/alembic:/app/alembic:cached
+      - ../../backend/alembic.ini:/app/alembic.ini:cached
+    depends_on:
+      db:
+        condition: service_healthy
+
   # Next.js Frontend
   web:
     build:

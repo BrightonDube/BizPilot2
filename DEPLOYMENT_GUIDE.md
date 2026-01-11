@@ -52,6 +52,40 @@ Copy and paste each of these:
 | `GOOGLE_CLIENT_ID` | Your Google OAuth Client ID |
 | `GOOGLE_CLIENT_SECRET` | Your Google OAuth Client Secret |
 
+---
+
+## Migration Strategy (Required)
+
+### Production (DigitalOcean App Platform)
+
+Migrations are applied using a **PRE_DEPLOY job** defined in `.do/app.yaml` (`release-migrate`).
+
+- The API container **does not** run `alembic upgrade head` on startup.
+- If the migration job fails, DigitalOcean will **rollback** the deployment.
+
+Required env vars for the migration job:
+
+- `DATABASE_URL`
+- `SECRET_KEY` (can be any valid value; migrations don't use auth, but settings validation requires it)
+
+### Local Development (docker-compose)
+
+Local development should apply migrations before starting the API.
+
+Options:
+
+1) Run the migrate service:
+
+```bash
+docker-compose -f infrastructure/docker/docker-compose.yml up --build migrate
+```
+
+2) Or run Alembic manually from `backend/`:
+
+```bash
+python -m alembic -c alembic.ini upgrade head
+```
+
 **⚠️ IMPORTANT:** After app deploys, get your app URL (e.g., `https://bizpilot-xxxxx.ondigitalocean.app`) and add:
 
 | Key | Value |
