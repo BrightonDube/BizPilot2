@@ -27,6 +27,11 @@ export interface User {
   avatar_url?: string | null;
   is_email_verified: boolean;
   status: string;
+  is_admin?: boolean;
+  is_superadmin?: boolean;
+  subscription_status?: string | null;
+  current_tier_id?: string | null;
+  current_tier_name?: string | null;
 }
 
 interface ApiError {

@@ -27,6 +27,7 @@ import {
   LogOut,
   User,
   Factory,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -131,6 +132,23 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
       {/* Bottom Navigation */}
       <div className="px-2 py-4 border-t border-slate-700 space-y-1">
+        {/* Superadmin-only Admin link */}
+        {user?.is_superadmin && (
+          <Link
+            href="/admin"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+              pathname.startsWith('/admin')
+                ? "bg-red-600/20 text-red-400"
+                : "text-red-400/70 hover:bg-red-900/20 hover:text-red-400",
+              collapsed && "justify-center"
+            )}
+            title={collapsed ? "Admin Panel" : undefined}
+          >
+            <Shield className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span className="text-sm font-medium">Admin Panel</span>}
+          </Link>
+        )}
         {bottomNavigation.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
