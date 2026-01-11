@@ -67,6 +67,11 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = None
     is_email_verified: bool
     status: str
+    is_admin: bool = False
+    is_superadmin: bool = False
+    subscription_status: Optional[str] = None
+    current_tier_id: Optional[str] = None
+    current_tier_name: Optional[str] = None
 
 
 class PasswordChange(BaseModel):

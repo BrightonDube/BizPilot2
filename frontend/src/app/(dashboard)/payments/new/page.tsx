@@ -149,7 +149,6 @@ export default function NewPaymentPage() {
         payment_date: formData.payment_date,
         reference: formData.reference || null,
         notes: formData.notes || null,
-        status: 'completed',
       })
       
       setSuccess(true)

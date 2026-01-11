@@ -106,6 +106,11 @@ class PaymentService:
                 if customer:
                     customer_name = f"{customer.first_name} {customer.last_name}" if customer.first_name else customer.company_name
             
+            # Normalize status: 'paid' -> 'completed' for frontend consistency
+            status_value = payment.status.value if payment.status else "pending"
+            if status_value == "paid":
+                status_value = "completed"
+            
             result.append(PaymentResponse(
                 id=payment.id,
                 payment_number=payment.payment_number,
@@ -115,7 +120,7 @@ class PaymentService:
                 customer_name=customer_name,
                 amount=float(payment.amount),
                 payment_method=payment.payment_method.value if payment.payment_method else "cash",
-                status=payment.status.value if payment.status else "pending",
+                status=status_value,
                 payment_date=payment.payment_date,
                 reference=payment.reference,
                 notes=payment.notes,
@@ -231,6 +236,11 @@ class PaymentService:
             if customer:
                 customer_name = f"{customer.first_name} {customer.last_name}" if customer.first_name else customer.company_name
 
+        # Normalize status: 'paid' -> 'completed' for frontend consistency
+        status_value = payment.status.value if payment.status else "pending"
+        if status_value == "paid":
+            status_value = "completed"
+        
         return PaymentResponse(
             id=payment.id,
             payment_number=payment.payment_number,
@@ -240,7 +250,7 @@ class PaymentService:
             customer_name=customer_name,
             amount=float(payment.amount),
             payment_method=payment.payment_method.value if payment.payment_method else "cash",
-            status=payment.status.value if payment.status else "pending",
+            status=status_value,
             payment_date=payment.payment_date,
             reference=payment.reference,
             notes=payment.notes,

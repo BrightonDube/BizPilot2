@@ -11,11 +11,14 @@ import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { LoadingSpinner } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 import { GlobalAIChat } from '@/components/ai/GlobalAIChat';
 import { AuthInitializer } from '@/components/auth/AuthInitializer';
 import { SessionInactivityManager } from '@/components/auth/SessionInactivityManager';
+import { FeatureGate, RequireAdmin } from '@/components/subscription/FeatureGate';
+import { ROUTE_FEATURES, FeatureFlag } from '@/hooks/useSubscription';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -91,6 +94,25 @@ function AppLayoutInner({
     );
   }
 
+  // Check if current route requires a specific feature
+  const requiredFeature = Object.entries(ROUTE_FEATURES).find(
+    ([route]) => pathname.startsWith(route)
+  )?.[1] as FeatureFlag | undefined;
+
+  // Check if route is admin-only
+  const isAdminRoute = pathname.startsWith('/admin');
+
+  // Wrap content with appropriate gate
+  const renderContent = () => {
+    if (isAdminRoute) {
+      return <RequireAdmin>{children}</RequireAdmin>;
+    }
+    if (requiredFeature) {
+      return <FeatureGate feature={requiredFeature}>{children}</FeatureGate>;
+    }
+    return children;
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <SessionInactivityManager />
@@ -112,7 +134,7 @@ function AppLayoutInner({
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="min-h-[calc(100vh-6rem)]"
           >
-            {children}
+            {renderContent()}
           </motion.div>
         </div>
       </main>

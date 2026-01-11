@@ -38,6 +38,12 @@ export default function MenuPage() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
 
+  // Use hard navigation for logout to avoid RSC hydration issues
+  const handleLogout = async () => {
+    await logout()
+    window.location.href = '/auth/login'
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 pb-20">
       {/* Header */}
@@ -145,7 +151,7 @@ export default function MenuPage() {
       {/* Sign Out */}
       <div className="px-4 py-4 border-t border-gray-800 mt-4">
         <motion.button
-          onClick={logout}
+          onClick={handleLogout}
           className="flex items-center gap-3 w-full p-3 rounded-xl bg-gray-900 hover:bg-red-900/20 transition-colors group"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
