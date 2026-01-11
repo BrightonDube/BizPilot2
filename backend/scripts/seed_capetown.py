@@ -640,12 +640,13 @@ def create_payments(db: Session, business: Business, invoices: list, customers: 
         method = random.choice(payment_methods)
         
         # Use string interpolation for enum cast, bind params for data
+        # Note: paymentstatus enum values are: pending, completed, failed, refunded, cancelled
         sql = f"""
             INSERT INTO payments (id, business_id, invoice_id, customer_id, payment_number, 
                                   amount, payment_method, status, payment_date, reference,
                                   created_at, updated_at)
             VALUES (:id, :business_id, :invoice_id, :customer_id, :payment_number,
-                    :amount, '{method}'::paymentmethod, 'paid'::paymentstatus, 
+                    :amount, '{method}'::paymentmethod, 'completed'::paymentstatus, 
                     :payment_date, :reference, :created_at, :updated_at)
         """
         
