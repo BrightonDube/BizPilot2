@@ -239,6 +239,7 @@ export default function ProductsPage() {
 #### Migrations
 - Use Alembic for database migrations
 - Migrations run automatically on backend container startup: `alembic upgrade head`
+- In production, migrations should be guarded to avoid concurrent runs (e.g. Postgres advisory lock) and may also run via a pre-deploy job
 - Create migrations: `alembic revision --autogenerate -m "description"`
 - Test migrations in both directions (upgrade/downgrade)
 

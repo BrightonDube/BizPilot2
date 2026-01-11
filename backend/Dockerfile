@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY backend/ .
 
-# Run database migrations on startup
+# Alembic config (migrations run at startup with a DB lock and/or via DO pre-deploy job)
 COPY backend/alembic.ini .
 COPY backend/alembic ./alembic
 
@@ -27,5 +27,5 @@ COPY backend/alembic ./backend/alembic
 # Expose port
 EXPOSE 8000
 
-# Production startup with migrations
-CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+# Production startup
+CMD ["python", "scripts/entrypoint.py"]

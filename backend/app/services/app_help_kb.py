@@ -87,6 +87,78 @@ DEFAULT_ARTICLES: tuple[HelpArticle, ...] = (
             "Save changes",
         ),
     ),
+    HelpArticle(
+        key="create_order",
+        title="Create a sales order",
+        triggers=("create order", "new order", "sales order", "order"),
+        steps=(
+            "Go to Orders",
+            "Click New Order",
+            "Select a customer (or create one)",
+            "Add products and quantities",
+            "Review totals and taxes",
+            "Save the order",
+        ),
+    ),
+    HelpArticle(
+        key="create_purchase_order",
+        title="Create a purchase order",
+        triggers=("purchase order", "create purchase", "new purchase", "supplier order"),
+        steps=(
+            "Go to Purchases",
+            "Click New Purchase Order",
+            "Select a supplier (or add one)",
+            "Add products and quantities",
+            "Save the purchase order",
+            "Mark as Received when goods arrive",
+        ),
+    ),
+    HelpArticle(
+        key="add_supplier",
+        title="Add a supplier",
+        triggers=("add supplier", "new supplier", "create supplier", "supplier"),
+        steps=(
+            "Go to Suppliers",
+            "Click New Supplier",
+            "Enter supplier details (name, contact, email/phone)",
+            "Save supplier",
+        ),
+    ),
+    HelpArticle(
+        key="inventory_adjustment",
+        title="Adjust inventory",
+        triggers=("adjust inventory", "inventory adjustment", "stock adjustment", "update stock"),
+        steps=(
+            "Go to Inventory",
+            "Open the product or inventory item",
+            "Choose Adjust Stock",
+            "Enter the adjustment quantity and reason",
+            "Save changes",
+        ),
+    ),
+    HelpArticle(
+        key="view_reports",
+        title="View reports",
+        triggers=("reports", "analytics", "revenue report", "sales report", "profit"),
+        steps=(
+            "Go to Reports",
+            "Pick a report type (Sales, Customers, Inventory, etc.)",
+            "Select the date range",
+            "Review charts and totals",
+            "Export if needed",
+        ),
+    ),
+    HelpArticle(
+        key="ai_privacy_settings",
+        title="Change AI privacy settings",
+        triggers=("ai privacy", "data sharing", "ai settings", "privacy settings"),
+        steps=(
+            "Go to Settings",
+            "Open AI Settings / Privacy",
+            "Choose how much data you want to share with AI",
+            "Save changes",
+        ),
+    ),
 )
 
 

@@ -13,8 +13,12 @@ from app.models.ai_message import AIMessage
 from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.customer import Customer
+from app.models.invoice import Invoice, InvoiceStatus
 from app.models.inventory import InventoryItem
+from app.models.order import Order, OrderDirection, PaymentStatus as OrderPaymentStatus
+from app.models.payment import Payment
 from app.models.product import Product
+from app.models.supplier import Supplier
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel, UserSettings
 from app.services.app_help_kb import AppHelpKnowledgeBase
@@ -133,24 +137,145 @@ class AIService:
         if not business:
             return {
                 "businessName": "",
+                "currency": "",
                 "totalProducts": 0,
                 "totalInventoryItems": 0,
+                "totalCustomers": 0,
+                "totalSuppliers": 0,
+                "totalOrders": 0,
+                "totalInvoices": 0,
+                "totalPayments": 0,
                 "lowStockItems": 0,
                 "avgMargin": 0,
+                "totalRevenue": 0,
+                "paidRevenue": 0,
+                "outstandingInvoiceAmount": 0,
+                "outstandingInvoiceCount": 0,
+                "totalPurchaseOrders": 0,
+                "totalPurchaseInvoices": 0,
+                "totalPurchasePayments": 0,
+                "totalPurchaseAmount": 0,
+                "totalPurchaseCount": 0,
             }
 
         if level in (AIDataSharingLevel.NONE, AIDataSharingLevel.APP_ONLY):
             return {
                 "businessName": business.name,
+                "currency": business.currency,
                 "totalProducts": 0,
                 "totalInventoryItems": 0,
+                "totalCustomers": 0,
+                "totalSuppliers": 0,
+                "totalOrders": 0,
+                "totalInvoices": 0,
+                "totalPayments": 0,
                 "lowStockItems": 0,
                 "avgMargin": 0,
+                "totalRevenue": 0,
+                "paidRevenue": 0,
+                "outstandingInvoiceAmount": 0,
+                "outstandingInvoiceCount": 0,
+                "totalPurchaseOrders": 0,
+                "totalPurchaseInvoices": 0,
+                "totalPurchasePayments": 0,
+                "totalPurchaseAmount": 0,
+                "totalPurchaseCount": 0,
             }
 
         total_products = (
             self.db.query(func.count(Product.id))
             .filter(Product.business_id == business.id, Product.deleted_at.is_(None))
+            .scalar()
+            or 0
+        )
+
+        total_customers = (
+            self.db.query(func.count(Customer.id))
+            .filter(Customer.business_id == business.id, Customer.deleted_at.is_(None))
+            .scalar()
+            or 0
+        )
+
+        total_suppliers = (
+            self.db.query(func.count(Supplier.id))
+            .filter(Supplier.business_id == business.id, Supplier.deleted_at.is_(None))
+            .scalar()
+            or 0
+        )
+
+        total_orders = (
+            self.db.query(func.count(Order.id))
+            .filter(Order.business_id == business.id, Order.deleted_at.is_(None))
+            .scalar()
+            or 0
+        )
+
+        total_invoices = (
+            self.db.query(func.count(Invoice.id))
+            .filter(Invoice.business_id == business.id, Invoice.deleted_at.is_(None))
+            .scalar()
+            or 0
+        )
+
+        total_payments = (
+            self.db.query(func.count(Payment.id))
+            .filter(Payment.business_id == business.id, Payment.deleted_at.is_(None))
+            .scalar()
+            or 0
+        )
+
+        total_revenue = (
+            self.db.query(func.coalesce(func.sum(Order.total), 0))
+            .filter(Order.business_id == business.id, Order.deleted_at.is_(None))
+            .scalar()
+            or 0
+        )
+
+        paid_revenue = (
+            self.db.query(func.coalesce(func.sum(Order.total), 0))
+            .filter(
+                Order.business_id == business.id,
+                Order.deleted_at.is_(None),
+                Order.payment_status == OrderPaymentStatus.PAID,
+            )
+            .scalar()
+            or 0
+        )
+
+        outstanding_invoice_amount = (
+            self.db.query(func.coalesce(func.sum(Invoice.total - Invoice.amount_paid), 0))
+            .filter(
+                Invoice.business_id == business.id,
+                Invoice.deleted_at.is_(None),
+                Invoice.status.in_(
+                    [
+                        InvoiceStatus.DRAFT,
+                        InvoiceStatus.SENT,
+                        InvoiceStatus.VIEWED,
+                        InvoiceStatus.PARTIAL,
+                        InvoiceStatus.OVERDUE,
+                    ]
+                ),
+            )
+            .scalar()
+            or 0
+        )
+
+        outstanding_invoice_count = (
+            self.db.query(func.count(Invoice.id))
+            .filter(
+                Invoice.business_id == business.id,
+                Invoice.deleted_at.is_(None),
+                Invoice.status.in_(
+                    [
+                        InvoiceStatus.DRAFT,
+                        InvoiceStatus.SENT,
+                        InvoiceStatus.VIEWED,
+                        InvoiceStatus.PARTIAL,
+                        InvoiceStatus.OVERDUE,
+                    ]
+                ),
+            )
             .scalar()
             or 0
         )
@@ -179,13 +304,76 @@ class AIService:
         margins = [p.profit_margin for p in products] if products else []
         avg_margin = (sum(margins) / len(margins)) if margins else 0
 
+        total_purchase_orders = (
+            self.db.query(func.count(Order.id))
+            .filter(
+                Order.business_id == business.id,
+                Order.deleted_at.is_(None),
+                Order.direction == OrderDirection.OUTBOUND,
+            )
+            .scalar()
+            or 0
+        )
+
+        total_purchase_invoices = (
+            self.db.query(func.count(Invoice.id))
+            .join(Order, Invoice.order_id == Order.id)
+            .filter(
+                Invoice.business_id == business.id,
+                Invoice.deleted_at.is_(None),
+                Order.direction == OrderDirection.OUTBOUND,
+            )
+            .scalar()
+            or 0
+        )
+
+        total_purchase_payments = (
+            self.db.query(func.count(Payment.id))
+            .join(Invoice, Payment.invoice_id == Invoice.id)
+            .join(Order, Invoice.order_id == Order.id)
+            .filter(
+                Payment.business_id == business.id,
+                Payment.deleted_at.is_(None),
+                Order.direction == OrderDirection.OUTBOUND,
+            )
+            .scalar()
+            or 0
+        )
+
+        total_purchase_amount = (
+            self.db.query(func.coalesce(func.sum(Order.total), 0))
+            .filter(
+                Order.business_id == business.id,
+                Order.deleted_at.is_(None),
+                Order.direction == OrderDirection.OUTBOUND,
+            )
+            .scalar()
+            or 0
+        )
+
+        total_purchase_count = int(total_purchase_orders)
+
         context: dict[str, Any] = {
             "businessName": business.name,
             "currency": business.currency,
             "totalProducts": int(total_products),
             "totalInventoryItems": int(total_inventory_items),
+            "totalCustomers": int(total_customers),
+            "totalSuppliers": int(total_suppliers),
+            "totalOrders": int(total_orders),
+            "totalInvoices": int(total_invoices),
+            "totalPayments": int(total_payments),
             "lowStockItems": int(low_stock_items),
             "avgMargin": float(avg_margin),
+            "totalRevenue": float(total_revenue),
+            "paidRevenue": float(paid_revenue),
+            "outstandingInvoiceAmount": float(outstanding_invoice_amount),
+            "outstandingInvoiceCount": int(outstanding_invoice_count),
+            "totalPurchaseOrders": int(total_purchase_orders),
+            "totalPurchaseInvoices": int(total_purchase_invoices),
+            "totalPurchasePayments": int(total_purchase_payments),
+            "totalPurchaseAmount": float(total_purchase_amount),
+            "totalPurchaseCount": int(total_purchase_count),
         }
 
         if level == AIDataSharingLevel.METRICS_ONLY:
@@ -261,72 +449,6 @@ class AIService:
             "howTo": kb_ctx.get("howTo", {}),
         }
 
-    def _build_grounded_system_prompt(
-        self, app_ctx: dict[str, Any] | None, biz_ctx: dict[str, Any] | None
-    ) -> str:
-        """
-        Build a system prompt with hallucination prevention guardrails.
-        
-        GUARDRAILS:
-        1. Only answer based on provided context data
-        2. Acknowledge when information is unavailable
-        3. Never invent business metrics or features
-        4. Stay within BizPilot's actual capabilities
-        5. Cite data sources when providing numbers
-        """
-        guardrails = """## CRITICAL SAFETY RULES - YOU MUST FOLLOW THESE:
-
-1. **ONLY USE PROVIDED DATA**: You may ONLY reference data explicitly provided in the App Context or Business Context below. Do NOT invent, estimate, or assume any business data.
-
-2. **ACKNOWLEDGE LIMITATIONS**: If asked about data not in the provided context, say: "I don't have access to that information. Please check [relevant page] in BizPilot."
-
-3. **NO HALLUCINATED FEATURES**: Only describe features that exist in BizPilot as documented in the App Context. Never invent capabilities.
-
-4. **CITE YOUR SOURCES**: When providing numbers or metrics, explicitly state they come from "your business data" or "BizPilot records."
-
-5. **STAY IN SCOPE**: You are a BizPilot assistant. Do not answer questions unrelated to business management, inventory, invoicing, or the BizPilot application.
-
-6. **PRIVACY FIRST**: Never share or reference customer PII beyond what's explicitly needed. Respect data sharing level settings.
-
-7. **NO FINANCIAL/LEGAL ADVICE**: Do not provide tax, legal, or certified financial advice. Recommend consulting professionals.
-
-8. **UNCERTAINTY DISCLOSURE**: If unsure, say so. Use phrases like "Based on the data I have..." or "I'm not certain, but..."
-
-"""
-        
-        app_section = ""
-        if app_ctx:
-            app_section = f"""## App Context (BizPilot Features & Navigation)
-{app_ctx}
-
-"""
-
-        biz_section = ""
-        if biz_ctx:
-            biz_section = f"""## Business Context (User's Actual Data)
-{biz_ctx}
-
-"""
-
-        no_data_notice = ""
-        if not app_ctx and not biz_ctx:
-            no_data_notice = """## Data Access Notice
-The user has not enabled data sharing. You can only provide general guidance about using BizPilot.
-Direct them to Settings > Privacy to enable AI data access for personalized insights.
-
-"""
-
-        return f"""You are BizPilot AI, a helpful business assistant for the BizPilot inventory and business management application.
-
-{guardrails}
-{no_data_notice}{app_section}{biz_section}## Your Role
-- Help users navigate BizPilot and understand their business data
-- Provide step-by-step guidance for app features
-- Analyze business metrics ONLY from the provided context
-- Suggest improvements based on actual data patterns
-
-Remember: NEVER make up data. If it's not in the context above, you don't know it."""
-
     def detect_context_mode(self, message: str) -> Literal["app_help", "business", "mixed"]:
         m = message.lower()
         app_triggers = ["how do i", "where do i", "where can i", "how to", "steps", "click", "navigate"]
@@ -341,6 +463,11 @@ Remember: NEVER make up data. If it's not in the context above, you don't know i
             "pricing",
             "customer",
             "invoice",
+            "payment",
+            "order",
+            "supplier",
+            "purchase",
+            "report",
         ]
 
         app_like = any(t in m for t in app_triggers)
