@@ -134,13 +134,16 @@ class PaymentService:
         if not business_id:
             raise ValueError("User not associated with a business")
 
+        # Convert schema enum to model enum by extracting the string value
+        payment_method_value = payment_data.payment_method.value if hasattr(payment_data.payment_method, 'value') else str(payment_data.payment_method)
+        
         payment = Payment(
             business_id=business_id,
             payment_number=self._generate_payment_number(business_id),
             invoice_id=payment_data.invoice_id,
             customer_id=payment_data.customer_id,
             amount=payment_data.amount,
-            payment_method=PaymentMethod(payment_data.payment_method),
+            payment_method=PaymentMethod(payment_method_value),
             status=PaymentStatus.COMPLETED,
             payment_date=payment_data.payment_date,
             reference=payment_data.reference,

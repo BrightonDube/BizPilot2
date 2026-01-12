@@ -23,7 +23,7 @@ import {
   LayoutGrid,
   List
 } from 'lucide-react'
-import { Button, Input, Card, CardContent, Badge } from '@/components/ui'
+import { Button, Input, Select, Card, CardContent, Badge } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 import { formatCurrency, toNumber } from '@/lib/utils'
 
@@ -357,28 +357,28 @@ export default function CustomersPage() {
               className="pl-10 bg-gray-900/50 border-gray-600"
             />
           </div>
-          <select
+          <Select
             value={selectedType}
             onChange={(e) => {
               setSelectedType(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+            className="w-auto"
           >
             <option value="all">All Types</option>
             <option value="individual">Individual</option>
             <option value="business">Business</option>
-          </select>
-          <select
+          </Select>
+          <Select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-4 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+            className="w-auto"
           >
             <option value="name">Name (A-Z)</option>
             <option value="total_spent">Total Spent</option>
             <option value="total_orders">Total Orders</option>
             <option value="recent">Recent Activity</option>
-          </select>
+          </Select>
         </div>
       </motion.div>
 

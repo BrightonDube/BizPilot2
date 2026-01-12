@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import {
   LayoutDashboard,
   Package,
@@ -23,6 +24,7 @@ import {
   CreditCard,
   BarChart3,
   Settings,
+  LogOut,
   X,
 } from 'lucide-react';
 
@@ -51,8 +53,15 @@ const moreRoutes = ['/menu', '/inventory', '/customers', '/suppliers', '/purchas
 export function MobileNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+  const { logout } = useAuth();
 
   const isMoreActive = moreRoutes.some(route => pathname.startsWith(route)) || moreOpen;
+
+  const handleLogout = async () => {
+    setMoreOpen(false);
+    await logout();
+    window.location.href = '/auth/login';
+  };
 
   return (
     <>
@@ -163,6 +172,22 @@ export function MobileNav() {
                   </Link>
                 );
               })}
+
+              <div className="pt-2 mt-2 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full p-3 rounded-xl border border-gray-800 bg-gray-900 hover:bg-red-900/20 hover:border-red-800/40 text-gray-200 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center">
+                    <LogOut className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium">Logout</p>
+                    <p className="text-xs text-gray-500 truncate">Sign out of your account</p>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Loader2, Save } from 'lucide-react'
 
-import { Button, Card, CardContent } from '@/components/ui'
+import { Button, Select, Card, CardContent } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 
 interface Customer {
@@ -344,10 +344,10 @@ export default function EditInvoicePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Customer *</label>
-                <select
+                <Select
                   value={formData.customer_id}
                   onChange={(e) => handleInputChange('customer_id', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full"
                   required
                 >
                   <option value="">Select customer...</option>
@@ -356,7 +356,7 @@ export default function EditInvoicePage() {
                       {customer.company_name || `${customer.first_name} ${customer.last_name}`}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
@@ -413,10 +413,10 @@ export default function EditInvoicePage() {
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     <div className="md:col-span-3">
                       <label className="block text-xs font-medium text-gray-400 mb-1">Product (Optional)</label>
-                      <select
+                      <Select
                         value={item.product_id || ''}
                         onChange={(e) => selectProduct(index, e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500"
+                        className="w-full text-sm"
                       >
                         <option value="">Select product...</option>
                         {products.map((product) => (
@@ -424,7 +424,7 @@ export default function EditInvoicePage() {
                             {product.name} - {formatCurrency(product.selling_price)}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     <div className="md:col-span-3">

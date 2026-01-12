@@ -3,7 +3,7 @@
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, func
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
@@ -12,6 +12,8 @@ from app.core.database import get_db
 from app.models.base import utc_now
 from app.core.admin import require_admin
 from app.models.user import User, UserStatus, SubscriptionStatus
+from app.models.business_user import BusinessUser
+from app.models.business import Business
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
 from app.models.subscription_transaction import SubscriptionTransaction
 
@@ -38,6 +40,24 @@ class TierResponse(BaseModel):
         from_attributes = True
 
 
+class BusinessSummaryResponse(BaseModel):
+    id: UUID
+    name: str
+    slug: str
+
+    class Config:
+        from_attributes = True
+
+
+class UserBusinessResponse(BaseModel):
+    business: BusinessSummaryResponse
+    status: str
+    is_primary: bool
+
+    class Config:
+        from_attributes = True
+
+
 class UserAdminResponse(BaseModel):
     id: UUID
     email: str
@@ -56,6 +76,7 @@ class UserAdminResponse(BaseModel):
     subscription_expires_at: Optional[datetime]
     trial_ends_at: Optional[datetime]
     feature_overrides: Optional[dict]
+    businesses: List[UserBusinessResponse] = []
     created_at: datetime
     updated_at: datetime
 
@@ -167,10 +188,41 @@ async def list_users(
     total = query.count()
     total_pages = (total + per_page - 1) // per_page
     
-    users = query.order_by(User.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
-    
+    users = (
+        query.order_by(User.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
+    user_ids = [u.id for u in users]
+    memberships = (
+        db.query(BusinessUser)
+        .options(joinedload(BusinessUser.business))
+        .filter(BusinessUser.user_id.in_(user_ids))
+        .all()
+    )
+    memberships_by_user: dict[UUID, list[BusinessUser]] = {}
+    for m in memberships:
+        memberships_by_user.setdefault(m.user_id, []).append(m)
+
+    response_users: list[UserAdminResponse] = []
+    for u in users:
+        user_resp = UserAdminResponse.model_validate(u)
+        user_memberships = memberships_by_user.get(u.id, [])
+        user_resp.businesses = [
+            UserBusinessResponse(
+                business=BusinessSummaryResponse.model_validate(m.business),
+                status=m.status.value if hasattr(m.status, "value") else str(m.status),
+                is_primary=bool(m.is_primary),
+            )
+            for m in user_memberships
+            if m.business is not None
+        ]
+        response_users.append(user_resp)
+
     return UserListResponse(
-        users=[UserAdminResponse.model_validate(u) for u in users],
+        users=response_users,
         total=total,
         page=page,
         per_page=per_page,
@@ -188,7 +240,23 @@ async def get_user(
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return UserAdminResponse.model_validate(user)
+    memberships = (
+        db.query(BusinessUser)
+        .options(joinedload(BusinessUser.business))
+        .filter(BusinessUser.user_id == user.id)
+        .all()
+    )
+    resp = UserAdminResponse.model_validate(user)
+    resp.businesses = [
+        UserBusinessResponse(
+            business=BusinessSummaryResponse.model_validate(m.business),
+            status=m.status.value if hasattr(m.status, "value") else str(m.status),
+            is_primary=bool(m.is_primary),
+        )
+        for m in memberships
+        if m.business is not None
+    ]
+    return resp
 
 
 @router.patch("/users/{user_id}", response_model=UserAdminResponse)

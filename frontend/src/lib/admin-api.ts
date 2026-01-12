@@ -23,6 +23,18 @@ export interface SubscriptionTier {
 export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
 export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'expired' | 'trial' | 'none';
 
+export interface BusinessSummary {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface UserBusiness {
+  business: BusinessSummary;
+  status: string;
+  is_primary: boolean;
+}
+
 export interface AdminUser {
   id: string;
   email: string;
@@ -40,6 +52,7 @@ export interface AdminUser {
   subscription_expires_at: string | null;
   trial_ends_at: string | null;
   feature_overrides: Record<string, boolean> | null;
+  businesses?: UserBusiness[];
   created_at: string;
   updated_at: string;
 }

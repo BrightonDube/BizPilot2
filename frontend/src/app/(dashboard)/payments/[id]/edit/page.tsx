@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Save, Loader2, CreditCard } from 'lucide-react'
-import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import { Button, Input, Select, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 
 interface PaymentDetail {
@@ -175,10 +175,10 @@ export default function EditPaymentPage() {
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Payment Method *
               </label>
-              <select
+              <Select
                 value={formData.payment_method}
                 onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+                className="w-full"
                 required
               >
                 {PAYMENT_METHODS.map((method) => (
@@ -186,17 +186,17 @@ export default function EditPaymentPage() {
                     {method.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Status *
               </label>
-              <select
+              <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+                className="w-full"
                 required
               >
                 {PAYMENT_STATUSES.map((status) => (
@@ -204,7 +204,7 @@ export default function EditPaymentPage() {
                     {status.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>

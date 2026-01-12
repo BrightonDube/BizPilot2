@@ -32,10 +32,13 @@ import {
   PageHeader,
   Button,
   Input,
+  Select,
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
@@ -87,7 +90,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const billingProvider: 'payfast' | 'paystack' = 'payfast';
+  const billingProvider: 'payfast' | 'paystack' = 'paystack';
   const tabParam = searchParams.get('tab') as SettingsTab | null;
   const [activeTab, setActiveTab] = useState<SettingsTab>(tabParam || 'profile');
   const [isSaving, setIsSaving] = useState(false);
@@ -276,34 +279,7 @@ export default function SettingsPage() {
 
   // Handle tier upgrade
   const handleUpgrade = async (tier: SubscriptionTier) => {
-    try {
-      if (billingProvider === 'payfast' && tier.price_monthly_cents > 0) {
-        setErrorMessage('Subscription upgrades are not available yet. Payfast integration is coming soon.');
-        return;
-      }
-
-      const response = await subscriptionApi.selectTier(tier.id, selectedBillingCycle);
-      
-      if (response.requires_payment) {
-        // Initiate Paystack checkout
-        const checkoutResp = await apiClient.post('/payments/checkout/initiate', {
-          tier_id: tier.id,
-          billing_cycle: selectedBillingCycle,
-        });
-        
-        // Redirect to Paystack
-        if (checkoutResp.data.authorization_url) {
-          window.location.href = checkoutResp.data.authorization_url;
-        }
-      } else {
-        // Free tier - reload subscription data
-        setSuccessMessage(`Successfully switched to ${tier.display_name}`);
-        await loadBillingData();
-      }
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } } };
-      setErrorMessage(error.response?.data?.detail || 'Failed to upgrade subscription');
-    }
+    router.push(`/pricing?tier=${encodeURIComponent(tier.id)}&cycle=${encodeURIComponent(selectedBillingCycle)}`);
   };
 
   const formatPrice = (cents: number) => {
@@ -575,18 +551,18 @@ export default function SettingsPage() {
                   </p>
 
                   <label htmlFor="ai-sharing" className="sr-only">AI Data Sharing Level</label>
-                  <select
+                  <Select
                     id="ai-sharing"
                     value={aiSharingLevel}
                     onChange={(e) => setAiSharingLevel(e.target.value as AISharingLevel)}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                    className="w-full"
                   >
                     <option value="none">None (no AI data)</option>
                     <option value="app_only">App only (how-to guidance)</option>
                     <option value="metrics_only">Metrics only (aggregated counts)</option>
                     <option value="full_business">Full business (products + inventory)</option>
                     <option value="full_business_with_customers">Full business + customers</option>
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="flex justify-end">
@@ -857,7 +833,6 @@ export default function SettingsPage() {
                   </p>
                   <Button
                     variant="outline"
-                    disabled
                     onClick={() => setErrorMessage('Two-factor authentication is coming soon.')}
                   >
                     Enable 2FA
@@ -871,7 +846,6 @@ export default function SettingsPage() {
                   </p>
                   <Button
                     variant="outline"
-                    disabled
                     onClick={() => setErrorMessage('Session management is coming soon.')}
                   >
                     View Sessions
@@ -988,7 +962,7 @@ export default function SettingsPage() {
                           const isCurrentTier = subscription?.tier?.id === tier.id;
                           const isProfessional = tier.name === 'professional';
                           const isPaid = price > 0;
-                          const paidUpgradeDisabled = billingProvider === 'payfast' && isPaid;
+                          const paidUpgradeDisabled = false;
                           
                           return (
                             <div
@@ -1041,8 +1015,6 @@ export default function SettingsPage() {
                                   ? 'Current Plan'
                                   : price === 0
                                   ? 'Select'
-                                  : paidUpgradeDisabled
-                                  ? 'Upgrade (Coming soon)'
                                   : 'Upgrade'}
                               </Button>
                             </div>
@@ -1159,14 +1131,14 @@ export default function SettingsPage() {
                 <div>
                   <h3 className="text-sm font-medium text-foreground mb-3">Date Format</h3>
                   <label htmlFor="date-format-select" className="sr-only">Select date format</label>
-                  <select
+                  <Select
                     id="date-format-select"
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                    className="w-full"
                   >
                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                     <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                     <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                  </select>
+                  </Select>
                 </div>
               </CardContent>
             </Card>

@@ -24,6 +24,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Select,
   StatCard,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
@@ -151,31 +152,31 @@ export default function ReportsPage() {
         actions={
           <div className="flex items-center gap-3">
             <label htmlFor="report-category-select" className="sr-only">Select report category</label>
-            <select
+            <Select
               id="report-category-select"
               value={category}
               onChange={(e) => setCategory(e.target.value as 'all' | 'sales' | 'purchases')}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+              className="w-auto text-sm"
             >
               {categoryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </Select>
             <label htmlFor="date-range-select" className="sr-only">Select date range</label>
-            <select
+            <Select
               id="date-range-select"
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+              className="w-auto text-sm"
             >
               {dateRangeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </Select>
             <Button
               variant="outline"
               className="border-gray-700"

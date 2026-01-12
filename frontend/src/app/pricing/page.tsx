@@ -2,11 +2,14 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Logo } from '@/components/common/Logo'
 import { MarketingFooter } from '@/components/common/MarketingFooter'
 import { Check, X } from 'lucide-react'
 import { subscriptionApi, type SubscriptionTier } from '@/lib/subscription-api'
+import { apiClient } from '@/lib/api'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Benefit {
   text: string
@@ -20,9 +23,11 @@ interface PricingCardProps {
   cta: string
   benefits: Benefit[]
   featured?: boolean
+  ctaHref?: string
+  onCtaClick?: () => void
 }
 
-function PricingCard({ tier, price, bestFor, cta, benefits, featured = false }: PricingCardProps) {
+function PricingCard({ tier, price, bestFor, cta, benefits, featured = false, ctaHref, onCtaClick }: PricingCardProps) {
   return (
     <motion.div
       initial={{ filter: "blur(2px)", opacity: 0, y: 20 }}
@@ -73,25 +78,47 @@ function PricingCard({ tier, price, bestFor, cta, benefits, featured = false }: 
             </div>
           ))}
         </div>
-        <Link
-          href="/auth/register"
-          className={`block w-full py-3 px-4 rounded-lg font-medium text-center transition-all ${
-            featured
-              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
-              : 'bg-slate-700 text-white hover:bg-slate-600'
-          }`}
-        >
-          {cta}
-        </Link>
+        {ctaHref ? (
+          <Link
+            href={ctaHref}
+            className={`block w-full py-3 px-4 rounded-lg font-medium text-center transition-all ${
+              featured
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
+                : 'bg-slate-700 text-white hover:bg-slate-600'
+            }`}
+          >
+            {cta}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={onCtaClick}
+            className={`block w-full py-3 px-4 rounded-lg font-medium text-center transition-all ${
+              featured
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
+                : 'bg-slate-700 text-white hover:bg-slate-600'
+            }`}
+          >
+            {cta}
+          </button>
+        )}
       </div>
     </motion.div>
   )
 }
 
 export default function PricingPage() {
+  const router = useRouter()
+  const { user } = useAuth()
   const [tiers, setTiers] = useState<SubscriptionTier[]>([])
   const [loading, setLoading] = useState(true)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+  const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
+
+  useEffect(() => {
+    const cycle = new URLSearchParams(window.location.search).get('cycle')
+    if (cycle === 'monthly' || cycle === 'yearly') setBillingCycle(cycle)
+  }, [])
 
   useEffect(() => {
     subscriptionApi
@@ -116,6 +143,32 @@ export default function PricingPage() {
     // Pricing page expects 3 plans; fall back gracefully if fewer.
     return tiers.slice(0, 3)
   }, [tiers])
+
+  const handleSelectTier = async (tier: SubscriptionTier) => {
+    setIsPurchasing(tier.id)
+    try {
+      const resp = await subscriptionApi.selectTier(tier.id, billingCycle)
+
+      if (!resp.requires_payment) {
+        router.push('/settings?tab=billing')
+        return
+      }
+
+      const checkoutResp = await apiClient.post('/payments/checkout/initiate', {
+        tier_id: tier.id,
+        billing_cycle: billingCycle,
+      })
+
+      const url = checkoutResp.data?.authorization_url
+      if (url) {
+        window.location.href = url
+      }
+    } catch (e) {
+      // stay on page; errors are handled elsewhere in settings for now
+    } finally {
+      setIsPurchasing(null)
+    }
+  }
 
   return (
     <motion.section 
@@ -234,9 +287,17 @@ export default function PricingPage() {
                   tier={tier.display_name}
                   price={priceLabel}
                   bestFor={tier.description || ''}
-                  cta={tier.price_monthly_cents === 0 ? 'Get Started Free' : 'Get Started'}
+                  cta={
+                    user
+                      ? (isPurchasing === tier.id ? 'Processing...' : cents === 0 ? 'Select Free' : 'Continue')
+                      : tier.price_monthly_cents === 0
+                      ? 'Get Started Free'
+                      : 'Get Started'
+                  }
                   featured={isFeatured}
                   benefits={benefits}
+                  ctaHref={user ? undefined : '/auth/register'}
+                  onCtaClick={user ? () => handleSelectTier(tier) : undefined}
                 />
               )
             })
