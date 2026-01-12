@@ -39,8 +39,7 @@ Copy and paste each of these:
 
 | Key | Value |
 |-----|-------|
-| `DATABASE_URL` | Your Neon pooled connection string OR leave blank if using DO Managed Database |
-| `DO_DATABASE_URL` | Your DigitalOcean Managed PostgreSQL connection string (preferred for DO deployments) |
+| `DATABASE_URL` | Your PostgreSQL connection string |
 | `SECRET_KEY` | Generate with `openssl rand -hex 32` |
 | `ALGORITHM` | `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` |
@@ -55,13 +54,11 @@ Copy and paste each of these:
 
 ### Using DigitalOcean Managed PostgreSQL
 
-If you're using DigitalOcean Managed PostgreSQL, set `DO_DATABASE_URL` with your connection string:
+Set `DATABASE_URL` with your connection string:
 
 ```
-DO_DATABASE_URL=postgresql://doadmin:PASSWORD@host.m.db.ondigitalocean.com:25060/defaultdb?sslmode=require
+DATABASE_URL=postgresql://doadmin:PASSWORD@host.m.db.ondigitalocean.com:25060/defaultdb?sslmode=require
 ```
-
-The application will automatically prefer `DO_DATABASE_URL` over `DATABASE_URL` in production environments.
 
 ---
 
@@ -179,8 +176,7 @@ Visit: `https://YOUR-APP-URL.ondigitalocean.app`
 
 ### Backend Environment Variables (Copy All)
 ```env
-DATABASE_URL=<your-neon-pooled-connection-string>
-DO_DATABASE_URL=<your-digitalocean-managed-postgres-connection-string>
+DATABASE_URL=<your-postgresql-connection-string>
 SECRET_KEY=<generate-with-openssl-rand-hex-32>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
@@ -193,8 +189,6 @@ COOKIE_SAMESITE=lax
 GOOGLE_CLIENT_ID=<your-google-oauth-client-id>
 GOOGLE_CLIENT_SECRET=<your-google-oauth-client-secret>
 ```
-
-**Note:** Set either `DATABASE_URL` or `DO_DATABASE_URL`. The application prefers `DO_DATABASE_URL` in production environments.
 
 ### Frontend Environment Variables (Copy All)
 ```env
@@ -219,10 +213,9 @@ NEXT_PUBLIC_ENABLE_PWA=false
 - Clear browser cookies and try again
 
 ### Database Connection Fails
-- Verify `DATABASE_URL` or `DO_DATABASE_URL` is set correctly
+- Verify `DATABASE_URL` is set correctly
 - For DigitalOcean Managed PostgreSQL: Use connection string with `?sslmode=require`
 - For Neon: Ensure using the **pooled** connection string (with `-pooler` in hostname)
-- The app prefers `DO_DATABASE_URL` in production; set only one of these variables
 
 ### Frontend Can't Reach API
 - Verify `NEXT_PUBLIC_API_URL` is set to `https://YOUR-APP-URL.ondigitalocean.app/api/v1`

@@ -61,9 +61,8 @@ services:
       - key: COOKIE_SAMESITE
         scope: RUN_TIME
         value: "lax"  # Lax is fine for same-domain
-      # DATABASE_URL - Use DO_DATABASE_URL for managed PostgreSQL databases
-      # The app prefers DO_DATABASE_URL over DATABASE_URL in production
-      - key: DO_DATABASE_URL
+      # DATABASE_URL from managed PostgreSQL
+      - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
         value: ${db.DATABASE_URL}
@@ -109,7 +108,7 @@ jobs:
       - key: ENVIRONMENT
         scope: RUN_TIME
         value: production
-      - key: DO_DATABASE_URL
+      - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
         value: ${db.DATABASE_URL}
@@ -143,7 +142,7 @@ jobs:
 #
 # DATABASE: This spec references an existing DigitalOcean Managed Database.
 # You must create the database separately and bind it to this app via the DO dashboard
-# or provide the connection string as DO_DATABASE_URL environment variable.
+# or provide the connection string as DATABASE_URL environment variable.
 
 databases:
   # Reference an existing DigitalOcean Managed PostgreSQL database
