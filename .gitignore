@@ -90,3 +90,4 @@ frontend/.env.local
 
 # Local maintenance scripts
 reset-admin-password.ps1
+check_db.py
