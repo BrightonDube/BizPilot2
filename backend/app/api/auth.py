@@ -1,5 +1,6 @@
 """Authentication API endpoints."""
 
+import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
@@ -34,8 +35,11 @@ from app.schemas.auth import (
     PasswordChange,
 )
 from app.services.auth_service import AuthService
+from app.services.email_service import EmailService
 from app.api.deps import get_current_active_user
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -111,10 +115,36 @@ async def register(request: Request, user_data: UserCreate, db: Session = Depend
     # Create user
     user = auth_service.create_user(user_data)
     
-    # Generate email verification token (would send email in production)
-    # Token is created for future email sending - stored or sent in production
-    _ = create_email_verification_token(user.email)
-    # TODO: Send verification email
+    # Generate email verification token
+    verification_token = create_email_verification_token(user.email)
+    verification_url = f"{settings.FRONTEND_URL}/auth/verify-email?token={verification_token}"
+    
+    # Send verification email if SMTP is configured
+    if settings.EMAILS_ENABLED and settings.SMTP_HOST:
+        try:
+            email_service = EmailService()
+            email_body = f"""Welcome to BizPilot, {user.first_name or 'there'}!
+
+Thank you for registering. Please verify your email address by clicking the link below:
+{verification_url}
+
+This link will expire in 24 hours.
+
+If you did not create this account, please ignore this email.
+
+Best regards,
+The BizPilot Team
+"""
+            email_service.send_email(
+                to_email=user.email,
+                subject="Verify Your BizPilot Email",
+                body_text=email_body,
+            )
+            logger.info(f"Verification email sent to {user.email}")
+        except Exception as e:
+            logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
+    else:
+        logger.info(f"[DEV] Email verification URL for {user.email}: {verification_url}")
     
     return UserResponse(
         id=str(user.id),
@@ -279,10 +309,42 @@ async def forgot_password(request: Request, data: PasswordReset, db: Session = D
     user = auth_service.get_user_by_email(data.email)
     
     if user:
-        # Generate reset token (would send email in production)
-        # Token is created for future email sending - stored or sent in production
-        _ = create_password_reset_token(data.email)
-        # TODO: Send password reset email
+        # Generate reset token
+        reset_token = create_password_reset_token(data.email)
+        
+        # Build the reset URL
+        reset_url = f"{settings.FRONTEND_URL}/auth/reset-password?token={reset_token}"
+        
+        # Send password reset email if SMTP is configured
+        if settings.EMAILS_ENABLED and settings.SMTP_HOST:
+            try:
+                email_service = EmailService()
+                email_body = f"""Hello {user.first_name or 'there'},
+
+You have requested to reset your password for your BizPilot account.
+
+Click the link below to reset your password:
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you did not request this password reset, please ignore this email or contact support if you have concerns.
+
+Best regards,
+The BizPilot Team
+"""
+                email_service.send_email(
+                    to_email=data.email,
+                    subject="Reset Your BizPilot Password",
+                    body_text=email_body,
+                )
+                logger.info(f"Password reset email sent to {data.email}")
+            except Exception as e:
+                # Log error but don't expose to user (security)
+                logger.error(f"Failed to send password reset email to {data.email}: {str(e)}")
+        else:
+            # In development, log the reset URL for testing
+            logger.info(f"[DEV] Password reset URL for {data.email}: {reset_url}")
     
     # Always return success to prevent email enumeration
     return {"message": "If the email exists, a password reset link has been sent"}
