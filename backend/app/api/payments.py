@@ -32,17 +32,25 @@ async def list_payments(
     db: Session = Depends(get_db),
 ):
     """List all payments with pagination and filtering."""
-    payment_service = PaymentService(db)
-    payments, total = payment_service.list_payments(
-        user_id=current_user.id,
-        skip=skip,
-        limit=limit,
-        status=status,
-        payment_method=payment_method,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    return PaymentListResponse(items=payments, total=total, skip=skip, limit=limit)
+    try:
+        payment_service = PaymentService(db)
+        payments, total = payment_service.list_payments(
+            user_id=current_user.id,
+            skip=skip,
+            limit=limit,
+            status=status,
+            payment_method=payment_method,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return PaymentListResponse(items=payments, total=total, skip=skip, limit=limit)
+    except Exception as e:
+        import logging
+        logging.error(f"Error listing payments: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list payments: {str(e)}",
+        )
 
 
 @router.post("", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)

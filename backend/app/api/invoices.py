@@ -153,6 +153,7 @@ async def get_invoice_stats(
 @router.get("/unpaid", response_model=InvoiceListResponse)
 async def get_unpaid_invoices(
     per_page: int = Query(100, ge=1, le=200),
+    search: Optional[str] = Query(None, description="Search by invoice number or customer name"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
@@ -160,8 +161,10 @@ async def get_unpaid_invoices(
     """
     Get all unpaid or partially paid invoices for payment linking.
     Returns invoices with status: sent, viewed, partial, or overdue.
+    Supports optional search by invoice number or customer name.
     """
     from app.models.invoice import Invoice
+    from sqlalchemy import or_
     
     query = db.query(Invoice).filter(
         Invoice.business_id == business_id,
@@ -172,9 +175,10 @@ async def get_unpaid_invoices(
             InvoiceStatus.PARTIAL,
             InvoiceStatus.OVERDUE,
         ])
-    ).order_by(Invoice.created_at.desc()).limit(per_page)
+    )
     
-    invoices = query.all()
+    # Get all invoices first, then filter by customer name if search is provided
+    invoices = query.order_by(Invoice.created_at.desc()).limit(per_page).all()
     
     # Build customer names
     customer_ids = [str(inv.customer_id) for inv in invoices if inv.customer_id]
@@ -186,6 +190,17 @@ async def get_unpaid_invoices(
             if customer.company_name:
                 name = customer.company_name
             customer_names[str(customer.id)] = name
+    
+    # Filter by search term if provided
+    if search:
+        search_lower = search.lower()
+        filtered_invoices = []
+        for invoice in invoices:
+            customer_name = customer_names.get(str(invoice.customer_id), "") if invoice.customer_id else ""
+            if (search_lower in invoice.invoice_number.lower() or 
+                search_lower in customer_name.lower()):
+                filtered_invoices.append(invoice)
+        invoices = filtered_invoices
     
     service = InvoiceService(db)
     invoice_responses = []

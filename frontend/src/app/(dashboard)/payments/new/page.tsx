@@ -103,10 +103,31 @@ export default function NewPaymentPage() {
     }
   }
 
-  const filteredInvoices = invoices.filter(inv => 
-    inv.invoice_number.toLowerCase().includes(searchInvoice.toLowerCase()) ||
-    inv.customer_name?.toLowerCase().includes(searchInvoice.toLowerCase())
-  )
+  const filteredInvoices = invoices
+    .filter(inv => 
+      inv.invoice_number.toLowerCase().includes(searchInvoice.toLowerCase()) ||
+      inv.customer_name?.toLowerCase().includes(searchInvoice.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Sort by best match - exact matches first, then partial matches
+      const searchLower = searchInvoice.toLowerCase()
+      const aInvoiceMatch = a.invoice_number.toLowerCase().startsWith(searchLower) ? 2 : 
+                           a.invoice_number.toLowerCase().includes(searchLower) ? 1 : 0
+      const bInvoiceMatch = b.invoice_number.toLowerCase().startsWith(searchLower) ? 2 : 
+                           b.invoice_number.toLowerCase().includes(searchLower) ? 1 : 0
+      const aCustomerMatch = (a.customer_name?.toLowerCase().startsWith(searchLower) ? 2 : 
+                             a.customer_name?.toLowerCase().includes(searchLower) ? 1 : 0) || 0
+      const bCustomerMatch = (b.customer_name?.toLowerCase().startsWith(searchLower) ? 2 : 
+                             b.customer_name?.toLowerCase().includes(searchLower) ? 1 : 0) || 0
+      
+      const aScore = Math.max(aInvoiceMatch, aCustomerMatch)
+      const bScore = Math.max(bInvoiceMatch, bCustomerMatch)
+      
+      if (bScore !== aScore) return bScore - aScore
+      
+      // If same match score, sort by invoice number
+      return a.invoice_number.localeCompare(b.invoice_number)
+    })
 
   const handleSelectInvoice = (invoice: Invoice) => {
     const total = toNumber(invoice.total, 0)
@@ -245,6 +266,11 @@ export default function NewPaymentPage() {
                 onFocus={() => setShowInvoiceDropdown(true)}
                 className="bg-gray-900 border-gray-600"
               />
+              {showInvoiceDropdown && searchInvoice && filteredInvoices.length === 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4">
+                  <p className="text-gray-400 text-sm text-center">No invoices found matching "{searchInvoice}"</p>
+                </div>
+              )}
               {showInvoiceDropdown && filteredInvoices.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-auto">
                   {filteredInvoices.map(invoice => (

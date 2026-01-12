@@ -124,7 +124,6 @@ def seed_purchases_for_business(db: Session, business_id: str) -> int:
                         tax_amount=line_tax,
                         discount_percent=discount_percent,
                         discount_amount=line_discount,
-                        subtotal=line_subtotal,
                         total=line_total,
                     )
                     db.add(item)
@@ -147,7 +146,6 @@ def seed_purchases_for_business(db: Session, business_id: str) -> int:
                         unit_price=unit_price,
                         tax_rate=tax_rate,
                         tax_amount=line_tax,
-                        subtotal=line_subtotal,
                         total=line_total,
                     )
                     db.add(item)
