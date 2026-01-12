@@ -46,7 +46,8 @@ def _acquire_lock(database_url: str, timeout_seconds: int = 60) -> bool:
 
 
 def main() -> int:
-    database_url = os.getenv("DATABASE_URL", "").strip()
+    # Check DO_DATABASE_URL first (DigitalOcean), then fall back to DATABASE_URL
+    database_url = os.getenv("DO_DATABASE_URL", "").strip() or os.getenv("DATABASE_URL", "").strip()
 
     if database_url and _is_postgres_url(database_url):
         got_lock = _acquire_lock(database_url, timeout_seconds=90)
