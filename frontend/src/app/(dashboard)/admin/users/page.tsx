@@ -34,6 +34,26 @@ function UserStatusBadge({ status }: { status: UserStatus }) {
   )
 }
 
+function UserBusinesses({ user }: { user: AdminUser }) {
+  const businesses = user.businesses || []
+  if (businesses.length === 0) {
+    return <div className="text-xs text-gray-500">No business</div>
+  }
+
+  const primary = businesses.find((b) => b.is_primary)
+  const names = businesses.map((b) => b.business.name)
+
+  return (
+    <div className="text-xs text-gray-500">
+      {primary ? (
+        <span>Primary: {primary.business.name}</span>
+      ) : (
+        <span>Businesses: {names.join(', ')}</span>
+      )}
+    </div>
+  )
+}
+
 function SubscriptionStatusBadge({ status }: { status: SubscriptionStatus | null }) {
   if (!status || status === 'none') {
     return <span className="text-gray-500 text-sm">Free</span>
@@ -412,6 +432,7 @@ export default function AdminUsersPage() {
                             )}
                           </div>
                           <div className="text-sm text-gray-400">{user.email}</div>
+                          <UserBusinesses user={user} />
                         </div>
                       </div>
                     </td>

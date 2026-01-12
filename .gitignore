@@ -87,3 +87,6 @@ secrets-backup.json
 backend/.env
 frontend/.env
 frontend/.env.local
+
+# Local maintenance scripts
+reset-admin-password.ps1
