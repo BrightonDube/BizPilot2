@@ -1,5 +1,6 @@
 """Payments API endpoints."""
 
+import logging
 from typing import Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -16,6 +17,8 @@ from app.schemas.payment import (
     PaymentListResponse,
 )
 from app.services.payment_service import PaymentService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -45,11 +48,10 @@ async def list_payments(
         )
         return PaymentListResponse(items=payments, total=total, skip=skip, limit=limit)
     except Exception as e:
-        import logging
-        logging.error(f"Error listing payments: {str(e)}", exc_info=True)
+        logger.error(f"Error listing payments: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list payments: {str(e)}",
+            detail="Failed to load payments. Please try again later.",
         )
 
 

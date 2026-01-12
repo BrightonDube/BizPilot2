@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -103,31 +103,48 @@ export default function NewPaymentPage() {
     }
   }
 
-  const filteredInvoices = invoices
-    .filter(inv => 
-      inv.invoice_number.toLowerCase().includes(searchInvoice.toLowerCase()) ||
-      inv.customer_name?.toLowerCase().includes(searchInvoice.toLowerCase())
-    )
-    .sort((a, b) => {
-      // Sort by best match - exact matches first, then partial matches
-      const searchLower = searchInvoice.toLowerCase()
-      const aInvoiceMatch = a.invoice_number.toLowerCase().startsWith(searchLower) ? 2 : 
-                           a.invoice_number.toLowerCase().includes(searchLower) ? 1 : 0
-      const bInvoiceMatch = b.invoice_number.toLowerCase().startsWith(searchLower) ? 2 : 
-                           b.invoice_number.toLowerCase().includes(searchLower) ? 1 : 0
-      const aCustomerMatch = (a.customer_name?.toLowerCase().startsWith(searchLower) ? 2 : 
-                             a.customer_name?.toLowerCase().includes(searchLower) ? 1 : 0) || 0
-      const bCustomerMatch = (b.customer_name?.toLowerCase().startsWith(searchLower) ? 2 : 
-                             b.customer_name?.toLowerCase().includes(searchLower) ? 1 : 0) || 0
-      
-      const aScore = Math.max(aInvoiceMatch, aCustomerMatch)
-      const bScore = Math.max(bInvoiceMatch, bCustomerMatch)
-      
-      if (bScore !== aScore) return bScore - aScore
-      
-      // If same match score, sort by invoice number
-      return a.invoice_number.localeCompare(b.invoice_number)
-    })
+  // Memoized invoice filtering and sorting
+  const filteredInvoices = useMemo(() => {
+    const searchLower = searchInvoice.toLowerCase()
+    
+    // Pre-compute lowercase values and match scores for all invoices
+    const invoiceDataMap = new Map<string, { 
+      invoiceLower: string
+      customerLower: string 
+      matchScore: number 
+    }>()
+    
+    for (const inv of invoices) {
+      const invoiceLower = inv.invoice_number.toLowerCase()
+      const customerLower = inv.customer_name?.toLowerCase() || ''
+      const invoiceMatch = invoiceLower.startsWith(searchLower) ? 2 : 
+                           invoiceLower.includes(searchLower) ? 1 : 0
+      const customerMatch = customerLower.startsWith(searchLower) ? 2 : 
+                            customerLower.includes(searchLower) ? 1 : 0
+      invoiceDataMap.set(inv.id, {
+        invoiceLower,
+        customerLower,
+        matchScore: Math.max(invoiceMatch, customerMatch)
+      })
+    }
+    
+    return invoices
+      .filter(inv => {
+        const data = invoiceDataMap.get(inv.id)
+        if (!data) return false
+        return data.invoiceLower.includes(searchLower) || data.customerLower.includes(searchLower)
+      })
+      .sort((a, b) => {
+        const aData = invoiceDataMap.get(a.id)
+        const bData = invoiceDataMap.get(b.id)
+        if (!aData || !bData) return 0
+        
+        if (bData.matchScore !== aData.matchScore) return bData.matchScore - aData.matchScore
+        
+        // If same match score, sort by invoice number
+        return a.invoice_number.localeCompare(b.invoice_number)
+      })
+  }, [invoices, searchInvoice])
 
   const handleSelectInvoice = (invoice: Invoice) => {
     const total = toNumber(invoice.total, 0)
