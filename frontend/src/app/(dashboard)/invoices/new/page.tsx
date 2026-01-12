@@ -13,7 +13,7 @@ import {
   User,
   Package
 } from 'lucide-react'
-import { Button, Card, CardContent } from '@/components/ui'
+import { Button, Select, Card, CardContent } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 
 interface Customer {
@@ -326,10 +326,10 @@ export default function NewInvoicePage() {
                   <User className="inline h-4 w-4 mr-1" />
                   Customer *
                 </label>
-                <select
+                <Select
                   value={formData.customer_id}
                   onChange={(e) => handleInputChange('customer_id', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full"
                   required
                 >
                   <option value="">Select customer...</option>
@@ -338,7 +338,7 @@ export default function NewInvoicePage() {
                       {customer.company_name || `${customer.first_name} ${customer.last_name}`}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Issue Date */}
@@ -421,10 +421,10 @@ export default function NewInvoicePage() {
                         <Package className="inline h-3 w-3 mr-1" />
                         Product (Optional)
                       </label>
-                      <select
+                      <Select
                         value={item.product_id || ''}
                         onChange={(e) => selectProduct(index, e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500"
+                        className="w-full text-sm"
                       >
                         <option value="">Select product...</option>
                         {products.map((product) => (
@@ -432,7 +432,7 @@ export default function NewInvoicePage() {
                             {product.name} - {formatCurrency(product.selling_price)}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     {/* Description */}

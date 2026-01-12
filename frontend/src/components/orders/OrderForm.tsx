@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
-import { Button, Input, Card, CardContent } from '@/components/ui';
+import { Button, Input, Select, Card, CardContent } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 import { ProductSelector, Product } from '@/components/products/ProductSelector';
 import { CustomerSelector } from '@/components/customers/CustomerSelector';
@@ -201,10 +201,10 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
             ) : (
               <div>
                 <label className="text-sm text-gray-300">Supplier</label>
-                <select
+                <Select
                   value={supplierId}
                   onChange={(e) => setSupplierId(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2"
+                  className="mt-1"
                   disabled={suppliersLoading}
                 >
                   <option value="">{suppliersLoading ? 'Loading…' : 'Select supplier'}</option>
@@ -213,15 +213,15 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
                       {s.name}{s.email ? ` (${s.email})` : ''}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             )}
             <div>
               <label className="text-sm text-gray-300">Payment Method</label>
-              <select
+              <Select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2"
+                className="mt-1"
               >
                 <option value="">Select payment method</option>
                 <option value="cash">Cash</option>
@@ -233,16 +233,16 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
                 <option value="yoco">Yoco</option>
                 <option value="snapscan">SnapScan</option>
                 <option value="other">Other</option>
-              </select>
+              </Select>
             </div>
             <div>
               <label className="text-sm text-gray-300">Order Status</label>
-              <select
+              <Select
                 value={status}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setStatus(e.target.value as OrderStatus)
                 }
-                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2"
+                className="mt-1"
               >
                 {['draft', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'].map(
                   (s) => (
@@ -251,23 +251,23 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
                     </option>
                   ),
                 )}
-              </select>
+              </Select>
             </div>
             <div>
               <label className="text-sm text-gray-300">Payment Status</label>
-              <select
+              <Select
                 value={paymentStatus}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setPaymentStatus(e.target.value as PaymentStatus)
                 }
-                className="mt-1 w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2"
+                className="mt-1"
               >
                 {['pending', 'partial', 'paid', 'refunded', 'failed'].map((s) => (
                   <option key={s} value={s} className="capitalize">
                     {s}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
           <div>

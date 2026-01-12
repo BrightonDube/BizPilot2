@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { adminApi, AdminUser, UserListResponse, SubscriptionTier, UserStatus, SubscriptionStatus } from '@/lib/admin-api'
+import { Select } from '@/components/ui'
 
 function UserStatusBadge({ status }: { status: UserStatus }) {
   const colors: Record<UserStatus, string> = {
@@ -177,23 +178,23 @@ function EditUserModal({ user, tiers, onClose, onSave }: EditUserModalProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-400 mb-1">Account Status</label>
-              <select
+              <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as UserStatus })}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-purple-500 focus:outline-none"
+                className="w-full"
               >
                 <option value="active">Active</option>
                 <option value="pending">Pending</option>
                 <option value="inactive">Inactive</option>
                 <option value="suspended">Suspended</option>
-              </select>
+              </Select>
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">Subscription Status</label>
-              <select
+              <Select
                 value={formData.subscription_status}
                 onChange={(e) => setFormData({ ...formData, subscription_status: e.target.value as SubscriptionStatus })}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-purple-500 focus:outline-none"
+                className="w-full"
               >
                 <option value="none">None (Free)</option>
                 <option value="trial">Trial</option>
@@ -201,24 +202,26 @@ function EditUserModal({ user, tiers, onClose, onSave }: EditUserModalProps) {
                 <option value="paused">Paused</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="expired">Expired</option>
-              </select>
+              </Select>
             </div>
           </div>
           
           <div>
             <label className="block text-sm text-gray-400 mb-1">Subscription Tier</label>
-            <select
+            <Select
               value={formData.current_tier_id}
               onChange={(e) => setFormData({ ...formData, current_tier_id: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-purple-500 focus:outline-none"
+              className="w-full"
+              disabled={tiers.length === 0}
             >
               <option value="">No Tier (Free)</option>
+              {tiers.length === 0 && <option value="" disabled>Loading tiers...</option>}
               {tiers.map((tier) => (
                 <option key={tier.id} value={tier.id}>
                   {tier.display_name} - R{tier.price_monthly_cents / 100}/mo
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           
           <div className="flex items-center gap-2">
@@ -265,6 +268,7 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState<UserStatus | ''>('')
   const [page, setPage] = useState(1)
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
+  const [updatingTierUserId, setUpdatingTierUserId] = useState<string | null>(null)
 
   const loadUsers = useCallback(async () => {
     setLoading(true)
@@ -290,6 +294,16 @@ export default function AdminUsersPage() {
   useEffect(() => {
     adminApi.listTiers(true).then(setTiers).catch(console.error)
   }, [])
+
+  const ensureTiersLoaded = async () => {
+    if (tiers.length > 0) return
+    try {
+      const next = await adminApi.listTiers(true)
+      setTiers(next)
+    } catch (error) {
+      console.error('Failed to load tiers:', error)
+    }
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -338,6 +352,21 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleTierChange = async (user: AdminUser, nextTierId: string) => {
+    setUpdatingTierUserId(user.id)
+    try {
+      await adminApi.updateSubscription(user.id, {
+        current_tier_id: nextTierId || null,
+        subscription_status: nextTierId ? 'active' : 'none',
+      })
+      loadUsers()
+    } catch (error) {
+      console.error('Failed to update subscription tier:', error)
+    } finally {
+      setUpdatingTierUserId(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -371,20 +400,20 @@ export default function AdminUsersPage() {
             />
           </div>
         </form>
-        <select
+        <Select
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value as UserStatus | '')
             setPage(1)
           }}
-          className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
+          className="w-auto"
         >
           <option value="">All Statuses</option>
           <option value="active">Active</option>
           <option value="pending">Pending</option>
           <option value="inactive">Inactive</option>
           <option value="suspended">Suspended</option>
-        </select>
+        </Select>
       </div>
 
       {/* Users Table */}
@@ -443,7 +472,21 @@ export default function AdminUsersPage() {
                       <SubscriptionStatusBadge status={user.subscription_status} />
                     </td>
                     <td className="px-4 py-3 text-gray-300">
-                      {user.current_tier?.display_name || 'Free'}
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={user.current_tier_id || ''}
+                          onChange={(e) => handleTierChange(user, e.target.value)}
+                          disabled={updatingTierUserId === user.id}
+                          className="w-auto"
+                        >
+                          <option value="">Free</option>
+                          {tiers.map((tier) => (
+                            <option key={tier.id} value={tier.id}>
+                              {tier.display_name}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-sm">
                       {new Date(user.created_at).toLocaleDateString()}
@@ -451,7 +494,10 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => setEditingUser(user)}
+                          onClick={async () => {
+                            await ensureTiersLoaded()
+                            setEditingUser(user)
+                          }}
                           className="p-2 text-gray-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
                           title="Edit"
                         >

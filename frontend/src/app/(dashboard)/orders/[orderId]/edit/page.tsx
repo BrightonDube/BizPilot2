@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Save, Loader2, ShoppingBag } from 'lucide-react'
-import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
+import { Button, Input, Select, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 
 interface Customer {
@@ -197,10 +197,10 @@ export default function EditOrderPage() {
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Customer
               </label>
-              <select
+              <Select
                 value={formData.customer_id}
                 onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+                className="w-full"
               >
                 <option value="">Select a customer</option>
                 {customers.map((customer) => (
@@ -208,7 +208,7 @@ export default function EditOrderPage() {
                     {customer.company_name || `${customer.first_name} ${customer.last_name}`}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -216,34 +216,34 @@ export default function EditOrderPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Status
                 </label>
-                <select
+                <Select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+                  className="w-full"
                 >
                   {ORDER_STATUSES.map((status) => (
                     <option key={status.value} value={status.value}>
                       {status.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Payment Status
                 </label>
-                <select
+                <Select
                   value={formData.payment_status}
                   onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+                  className="w-full"
                 >
                   {PAYMENT_STATUSES.map((status) => (
                     <option key={status.value} value={status.value}>
                       {status.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 
@@ -252,17 +252,17 @@ export default function EditOrderPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Payment Method
                 </label>
-                <select
+                <Select
                   value={formData.payment_method}
                   onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white"
+                  className="w-full"
                 >
                   {PAYMENT_METHODS.map((method) => (
                     <option key={method.value} value={method.value}>
                       {method.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
