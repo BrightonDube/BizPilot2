@@ -38,6 +38,7 @@ services:
         scope: RUN_TIME
         type: SECRET
         value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
+        # IMPORTANT: Override this value in DO Dashboard with a secure key
       - key: ENVIRONMENT
         scope: RUN_TIME
         value: production
@@ -116,6 +117,7 @@ jobs:
         scope: RUN_TIME
         type: SECRET
         value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
+        # IMPORTANT: Override this value in DO Dashboard with a secure key
 
   # Optional: post-deploy seeding. Use with care (can be destructive depending on script).
   # Uncomment and set the command you want if you need automated seeding.
@@ -145,7 +147,7 @@ jobs:
 
 databases:
   # Reference an existing DigitalOcean Managed PostgreSQL database
-  # Create database first: doctl databases create bizpilot-db --engine pg --size db-s-1vcpu-1gb --region nyc1
+  # Create database first: doctl databases create bizpilot-postgres --engine pg --size db-s-1vcpu-1gb --region nyc1
   - name: db
     engine: PG
     production: true
