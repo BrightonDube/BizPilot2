@@ -38,6 +38,7 @@ services:
         scope: RUN_TIME
         type: SECRET
         value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
+        # IMPORTANT: Override this value in DO Dashboard with a secure key
       - key: ENVIRONMENT
         scope: RUN_TIME
         value: production
@@ -60,7 +61,12 @@ services:
       - key: COOKIE_SAMESITE
         scope: RUN_TIME
         value: "lax"  # Lax is fine for same-domain
-      # DATABASE_URL and CORS_ORIGINS set manually in dashboard
+      # DATABASE_URL from managed PostgreSQL
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+        value: ${db.DATABASE_URL}
+      # CORS_ORIGINS set manually in dashboard
 
   # Next.js Frontend
   - name: web
@@ -102,7 +108,15 @@ jobs:
       - key: ENVIRONMENT
         scope: RUN_TIME
         value: production
-      # Provide DATABASE_URL, SECRET_KEY, CORS_ORIGINS and any other secrets in the DO dashboard.
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+        value: ${db.DATABASE_URL}
+      - key: SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
+        # IMPORTANT: Override this value in DO Dashboard with a secure key
 
   # Optional: post-deploy seeding. Use with care (can be destructive depending on script).
   # Uncomment and set the command you want if you need automated seeding.
@@ -123,6 +137,18 @@ jobs:
   #       value: production
 
 # NOTE: After deployment, manually set in DO Dashboard:
-# 1. DATABASE_URL - Your Neon pooled connection string
-# 2. CORS_ORIGINS - ["https://your-app.ondigitalocean.app"]
-# 3. NEXT_PUBLIC_API_URL - https://your-app.ondigitalocean.app/api/v1
+# 1. CORS_ORIGINS - ["https://your-app.ondigitalocean.app"]
+# 2. NEXT_PUBLIC_API_URL - https://your-app.ondigitalocean.app/api/v1
+#
+# DATABASE: This spec references an existing DigitalOcean Managed Database.
+# You must create the database separately and bind it to this app via the DO dashboard
+# or provide the connection string as DATABASE_URL environment variable.
+
+databases:
+  # Reference an existing DigitalOcean Managed PostgreSQL database
+  # Create database first: doctl databases create bizpilot-postgres --engine pg --size db-s-1vcpu-1gb --region nyc1
+  - name: db
+    engine: PG
+    production: true
+    cluster_name: bizpilot-postgres
+    # The cluster must be created separately via DO dashboard or doctl

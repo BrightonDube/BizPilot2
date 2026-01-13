@@ -153,6 +153,7 @@ async def get_invoice_stats(
 @router.get("/unpaid", response_model=InvoiceListResponse)
 async def get_unpaid_invoices(
     per_page: int = Query(100, ge=1, le=200),
+    search: Optional[str] = Query(None, description="Search by invoice number"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
@@ -160,6 +161,8 @@ async def get_unpaid_invoices(
     """
     Get all unpaid or partially paid invoices for payment linking.
     Returns invoices with status: sent, viewed, partial, or overdue.
+    Supports optional search by invoice number. Customer name filtering
+    is done client-side for better UX.
     """
     from app.models.invoice import Invoice
     
@@ -172,9 +175,13 @@ async def get_unpaid_invoices(
             InvoiceStatus.PARTIAL,
             InvoiceStatus.OVERDUE,
         ])
-    ).order_by(Invoice.created_at.desc()).limit(per_page)
+    )
     
-    invoices = query.all()
+    # Apply invoice_number search filter in SQL if provided
+    if search:
+        query = query.filter(Invoice.invoice_number.ilike(f"%{search}%"))
+    
+    invoices = query.order_by(Invoice.created_at.desc()).limit(per_page).all()
     
     # Build customer names
     customer_ids = [str(inv.customer_id) for inv in invoices if inv.customer_id]
