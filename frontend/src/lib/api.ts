@@ -16,6 +16,13 @@
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+/**
+ * Extended request config with retry flag for token refresh logic.
+ */
+interface RetryableAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (process.env.NODE_ENV === 'production' ? '/api/v1' : 'http://localhost:8000/api/v1');
@@ -103,7 +110,7 @@ function isAuthError(error: AxiosError): boolean {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as RetryableAxiosRequestConfig;
     
     // Skip refresh logic for auth endpoints to prevent redirect loops
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/') || 

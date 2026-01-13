@@ -29,9 +29,12 @@ export function AuthInitializer() {
     
     // Redirect to login with session expired message
     // Use window.location for a hard navigation to ensure clean state
-    const currentPath = window.location.pathname + window.location.search
-    const loginUrl = `/auth/login?session_expired=true&next=${encodeURIComponent(currentPath)}`
-    window.location.href = loginUrl
+    // Check for window to ensure SSR safety (though this is a client component)
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname + window.location.search
+      const loginUrl = `/auth/login?session_expired=true&next=${encodeURIComponent(currentPath)}`
+      window.location.href = loginUrl
+    }
   }, [logout])
 
   // Subscribe to session expiration events
@@ -45,6 +48,9 @@ export function AuthInitializer() {
 
   // Initial user fetch
   useEffect(() => {
+    // Guard for SSR safety (though useEffect only runs on client)
+    if (typeof window === 'undefined') return
+    
     const oauthLoadingTime = window.localStorage.getItem('oauth_loading_time')
     if (oauthLoadingTime) {
       const timeDiff = Date.now() - Number(oauthLoadingTime)
