@@ -4,30 +4,55 @@
  * Login page component with BizPilot styling.
  */
 
-import { useState, FormEvent } from 'react';
+import { Suspense, useState, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, Clock, Loader2 } from 'lucide-react';
 import OAuthButtons from '@/components/auth/OAuthButtons';
 
-// Google Icon component
-export default function LoginPage() {
+/**
+ * Loading fallback for Suspense boundary
+ */
+function LoginPageLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+    </div>
+  );
+}
+
+/**
+ * Main login form component that uses useSearchParams
+ */
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, isLoading, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [messageDismissed, setMessageDismissed] = useState(false);
+
+  // Derive session expired message from URL params
+  const sessionExpiredMessage = useMemo(() => {
+    if (messageDismissed) return null;
+    if (searchParams.get('session_expired') === 'true') {
+      return 'Your session has expired. Please log in again.';
+    }
+    return null;
+  }, [searchParams, messageDismissed]);
 
   // Redirect if already authenticated
   useGuestOnly();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    // Clear session expired message on new login attempt
+    setMessageDismissed(true);
     try {
       await login(email, password);
-      const qs = typeof window !== 'undefined' ? window.location.search : '';
-      const next = qs ? new URLSearchParams(qs).get('next') : null;
+      const next = searchParams.get('next');
       const target = next && next.startsWith('/') ? next : '/dashboard';
       router.push(target);
     } catch {
@@ -44,6 +69,24 @@ export default function LoginPage() {
       <h2 className="text-2xl font-semibold text-white mb-2">Welcome back</h2>
       <p className="text-gray-400 mb-6">Sign in to access your dashboard</p>
       
+      {sessionExpiredMessage && (
+        <motion.div 
+          className="bg-amber-900/20 border border-amber-500/50 text-amber-400 px-4 py-3 rounded-lg mb-4 flex items-center gap-2"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Clock className="h-5 w-5 flex-shrink-0" />
+          <span>{sessionExpiredMessage}</span>
+          <button 
+            onClick={() => setMessageDismissed(true)} 
+            className="ml-auto text-amber-400 hover:text-amber-300"
+          >
+            &times;
+          </button>
+        </motion.div>
+      )}
+
       {error && (
         <motion.div 
           className="bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-4"
@@ -201,5 +244,16 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </motion.div>
+  );
+}
+
+/**
+ * Login page wrapper with Suspense boundary for useSearchParams
+ */
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageLoading />}>
+      <LoginForm />
+    </Suspense>
   );
 }
