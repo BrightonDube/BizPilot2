@@ -24,7 +24,7 @@ const API_URL =
  * Event types for auth-related events.
  * These events allow decoupled communication between the API client and auth store.
  */
-export type AuthEventType = 'auth:session-expired' | 'auth:unauthorized';
+export type AuthEventType = 'auth:session-expired';
 
 /**
  * Dispatch a custom auth event that components/stores can listen to.
@@ -71,10 +71,11 @@ apiClient.interceptors.request.use(
 );
 
 /**
- * Check if an error is an authentication error.
+ * Check if an error indicates an authentication/session issue.
  * This includes:
- * - 401 Unauthorized
- * - 500 errors with specific auth-related messages (token validation failures)
+ * - 401 Unauthorized (always indicates auth issue)
+ * - 500 errors with specific credential validation messages
+ *   (e.g., when token decode fails and backend doesn't handle it gracefully)
  */
 function isAuthError(error: AxiosError): boolean {
   const status = error.response?.status;
@@ -84,20 +85,15 @@ function isAuthError(error: AxiosError): boolean {
     return true;
   }
   
-  // Check for 500 errors that are actually auth-related
-  // (e.g., token decode failures that weren't properly handled by backend)
+  // Check for 500 errors that are specifically credential validation failures
+  // We only check for the exact message from the backend's authentication code
   if (status === 500) {
     const data = error.response?.data as { detail?: string } | undefined;
     const detail = data?.detail?.toLowerCase() || '';
-    const authMessages = [
-      'could not validate credentials',
-      'token',
-      'expired',
-      'invalid credentials',
-      'authentication',
-      'unauthorized',
-    ];
-    return authMessages.some(msg => detail.includes(msg));
+    // Only match the specific error message from the auth dependency
+    if (detail === 'could not validate credentials') {
+      return true;
+    }
   }
   
   return false;
@@ -142,14 +138,6 @@ apiClient.interceptors.response.use(
         // Return a rejected promise with a user-friendly error
         return Promise.reject(new Error('Session expired. Please log in again.'));
       }
-    }
-    
-    // For auth errors that already retried, dispatch event
-    if (authError && originalRequest?._retry) {
-      dispatchAuthEvent('auth:session-expired', {
-        originalUrl: originalRequest?.url,
-        message: 'Your session has expired. Please log in again.',
-      });
     }
     
     return Promise.reject(error);
