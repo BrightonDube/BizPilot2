@@ -10,7 +10,7 @@ from app.models.product import Product, ProductStatus, ProductCategory
 from app.models.customer import Customer, CustomerType
 from app.models.supplier import Supplier
 from app.models.order import Order, OrderStatus, PaymentStatus, OrderItem
-from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem
+from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem, InvoiceType
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
 
 from app.models.product_ingredient import ProductIngredient
@@ -56,6 +56,7 @@ __all__ = [
     "Invoice",
     "InvoiceStatus",
     "InvoiceItem",
+    "InvoiceType",
     # Inventory
     "InventoryItem",
     "InventoryTransaction",

@@ -3,6 +3,7 @@
 import math
 from typing import Optional
 from datetime import date
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -11,8 +12,9 @@ from app.core.database import get_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
-from app.models.invoice import InvoiceStatus
+from app.models.invoice import InvoiceStatus, InvoiceType
 from app.models.customer import Customer
+from app.models.supplier import Supplier
 from app.core.pdf import build_simple_pdf, build_invoice_pdf
 from app.schemas.invoice import (
     InvoiceCreate,
@@ -22,21 +24,29 @@ from app.schemas.invoice import (
     InvoiceItemResponse,
     PaymentRecord,
     InvoiceSummary,
+    InitiateSupplierPaymentRequest,
+    InitiateSupplierPaymentResponse,
+    VerifySupplierPaymentRequest,
+    VerifySupplierPaymentResponse,
 )
 from app.services.invoice_service import InvoiceService
+from app.services.paystack_service import paystack_service
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
 
-def _invoice_to_response(invoice, items=None, customer_name: str = None) -> InvoiceResponse:
+def _invoice_to_response(invoice, items=None, customer_name: str = None, supplier_name: str = None) -> InvoiceResponse:
     """Convert invoice model to response schema."""
     return InvoiceResponse(
         id=str(invoice.id),
         business_id=str(invoice.business_id),
         customer_id=str(invoice.customer_id) if invoice.customer_id else None,
         customer_name=customer_name,
+        supplier_id=str(invoice.supplier_id) if invoice.supplier_id else None,
+        supplier_name=supplier_name,
         order_id=str(invoice.order_id) if invoice.order_id else None,
         invoice_number=invoice.invoice_number,
+        invoice_type=invoice.invoice_type or InvoiceType.CUSTOMER,
         status=invoice.status,
         issue_date=invoice.issue_date,
         due_date=invoice.due_date,
@@ -53,7 +63,12 @@ def _invoice_to_response(invoice, items=None, customer_name: str = None) -> Invo
         balance_due=invoice.balance_due,
         is_paid=invoice.is_paid,
         is_overdue=invoice.is_overdue,
+        is_supplier_invoice=invoice.is_supplier_invoice,
         pdf_url=invoice.pdf_url,
+        paystack_reference=invoice.paystack_reference,
+        gateway_fee=invoice.gateway_fee or Decimal("0"),
+        gateway_fee_percent=invoice.gateway_fee_percent or Decimal("1.5"),
+        total_with_gateway_fee=invoice.total_with_gateway_fee,
         created_at=invoice.created_at,
         updated_at=invoice.updated_at,
         items=[_item_to_response(item) for item in (items or [])],
@@ -123,11 +138,20 @@ async def list_invoices(
                 name = customer.company_name
             customer_names[str(customer.id)] = name
     
+    # Build a cache of supplier IDs to names
+    supplier_ids = [str(inv.supplier_id) for inv in invoices if inv.supplier_id]
+    supplier_names = {}
+    if supplier_ids:
+        suppliers = db.query(Supplier).filter(Supplier.id.in_(supplier_ids)).all()
+        for supplier in suppliers:
+            supplier_names[str(supplier.id)] = supplier.name
+    
     invoice_responses = []
     for invoice in invoices:
         items = service.get_invoice_items(str(invoice.id))
         customer_name = customer_names.get(str(invoice.customer_id)) if invoice.customer_id else None
-        invoice_responses.append(_invoice_to_response(invoice, items, customer_name))
+        supplier_name = supplier_names.get(str(invoice.supplier_id)) if invoice.supplier_id else None
+        invoice_responses.append(_invoice_to_response(invoice, items, customer_name, supplier_name))
     
     return InvoiceListResponse(
         items=invoice_responses,
@@ -194,12 +218,21 @@ async def get_unpaid_invoices(
                 name = customer.company_name
             customer_names[str(customer.id)] = name
     
+    # Build supplier names
+    supplier_ids = [str(inv.supplier_id) for inv in invoices if inv.supplier_id]
+    supplier_names = {}
+    if supplier_ids:
+        suppliers = db.query(Supplier).filter(Supplier.id.in_(supplier_ids)).all()
+        for supplier in suppliers:
+            supplier_names[str(supplier.id)] = supplier.name
+    
     service = InvoiceService(db)
     invoice_responses = []
     for invoice in invoices:
         items = service.get_invoice_items(str(invoice.id))
         customer_name = customer_names.get(str(invoice.customer_id)) if invoice.customer_id else None
-        invoice_responses.append(_invoice_to_response(invoice, items, customer_name))
+        supplier_name = supplier_names.get(str(invoice.supplier_id)) if invoice.supplier_id else None
+        invoice_responses.append(_invoice_to_response(invoice, items, customer_name, supplier_name))
     
     return InvoiceListResponse(
         items=invoice_responses,
@@ -227,8 +260,22 @@ async def get_invoice(
             detail="Invoice not found",
         )
     
+    # Get customer name if exists
+    customer_name = None
+    if invoice.customer_id:
+        customer = db.query(Customer).filter(Customer.id == invoice.customer_id).first()
+        if customer:
+            customer_name = customer.company_name or f"{customer.first_name} {customer.last_name}"
+    
+    # Get supplier name if exists
+    supplier_name = None
+    if invoice.supplier_id:
+        supplier = db.query(Supplier).filter(Supplier.id == invoice.supplier_id).first()
+        if supplier:
+            supplier_name = supplier.name
+    
     items = service.get_invoice_items(str(invoice.id))
-    return _invoice_to_response(invoice, items)
+    return _invoice_to_response(invoice, items, customer_name, supplier_name)
 
 
 @router.get("/{invoice_id}/pdf")
@@ -432,3 +479,221 @@ async def get_invoice_items(
     
     items = service.get_invoice_items(str(invoice.id))
     return [_item_to_response(item) for item in items]
+
+
+# Supplier Payment Endpoints (Paystack Integration)
+
+@router.post("/{invoice_id}/pay", response_model=InitiateSupplierPaymentResponse)
+async def initiate_supplier_payment(
+    invoice_id: str,
+    data: InitiateSupplierPaymentRequest,
+    current_user: User = Depends(has_permission("invoices:edit")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Initiate a payment for a supplier invoice via Paystack.
+    
+    This endpoint:
+    1. Validates the invoice is a supplier invoice with a balance due
+    2. Calculates the gateway fee (typically 1.5% of the invoice total)
+    3. Creates a Paystack transaction for the total + gateway fee
+    4. Returns the authorization URL for the user to complete payment
+    """
+    service = InvoiceService(db)
+    invoice = service.get_invoice(invoice_id, business_id)
+    
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found",
+        )
+    
+    # Validate this is a supplier invoice
+    if not invoice.is_supplier_invoice:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This is not a supplier invoice. Only supplier invoices can be paid via gateway.",
+        )
+    
+    # Check if already paid
+    if invoice.is_paid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This invoice has already been paid.",
+        )
+    
+    # Check if already has a pending payment
+    if invoice.paystack_reference:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A payment has already been initiated for this invoice. Please verify the existing payment first.",
+        )
+    
+    # Calculate gateway fee (typically 1.5% of total, but can be set per invoice)
+    gateway_fee_percent = float(invoice.gateway_fee_percent or 1.5)
+    invoice_total = float(invoice.balance_due)
+    gateway_fee = round(invoice_total * (gateway_fee_percent / 100), 2)
+    total_to_pay = invoice_total + gateway_fee
+    
+    # Generate a unique reference
+    reference = paystack_service.generate_reference(prefix="SUP")
+    
+    # Initialize Paystack transaction
+    # Amount is in kobo/cents (smallest currency unit)
+    amount_cents = int(total_to_pay * 100)
+    
+    transaction = await paystack_service.initialize_transaction(
+        email=current_user.email,
+        amount_cents=amount_cents,
+        reference=reference,
+        callback_url=data.callback_url,
+        metadata={
+            "invoice_id": str(invoice.id),
+            "invoice_number": invoice.invoice_number,
+            "business_id": str(business_id),
+            "payment_type": "supplier_invoice",
+            "invoice_amount": str(invoice_total),
+            "gateway_fee": str(gateway_fee),
+        },
+    )
+    
+    if not transaction:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to initialize payment with Paystack. Please try again.",
+        )
+    
+    # Store the payment reference on the invoice
+    invoice.paystack_reference = transaction.reference
+    invoice.paystack_access_code = transaction.access_code
+    invoice.gateway_fee = Decimal(str(gateway_fee))
+    db.commit()
+    
+    return InitiateSupplierPaymentResponse(
+        reference=transaction.reference,
+        authorization_url=transaction.authorization_url,
+        access_code=transaction.access_code,
+        invoice_total=Decimal(str(invoice_total)),
+        gateway_fee=Decimal(str(gateway_fee)),
+        total_to_pay=Decimal(str(total_to_pay)),
+    )
+
+
+@router.post("/{invoice_id}/verify-payment", response_model=VerifySupplierPaymentResponse)
+async def verify_supplier_payment(
+    invoice_id: str,
+    data: VerifySupplierPaymentRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Verify a supplier payment after Paystack callback.
+    
+    This endpoint:
+    1. Verifies the payment with Paystack
+    2. If successful, marks the invoice as paid
+    3. Returns the payment status
+    """
+    service = InvoiceService(db)
+    invoice = service.get_invoice(invoice_id, business_id)
+    
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found",
+        )
+    
+    # Verify the reference matches
+    if invoice.paystack_reference != data.reference:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment reference does not match this invoice.",
+        )
+    
+    # Verify with Paystack
+    verification = await paystack_service.verify_transaction(data.reference)
+    
+    if not verification:
+        return VerifySupplierPaymentResponse(
+            status="failed",
+            message="Unable to verify payment with Paystack. Please contact support.",
+            invoice_id=str(invoice.id),
+            invoice_number=invoice.invoice_number,
+        )
+    
+    paystack_status = verification.get("status", "").lower()
+    
+    if paystack_status == "success":
+        # Payment successful - update invoice
+        amount_paid = verification.get("amount", 0) / 100  # Convert from kobo to rands
+        
+        # The amount paid includes gateway fee, so we record the invoice balance as paid
+        invoice.amount_paid = invoice.total
+        invoice.status = InvoiceStatus.PAID
+        invoice.paid_date = date.today()
+        db.commit()
+        
+        return VerifySupplierPaymentResponse(
+            status="success",
+            message="Payment verified successfully. Invoice has been marked as paid.",
+            invoice_id=str(invoice.id),
+            invoice_number=invoice.invoice_number,
+            amount_paid=Decimal(str(float(invoice.total))),
+            gateway_fee=invoice.gateway_fee,
+        )
+    elif paystack_status == "pending":
+        return VerifySupplierPaymentResponse(
+            status="pending",
+            message="Payment is still being processed. Please wait.",
+            invoice_id=str(invoice.id),
+            invoice_number=invoice.invoice_number,
+        )
+    else:
+        # Payment failed - clear the reference so user can try again
+        invoice.paystack_reference = None
+        invoice.paystack_access_code = None
+        invoice.gateway_fee = Decimal("0")
+        db.commit()
+        
+        return VerifySupplierPaymentResponse(
+            status="failed",
+            message=f"Payment failed: {verification.get('gateway_response', 'Unknown error')}",
+            invoice_id=str(invoice.id),
+            invoice_number=invoice.invoice_number,
+        )
+
+
+@router.delete("/{invoice_id}/cancel-payment", status_code=status.HTTP_204_NO_CONTENT)
+async def cancel_pending_payment(
+    invoice_id: str,
+    current_user: User = Depends(has_permission("invoices:edit")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Cancel a pending supplier payment.
+    
+    This allows the user to start a new payment if the previous one was abandoned.
+    """
+    service = InvoiceService(db)
+    invoice = service.get_invoice(invoice_id, business_id)
+    
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found",
+        )
+    
+    if not invoice.paystack_reference:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No pending payment to cancel.",
+        )
+    
+    # Clear the payment reference
+    invoice.paystack_reference = None
+    invoice.paystack_access_code = None
+    invoice.gateway_fee = Decimal("0")
+    db.commit()
