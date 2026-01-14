@@ -17,7 +17,6 @@ import {
   Users,
   Truck,
   FileText,
-  CreditCard,
   BarChart3,
   Sparkles,
   Settings,
@@ -41,7 +40,6 @@ const navigation = [
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Suppliers', href: '/suppliers', icon: Truck },
   { name: 'Invoices', href: '/invoices', icon: FileText },
-  { name: 'Payments', href: '/payments', icon: CreditCard },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'AI Assistant', href: '/ai', icon: Sparkles },
 ];

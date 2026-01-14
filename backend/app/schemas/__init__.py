@@ -11,12 +11,6 @@ from app.schemas.auth import (
     UserResponse,
     PasswordChange,
 )
-from app.schemas.payment import (
-    PaymentCreate,
-    PaymentUpdate,
-    PaymentResponse,
-    PaymentListResponse,
-)
 from app.schemas.report import (
     ReportStats,
     TopProduct,
@@ -33,10 +27,6 @@ __all__ = [
     "EmailVerification",
     "UserResponse",
     "PasswordChange",
-    "PaymentCreate",
-    "PaymentUpdate",
-    "PaymentResponse",
-    "PaymentListResponse",
     "ReportStats",
     "TopProduct",
     "TopCustomer",

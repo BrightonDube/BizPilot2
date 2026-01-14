@@ -9,7 +9,6 @@ This script seeds ALL data needed for every UI component:
 - Customers: individual and business customers with metrics
 - Orders: orders with order_items
 - Invoices: invoices with invoice_items
-- Payments: payment records
 - Reports: uses data from orders, customers, products
 
 Run: python -m scripts.seed_capetown
@@ -40,7 +39,6 @@ from app.models.customer import Customer, CustomerType
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus as OrderPaymentStatus
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
-from app.models.payment import Payment, PaymentStatus, PaymentMethod
 
 
 def clear_all_data(db: Session):
@@ -52,7 +50,6 @@ def clear_all_data(db: Session):
     # Use TRUNCATE ... CASCADE to reliably clear data even when there are
     # foreign keys or additional dependent tables.
     tables = [
-        "payments",
         "inventory_transactions",
         "inventory_items",
         "invoice_items",
@@ -606,69 +603,6 @@ def create_invoices(db: Session, business: Business, orders: list) -> list:
     return invoices
 
 
-def create_payments(db: Session, business: Business, invoices: list, customers: list) -> int:
-    """Create payment records using raw SQL due to enum case sensitivity."""
-    print("Creating payments...")
-    
-    from sqlalchemy import text
-    from uuid import uuid4
-    from datetime import datetime, timezone
-    
-    # Keep enum values aligned with the DB schema created by Alembic (002_add_payments)
-    # paymentmethod: cash, card, bank_transfer, mobile, check, other
-    # paymentstatus: pending, completed, failed, refunded, cancelled
-    payment_methods = [
-        "cash",
-        "card",
-        "bank_transfer",
-        "eft",
-        "mobile",
-        "check",
-        "payfast",
-        "yoco",
-        "snapscan",
-        "other",
-    ]
-    
-    payments_created = 0
-    pay_num = 1000
-    
-    for invoice in invoices:
-        payment_id = uuid4()
-        now = datetime.now(timezone.utc)
-        payment_date = invoice.paid_date or date.today()
-        method = random.choice(payment_methods)
-        
-        # Use string interpolation for enum cast, bind params for data
-        # Note: paymentstatus enum values are: pending, completed, failed, refunded, cancelled
-        sql = f"""
-            INSERT INTO payments (id, business_id, invoice_id, customer_id, payment_number, 
-                                  amount, payment_method, status, payment_date, reference,
-                                  created_at, updated_at)
-            VALUES (:id, :business_id, :invoice_id, :customer_id, :payment_number,
-                    :amount, '{method}'::paymentmethod, 'completed'::paymentstatus, 
-                    :payment_date, :reference, :created_at, :updated_at)
-        """
-        
-        db.execute(text(sql), {
-            "id": payment_id,
-            "business_id": business.id,
-            "invoice_id": invoice.id,
-            "customer_id": invoice.customer_id,
-            "payment_number": f"TBS-PAY-{pay_num}",
-            "amount": float(invoice.total),
-            "payment_date": payment_date,
-            "reference": f"REF{random.randint(100000, 999999)}",
-            "created_at": now,
-            "updated_at": now,
-        })
-        payments_created += 1
-        pay_num += 1
-    
-    db.commit()
-    print(f"  ✓ Payments: {payments_created}")
-    return payments_created
-
 
 def update_customer_metrics(db: Session, business: Business):
     """Update customer order metrics."""
@@ -719,14 +653,6 @@ def main():
         orders = create_orders(db, business, customers, products)
         invoices = create_invoices(db, business, orders)
         
-        # Payments - wrap in try/except due to potential enum mismatch
-        payments_count = 0
-        try:
-            payments_count = create_payments(db, business, invoices, customers)
-        except Exception as e:
-            db.rollback()
-            print(f"  ⚠ Payments skipped: {str(e)[:100]}")
-        
         # Metrics
         update_customer_metrics(db, business)
         
@@ -753,7 +679,6 @@ def main():
         print(f"   Customers:       {len(customers)}")
         print(f"   Orders:          {len(orders)}")
         print(f"   Invoices:        {len(invoices)}")
-        print(f"   Payments:        {payments_count}")
         print("=" * 60 + "\n")
         
     except Exception as e:
