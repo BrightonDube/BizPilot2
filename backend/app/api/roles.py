@@ -177,7 +177,7 @@ async def create_role(
     if invalid_perms:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid permissions: {invalid_perms}"
+            detail=f"Some provided permissions are invalid. Found {len(invalid_perms)} invalid permission(s)."
         )
     
     role = service.create_role(

@@ -4,8 +4,6 @@ from typing import Optional, List
 from decimal import Decimal
 from pydantic import BaseModel, Field
 from datetime import datetime, date
-from enum import Enum
-
 from app.models.invoice import InvoiceStatus, InvoiceType
 
 

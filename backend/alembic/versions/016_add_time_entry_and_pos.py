@@ -142,8 +142,7 @@ def upgrade() -> None:
     )
     op.create_index('ix_pos_sync_logs_connection_id', 'pos_sync_logs', ['connection_id'])
     
-    # Add pin_code field to users table for POS login
-    op.add_column('users', sa.Column('pin_code', sa.String(6), nullable=True))
+    # Add pin_code_hash field to users table for POS login (no plain text PIN stored for security)
     op.add_column('users', sa.Column('pin_code_hash', sa.String(255), nullable=True))
     op.add_column('users', sa.Column('biometric_enabled', sa.Boolean(), nullable=True, default=False))
     op.add_column('users', sa.Column('biometric_public_key', sa.Text(), nullable=True))
@@ -154,7 +153,6 @@ def downgrade() -> None:
     op.drop_column('users', 'biometric_public_key')
     op.drop_column('users', 'biometric_enabled')
     op.drop_column('users', 'pin_code_hash')
-    op.drop_column('users', 'pin_code')
     
     # Drop pos_sync_logs
     op.drop_index('ix_pos_sync_logs_connection_id', table_name='pos_sync_logs')

@@ -1,10 +1,10 @@
 """Time Entry service for user time tracking."""
 
 from typing import List, Optional, Tuple
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, extract
+from sqlalchemy import func
 
 from app.models.time_entry import TimeEntry, TimeEntryType, TimeEntryStatus
 from app.models.user import User

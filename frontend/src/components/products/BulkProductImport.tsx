@@ -71,11 +71,9 @@ export function BulkProductImport({ onClose, onSuccess }: BulkProductImportProps
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await apiClient.post<ImportResult>('/products/import/excel', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+      const response = await apiClient.post<ImportResult>('/products/import/excel', formData)
+      // Note: Don't set Content-Type header manually for multipart/form-data
+      // axios will set it automatically with the correct boundary
 
       setImportResult(response.data)
       setStep('result')

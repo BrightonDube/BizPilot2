@@ -66,8 +66,7 @@ class User(BaseModel):
     # Feature overrides - admin can enable/disable specific features for a user regardless of tier
     feature_overrides = Column(JSONB, nullable=True, default={})
     
-    # POS login fields
-    pin_code = Column(String(6), nullable=True)  # For display/recovery purposes only
+    # POS login fields - PIN is only stored as a secure hash
     pin_code_hash = Column(String(255), nullable=True)  # Hashed PIN for verification
     biometric_enabled = Column(Boolean, default=False, nullable=True)
     biometric_public_key = Column(String, nullable=True)  # For WebAuthn/fingerprint

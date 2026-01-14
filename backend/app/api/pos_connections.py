@@ -1,6 +1,5 @@
 """POS Connection API endpoints for managing Point of Sale integrations."""
 
-import math
 from typing import Optional, List
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -8,7 +7,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user, get_current_business_id
+from app.api.deps import get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.pos_connection import (

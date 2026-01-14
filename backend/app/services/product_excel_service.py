@@ -3,7 +3,7 @@
 from io import BytesIO
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from uuid import UUID
 
 from openpyxl import Workbook, load_workbook
@@ -323,14 +323,16 @@ class ProductExcelService:
                     try:
                         initial_quantity = int(quantity)
                         product.quantity = initial_quantity
-                    except Exception:
+                    except (TypeError, ValueError):
+                        # Ignore invalid quantity values and keep default of 0
                         pass
 
                 low_stock_threshold = get_cell_value("low_stock_threshold")
                 if low_stock_threshold is not None:
                     try:
                         product.low_stock_threshold = int(low_stock_threshold)
-                    except Exception:
+                    except (TypeError, ValueError):
+                        # Ignore invalid threshold values and keep default
                         pass
 
                 is_taxable = get_cell_value("is_taxable_(y/n)") or get_cell_value("is_taxable")

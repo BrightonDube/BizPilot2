@@ -1,7 +1,7 @@
 """Invoice models for invoicing."""
 
 from decimal import Decimal
-from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum as SQLEnum, Date, Boolean
+from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum as SQLEnum, Date
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 import enum
 from datetime import date

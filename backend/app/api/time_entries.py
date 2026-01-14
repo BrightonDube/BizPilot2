@@ -1,10 +1,8 @@
 """Time Entry API endpoints for time tracking and payroll."""
 
-import math
 import io
 from typing import Optional
 from datetime import datetime, date, timedelta
-from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -278,6 +276,7 @@ async def list_time_entries(
         try:
             entry_status = TimeEntryStatus(status_filter)
         except ValueError:
+            # Invalid status filter provided; ignore and treat as no status filter
             pass
     
     entries, total = service.get_entries(

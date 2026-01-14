@@ -541,8 +541,8 @@ async def initiate_supplier_payment(
     
     # Initialize Paystack transaction
     # Amount is in kobo/cents (smallest currency unit)
-    # Use quantize to ensure we round to 2 decimal places, then convert to cents
-    amount_cents = int((total_to_pay * Decimal("100")).quantize(Decimal("1")))
+    # Multiply by 100 to convert to cents, then round to the nearest integer cent
+    amount_cents = int(round(total_to_pay * Decimal("100")))
     
     transaction = await paystack_service.initialize_transaction(
         email=current_user.email,
@@ -635,8 +635,8 @@ async def verify_supplier_payment(
         # Calculate expected total (invoice balance + gateway fee)
         expected_total = Decimal(str(invoice.balance_due)) + (invoice.gateway_fee or Decimal("0"))
         
-        # Validate the amount paid matches expected (allow small tolerance for rounding)
-        tolerance = Decimal("0.02")  # 2 cents tolerance
+        # Validate the amount paid matches expected (allow minimal tolerance for rounding)
+        tolerance = Decimal("0.01")  # 1 cent tolerance
         if abs(amount_paid - expected_total) > tolerance:
             return VerifySupplierPaymentResponse(
                 status="failed",
