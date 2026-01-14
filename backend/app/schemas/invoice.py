@@ -94,6 +94,7 @@ class InvoiceResponse(InvoiceBase):
     business_id: str
     invoice_number: str
     customer_name: Optional[str] = None  # Computed from customer relationship
+    supplier_id: Optional[str] = None
     supplier_name: Optional[str] = None  # Computed from supplier relationship
     subtotal: Decimal
     tax_amount: Decimal
@@ -106,11 +107,11 @@ class InvoiceResponse(InvoiceBase):
     is_supplier_invoice: bool = False
     paid_date: Optional[date] = None
     pdf_url: Optional[str] = None
-    # Paystack payment tracking
-    paystack_reference: Optional[str] = None
-    gateway_fee: Decimal = Decimal("0")
-    gateway_fee_percent: Decimal = Decimal("1.5")
-    total_with_gateway_fee: Decimal = Decimal("0")
+    # Paystack payment fields
+    payment_reference: Optional[str] = None
+    payment_gateway_fees: Decimal = Decimal("0")
+    gateway_status: Optional[str] = None
+    total_with_fees: Decimal = Decimal("0")
     created_at: datetime
     updated_at: datetime
     items: List[InvoiceItemResponse] = []
@@ -148,36 +149,35 @@ class InvoiceSummary(BaseModel):
     overdue_amount: Decimal
 
 
-# Supplier Payment Schemas
-class InitiateSupplierPaymentRequest(BaseModel):
-    """Schema for initiating a supplier payment via Paystack."""
+# Paystack payment schemas
+class InvoicePaymentInitiate(BaseModel):
+    """Schema for initiating a Paystack payment for an invoice."""
     
-    callback_url: str = Field(..., min_length=1, description="URL to redirect after payment")
+    callback_url: str = Field(..., description="URL to redirect to after payment")
 
 
-class InitiateSupplierPaymentResponse(BaseModel):
-    """Schema for supplier payment initiation response."""
+class InvoicePaymentResponse(BaseModel):
+    """Schema for Paystack payment initialization response."""
     
     reference: str
     authorization_url: str
     access_code: str
     invoice_total: Decimal
-    gateway_fee: Decimal
-    total_to_pay: Decimal
+    gateway_fees: Decimal
+    total_with_fees: Decimal
 
 
-class VerifySupplierPaymentRequest(BaseModel):
-    """Schema for verifying a supplier payment."""
+class InvoicePaymentVerify(BaseModel):
+    """Schema for verifying a Paystack payment."""
     
-    reference: str = Field(..., min_length=1)
+    reference: str
 
 
-class VerifySupplierPaymentResponse(BaseModel):
-    """Schema for supplier payment verification response."""
+class InvoicePaymentVerifyResponse(BaseModel):
+    """Schema for payment verification response."""
     
-    status: str  # success, failed, pending
+    status: str
     message: str
     invoice_id: Optional[str] = None
-    invoice_number: Optional[str] = None
     amount_paid: Optional[Decimal] = None
-    gateway_fee: Optional[Decimal] = None
+    gateway_fees: Optional[Decimal] = None

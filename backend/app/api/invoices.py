@@ -24,13 +24,13 @@ from app.schemas.invoice import (
     InvoiceItemResponse,
     PaymentRecord,
     InvoiceSummary,
-    InitiateSupplierPaymentRequest,
-    InitiateSupplierPaymentResponse,
-    VerifySupplierPaymentRequest,
-    VerifySupplierPaymentResponse,
+    InvoicePaymentInitiate,
+    InvoicePaymentResponse,
+    InvoicePaymentVerify,
+    InvoicePaymentVerifyResponse,
 )
 from app.services.invoice_service import InvoiceService
-from app.services.paystack_service import paystack_service
+from app.services.invoice_payment_service import InvoicePaymentService, calculate_gateway_fees
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
@@ -65,10 +65,11 @@ def _invoice_to_response(invoice, items=None, customer_name: str = None, supplie
         is_overdue=invoice.is_overdue,
         is_supplier_invoice=invoice.is_supplier_invoice,
         pdf_url=invoice.pdf_url,
-        paystack_reference=invoice.paystack_reference,
-        gateway_fee=invoice.gateway_fee or Decimal("0"),
-        gateway_fee_percent=invoice.gateway_fee_percent or Decimal("1.5"),
-        total_with_gateway_fee=invoice.total_with_gateway_fee,
+        # Paystack payment fields
+        payment_reference=invoice.payment_reference,
+        payment_gateway_fees=invoice.payment_gateway_fees or Decimal("0"),
+        gateway_status=invoice.gateway_status,
+        total_with_fees=invoice.total_with_fees,
         created_at=invoice.created_at,
         updated_at=invoice.updated_at,
         items=[_item_to_response(item) for item in (items or [])],
@@ -481,124 +482,28 @@ async def get_invoice_items(
     return [_item_to_response(item) for item in items]
 
 
-# Supplier Payment Endpoints (Paystack Integration)
+# ============================================================================
+# Paystack Payment Endpoints
+# ============================================================================
 
-@router.post("/{invoice_id}/pay", response_model=InitiateSupplierPaymentResponse)
-async def initiate_supplier_payment(
+@router.post("/{invoice_id}/pay", response_model=InvoicePaymentResponse)
+async def initiate_invoice_payment(
     invoice_id: str,
-    data: InitiateSupplierPaymentRequest,
-    current_user: User = Depends(has_permission("invoices:edit")),
-    business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
-):
-    """
-    Initiate a payment for a supplier invoice via Paystack.
-    
-    This endpoint:
-    1. Validates the invoice is a supplier invoice with a balance due
-    2. Calculates the gateway fee (typically 1.5% of the invoice total)
-    3. Creates a Paystack transaction for the total + gateway fee
-    4. Returns the authorization URL for the user to complete payment
-    """
-    service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, business_id)
-    
-    if not invoice:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Invoice not found",
-        )
-    
-    # Validate this is a supplier invoice
-    if not invoice.is_supplier_invoice:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This is not a supplier invoice. Only supplier invoices can be paid via gateway.",
-        )
-    
-    # Check if already paid
-    if invoice.is_paid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This invoice has already been paid.",
-        )
-    
-    # Check if already has a pending payment
-    if invoice.paystack_reference:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A payment has already been initiated for this invoice. Please verify the existing payment first.",
-        )
-    
-    # Calculate gateway fee using Decimal for precision
-    gateway_fee_percent = Decimal(str(invoice.gateway_fee_percent or "1.5"))
-    invoice_total = Decimal(str(invoice.balance_due))
-    gateway_fee = (invoice_total * gateway_fee_percent / Decimal("100")).quantize(Decimal("0.01"))
-    total_to_pay = invoice_total + gateway_fee
-    
-    # Generate a unique reference
-    reference = paystack_service.generate_reference(prefix="SUP")
-    
-    # Initialize Paystack transaction
-    # Amount is in kobo/cents (smallest currency unit)
-    # Multiply by 100 to convert to cents, then round to the nearest integer cent
-    amount_cents = int(round(total_to_pay * Decimal("100")))
-    
-    transaction = await paystack_service.initialize_transaction(
-        email=current_user.email,
-        amount_cents=amount_cents,
-        reference=reference,
-        callback_url=data.callback_url,
-        metadata={
-            "invoice_id": str(invoice.id),
-            "invoice_number": invoice.invoice_number,
-            "business_id": str(business_id),
-            "payment_type": "supplier_invoice",
-            "invoice_amount": str(invoice_total),
-            "gateway_fee": str(gateway_fee),
-        },
-    )
-    
-    if not transaction:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to initialize payment with Paystack. Please try again.",
-        )
-    
-    # Store the payment reference on the invoice
-    invoice.paystack_reference = transaction.reference
-    invoice.paystack_access_code = transaction.access_code
-    invoice.gateway_fee = gateway_fee
-    db.commit()
-    
-    return InitiateSupplierPaymentResponse(
-        reference=transaction.reference,
-        authorization_url=transaction.authorization_url,
-        access_code=transaction.access_code,
-        invoice_total=invoice_total,
-        gateway_fee=gateway_fee,
-        total_to_pay=total_to_pay,
-    )
-
-
-@router.post("/{invoice_id}/verify-payment", response_model=VerifySupplierPaymentResponse)
-async def verify_supplier_payment(
-    invoice_id: str,
-    data: VerifySupplierPaymentRequest,
+    data: InvoicePaymentInitiate,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
-    Verify a supplier payment after Paystack callback.
+    Initiate a Paystack payment for an invoice.
     
-    This endpoint:
-    1. Verifies the payment with Paystack
-    2. If successful, marks the invoice as paid
-    3. Returns the payment status
+    This endpoint creates a Paystack transaction for the invoice balance plus gateway fees.
+    The user will be redirected to Paystack's payment page.
+    
+    Gateway fees (Paystack): 1.5% + R2, capped at R50
     """
-    service = InvoiceService(db)
-    invoice = service.get_invoice(invoice_id, business_id)
+    payment_service = InvoicePaymentService(db)
+    invoice = payment_service.get_invoice(invoice_id, business_id)
     
     if not invoice:
         raise HTTPException(
@@ -606,92 +511,55 @@ async def verify_supplier_payment(
             detail="Invoice not found",
         )
     
-    # Verify the reference matches
-    if invoice.paystack_reference != data.reference:
+    if invoice.is_paid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Payment reference does not match this invoice.",
+            detail="Invoice is already fully paid",
         )
     
-    # Verify with Paystack
-    verification = await paystack_service.verify_transaction(data.reference)
-    
-    if not verification:
-        return VerifySupplierPaymentResponse(
-            status="failed",
-            message="Unable to verify payment with Paystack. Please contact support.",
-            invoice_id=str(invoice.id),
-            invoice_number=invoice.invoice_number,
+    if invoice.status == InvoiceStatus.CANCELLED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot pay a cancelled invoice",
         )
     
-    paystack_status = verification.get("status", "").lower()
+    # If there's an existing pending payment, reset it
+    if invoice.gateway_status == "pending":
+        payment_service.reset_payment_reference(invoice)
     
-    if paystack_status == "success":
-        # Payment successful - validate amount and update invoice
-        # Convert from kobo to rands using Decimal for precision
-        amount_paid_kobo = verification.get("amount", 0)
-        amount_paid = Decimal(str(amount_paid_kobo)) / Decimal("100")
-        
-        # Calculate expected total (invoice balance + gateway fee)
-        expected_total = Decimal(str(invoice.balance_due)) + (invoice.gateway_fee or Decimal("0"))
-        
-        # Validate the amount paid matches expected (allow minimal tolerance for rounding)
-        tolerance = Decimal("0.01")  # 1 cent tolerance
-        if abs(amount_paid - expected_total) > tolerance:
-            return VerifySupplierPaymentResponse(
-                status="failed",
-                message=f"Payment amount mismatch. Expected {expected_total}, received {amount_paid}. Please contact support.",
-                invoice_id=str(invoice.id),
-                invoice_number=invoice.invoice_number,
-            )
-        
-        # The amount paid includes gateway fee, so we record the invoice balance as paid
-        invoice.amount_paid = invoice.total
-        invoice.status = InvoiceStatus.PAID
-        invoice.paid_date = date.today()
-        db.commit()
-        
-        return VerifySupplierPaymentResponse(
-            status="success",
-            message="Payment verified successfully. Invoice has been marked as paid.",
-            invoice_id=str(invoice.id),
-            invoice_number=invoice.invoice_number,
-            amount_paid=invoice.total,
-            gateway_fee=invoice.gateway_fee,
+    transaction, gateway_fees, total_with_fees = await payment_service.initiate_payment(
+        invoice=invoice,
+        user_email=current_user.email,
+        callback_url=data.callback_url,
+    )
+    
+    if not transaction:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initialize payment with Paystack",
         )
-    elif paystack_status == "pending":
-        return VerifySupplierPaymentResponse(
-            status="pending",
-            message="Payment is still being processed. Please wait.",
-            invoice_id=str(invoice.id),
-            invoice_number=invoice.invoice_number,
-        )
-    else:
-        # Payment failed - clear the reference so user can try again
-        invoice.paystack_reference = None
-        invoice.paystack_access_code = None
-        invoice.gateway_fee = Decimal("0")
-        db.commit()
-        
-        return VerifySupplierPaymentResponse(
-            status="failed",
-            message=f"Payment failed: {verification.get('gateway_response', 'Unknown error')}",
-            invoice_id=str(invoice.id),
-            invoice_number=invoice.invoice_number,
-        )
+    
+    return InvoicePaymentResponse(
+        reference=transaction.reference,
+        authorization_url=transaction.authorization_url,
+        access_code=transaction.access_code,
+        invoice_total=Decimal(str(invoice.balance_due)),
+        gateway_fees=gateway_fees,
+        total_with_fees=total_with_fees,
+    )
 
 
-@router.delete("/{invoice_id}/cancel-payment", status_code=status.HTTP_204_NO_CONTENT)
-async def cancel_pending_payment(
+@router.get("/{invoice_id}/payment-preview")
+async def get_payment_preview(
     invoice_id: str,
-    current_user: User = Depends(has_permission("invoices:edit")),
+    current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
-    Cancel a pending supplier payment.
+    Get a preview of payment amounts including gateway fees.
     
-    This allows the user to start a new payment if the previous one was abandoned.
+    This allows the frontend to show the total amount before initiating payment.
     """
     service = InvoiceService(db)
     invoice = service.get_invoice(invoice_id, business_id)
@@ -701,15 +569,41 @@ async def cancel_pending_payment(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Invoice not found",
         )
+
+    balance_due = Decimal(str(invoice.balance_due))
+    gateway_fees = calculate_gateway_fees(balance_due)
+    total_with_fees = balance_due + gateway_fees
     
-    if not invoice.paystack_reference:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No pending payment to cancel.",
-        )
+    return {
+        "invoice_id": str(invoice.id),
+        "invoice_number": invoice.invoice_number,
+        "balance_due": float(balance_due),
+        "gateway_fees": float(gateway_fees),
+        "total_with_fees": float(total_with_fees),
+        "currency": "ZAR",
+    }
+
+
+@router.post("/payment/verify", response_model=InvoicePaymentVerifyResponse)
+async def verify_invoice_payment(
+    data: InvoicePaymentVerify,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Verify a Paystack payment after callback.
     
-    # Clear the payment reference
-    invoice.paystack_reference = None
-    invoice.paystack_access_code = None
-    invoice.gateway_fee = Decimal("0")
-    db.commit()
+    This endpoint should be called after the user returns from the Paystack payment page
+    to confirm the payment status and update the invoice.
+    """
+    payment_service = InvoicePaymentService(db)
+    
+    success, message, invoice = await payment_service.verify_payment(data.reference)
+    
+    return InvoicePaymentVerifyResponse(
+        status="success" if success else "failed",
+        message=message,
+        invoice_id=str(invoice.id) if invoice else None,
+        amount_paid=invoice.amount_paid if invoice else None,
+        gateway_fees=invoice.payment_gateway_fees if invoice else None,
+    )

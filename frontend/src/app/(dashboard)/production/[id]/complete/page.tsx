@@ -72,8 +72,9 @@ export default function CompleteProductionPage() {
 
       await apiClient.post(`/production/${order.id}/complete`, payload)
       router.push(`/production/${order.id}`)
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to complete production')
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } }
+      setError(error.response?.data?.detail || 'Failed to complete production')
     } finally {
       setIsSubmitting(false)
     }

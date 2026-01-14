@@ -15,45 +15,51 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const STORAGE_KEY = 'bizpilot-theme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('dark');
+  const getSystemTheme = (): 'dark' | 'light' => {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
 
-  useEffect(() => {
-    // Load saved theme from localStorage
+  const [theme, setThemeState] = useState<Theme>(() => {
     const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
     if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
-      setThemeState(savedTheme);
+      return savedTheme;
     }
-  }, []);
+    return 'dark';
+  });
+
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
+    const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    const initialTheme = savedTheme && ['dark', 'light', 'system'].includes(savedTheme) ? savedTheme : 'dark';
+    if (initialTheme === 'system') {
+      return getSystemTheme();
+    }
+    return initialTheme;
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
-    
-    const applyTheme = (newTheme: 'dark' | 'light') => {
-      root.classList.remove('light', 'dark');
-      root.classList.add(newTheme);
-      setResolvedTheme(newTheme);
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme === 'system' ? resolvedTheme : theme);
+  }, [theme, resolvedTheme]);
+
+  useEffect(() => {
+    if (theme !== 'system') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setResolvedTheme(e.matches ? 'dark' : 'light');
     };
 
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const systemTheme = mediaQuery.matches ? 'dark' : 'light';
-      applyTheme(systemTheme);
-
-      const handleChange = (e: MediaQueryListEvent) => {
-        applyTheme(e.matches ? 'dark' : 'light');
-      };
-
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } else {
-      applyTheme(theme);
-    }
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem(STORAGE_KEY, newTheme);
+    setResolvedTheme(newTheme === 'system' ? getSystemTheme() : newTheme);
   };
 
   return (

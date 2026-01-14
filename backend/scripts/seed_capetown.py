@@ -547,7 +547,6 @@ def create_orders(db: Session, business: Business, customers: list, products: li
         orders.append(order)
         order_num += 1
     
-    db.commit()
     print(f"  ✓ Orders: {len(orders)}")
     return orders
 
@@ -601,7 +600,6 @@ def create_invoices(db: Session, business: Business, orders: list) -> list:
     db.commit()
     print(f"  ✓ Invoices: {len(invoices)}")
     return invoices
-
 
 
 def update_customer_metrics(db: Session, business: Business):

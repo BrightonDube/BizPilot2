@@ -216,13 +216,13 @@ class AIService:
             or 0
         )
 
-        # Count paid invoices instead of separate payment records
+        # Count paid/partial invoices as "payments"
         total_payments = (
             self.db.query(func.count(Invoice.id))
             .filter(
                 Invoice.business_id == business.id,
                 Invoice.deleted_at.is_(None),
-                Invoice.status == InvoiceStatus.PAID,
+                Invoice.status.in_([InvoiceStatus.PAID, InvoiceStatus.PARTIAL]),
             )
             .scalar()
             or 0
@@ -331,15 +331,15 @@ class AIService:
             or 0
         )
 
-        # Count paid purchase invoices instead of separate payment records
+        # Count paid/partial purchase invoices as "payments"
         total_purchase_payments = (
             self.db.query(func.count(Invoice.id))
             .join(Order, Invoice.order_id == Order.id)
             .filter(
                 Invoice.business_id == business.id,
                 Invoice.deleted_at.is_(None),
-                Invoice.status == InvoiceStatus.PAID,
                 Order.direction == OrderDirection.OUTBOUND,
+                Invoice.status.in_([InvoiceStatus.PAID, InvoiceStatus.PARTIAL]),
             )
             .scalar()
             or 0

@@ -90,8 +90,9 @@ export default function ProductionDetailPage() {
     try {
       await apiClient.post(`/production/${order.id}/start`)
       fetchOrder()
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to start production')
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } }
+      setError(error.response?.data?.detail || 'Failed to start production')
     } finally {
       setActionLoading(false)
     }
@@ -103,8 +104,9 @@ export default function ProductionDetailPage() {
     try {
       await apiClient.post(`/production/${order.id}/cancel`)
       fetchOrder()
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to cancel production')
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } }
+      setError(error.response?.data?.detail || 'Failed to cancel production')
     } finally {
       setActionLoading(false)
     }

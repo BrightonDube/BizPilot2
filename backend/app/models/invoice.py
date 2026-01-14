@@ -67,11 +67,10 @@ class Invoice(BaseModel):
     # Payment
     amount_paid = Column(Numeric(12, 2), default=0)
     
-    # Paystack payment tracking (for supplier payments via gateway)
-    paystack_reference = Column(String(100), nullable=True, index=True)
-    paystack_access_code = Column(String(100), nullable=True)
-    gateway_fee = Column(Numeric(12, 2), default=0)  # Gateway transaction fee
-    gateway_fee_percent = Column(Numeric(5, 2), default=1.5)  # Paystack typically charges 1.5%
+    # Paystack payment tracking
+    payment_reference = Column(String(100), nullable=True, index=True)
+    payment_gateway_fees = Column(Numeric(12, 2), default=0)
+    gateway_status = Column(String(50), nullable=True)
     
     # Addresses
     billing_address = Column(JSONB, nullable=True)
@@ -112,11 +111,11 @@ class Invoice(BaseModel):
         return self.invoice_type == InvoiceType.SUPPLIER or self.supplier_id is not None
     
     @property
-    def total_with_gateway_fee(self) -> Decimal:
-        """Calculate total amount including gateway fee for supplier payments."""
+    def total_with_fees(self) -> Decimal:
+        """Calculate total including gateway fees."""
         total = self.total or Decimal("0")
-        fee = self.gateway_fee or Decimal("0")
-        return total + fee
+        fees = self.payment_gateway_fees or Decimal("0")
+        return total + fees
 
 
 class InvoiceItem(BaseModel):
