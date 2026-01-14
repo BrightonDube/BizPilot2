@@ -463,7 +463,7 @@ async def setup_pin(
     try:
         hashed_pin = hash_pin_code(data.pin)
         current_user.pin_code_hash = hashed_pin
-        current_user.pin_code = data.pin[-4:]  # Store last 4 digits for reference only
+        # Don't store any part of the PIN in plain text for security
         db.commit()
         
         return {"message": "PIN set up successfully"}

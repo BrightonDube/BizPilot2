@@ -10,6 +10,10 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
+# Import openpyxl at module level for efficiency
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+
 from app.core.database import get_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
@@ -399,8 +403,7 @@ async def export_payroll_report(
     db: Session = Depends(get_db),
 ):
     """Export payroll report to Excel (requires reports:view permission)."""
-    import openpyxl
-    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    # openpyxl imported at module level for efficiency
     
     service = TimeEntryService(db)
     

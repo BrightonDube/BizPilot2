@@ -71,7 +71,7 @@ class AssignRoleRequest(BaseModel):
 
 def _role_to_response(role: Role) -> RoleResponse:
     """Convert role to response."""
-    permissions = role.get_permissions() if hasattr(role, 'get_permissions') else []
+    permissions = role.get_permissions()
     return RoleResponse(
         id=str(role.id),
         name=role.name,

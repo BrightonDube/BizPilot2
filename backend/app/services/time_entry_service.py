@@ -68,9 +68,10 @@ class TimeEntryService:
         if not entry:
             raise ValueError("Not currently clocked in.")
         
-        entry.clock_out = datetime.utcnow()
+        clock_out_time = datetime.utcnow()
+        entry.clock_out = clock_out_time
         entry.status = TimeEntryStatus.COMPLETED
-        entry.hours_worked = entry.calculate_hours()
+        entry.hours_worked = entry.calculate_hours(current_time=clock_out_time)
         
         if notes:
             existing_notes = entry.notes or ""
@@ -277,7 +278,7 @@ class TimeEntryService:
         created_by_id: Optional[str] = None,
     ) -> TimeEntry:
         """Create a manual time entry (for adjustments)."""
-        if clock_out <= clock_in:
+        if clock_out < clock_in:
             raise ValueError("Clock out time must be after clock in time.")
         
         total_seconds = (clock_out - clock_in).total_seconds()

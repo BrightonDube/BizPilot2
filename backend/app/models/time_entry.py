@@ -78,12 +78,24 @@ class TimeEntry(BaseModel):
     def __repr__(self) -> str:
         return f"<TimeEntry {self.id} user={self.user_id} status={self.status}>"
 
-    def calculate_hours(self) -> Decimal:
-        """Calculate hours worked for this entry."""
+    def calculate_hours(self, current_time: datetime = None) -> Decimal:
+        """Calculate hours worked for this entry.
+        
+        Args:
+            current_time: The time to use as end time for active entries.
+                         If not provided and clock_out is None, returns 0.
+        """
         if not self.clock_in:
             return Decimal("0")
         
-        end_time = self.clock_out or datetime.utcnow()
+        # For completed entries, use clock_out; for active entries, use provided time
+        if self.clock_out:
+            end_time = self.clock_out
+        elif current_time:
+            end_time = current_time
+        else:
+            return Decimal("0")  # Cannot calculate without end time
+        
         total_seconds = (end_time - self.clock_in).total_seconds()
         
         # Subtract break time
