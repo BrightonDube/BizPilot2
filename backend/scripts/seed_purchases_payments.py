@@ -1,4 +1,4 @@
-"""Seed script for Purchases (Orders with direction=outbound) and Payments (non-destructive, idempotent)."""
+"""Seed script for Purchases (Orders with direction=outbound) - non-destructive, idempotent."""
 
 import sys
 import os
@@ -15,7 +15,6 @@ from app.core.database import SessionLocal
 from app.models.business import Business
 from app.models.supplier import Supplier
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus as OrderPaymentStatus
-from app.models.payment import Payment, PaymentStatus, PaymentMethod
 from app.models.product import Product
 
 
@@ -23,12 +22,6 @@ def generate_order_number(prefix: str = "PO") -> str:
     """Generate a unique order number."""
     import uuid
     return f"{prefix}-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
-
-
-def generate_payment_number() -> str:
-    """Generate a unique payment number."""
-    import uuid
-    return f"PAY-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
 
 
 def seed_purchases_for_business(db: Session, business_id: str) -> int:
@@ -174,56 +167,8 @@ def seed_purchases_for_business(db: Session, business_id: str) -> int:
     return orders_created
 
 
-def seed_payments_for_business(db: Session, business_id: str) -> int:
-    """Seed payments for a business based on existing orders."""
-    # Check if payments already exist
-    existing = db.query(Payment).filter(
-        Payment.business_id == business_id,
-    ).count()
-
-    if existing > 0:
-        print(f"    Skipping payments - {existing} already exist")
-        return 0
-
-    # Get orders with payments (paid or partial)
-    orders = db.query(Order).filter(
-        Order.business_id == business_id,
-        Order.amount_paid > 0,
-    ).all()
-
-    if not orders:
-        print("    No paid orders found")
-        return 0
-
-    payments_created = 0
-    payment_methods_list = list(PaymentMethod)
-
-    for order in orders:
-        if order.amount_paid <= 0:
-            continue
-
-        # Create payment record
-        payment_method = PaymentMethod(order.payment_method) if order.payment_method in [m.value for m in PaymentMethod] else random.choice(payment_methods_list)
-        
-        payment = Payment(
-            business_id=business_id,
-            payment_number=generate_payment_number(),
-            amount=order.amount_paid,
-            payment_method=payment_method,
-            status=PaymentStatus.COMPLETED if order.payment_status == OrderPaymentStatus.PAID else PaymentStatus.PENDING,
-            payment_date=order.order_date + timedelta(days=random.randint(0, 7)),
-            reference=f"Payment for {order.order_number}",
-            notes=f"Payment recorded for order {order.order_number}",
-        )
-        db.add(payment)
-        payments_created += 1
-
-    db.commit()
-    return payments_created
-
-
 def main() -> None:
-    """Main entry point for seeding purchases and payments."""
+    """Main entry point for seeding purchases."""
     db = SessionLocal()
     try:
         businesses = db.query(Business).all()
@@ -235,7 +180,6 @@ def main() -> None:
         print(f"Found {len(businesses)} business(es)")
         
         total_purchases = 0
-        total_payments = 0
 
         for business in businesses:
             print(f"\nSeeding for business: {business.name} ({business.id})")
@@ -244,15 +188,9 @@ def main() -> None:
             purchases = seed_purchases_for_business(db, str(business.id))
             total_purchases += purchases
             print(f"  ✓ Purchases seeded: {purchases}")
-            
-            # Seed payments
-            payments = seed_payments_for_business(db, str(business.id))
-            total_payments += payments
-            print(f"  ✓ Payments seeded: {payments}")
 
         print(f"\n=== Summary ===")
         print(f"Total purchases created: {total_purchases}")
-        print(f"Total payments created: {total_payments}")
 
     finally:
         db.close()

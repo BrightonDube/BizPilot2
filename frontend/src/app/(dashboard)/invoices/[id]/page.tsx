@@ -41,6 +41,7 @@ interface Invoice {
   invoice_number: string
   customer_id: string | null
   customer_name?: string
+  supplier_id?: string | null
   status: string
   issue_date: string
   due_date: string
@@ -58,6 +59,11 @@ interface Invoice {
   is_paid: boolean
   is_overdue: boolean
   pdf_url?: string
+  // Paystack payment fields
+  payment_reference?: string
+  payment_gateway_fees?: number
+  gateway_status?: string
+  total_with_fees?: number
   items: InvoiceItem[]
   created_at: string
   updated_at: string
@@ -98,6 +104,18 @@ const statusConfig: Record<string, { color: string; bgColor: string; icon: React
   cancelled: { color: 'text-gray-400', bgColor: 'bg-gray-500/20', icon: <FileText className="w-4 h-4" />, label: 'Cancelled' },
 }
 
+// Action loading states as constants to avoid typos
+const ACTION_STATES = {
+  SEND: 'send',
+  PDF: 'pdf',
+  DELETE: 'delete',
+  PAYMENT: 'payment',
+  PAYSTACK_PREVIEW: 'paystack-preview',
+  PAYSTACK: 'paystack',
+} as const
+
+type ActionState = typeof ACTION_STATES[keyof typeof ACTION_STATES] | null
+
 export default function InvoiceDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -106,8 +124,14 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState<ActionState>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showPaystackModal, setShowPaystackModal] = useState(false)
+  const [paymentPreview, setPaymentPreview] = useState<{
+    balance_due: number
+    gateway_fees: number
+    total_with_fees: number
+  } | null>(null)
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer')
 
@@ -135,7 +159,7 @@ export default function InvoiceDetailPage() {
     if (!invoice) return
     if (!confirm(`Send invoice ${invoice.invoice_number} to customer?`)) return
 
-    setActionLoading('send')
+    setActionLoading(ACTION_STATES.SEND)
     try {
       const response = await apiClient.post(`/invoices/${invoiceId}/send`)
       setInvoice(response.data)
@@ -151,7 +175,7 @@ export default function InvoiceDetailPage() {
   const handleDownloadPdf = async () => {
     if (!invoice) return
 
-    setActionLoading('pdf')
+    setActionLoading(ACTION_STATES.PDF)
     try {
       if (invoice.pdf_url) {
         window.open(invoice.pdf_url, '_blank', 'noopener,noreferrer')
@@ -297,7 +321,7 @@ export default function InvoiceDetailPage() {
     if (!invoice) return
     if (!confirm(`Are you sure you want to delete invoice ${invoice.invoice_number}? This action cannot be undone.`)) return
 
-    setActionLoading('delete')
+    setActionLoading(ACTION_STATES.DELETE)
     try {
       await apiClient.delete(`/invoices/${invoiceId}`)
       router.push('/invoices')
@@ -322,7 +346,7 @@ export default function InvoiceDetailPage() {
       return
     }
 
-    setActionLoading('payment')
+    setActionLoading(ACTION_STATES.PAYMENT)
     try {
       const response = await apiClient.post(`/invoices/${invoiceId}/payment`, {
         amount,
@@ -336,6 +360,46 @@ export default function InvoiceDetailPage() {
       const error = err as { response?: { data?: { detail?: string } } }
       alert(error.response?.data?.detail || 'Failed to record payment')
     } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handlePayWithPaystack = async () => {
+    if (!invoice) return
+
+    setActionLoading(ACTION_STATES.PAYSTACK_PREVIEW)
+    try {
+      // First get the payment preview to show fees
+      const previewResponse = await apiClient.get(`/invoices/${invoiceId}/payment-preview`)
+      setPaymentPreview(previewResponse.data)
+      setShowPaystackModal(true)
+    } catch (err: unknown) {
+      console.error('Error getting payment preview:', err)
+      const error = err as { response?: { data?: { detail?: string } } }
+      alert(error.response?.data?.detail || 'Failed to get payment preview')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleInitiatePaystackPayment = async () => {
+    if (!invoice) return
+
+    setActionLoading(ACTION_STATES.PAYSTACK)
+    try {
+      // Create callback URL - where Paystack will redirect after payment
+      const callbackUrl = `${window.location.origin}/invoices/payment/callback`
+      
+      const response = await apiClient.post(`/invoices/${invoiceId}/pay`, {
+        callback_url: callbackUrl
+      })
+      
+      // Redirect to Paystack payment page
+      window.location.href = response.data.authorization_url
+    } catch (err: unknown) {
+      console.error('Error initiating Paystack payment:', err)
+      const error = err as { response?: { data?: { detail?: string } } }
+      alert(error.response?.data?.detail || 'Failed to initiate payment')
       setActionLoading(null)
     }
   }
@@ -409,10 +473,10 @@ export default function InvoiceDetailPage() {
             variant="outline"
             size="sm"
             onClick={handleDownloadPdf}
-            disabled={actionLoading === 'pdf'}
+            disabled={actionLoading === ACTION_STATES.PDF}
             className="border-gray-600"
           >
-            {actionLoading === 'pdf' ? (
+            {actionLoading === ACTION_STATES.PDF ? (
               <Loader2 className="h-4 w-4 mr-1 animate-spin" />
             ) : (
               <Download className="h-4 w-4 mr-1" />
@@ -444,10 +508,10 @@ export default function InvoiceDetailPage() {
               <Button
                 size="sm"
                 onClick={handleSendInvoice}
-                disabled={actionLoading === 'send'}
+                disabled={actionLoading === ACTION_STATES.SEND}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {actionLoading === 'send' ? (
+                {actionLoading === ACTION_STATES.SEND ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                 ) : (
                   <Send className="h-4 w-4 mr-1" />
@@ -458,24 +522,40 @@ export default function InvoiceDetailPage() {
           )}
           
           {['sent', 'viewed', 'partial'].includes(invoice.status) && invoice.balance_due > 0 && (
-            <Button
-              size="sm"
-              onClick={() => setShowPaymentModal(true)}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CreditCard className="h-4 w-4 mr-1" />
-              Record Payment
-            </Button>
+            <>
+              <Button
+                size="sm"
+                onClick={handlePayWithPaystack}
+                disabled={actionLoading === ACTION_STATES.PAYSTACK_PREVIEW || actionLoading === ACTION_STATES.PAYSTACK}
+                className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+              >
+                {actionLoading === ACTION_STATES.PAYSTACK_PREVIEW || actionLoading === ACTION_STATES.PAYSTACK ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-1" />
+                )}
+                Pay with Paystack
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowPaymentModal(true)}
+                className="border-gray-600"
+              >
+                <CreditCard className="h-4 w-4 mr-1" />
+                Record Manual Payment
+              </Button>
+            </>
           )}
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleDeleteInvoice}
-            disabled={actionLoading === 'delete'}
+            disabled={actionLoading === ACTION_STATES.DELETE}
             className="border-red-600 text-red-400 hover:bg-red-900/20"
           >
-            {actionLoading === 'delete' ? (
+            {actionLoading === ACTION_STATES.DELETE ? (
               <Loader2 className="h-4 w-4 mr-1 animate-spin" />
             ) : (
               <Trash2 className="h-4 w-4 mr-1" />
@@ -710,15 +790,75 @@ export default function InvoiceDetailPage() {
               </Button>
               <Button
                 onClick={handleRecordPayment}
-                disabled={actionLoading === 'payment'}
+                disabled={actionLoading === ACTION_STATES.PAYMENT}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {actionLoading === 'payment' ? (
+                {actionLoading === ACTION_STATES.PAYMENT ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                 ) : (
                   <CheckCircle className="h-4 w-4 mr-1" />
                 )}
                 Record Payment
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Paystack Payment Modal */}
+      {showPaystackModal && paymentPreview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            className="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <h2 className="text-xl font-semibold text-white mb-4">Pay Invoice with Paystack</h2>
+            <p className="text-gray-400 mb-4">
+              Pay invoice <span className="text-white font-medium">{invoice.invoice_number}</span> securely via Paystack.
+            </p>
+            
+            <div className="bg-gray-900 rounded-lg p-4 space-y-3 mb-6">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Invoice Balance</span>
+                <span className="text-white">{formatCurrency(paymentPreview.balance_due)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Gateway Fees (Paystack)</span>
+                <span className="text-yellow-400">+{formatCurrency(paymentPreview.gateway_fees)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-semibold pt-2 border-t border-gray-700">
+                <span className="text-white">Total to Pay</span>
+                <span className="text-green-400">{formatCurrency(paymentPreview.total_with_fees)}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-4">
+              You will be redirected to Paystack&apos;s secure payment page. Gateway fees are charged by Paystack for processing the payment.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowPaystackModal(false)
+                  setPaymentPreview(null)
+                }}
+                className="border-gray-600"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleInitiatePaystackPayment}
+                disabled={actionLoading === ACTION_STATES.PAYSTACK}
+                className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+              >
+                {actionLoading === ACTION_STATES.PAYSTACK ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-1" />
+                )}
+                Proceed to Payment
               </Button>
             </div>
           </motion.div>
