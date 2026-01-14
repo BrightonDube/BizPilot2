@@ -4,6 +4,7 @@ import json
 from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from urllib.parse import urlparse
 
 
 class Settings(BaseSettings):
@@ -55,6 +56,20 @@ class Settings(BaseSettings):
                 "Generate one with: openssl rand -hex 32"
             )
         return v
+
+    @field_validator("COOKIE_DOMAIN", mode="before")
+    @classmethod
+    def parse_cookie_domain(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return ""
+        value = v.strip()
+        if value == "":
+            return ""
+        parsed = urlparse(value)
+        if parsed.scheme and parsed.netloc:
+            value = parsed.netloc
+        value = value.split("/")[0]
+        return value
 
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
