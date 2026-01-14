@@ -28,6 +28,9 @@ from app.services.product_excel_service import ProductExcelService
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
+# Constants
+MAX_UPLOAD_SIZE_MB = 10  # Maximum file size for Excel uploads
+
 
 def _product_to_response(product: Product) -> ProductResponse:
     """Convert a Product model to ProductResponse schema."""
@@ -459,12 +462,12 @@ async def import_products_excel(
             detail="File is empty",
         )
     
-    # File size limit: 10MB max
-    max_file_size = 10 * 1024 * 1024
+    # File size limit
+    max_file_size = MAX_UPLOAD_SIZE_MB * 1024 * 1024
     if len(content) > max_file_size:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File too large. Maximum size is 10MB, received {len(content) / (1024*1024):.2f}MB",
+            detail=f"File too large. Maximum size is {MAX_UPLOAD_SIZE_MB}MB, received {len(content) / (1024*1024):.2f}MB",
         )
     
     # Process import

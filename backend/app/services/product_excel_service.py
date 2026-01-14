@@ -30,6 +30,9 @@ PRODUCT_COLUMNS = [
     {"key": "status", "header": "Status", "width": 12, "required": False},
 ]
 
+# Constants
+IMPORT_BATCH_SIZE = 100  # Commit every N rows during import
+
 
 class ProductExcelService:
     """Service for Excel-based product import/export."""
@@ -213,11 +216,6 @@ class ProductExcelService:
         if ws is None:
             ws = wb[wb.sheetnames[0]]
 
-        if ws is None:
-            result["success"] = False
-            result["errors"].append("Could not find Products sheet")
-            return result
-
         # Get header row and map columns
         headers: Dict[str, int] = {}
         for col_idx, cell in enumerate(ws[1], 1):
@@ -373,10 +371,9 @@ class ProductExcelService:
                 else:
                     result["updated"] += 1
 
-                # Batch commit every 100 rows
-                batch_size = 100
+                # Batch commit periodically to reduce memory pressure
                 processed = result["created"] + result["updated"]
-                if processed > 0 and processed % batch_size == 0:
+                if processed > 0 and processed % IMPORT_BATCH_SIZE == 0:
                     try:
                         self.db.commit()
                     except Exception as e:
