@@ -105,8 +105,8 @@ export const useAuthStore = create<AuthState>()(
             } else {
               userMessage = errorMessage;
             }
-          } else if (error.message === 'Network Error') {
-            userMessage = 'Unable to connect to server. Please check your connection.';
+          } else if (error.message === 'Network Error' || !error.response) {
+            userMessage = 'We could not reach the server. Please refresh the page and try again. If this keeps happening, contact support.';
           }
           
           set({
