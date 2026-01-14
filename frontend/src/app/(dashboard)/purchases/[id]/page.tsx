@@ -19,6 +19,8 @@ import {
   FileText,
   Download,
   PackageCheck,
+  Send,
+  ChevronDown,
 } from 'lucide-react'
 import { Button, Card, CardContent, Badge, PageHeader } from '@/components/ui'
 import { apiClient } from '@/lib/api'
@@ -70,6 +72,17 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType; la
   cancelled: { color: 'bg-red-500', icon: XCircle, label: 'Cancelled' },
 }
 
+const STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'received', label: 'Received' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
+
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-ZA', {
     style: 'currency',
@@ -95,6 +108,8 @@ export default function PurchaseDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false)
 
   useEffect(() => {
     async function fetchPurchase() {
@@ -151,6 +166,37 @@ export default function PurchaseDetailPage() {
     }
   }
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (!purchase) return
+    setShowStatusDropdown(false)
+    
+    try {
+      setIsUpdatingStatus(true)
+      await apiClient.patch(`/orders/${purchaseId}`, { status: newStatus })
+      setPurchase({ ...purchase, status: newStatus })
+    } catch (err) {
+      console.error('Error updating status:', err)
+      setError('Failed to update order status')
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
+  const handleSendPurchaseOrder = async () => {
+    if (!purchase) return
+    
+    try {
+      setIsUpdatingStatus(true)
+      await apiClient.patch(`/orders/${purchaseId}`, { status: 'pending' })
+      setPurchase({ ...purchase, status: 'pending' })
+    } catch (err) {
+      console.error('Error sending purchase order:', err)
+      setError('Failed to send purchase order')
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -198,6 +244,55 @@ export default function PurchaseDetailPage() {
               <Download className="h-4 w-4 mr-2" />
               PDF
             </Button>
+            
+            {/* Status Change Dropdown */}
+            <div className="relative">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                disabled={isUpdatingStatus}
+              >
+                {isUpdatingStatus ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <StatusIcon className="h-4 w-4 mr-2" />
+                )}
+                {statusInfo.label}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+              {showStatusDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+                  {STATUS_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => handleStatusChange(option.value)}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                        purchase.status === option.value ? 'text-purple-400 bg-gray-700/50' : 'text-gray-300'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Send Purchase Order button - only for draft orders */}
+            {purchase.status === 'draft' && (
+              <Button 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                onClick={handleSendPurchaseOrder}
+                disabled={isUpdatingStatus}
+              >
+                {isUpdatingStatus ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                Send Purchase Order
+              </Button>
+            )}
+
             {purchase.status !== 'delivered' && purchase.status !== 'received' && purchase.status !== 'cancelled' && (
               <Link href={`/purchases/${purchase.id}/receive`}>
                 <Button className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700">
@@ -220,6 +315,14 @@ export default function PurchaseDetailPage() {
         }
       />
 
+      {/* Click outside to close dropdown */}
+      {showStatusDropdown && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowStatusDropdown(false)}
+        />
+      )}
+
       {error && (
         <div className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm mb-6">
           {error}
@@ -228,7 +331,7 @@ export default function PurchaseDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="bg-gray-800/50 border border-gray-700">
             <CardContent className="p-6 space-y-4">
               <div className="flex items-start gap-3">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${statusInfo.color} bg-opacity-20`}>
@@ -313,7 +416,7 @@ export default function PurchaseDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gray-800/50 border border-gray-700">
             <CardContent className="p-6">
               <h3 className="text-sm font-semibold text-white mb-4">Items ({purchase.items_count})</h3>
               {purchase.items && purchase.items.length > 0 ? (
@@ -350,7 +453,7 @@ export default function PurchaseDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="bg-gray-800/50 border border-gray-700">
             <CardContent className="p-6 space-y-4">
               <h3 className="text-sm font-semibold text-white">Metadata</h3>
               <div className="space-y-2 text-sm">
