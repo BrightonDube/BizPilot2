@@ -26,6 +26,11 @@ interface VerificationResult {
 export default function PaymentCallbackPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  
+  // Paystack uses different parameter names depending on the callback type:
+  // - 'reference' is used when the user completes payment and is redirected
+  // - 'trxref' is used in some webhook and mobile SDK callbacks
+  // We check both to ensure we capture the reference in all scenarios
   const reference = searchParams.get('reference') || searchParams.get('trxref')
 
   const [verifying, setVerifying] = useState(true)

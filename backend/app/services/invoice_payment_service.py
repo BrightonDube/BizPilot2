@@ -78,7 +78,8 @@ class InvoicePaymentService:
         total_with_fees = balance_due + gateway_fees
         
         # Convert to cents (Paystack uses smallest currency unit)
-        amount_cents = int(total_with_fees * 100)
+        # Use Decimal arithmetic to avoid floating-point precision errors
+        amount_cents = int((total_with_fees * 100).to_integral_value())
         
         # Generate a unique reference
         reference = paystack_service.generate_reference(prefix="INV")

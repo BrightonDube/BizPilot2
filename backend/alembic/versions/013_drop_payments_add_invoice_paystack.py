@@ -55,7 +55,7 @@ def upgrade() -> None:
     if "payment_gateway_fees" not in columns:
         op.add_column(
             "invoices",
-            sa.Column("payment_gateway_fees", sa.Numeric(12, 2), nullable=True, server_default="0"),
+            sa.Column("payment_gateway_fees", sa.Numeric(12, 2), nullable=True, server_default=sa.text("0")),
         )
     
     if "gateway_status" not in columns:
