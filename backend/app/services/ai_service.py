@@ -16,7 +16,6 @@ from app.models.customer import Customer
 from app.models.invoice import Invoice, InvoiceStatus
 from app.models.inventory import InventoryItem
 from app.models.order import Order, OrderDirection, PaymentStatus as OrderPaymentStatus
-from app.models.payment import Payment
 from app.models.product import Product
 from app.models.supplier import Supplier
 from app.models.user import User
@@ -217,9 +216,14 @@ class AIService:
             or 0
         )
 
+        # Count paid/partial invoices as "payments"
         total_payments = (
-            self.db.query(func.count(Payment.id))
-            .filter(Payment.business_id == business.id, Payment.deleted_at.is_(None))
+            self.db.query(func.count(Invoice.id))
+            .filter(
+                Invoice.business_id == business.id,
+                Invoice.deleted_at.is_(None),
+                Invoice.status.in_([InvoiceStatus.PAID, InvoiceStatus.PARTIAL]),
+            )
             .scalar()
             or 0
         )
@@ -327,14 +331,15 @@ class AIService:
             or 0
         )
 
+        # Count paid/partial purchase invoices as "payments"
         total_purchase_payments = (
-            self.db.query(func.count(Payment.id))
-            .join(Invoice, Payment.invoice_id == Invoice.id)
+            self.db.query(func.count(Invoice.id))
             .join(Order, Invoice.order_id == Order.id)
             .filter(
-                Payment.business_id == business.id,
-                Payment.deleted_at.is_(None),
+                Invoice.business_id == business.id,
+                Invoice.deleted_at.is_(None),
                 Order.direction == OrderDirection.OUTBOUND,
+                Invoice.status.in_([InvoiceStatus.PAID, InvoiceStatus.PARTIAL]),
             )
             .scalar()
             or 0
