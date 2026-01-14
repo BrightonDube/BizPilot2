@@ -25,6 +25,8 @@ from app.models.subscription_transaction import (
     TransactionStatus as SubscriptionTransactionStatus,
     TransactionType as SubscriptionTransactionType,
 )
+from app.models.time_entry import TimeEntry, TimeEntryType, TimeEntryStatus
+from app.models.pos_connection import POSConnection, POSProvider, POSConnectionStatus, POSSyncLog
 
 __all__ = [
     "BaseModel",
@@ -80,4 +82,13 @@ __all__ = [
     "SubscriptionTransaction",
     "SubscriptionTransactionStatus",
     "SubscriptionTransactionType",
+    # Time Entry
+    "TimeEntry",
+    "TimeEntryType",
+    "TimeEntryStatus",
+    # POS Connection
+    "POSConnection",
+    "POSProvider",
+    "POSConnectionStatus",
+    "POSSyncLog",
 ]

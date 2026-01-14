@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
+from pydantic import BaseModel as PydanticBaseModel
 
 from app.core.database import get_db
 from app.core.config import settings
@@ -420,3 +421,134 @@ async def change_password(
     auth_service.update_password(current_user, data.new_password)
     
     return {"message": "Password changed successfully"}
+
+
+# --- PIN Code Login ---
+
+class PINSetup(PydanticBaseModel):
+    """Schema for setting up a PIN code."""
+    pin: str
+
+
+class PINLogin(PydanticBaseModel):
+    """Schema for logging in with PIN code."""
+    email: str
+    pin: str
+    device_id: Optional[str] = None
+
+
+@router.post("/pin/setup")
+async def setup_pin(
+    data: PINSetup,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Set up a PIN code for quick login (requires authentication)."""
+    from app.core.security import hash_pin_code
+    
+    # Validate PIN
+    if not data.pin or len(data.pin) < 4 or len(data.pin) > 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="PIN must be 4-6 digits"
+        )
+    
+    if not data.pin.isdigit():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="PIN must contain only digits"
+        )
+    
+    # Hash and store PIN
+    try:
+        hashed_pin = hash_pin_code(data.pin)
+        current_user.pin_code_hash = hashed_pin
+        current_user.pin_code = data.pin[-4:]  # Store last 4 digits for reference only
+        db.commit()
+        
+        return {"message": "PIN set up successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/pin/login", response_model=Token)
+@limiter.limit(AUTH_RATE_LIMIT)
+async def pin_login(
+    request: Request,
+    credentials: PINLogin,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    """
+    Login with email and PIN code (for POS terminals).
+    
+    This is a quick login method for users who have set up a PIN.
+    For web clients: Sets HttpOnly cookies and returns tokens in body.
+    For mobile/POS clients: Only returns tokens in body.
+    """
+    from app.core.security import verify_pin_code
+    
+    auth_service = AuthService(db)
+    user = auth_service.get_user_by_email(credentials.email)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or PIN",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Check if user has a PIN set up
+    if not user.pin_code_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="PIN login not set up. Please use password login.",
+        )
+    
+    # Verify PIN
+    if not verify_pin_code(credentials.pin, user.pin_code_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or PIN",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Create tokens
+    access_token = create_access_token(data={"sub": str(user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    
+    # For web clients, set HttpOnly cookies
+    if not is_mobile_client(request):
+        set_auth_cookies(response, access_token, refresh_token)
+    
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@router.delete("/pin")
+async def remove_pin(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Remove the PIN code from the current user's account."""
+    current_user.pin_code = None
+    current_user.pin_code_hash = None
+    db.commit()
+    
+    return {"message": "PIN removed successfully"}
+
+
+@router.get("/pin/status")
+async def get_pin_status(
+    current_user: User = Depends(get_current_active_user),
+):
+    """Check if the current user has a PIN set up."""
+    return {
+        "has_pin": current_user.pin_code_hash is not None,
+        "biometric_enabled": current_user.biometric_enabled or False,
+    }
+
+
+# Import Pydantic BaseModel for schemas
