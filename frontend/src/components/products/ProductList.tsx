@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import {
   Plus,
   Search,
@@ -14,10 +15,14 @@ import {
   AlertTriangle,
   Grid3X3,
   List,
+  Upload,
+  Download,
 } from 'lucide-react'
 
 import { Badge, Button, Input } from '@/components/ui'
 import { apiClient } from '@/lib/api'
+
+const BulkProductImport = dynamic(() => import('@/components/products/BulkProductImport').then(mod => ({ default: mod.BulkProductImport })), { ssr: false })
 
 interface Product {
   id: string
@@ -91,34 +96,35 @@ export function ProductList() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showImport, setShowImport] = useState(false)
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        per_page: '20',
+      })
+
+      if (searchTerm) {
+        params.append('search', searchTerm)
+      }
+
+      const response = await apiClient.get<ProductListResponse>(`/products?${params}`)
+      setProducts(response.data.items)
+      setTotal(response.data.total)
+      setPages(response.data.pages)
+    } catch (err) {
+      console.error('Failed to fetch products:', err)
+      setError('Failed to load products')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        const params = new URLSearchParams({
-          page: page.toString(),
-          per_page: '20',
-        })
-
-        if (searchTerm) {
-          params.append('search', searchTerm)
-        }
-
-        const response = await apiClient.get<ProductListResponse>(`/products?${params}`)
-        setProducts(response.data.items)
-        setTotal(response.data.total)
-        setPages(response.data.pages)
-      } catch (err) {
-        console.error('Failed to fetch products:', err)
-        setError('Failed to load products')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     const timeoutId = setTimeout(fetchProducts, 300)
     return () => clearTimeout(timeoutId)
   }, [page, searchTerm])
@@ -193,12 +199,22 @@ export function ProductList() {
           <h1 className="text-2xl font-bold text-gray-100">Products</h1>
           <p className="text-gray-400">Manage your products and pricing ({total} products)</p>
         </div>
-        <Link href="/products/new">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowImport(true)}
+            className="border-gray-600 hover:bg-gray-700"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import
           </Button>
-        </Link>
+          <Link href="/products/new">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       <motion.div
@@ -434,6 +450,18 @@ export function ProductList() {
             </Button>
           </div>
         </motion.div>
+      )}
+
+      {/* Import Modal */}
+      {showImport && (
+        <BulkProductImport 
+          onClose={() => setShowImport(false)} 
+          onSuccess={() => {
+            setShowImport(false)
+            setPage(1)
+            fetchProducts()
+          }}
+        />
       )}
     </motion.div>
   )

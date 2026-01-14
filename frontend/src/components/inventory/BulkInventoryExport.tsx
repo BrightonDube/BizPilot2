@@ -69,14 +69,14 @@ export function BulkInventoryExport({ onClose }: BulkInventoryExportProps) {
         onClick={onClose}
       >
         <motion.div
-          className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md overflow-hidden"
+          className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md overflow-hidden max-h-[calc(100vh-8rem)] flex flex-col"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500/20 rounded-lg">
                 <FileSpreadsheet className="h-5 w-5 text-green-400" />
@@ -95,7 +95,7 @@ export function BulkInventoryExport({ onClose }: BulkInventoryExportProps) {
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 overflow-y-auto flex-1">
             {exportSuccess ? (
               <motion.div
                 className="text-center py-8"
@@ -144,7 +144,7 @@ export function BulkInventoryExport({ onClose }: BulkInventoryExportProps) {
 
           {/* Footer */}
           {!exportSuccess && (
-            <div className="flex justify-end gap-3 p-6 border-t border-gray-700">
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-700 flex-shrink-0">
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
