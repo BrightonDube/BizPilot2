@@ -6,7 +6,7 @@ import { X, Upload, FileSpreadsheet, Loader2, Check, AlertTriangle, Download } f
 import { Button } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 
-interface BulkInventoryImportProps {
+interface BulkProductImportProps {
   onClose: () => void
   onSuccess?: () => void
 }
@@ -35,7 +35,7 @@ interface ApiErrorResponse {
   }
 }
 
-export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportProps) {
+export function BulkProductImport({ onClose, onSuccess }: BulkProductImportProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
@@ -68,15 +68,12 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
     setError(null)
 
     try {
-      // Create FormData and upload to backend
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await apiClient.post<ImportResult>('/inventory/import/excel', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+      const response = await apiClient.post<ImportResult>('/products/import/excel', formData)
+      // Note: Don't set Content-Type header manually for multipart/form-data
+      // axios will set it automatically with the correct boundary
 
       setImportResult(response.data)
       setStep('result')
@@ -86,13 +83,11 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
       }
     } catch (err: unknown) {
       console.error('Import failed:', err)
-      // Try to extract error details from response using typed interface
       const axiosError = err as ApiErrorResponse
       const detail = axiosError.response?.data?.detail
       
       if (detail) {
         if (typeof detail === 'object' && detail.errors) {
-          // Structured error response with details
           setImportResult({
             success: false,
             updated: detail.updated ?? 0,
@@ -104,10 +99,10 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
         } else if (typeof detail === 'string') {
           setError(detail)
         } else {
-          setError('Failed to import inventory data')
+          setError('Failed to import product data')
         }
       } else {
-        setError('Failed to import inventory data')
+        setError('Failed to import product data')
       }
     } finally {
       setIsImporting(false)
@@ -116,7 +111,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
 
   const downloadTemplate = async () => {
     try {
-      const response = await apiClient.get('/inventory/template/excel', {
+      const response = await apiClient.get('/products/template/excel', {
         responseType: 'blob',
       })
 
@@ -126,7 +121,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = 'inventory_import_template.xlsx'
+      link.download = 'product_import_template.xlsx'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -156,13 +151,13 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <Upload className="h-5 w-5 text-blue-400" />
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <Upload className="h-5 w-5 text-purple-400" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-white">Import Inventory</h2>
+                <h2 className="text-lg font-semibold text-white">Import Products</h2>
                 <p className="text-sm text-gray-400">
-                  {step === 'upload' && 'Upload an Excel spreadsheet to update inventory'}
+                  {step === 'upload' && 'Upload an Excel spreadsheet to add products'}
                   {step === 'result' && 'Import completed'}
                 </p>
               </div>
@@ -197,7 +192,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
                   className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
                     file 
                       ? 'border-green-500 bg-green-500/10' 
-                      : 'border-gray-600 hover:border-blue-500 hover:bg-blue-500/5'
+                      : 'border-gray-600 hover:border-purple-500 hover:bg-purple-500/5'
                   }`}
                 >
                   <input
@@ -231,9 +226,10 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
                 <div className="p-4 bg-gray-700/50 rounded-lg space-y-2">
                   <p className="text-sm text-white font-medium">Requirements:</p>
                   <ul className="text-sm text-gray-400 space-y-1">
-                    <li>• SKU column must match existing products</li>
-                    <li>• Quantity On Hand is required</li>
-                    <li>• Other columns are optional</li>
+                    <li>• Product Name column is required</li>
+                    <li>• Selling Price column is required</li>
+                    <li>• SKU is optional but must be unique</li>
+                    <li>• Products will be auto-added to inventory</li>
                   </ul>
                 </div>
 
@@ -316,7 +312,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
                 <Button
                   onClick={handleImport}
                   disabled={!file || isImporting}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50"
                 >
                   {isImporting ? (
                     <>
@@ -333,7 +329,7 @@ export function BulkInventoryImport({ onClose, onSuccess }: BulkInventoryImportP
               </>
             )}
             {step === 'result' && (
-              <Button onClick={onClose} className="bg-gradient-to-r from-blue-600 to-purple-600">
+              <Button onClick={onClose} className="bg-gradient-to-r from-purple-600 to-pink-600">
                 Done
               </Button>
             )}

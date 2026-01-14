@@ -48,6 +48,25 @@ services:
         sync: false  # Configure in Render dashboard
       - key: GOOGLE_REDIRECT_URI
         value: https://bizpilot-api.onrender.com/api/v1/oauth/google/callback
+      # Email configuration
+      - key: EMAILS_ENABLED
+        value: "false"  # Set to "true" in dashboard after configuring SMTP
+      - key: SMTP_STARTTLS
+        value: "true"
+      - key: SMTP_TIMEOUT
+        value: "10"
+      - key: EMAILS_FROM_EMAIL
+        value: "noreply@bizpilot.com"
+      - key: EMAILS_FROM_NAME
+        value: "BizPilot"
+      # Paystack - required for subscription payments
+      - key: PAYSTACK_SECRET_KEY
+        sync: false  # Configure in Render dashboard
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false  # Configure in Render dashboard
+      # Frontend URL for payment callbacks
+      - key: FRONTEND_URL
+        value: https://bizpilot-web.onrender.com
 
   # Next.js Frontend
   - type: web

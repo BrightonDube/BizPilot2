@@ -41,6 +41,9 @@ interface Invoice {
   invoice_number: string
   customer_id: string | null
   customer_name?: string
+  supplier_id: string | null
+  supplier_name?: string
+  invoice_type: 'customer' | 'supplier'
   status: string
   issue_date: string
   due_date: string
@@ -57,6 +60,11 @@ interface Invoice {
   balance_due: number
   is_paid: boolean
   is_overdue: boolean
+  is_supplier_invoice: boolean
+  paystack_reference?: string
+  gateway_fee: number
+  gateway_fee_percent: number
+  total_with_gateway_fee: number
   pdf_url?: string
   items: InvoiceItem[]
   created_at: string
@@ -108,6 +116,7 @@ export default function InvoiceDetailPage() {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showSupplierPaymentModal, setShowSupplierPaymentModal] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer')
 
@@ -340,6 +349,51 @@ export default function InvoiceDetailPage() {
     }
   }
 
+  const handlePaySupplier = async () => {
+    if (!invoice) return
+
+    setActionLoading('paySupplier')
+    try {
+      // Get the current URL for the callback
+      const callbackUrl = `${window.location.origin}/invoices/${invoiceId}/payment-callback`
+      
+      const response = await apiClient.post(`/invoices/${invoiceId}/pay`, {
+        callback_url: callbackUrl
+      })
+      
+      // Redirect to Paystack authorization URL
+      if (response.data.authorization_url) {
+        window.location.href = response.data.authorization_url
+      }
+    } catch (err: unknown) {
+      console.error('Error initiating payment:', err)
+      const error = err as { response?: { data?: { detail?: string } } }
+      alert(error.response?.data?.detail || 'Failed to initiate payment')
+      setShowSupplierPaymentModal(false)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleCancelPendingPayment = async () => {
+    if (!invoice) return
+    if (!confirm('Are you sure you want to cancel the pending payment? You can start a new payment after.')) return
+
+    setActionLoading('cancelPayment')
+    try {
+      await apiClient.delete(`/invoices/${invoiceId}/cancel-payment`)
+      // Reload invoice to get updated state
+      const response = await apiClient.get(`/invoices/${invoiceId}`)
+      setInvoice(response.data)
+    } catch (err: unknown) {
+      console.error('Error canceling payment:', err)
+      const error = err as { response?: { data?: { detail?: string } } }
+      alert(error.response?.data?.detail || 'Failed to cancel payment')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -457,7 +511,7 @@ export default function InvoiceDetailPage() {
             </>
           )}
           
-          {['sent', 'viewed', 'partial'].includes(invoice.status) && invoice.balance_due > 0 && (
+          {['sent', 'viewed', 'partial'].includes(invoice.status) && invoice.balance_due > 0 && !invoice.is_supplier_invoice && (
             <Button
               size="sm"
               onClick={() => setShowPaymentModal(true)}
@@ -466,6 +520,37 @@ export default function InvoiceDetailPage() {
               <CreditCard className="h-4 w-4 mr-1" />
               Record Payment
             </Button>
+          )}
+
+          {/* Pay Supplier button for supplier invoices */}
+          {invoice.is_supplier_invoice && invoice.balance_due > 0 && !invoice.is_paid && (
+            <>
+              {invoice.paystack_reference ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancelPendingPayment}
+                  disabled={actionLoading === 'cancelPayment'}
+                  className="border-yellow-600 text-yellow-400 hover:bg-yellow-900/20"
+                >
+                  {actionLoading === 'cancelPayment' ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                  )}
+                  Cancel Pending Payment
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => setShowSupplierPaymentModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <CreditCard className="h-4 w-4 mr-1" />
+                  Pay Supplier
+                </Button>
+              )}
+            </>
           )}
 
           <Button
@@ -613,21 +698,37 @@ export default function InvoiceDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Customer Info */}
+          {/* Customer/Supplier Info */}
           <Card className="bg-gray-800/50 border-gray-700">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Customer</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">
+                {invoice.is_supplier_invoice ? 'Supplier' : 'Customer'}
+              </h3>
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <User className="h-5 w-5 text-blue-400" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  invoice.is_supplier_invoice ? 'bg-purple-500/20' : 'bg-blue-500/20'
+                }`}>
+                  <User className={`h-5 w-5 ${
+                    invoice.is_supplier_invoice ? 'text-purple-400' : 'text-blue-400'
+                  }`} />
                 </div>
                 <div>
-                  <p className="text-white font-medium">{invoice.customer_name || 'Walk-in Customer'}</p>
+                  <p className="text-white font-medium">
+                    {invoice.is_supplier_invoice 
+                      ? (invoice.supplier_name || 'Unknown Supplier')
+                      : (invoice.customer_name || 'Walk-in Customer')
+                    }
+                  </p>
                   {invoice.billing_address && (
                     <div className="text-sm text-gray-400 mt-1">
                       {invoice.billing_address.street && <p>{invoice.billing_address.street}</p>}
                       {invoice.billing_address.city && <p>{invoice.billing_address.city}</p>}
                     </div>
+                  )}
+                  {invoice.is_supplier_invoice && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300 mt-2">
+                      Payable Invoice
+                    </span>
                   )}
                 </div>
               </div>
@@ -719,6 +820,72 @@ export default function InvoiceDetailPage() {
                   <CheckCircle className="h-4 w-4 mr-1" />
                 )}
                 Record Payment
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Supplier Payment Modal */}
+      {showSupplierPaymentModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            className="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <h2 className="text-xl font-semibold text-white mb-4">Pay Supplier via Paystack</h2>
+            <div className="space-y-4">
+              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Invoice Amount</span>
+                  <span className="text-white font-medium">{formatCurrency(invoice.balance_due)}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Gateway Fee ({invoice.gateway_fee_percent}%)</span>
+                  <span className="text-yellow-400 font-medium">
+                    {formatCurrency(invoice.balance_due * (invoice.gateway_fee_percent / 100))}
+                  </span>
+                </div>
+                <div className="border-t border-gray-700 pt-2 mt-2">
+                  <div className="flex justify-between">
+                    <span className="text-white font-semibold">Total to Pay</span>
+                    <span className="text-green-400 font-bold">
+                      {formatCurrency(invoice.balance_due * (1 + invoice.gateway_fee_percent / 100))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <p className="text-sm text-blue-200">
+                  <strong>Note:</strong> You will be redirected to Paystack to complete the payment securely. 
+                  The gateway fee covers transaction processing.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowSupplierPaymentModal(false)}
+                className="border-gray-600"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSupplierPaymentModal(false)
+                  handlePaySupplier()
+                }}
+                disabled={actionLoading === 'paySupplier'}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {actionLoading === 'paySupplier' ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-1" />
+                )}
+                Proceed to Payment
               </Button>
             </div>
           </motion.div>

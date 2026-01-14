@@ -89,3 +89,29 @@ def verify_password_reset_token(token: str) -> Optional[str]:
     if payload and payload.get("type") == "password_reset":
         return payload.get("sub")
     return None
+
+
+def hash_pin_code(pin: str) -> str:
+    """Hash a PIN code using bcrypt."""
+    if not pin or len(pin) < 4 or len(pin) > 6:
+        raise ValueError("PIN must be 4-6 digits")
+    if not pin.isdigit():
+        raise ValueError("PIN must contain only digits")
+    
+    pin_bytes = pin.encode('utf-8')
+    salt = bcrypt.gensalt(rounds=10)
+    hashed = bcrypt.hashpw(pin_bytes, salt)
+    return hashed.decode('utf-8')
+
+
+def verify_pin_code(plain_pin: str, hashed_pin: str) -> bool:
+    """Verify a PIN code against a hashed PIN."""
+    if not plain_pin or not hashed_pin:
+        return False
+    try:
+        return bcrypt.checkpw(
+            plain_pin.encode('utf-8'),
+            hashed_pin.encode('utf-8')
+        )
+    except Exception:
+        return False
