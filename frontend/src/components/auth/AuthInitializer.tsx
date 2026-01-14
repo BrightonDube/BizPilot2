@@ -41,8 +41,9 @@ export function AuthInitializer() {
       window.location.href = loginUrl
       
       // Clear auth state in background (redirect will happen first)
-      logout().catch(() => {
-        // Ignore errors during logout - we're redirecting anyway
+      logout().catch((err) => {
+        // Log for debugging but don't block - redirect is already in progress
+        console.debug('Logout during session expiration failed:', err)
       })
     }
   }, [logout])

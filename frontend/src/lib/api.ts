@@ -37,6 +37,10 @@ export type AuthEventType = 'auth:session-expired';
 /**
  * Flag indicating that session expiration is in progress.
  * Components can check this to avoid rendering error states during redirect.
+ * 
+ * Note: This flag is intentionally not reset because session expiration triggers
+ * a hard redirect (window.location.href), which causes a full page reload and
+ * resets all JavaScript state including this flag.
  */
 let sessionExpiringFlag = false;
 
