@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_business_id, get_current_user
+from app.api.deps import get_current_business_id
 from app.core.rbac import has_permission
 from app.models.production import ProductionStatus
 from app.models.user import User
@@ -16,7 +16,6 @@ from app.schemas.production import (
     ProductionOrderResponse,
     ProductionOrderListResponse,
     ProductionOrderItemResponse,
-    StartProductionRequest,
     CompleteProductionRequest,
     IngredientSuggestion,
 )

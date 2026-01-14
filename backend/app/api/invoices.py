@@ -15,7 +15,7 @@ from app.models.user import User
 from app.models.invoice import InvoiceStatus, InvoiceType
 from app.models.customer import Customer
 from app.models.supplier import Supplier
-from app.core.pdf import build_simple_pdf, build_invoice_pdf
+from app.core.pdf import build_invoice_pdf
 from app.schemas.invoice import (
     InvoiceCreate,
     InvoiceUpdate,

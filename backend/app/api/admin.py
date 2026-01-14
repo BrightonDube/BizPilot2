@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, func
 from pydantic import BaseModel, EmailStr
@@ -13,7 +13,6 @@ from app.models.base import utc_now
 from app.core.admin import require_admin
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.business_user import BusinessUser
-from app.models.business import Business
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
 from app.models.subscription_transaction import SubscriptionTransaction
 
@@ -475,7 +474,7 @@ async def list_tiers(
     """List all subscription tiers."""
     query = db.query(SubscriptionTier).filter(SubscriptionTier.deleted_at.is_(None))
     if not include_inactive:
-        query = query.filter(SubscriptionTier.is_active == True)
+        query = query.filter(SubscriptionTier.is_active.is_(True))
     
     tiers = query.order_by(SubscriptionTier.sort_order).all()
     return [TierResponse.model_validate(t) for t in tiers]

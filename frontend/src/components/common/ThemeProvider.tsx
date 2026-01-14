@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -35,25 +35,21 @@ function getSystemTheme(): 'dark' | 'light' {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Start with 'dark' to avoid hydration mismatch, then sync with localStorage in useEffect
-  const [theme, setThemeState] = useState<Theme>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('dark');
-  const [mounted, setMounted] = useState(false);
+  // Initialize with stored theme (or default) - use function initializer to avoid SSR issues
+  const [theme, setThemeState] = useState<Theme>(() => getStoredTheme());
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
+    const stored = getStoredTheme();
+    return stored === 'system' ? getSystemTheme() : stored;
+  });
 
-  // Sync with localStorage after mount (client-side only)
-  useEffect(() => {
-    const storedTheme = getStoredTheme();
-    setThemeState(storedTheme);
-    setResolvedTheme(storedTheme === 'system' ? getSystemTheme() : storedTheme);
-    setMounted(true);
-  }, []);
-
+  // Apply theme class to document
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme === 'system' ? resolvedTheme : theme);
   }, [theme, resolvedTheme]);
 
+  // Listen for system theme changes when in 'system' mode
   useEffect(() => {
     if (theme !== 'system') {
       return;
@@ -68,14 +64,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useMemo(() => (newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem(STORAGE_KEY, newTheme);
     setResolvedTheme(newTheme === 'system' ? getSystemTheme() : newTheme);
-  };
+  }, []);
+
+  const value = useMemo(() => ({ theme, setTheme, resolvedTheme }), [theme, setTheme, resolvedTheme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

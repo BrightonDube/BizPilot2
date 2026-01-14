@@ -1,10 +1,8 @@
 """Invoice payment service for Paystack integration."""
 
-import os
 from decimal import Decimal
 from typing import Optional, Tuple
 from datetime import date
-from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.models.invoice import Invoice, InvoiceStatus

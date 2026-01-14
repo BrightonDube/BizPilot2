@@ -1,6 +1,7 @@
 """Time Entry API endpoints for time tracking and payroll."""
 
 import io
+import math
 from typing import Optional
 from datetime import datetime, date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query

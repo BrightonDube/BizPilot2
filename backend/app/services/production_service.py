@@ -2,7 +2,6 @@
 
 from typing import List, Optional, Tuple
 from decimal import Decimal
-import uuid
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import or_

@@ -17,8 +17,7 @@ Run: python -m scripts.seed_capetown
 import sys
 import os
 from decimal import Decimal
-from datetime import date, datetime, timedelta
-from uuid import uuid4
+from datetime import datetime, timedelta
 import random
 import secrets
 
@@ -38,7 +37,7 @@ from app.models.product import Product, ProductCategory, ProductStatus
 from app.models.customer import Customer, CustomerType
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus as OrderPaymentStatus
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
-from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.inventory import InventoryItem
 
 
 def clear_all_data(db: Session):
@@ -128,7 +127,7 @@ def create_superadmin(db: Session) -> tuple[User, str]:
     email = "admin@bizpilot.co.za"
 
     # Ensure only this account can be superadmin
-    db.query(User).filter(User.is_superadmin == True, User.email != email).update(
+    db.query(User).filter(User.is_superadmin.is_(True), User.email != email).update(
         {User.is_superadmin: False},
         synchronize_session=False,
     )
@@ -504,11 +503,11 @@ def create_orders(db: Session, business: Business, customers: list, products: li
         order_status = OrderStatus.PENDING
         payment_status = OrderPaymentStatus.PENDING
         
-        for os, ps, prob in status_weights:
+        for o_stat, p_stat, prob in status_weights:
             cumulative += prob
             if rand < cumulative:
-                order_status = os
-                payment_status = ps
+                order_status = o_stat
+                payment_status = p_stat
                 break
         
         amount_paid = total if payment_status == OrderPaymentStatus.PAID else Decimal("0")
@@ -658,19 +657,19 @@ def main():
         print("\n" + "=" * 60)
         print("✅ SEEDING COMPLETE")
         print("=" * 60)
-        print(f"\n📧 Demo Login:")
-        print(f"   Email: demo@bizpilot.co.za")
-        print(f"   Password: Demo@2024")
+        print("\n📧 Demo Login:")
+        print("   Email: demo@bizpilot.co.za")
+        print("   Password: Demo@2024")
 
-        print(f"\n🔐 Superadmin Login (BizPilot platform admin):")
-        print(f"   Email: admin@bizpilot.co.za")
+        print("\n🔐 Superadmin Login (BizPilot platform admin):")
+        print("   Email: admin@bizpilot.co.za")
         print(f"   Password: {superadmin_password}")
         if not os.getenv("BIZPILOT_SUPERADMIN_PASSWORD"):
             print("   NOTE: Password was generated. Set BIZPILOT_SUPERADMIN_PASSWORD to control it.")
         print(f"\n🏢 Business: {business.name}")
-        print(f"   Location: Cape Town, Western Cape")
-        print(f"   Currency: ZAR | VAT: 15%")
-        print(f"\n📊 Data Summary:")
+        print("   Location: Cape Town, Western Cape")
+        print("   Currency: ZAR | VAT: 15%")
+        print("\n📊 Data Summary:")
         print(f"   Categories:      {len(categories)}")
         print(f"   Products:        {len(products)}")
         print(f"   Inventory Items: {len(inventory)}")
