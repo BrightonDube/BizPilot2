@@ -14,27 +14,39 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'bizpilot-theme';
 
+// Helper function to safely get theme from localStorage (SSR-safe)
+function getStoredTheme(): Theme {
+  if (typeof window === 'undefined') {
+    return 'dark'; // Default during SSR
+  }
+  const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
+  if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
+    return savedTheme;
+  }
+  return 'dark';
+}
+
+// Helper function to safely get system theme (SSR-safe)
+function getSystemTheme(): 'dark' | 'light' {
+  if (typeof window === 'undefined') {
+    return 'dark'; // Default during SSR
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const getSystemTheme = (): 'dark' | 'light' => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  };
+  // Start with 'dark' to avoid hydration mismatch, then sync with localStorage in useEffect
+  const [theme, setThemeState] = useState<Theme>('dark');
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('dark');
+  const [mounted, setMounted] = useState(false);
 
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
-      return savedTheme;
-    }
-    return 'dark';
-  });
-
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
-    const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const initialTheme = savedTheme && ['dark', 'light', 'system'].includes(savedTheme) ? savedTheme : 'dark';
-    if (initialTheme === 'system') {
-      return getSystemTheme();
-    }
-    return initialTheme;
-  });
+  // Sync with localStorage after mount (client-side only)
+  useEffect(() => {
+    const storedTheme = getStoredTheme();
+    setThemeState(storedTheme);
+    setResolvedTheme(storedTheme === 'system' ? getSystemTheme() : storedTheme);
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
