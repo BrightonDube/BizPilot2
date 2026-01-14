@@ -27,6 +27,7 @@ class Invoice(BaseModel):
 
     business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True)
+    supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True, index=True)
     order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), nullable=True, index=True)
     
     # Invoice reference
@@ -51,6 +52,11 @@ class Invoice(BaseModel):
     
     # Payment
     amount_paid = Column(Numeric(12, 2), default=0)
+    
+    # Paystack payment tracking
+    payment_reference = Column(String(100), nullable=True, index=True)
+    payment_gateway_fees = Column(Numeric(12, 2), default=0)
+    gateway_status = Column(String(50), nullable=True)
     
     # Addresses
     billing_address = Column(JSONB, nullable=True)
@@ -82,6 +88,11 @@ class Invoice(BaseModel):
         if self.due_date and not self.is_paid:
             return date.today() > self.due_date
         return False
+    
+    @property
+    def total_with_fees(self) -> float:
+        """Calculate total including gateway fees."""
+        return float(self.total) + float(self.payment_gateway_fees or 0)
 
 
 class InvoiceItem(BaseModel):

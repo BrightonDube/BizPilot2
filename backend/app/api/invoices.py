@@ -3,6 +3,7 @@
 import math
 from typing import Optional
 from datetime import date
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -22,8 +23,13 @@ from app.schemas.invoice import (
     InvoiceItemResponse,
     PaymentRecord,
     InvoiceSummary,
+    InvoicePaymentInitiate,
+    InvoicePaymentResponse,
+    InvoicePaymentVerify,
+    InvoicePaymentVerifyResponse,
 )
 from app.services.invoice_service import InvoiceService
+from app.services.invoice_payment_service import InvoicePaymentService, calculate_gateway_fees
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
@@ -35,6 +41,7 @@ def _invoice_to_response(invoice, items=None, customer_name: str = None) -> Invo
         business_id=str(invoice.business_id),
         customer_id=str(invoice.customer_id) if invoice.customer_id else None,
         customer_name=customer_name,
+        supplier_id=str(invoice.supplier_id) if invoice.supplier_id else None,
         order_id=str(invoice.order_id) if invoice.order_id else None,
         invoice_number=invoice.invoice_number,
         status=invoice.status,
@@ -54,6 +61,11 @@ def _invoice_to_response(invoice, items=None, customer_name: str = None) -> Invo
         is_paid=invoice.is_paid,
         is_overdue=invoice.is_overdue,
         pdf_url=invoice.pdf_url,
+        # Paystack payment fields
+        payment_reference=invoice.payment_reference,
+        payment_gateway_fees=invoice.payment_gateway_fees or 0,
+        gateway_status=invoice.gateway_status,
+        total_with_fees=invoice.total_with_fees,
         created_at=invoice.created_at,
         updated_at=invoice.updated_at,
         items=[_item_to_response(item) for item in (items or [])],
@@ -432,3 +444,130 @@ async def get_invoice_items(
     
     items = service.get_invoice_items(str(invoice.id))
     return [_item_to_response(item) for item in items]
+
+
+# ============================================================================
+# Paystack Payment Endpoints
+# ============================================================================
+
+@router.post("/{invoice_id}/pay", response_model=InvoicePaymentResponse)
+async def initiate_invoice_payment(
+    invoice_id: str,
+    data: InvoicePaymentInitiate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Initiate a Paystack payment for an invoice.
+    
+    This endpoint creates a Paystack transaction for the invoice balance plus gateway fees.
+    The user will be redirected to Paystack's payment page.
+    
+    Gateway fees (Paystack): 1.5% + R2, capped at R50
+    """
+    payment_service = InvoicePaymentService(db)
+    invoice = payment_service.get_invoice(invoice_id, business_id)
+    
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found",
+        )
+    
+    if invoice.is_paid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invoice is already fully paid",
+        )
+    
+    if invoice.status == InvoiceStatus.CANCELLED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot pay a cancelled invoice",
+        )
+    
+    # If there's an existing pending payment, reset it
+    if invoice.gateway_status == "pending":
+        payment_service.reset_payment_reference(invoice)
+    
+    transaction, gateway_fees, total_with_fees = await payment_service.initiate_payment(
+        invoice=invoice,
+        user_email=current_user.email,
+        callback_url=data.callback_url,
+    )
+    
+    if not transaction:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initialize payment with Paystack",
+        )
+    
+    return InvoicePaymentResponse(
+        reference=transaction.reference,
+        authorization_url=transaction.authorization_url,
+        access_code=transaction.access_code,
+        invoice_total=Decimal(str(invoice.balance_due)),
+        gateway_fees=gateway_fees,
+        total_with_fees=total_with_fees,
+    )
+
+
+@router.get("/{invoice_id}/payment-preview")
+async def get_payment_preview(
+    invoice_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Get a preview of payment amounts including gateway fees.
+    
+    This allows the frontend to show the total amount before initiating payment.
+    """
+    service = InvoiceService(db)
+    invoice = service.get_invoice(invoice_id, business_id)
+    
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found",
+        )
+    
+    balance_due = Decimal(str(invoice.balance_due))
+    gateway_fees = calculate_gateway_fees(balance_due)
+    total_with_fees = balance_due + gateway_fees
+    
+    return {
+        "invoice_id": str(invoice.id),
+        "invoice_number": invoice.invoice_number,
+        "balance_due": float(balance_due),
+        "gateway_fees": float(gateway_fees),
+        "total_with_fees": float(total_with_fees),
+        "currency": "ZAR",
+    }
+
+
+@router.post("/payment/verify", response_model=InvoicePaymentVerifyResponse)
+async def verify_invoice_payment(
+    data: InvoicePaymentVerify,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Verify a Paystack payment after callback.
+    
+    This endpoint should be called after the user returns from the Paystack payment page
+    to confirm the payment status and update the invoice.
+    """
+    payment_service = InvoicePaymentService(db)
+    
+    success, message, invoice = await payment_service.verify_payment(data.reference)
+    
+    return InvoicePaymentVerifyResponse(
+        status="success" if success else "failed",
+        message=message,
+        invoice_id=str(invoice.id) if invoice else None,
+        amount_paid=invoice.amount_paid if invoice else None,
+        gateway_fees=invoice.payment_gateway_fees if invoice else None,
+    )

@@ -91,6 +91,7 @@ class InvoiceResponse(InvoiceBase):
     business_id: str
     invoice_number: str
     customer_name: Optional[str] = None  # Computed from customer relationship
+    supplier_id: Optional[str] = None
     subtotal: Decimal
     tax_amount: Decimal
     discount_amount: Decimal
@@ -101,6 +102,11 @@ class InvoiceResponse(InvoiceBase):
     is_overdue: bool
     paid_date: Optional[date] = None
     pdf_url: Optional[str] = None
+    # Paystack payment fields
+    payment_reference: Optional[str] = None
+    payment_gateway_fees: Decimal = Decimal("0")
+    gateway_status: Optional[str] = None
+    total_with_fees: float = 0.0
     created_at: datetime
     updated_at: datetime
     items: List[InvoiceItemResponse] = []
@@ -136,3 +142,37 @@ class InvoiceSummary(BaseModel):
     total_outstanding: Decimal
     overdue_count: int
     overdue_amount: Decimal
+
+
+# Paystack payment schemas
+class InvoicePaymentInitiate(BaseModel):
+    """Schema for initiating a Paystack payment for an invoice."""
+    
+    callback_url: str = Field(..., description="URL to redirect to after payment")
+
+
+class InvoicePaymentResponse(BaseModel):
+    """Schema for Paystack payment initialization response."""
+    
+    reference: str
+    authorization_url: str
+    access_code: str
+    invoice_total: Decimal
+    gateway_fees: Decimal
+    total_with_fees: Decimal
+
+
+class InvoicePaymentVerify(BaseModel):
+    """Schema for verifying a Paystack payment."""
+    
+    reference: str
+
+
+class InvoicePaymentVerifyResponse(BaseModel):
+    """Schema for payment verification response."""
+    
+    status: str
+    message: str
+    invoice_id: Optional[str] = None
+    amount_paid: Optional[Decimal] = None
+    gateway_fees: Optional[Decimal] = None
