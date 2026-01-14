@@ -1,5 +1,6 @@
 """Invoice models for invoicing."""
 
+from decimal import Decimal
 from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum as SQLEnum, Date, Boolean
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 import enum
@@ -87,9 +88,11 @@ class Invoice(BaseModel):
         return f"<Invoice {self.invoice_number}>"
 
     @property
-    def balance_due(self) -> float:
+    def balance_due(self) -> Decimal:
         """Calculate balance due."""
-        return float(self.total - self.amount_paid)
+        total = self.total or Decimal("0")
+        paid = self.amount_paid or Decimal("0")
+        return total - paid
 
     @property
     def is_paid(self) -> bool:
@@ -109,9 +112,11 @@ class Invoice(BaseModel):
         return self.invoice_type == InvoiceType.SUPPLIER or self.supplier_id is not None
     
     @property
-    def total_with_gateway_fee(self) -> float:
+    def total_with_gateway_fee(self) -> Decimal:
         """Calculate total amount including gateway fee for supplier payments."""
-        return float(self.total) + float(self.gateway_fee or 0)
+        total = self.total or Decimal("0")
+        fee = self.gateway_fee or Decimal("0")
+        return total + fee
 
 
 class InvoiceItem(BaseModel):

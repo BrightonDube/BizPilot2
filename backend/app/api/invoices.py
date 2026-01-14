@@ -530,10 +530,10 @@ async def initiate_supplier_payment(
             detail="A payment has already been initiated for this invoice. Please verify the existing payment first.",
         )
     
-    # Calculate gateway fee (typically 1.5% of total, but can be set per invoice)
-    gateway_fee_percent = float(invoice.gateway_fee_percent or 1.5)
-    invoice_total = float(invoice.balance_due)
-    gateway_fee = round(invoice_total * (gateway_fee_percent / 100), 2)
+    # Calculate gateway fee using Decimal for precision
+    gateway_fee_percent = Decimal(str(invoice.gateway_fee_percent or "1.5"))
+    invoice_total = Decimal(str(invoice.balance_due))
+    gateway_fee = (invoice_total * gateway_fee_percent / Decimal("100")).quantize(Decimal("0.01"))
     total_to_pay = invoice_total + gateway_fee
     
     # Generate a unique reference
@@ -541,7 +541,8 @@ async def initiate_supplier_payment(
     
     # Initialize Paystack transaction
     # Amount is in kobo/cents (smallest currency unit)
-    amount_cents = int(total_to_pay * 100)
+    # Use quantize to ensure we round to 2 decimal places, then convert to cents
+    amount_cents = int((total_to_pay * Decimal("100")).quantize(Decimal("1")))
     
     transaction = await paystack_service.initialize_transaction(
         email=current_user.email,
@@ -567,16 +568,16 @@ async def initiate_supplier_payment(
     # Store the payment reference on the invoice
     invoice.paystack_reference = transaction.reference
     invoice.paystack_access_code = transaction.access_code
-    invoice.gateway_fee = Decimal(str(gateway_fee))
+    invoice.gateway_fee = gateway_fee
     db.commit()
     
     return InitiateSupplierPaymentResponse(
         reference=transaction.reference,
         authorization_url=transaction.authorization_url,
         access_code=transaction.access_code,
-        invoice_total=Decimal(str(invoice_total)),
-        gateway_fee=Decimal(str(gateway_fee)),
-        total_to_pay=Decimal(str(total_to_pay)),
+        invoice_total=invoice_total,
+        gateway_fee=gateway_fee,
+        total_to_pay=total_to_pay,
     )
 
 
@@ -626,8 +627,23 @@ async def verify_supplier_payment(
     paystack_status = verification.get("status", "").lower()
     
     if paystack_status == "success":
-        # Payment successful - update invoice
-        amount_paid = verification.get("amount", 0) / 100  # Convert from kobo to rands
+        # Payment successful - validate amount and update invoice
+        # Convert from kobo to rands using Decimal for precision
+        amount_paid_kobo = verification.get("amount", 0)
+        amount_paid = Decimal(str(amount_paid_kobo)) / Decimal("100")
+        
+        # Calculate expected total (invoice balance + gateway fee)
+        expected_total = Decimal(str(invoice.balance_due)) + (invoice.gateway_fee or Decimal("0"))
+        
+        # Validate the amount paid matches expected (allow small tolerance for rounding)
+        tolerance = Decimal("0.02")  # 2 cents tolerance
+        if abs(amount_paid - expected_total) > tolerance:
+            return VerifySupplierPaymentResponse(
+                status="failed",
+                message=f"Payment amount mismatch. Expected {expected_total}, received {amount_paid}. Please contact support.",
+                invoice_id=str(invoice.id),
+                invoice_number=invoice.invoice_number,
+            )
         
         # The amount paid includes gateway fee, so we record the invoice balance as paid
         invoice.amount_paid = invoice.total
@@ -640,7 +656,7 @@ async def verify_supplier_payment(
             message="Payment verified successfully. Invoice has been marked as paid.",
             invoice_id=str(invoice.id),
             invoice_number=invoice.invoice_number,
-            amount_paid=Decimal(str(float(invoice.total))),
+            amount_paid=invoice.total,
             gateway_fee=invoice.gateway_fee,
         )
     elif paystack_status == "pending":

@@ -102,7 +102,7 @@ class InvoiceResponse(InvoiceBase):
     discount_amount: Decimal
     total: Decimal
     amount_paid: Decimal
-    balance_due: float
+    balance_due: Decimal
     is_paid: bool
     is_overdue: bool
     is_supplier_invoice: bool = False
@@ -112,7 +112,7 @@ class InvoiceResponse(InvoiceBase):
     paystack_reference: Optional[str] = None
     gateway_fee: Decimal = Decimal("0")
     gateway_fee_percent: Decimal = Decimal("1.5")
-    total_with_gateway_fee: float = 0
+    total_with_gateway_fee: Decimal = Decimal("0")
     created_at: datetime
     updated_at: datetime
     items: List[InvoiceItemResponse] = []
