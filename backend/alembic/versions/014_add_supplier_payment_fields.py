@@ -63,10 +63,10 @@ def upgrade() -> None:
     op.add_column('invoices', sa.Column('gateway_fee_percent', sa.Numeric(5, 2), nullable=True, server_default='1.5'))
     
     # Create index on supplier_id
-    op.create_index('ix_invoices_supplier_id', 'invoices', ['supplier_id'])
+    op.execute("CREATE INDEX IF NOT EXISTS ix_invoices_supplier_id ON invoices (supplier_id)")
     
     # Create index on paystack_reference
-    op.create_index('ix_invoices_paystack_reference', 'invoices', ['paystack_reference'])
+    op.execute("CREATE INDEX IF NOT EXISTS ix_invoices_paystack_reference ON invoices (paystack_reference)")
 
 
 def downgrade() -> None:

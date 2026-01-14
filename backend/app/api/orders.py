@@ -32,7 +32,6 @@ from app.services.inventory_service import InventoryService
 from app.services.email_service import EmailService, EmailAttachment
 from app.core.pdf import build_simple_pdf, build_invoice_pdf
 from app.models.product import Product
-from app.models.order import Order, OrderItem
 from app.models.base import utc_now
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -236,10 +235,8 @@ async def get_order_pdf(
         party_name = order.customer.company_name if order.customer else None
         if not party_name and order.customer:
             party_name = f"{order.customer.first_name} {order.customer.last_name}".strip()
-        doc_type = "Sales Order"
     else:
         party_name = order.supplier.name if order.supplier else None
-        doc_type = "Purchase Order"
 
     # Convert items to dict format for PDF builder
     items_data = [
