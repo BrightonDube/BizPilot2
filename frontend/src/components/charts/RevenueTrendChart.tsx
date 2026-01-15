@@ -24,6 +24,30 @@ interface RevenueTrendChartProps {
   average: number
 }
 
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean
+  payload?: Array<{ value: number; name: string; color: string }>
+  label?: string
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl">
+        <p className="text-gray-300 font-medium mb-1">{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} className="text-sm text-purple-400">
+            Revenue: {formatCurrency(entry.value)}
+          </p>
+        ))}
+      </div>
+    )
+  }
+  return null
+}
+
 export function RevenueTrendChart({ data, total, average }: RevenueTrendChartProps) {
   const chartData = useMemo(() => {
     return data.map((point) => ({
@@ -31,30 +55,6 @@ export function RevenueTrendChart({ data, total, average }: RevenueTrendChartPro
       revenue: point.value,
     }))
   }, [data])
-
-  const CustomTooltip = ({
-    active,
-    payload,
-    label,
-  }: {
-    active?: boolean
-    payload?: Array<{ value: number; name: string; color: string }>
-    label?: string
-  }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl">
-          <p className="text-gray-300 font-medium mb-1">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm text-purple-400">
-              Revenue: {formatCurrency(entry.value)}
-            </p>
-          ))}
-        </div>
-      )
-    }
-    return null
-  }
 
   if (data.length === 0) {
     return (
