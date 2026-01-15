@@ -10,8 +10,9 @@
  * 
  * Session Expiration Handling:
  * - On 401 errors, the client attempts to refresh the token
- * - If refresh fails, emits an 'auth:session-expired' event
+ * - If refresh fails, sets isSessionExpiring flag and emits an 'auth:session-expired' event
  * - The auth store subscribes to this event and handles logout + redirect
+ * - Components can check isSessionExpiring to avoid rendering error states
  */
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
@@ -34,11 +35,33 @@ const API_URL =
 export type AuthEventType = 'auth:session-expired';
 
 /**
+ * Flag indicating that session expiration is in progress.
+ * Components can check this to avoid rendering error states during redirect.
+ * 
+ * Note: This flag is intentionally not reset because session expiration triggers
+ * a hard redirect (window.location.href), which causes a full page reload and
+ * resets all JavaScript state including this flag.
+ */
+let sessionExpiringFlag = false;
+
+/**
+ * Check if a session expiration redirect is in progress.
+ * Use this in components to avoid rendering error states.
+ */
+export function isSessionExpiring(): boolean {
+  return sessionExpiringFlag;
+}
+
+/**
  * Dispatch a custom auth event that components/stores can listen to.
  * Uses window events for browser-side communication.
  */
 export function dispatchAuthEvent(type: AuthEventType, detail?: Record<string, unknown>) {
   if (typeof window !== 'undefined') {
+    // Set flag before dispatching to prevent error rendering
+    if (type === 'auth:session-expired') {
+      sessionExpiringFlag = true;
+    }
     window.dispatchEvent(new CustomEvent(type, { detail }));
   }
 }
@@ -150,5 +173,17 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Check if an error is a session expiration error.
+ * Components can use this to suppress error UI when session is expiring.
+ */
+export function isSessionExpiredError(error: unknown): boolean {
+  if (sessionExpiringFlag) return true;
+  if (error instanceof Error && error.message === 'Session expired. Please log in again.') {
+    return true;
+  }
+  return false;
+}
 
 export default apiClient;

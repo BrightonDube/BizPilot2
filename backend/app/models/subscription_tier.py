@@ -1,6 +1,6 @@
 """SubscriptionTier model for defining pricing tiers and features."""
 
-from sqlalchemy import Column, String, Numeric, Boolean, Integer
+from sqlalchemy import Column, String, Boolean, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 

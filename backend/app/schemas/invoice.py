@@ -4,8 +4,7 @@ from typing import Optional, List
 from decimal import Decimal
 from pydantic import BaseModel, Field
 from datetime import datetime, date
-
-from app.models.invoice import InvoiceStatus
+from app.models.invoice import InvoiceStatus, InvoiceType
 
 
 class InvoiceItemBase(BaseModel):
@@ -54,7 +53,9 @@ class InvoiceBase(BaseModel):
     """Base schema for invoice."""
     
     customer_id: Optional[str] = None
+    supplier_id: Optional[str] = None
     order_id: Optional[str] = None
+    invoice_type: InvoiceType = InvoiceType.CUSTOMER
     status: InvoiceStatus = InvoiceStatus.DRAFT
     issue_date: date = Field(default_factory=date.today)
     due_date: Optional[date] = None
@@ -74,6 +75,8 @@ class InvoiceUpdate(BaseModel):
     """Schema for updating an invoice."""
     
     customer_id: Optional[str] = None
+    supplier_id: Optional[str] = None
+    invoice_type: Optional[InvoiceType] = None
     status: Optional[InvoiceStatus] = None
     issue_date: Optional[date] = None
     due_date: Optional[date] = None
@@ -91,16 +94,24 @@ class InvoiceResponse(InvoiceBase):
     business_id: str
     invoice_number: str
     customer_name: Optional[str] = None  # Computed from customer relationship
+    supplier_id: Optional[str] = None
+    supplier_name: Optional[str] = None  # Computed from supplier relationship
     subtotal: Decimal
     tax_amount: Decimal
     discount_amount: Decimal
     total: Decimal
     amount_paid: Decimal
-    balance_due: float
+    balance_due: Decimal
     is_paid: bool
     is_overdue: bool
+    is_supplier_invoice: bool = False
     paid_date: Optional[date] = None
     pdf_url: Optional[str] = None
+    # Paystack payment fields
+    payment_reference: Optional[str] = None
+    payment_gateway_fees: Decimal = Decimal("0")
+    gateway_status: Optional[str] = None
+    total_with_fees: Decimal = Decimal("0")
     created_at: datetime
     updated_at: datetime
     items: List[InvoiceItemResponse] = []
@@ -136,3 +147,37 @@ class InvoiceSummary(BaseModel):
     total_outstanding: Decimal
     overdue_count: int
     overdue_amount: Decimal
+
+
+# Paystack payment schemas
+class InvoicePaymentInitiate(BaseModel):
+    """Schema for initiating a Paystack payment for an invoice."""
+    
+    callback_url: str = Field(..., description="URL to redirect to after payment")
+
+
+class InvoicePaymentResponse(BaseModel):
+    """Schema for Paystack payment initialization response."""
+    
+    reference: str
+    authorization_url: str
+    access_code: str
+    invoice_total: Decimal
+    gateway_fees: Decimal
+    total_with_fees: Decimal
+
+
+class InvoicePaymentVerify(BaseModel):
+    """Schema for verifying a Paystack payment."""
+    
+    reference: str
+
+
+class InvoicePaymentVerifyResponse(BaseModel):
+    """Schema for payment verification response."""
+    
+    status: str
+    message: str
+    invoice_id: Optional[str] = None
+    amount_paid: Optional[Decimal] = None
+    gateway_fees: Optional[Decimal] = None

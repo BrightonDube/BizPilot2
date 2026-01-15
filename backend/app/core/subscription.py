@@ -1,6 +1,6 @@
 """Subscription and feature gating dependencies."""
 
-from typing import List, Optional
+from typing import List
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 

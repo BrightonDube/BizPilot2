@@ -67,6 +67,45 @@ services:
         type: SECRET
         value: ${db.DATABASE_URL}
       # CORS_ORIGINS set manually in dashboard
+      # Email - set these in DO Dashboard for production email sending
+      - key: EMAILS_ENABLED
+        scope: RUN_TIME
+        value: "false"  # Set to "true" in dashboard after configuring SMTP
+      - key: SMTP_HOST
+        scope: RUN_TIME
+        value: ""  # Configure in dashboard
+      - key: SMTP_PORT
+        scope: RUN_TIME
+        value: "587"
+      - key: SMTP_STARTTLS
+        scope: RUN_TIME
+        value: "true"
+      - key: SMTP_USER
+        scope: RUN_TIME
+        type: SECRET
+        value: ""  # Configure in dashboard
+      - key: SMTP_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+        value: ""  # Configure in dashboard
+      - key: EMAILS_FROM_EMAIL
+        scope: RUN_TIME
+        value: "noreply@bizpilotpro.app"
+      - key: EMAILS_FROM_NAME
+        scope: RUN_TIME
+        value: "BizPilot"
+      # Paystack - required for subscription payments
+      - key: PAYSTACK_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: ""  # Configure in dashboard
+      - key: PAYSTACK_PUBLIC_KEY
+        scope: RUN_TIME
+        value: ""  # Configure in dashboard
+      # Frontend URL for payment callbacks
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: ""  # Set to your app URL in dashboard, e.g., https://bizpilotpro.app
 
   # Next.js Frontend
   - name: web

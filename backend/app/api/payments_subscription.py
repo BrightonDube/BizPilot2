@@ -57,7 +57,7 @@ async def initiate_checkout(
     # Get the tier
     tier = db.query(SubscriptionTier).filter(
         SubscriptionTier.id == data.tier_id,
-        SubscriptionTier.is_active == True,
+        SubscriptionTier.is_active,
         SubscriptionTier.deleted_at.is_(None)
     ).first()
     

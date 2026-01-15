@@ -1,0 +1,57 @@
+# AWS App Runner Service Configuration for BizPilot API
+# Deploy with: aws apprunner create-service --cli-input-yaml file://apprunner-api.yaml
+
+ServiceName: bizpilot-api
+
+SourceConfiguration:
+  AuthenticationConfiguration:
+    AccessRoleArn: arn:aws:iam::YOUR_ACCOUNT_ID:role/AppRunnerECRAccessRole
+  ImageRepository:
+    ImageIdentifier: YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/bizpilot-api:latest
+    ImageRepositoryType: ECR
+    ImageConfiguration:
+      Port: "8000"
+      RuntimeEnvironmentVariables:
+        ENVIRONMENT: production
+        DEBUG: "false"
+        ALGORITHM: HS256
+        ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+        COOKIE_SECURE: "true"
+        COOKIE_SAMESITE: "lax"
+        EMAILS_ENABLED: "false"
+        SMTP_PORT: "587"
+        SMTP_STARTTLS: "true"
+        EMAILS_FROM_EMAIL: noreply@bizpilot.com
+        EMAILS_FROM_NAME: BizPilot
+      # Note: Use AWS Secrets Manager to store sensitive values
+      # Create secrets with: aws secretsmanager create-secret --name bizpilot/<name> --secret-string '{"key":"value"}'
+      RuntimeEnvironmentSecrets:
+        # Database connection string
+        DATABASE_URL: arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:bizpilot/database-xxxxx:url::
+        # JWT signing key
+        SECRET_KEY: arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:bizpilot/jwt-xxxxx:key::
+        # Paystack API key
+        PAYSTACK_SECRET_KEY: arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:bizpilot/paystack-xxxxx:secret_key::
+        # SMTP credentials (both from same secret with different keys)
+        SMTP_USER: arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:bizpilot/smtp-xxxxx:user::
+        SMTP_PASSWORD: arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:bizpilot/smtp-xxxxx:password::
+
+InstanceConfiguration:
+  Cpu: "0.25 vCPU"
+  Memory: "0.5 GB"
+
+HealthCheckConfiguration:
+  Protocol: HTTP
+  Path: /health
+  Interval: 10
+  Timeout: 5
+  HealthyThreshold: 1
+  UnhealthyThreshold: 5
+
+AutoScalingConfigurationArn: arn:aws:apprunner:us-east-1:YOUR_ACCOUNT_ID:autoscalingconfiguration/DefaultConfiguration/1/00000000000000000000000000000001
+
+Tags:
+  - Key: Project
+    Value: BizPilot
+  - Key: Environment
+    Value: production

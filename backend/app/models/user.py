@@ -3,7 +3,6 @@
 from sqlalchemy import Column, String, Boolean, Enum as SQLEnum, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
-from datetime import datetime
 import enum
 
 from app.models.base import BaseModel
@@ -65,6 +64,11 @@ class User(BaseModel):
     
     # Feature overrides - admin can enable/disable specific features for a user regardless of tier
     feature_overrides = Column(JSONB, nullable=True, default={})
+    
+    # POS login fields - PIN is only stored as a secure hash
+    pin_code_hash = Column(String(255), nullable=True)  # Hashed PIN for verification
+    biometric_enabled = Column(Boolean, default=False, nullable=True)
+    biometric_public_key = Column(String, nullable=True)  # For WebAuthn/fingerprint
 
     # Relationships
     business_users = relationship("BusinessUser", back_populates="user", cascade="all, delete-orphan")

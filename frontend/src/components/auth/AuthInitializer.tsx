@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { subscribeToAuthEvent } from '@/lib/api'
 
@@ -18,22 +18,33 @@ export function AuthInitializer() {
   const fetchUser = useAuthStore((s) => s.fetchUser)
   const isInitialized = useAuthStore((s) => s.isInitialized)
   const logout = useAuthStore((s) => s.logout)
+  
+  // Track if we're already redirecting to prevent multiple redirects
+  const isRedirecting = useRef(false)
 
   /**
    * Handle session expiration.
-   * Clears auth state and redirects to login with a message.
+   * Redirects immediately to login, then clears auth state.
+   * The immediate redirect prevents any error states from being rendered.
    */
-  const handleSessionExpired = useCallback(async () => {
-    // Clear auth state
-    await logout()
+  const handleSessionExpired = useCallback(() => {
+    // Prevent multiple redirects
+    if (isRedirecting.current) return
+    isRedirecting.current = true
     
-    // Redirect to login with session expired message
-    // Use window.location for a hard navigation to ensure clean state
     // Check for window to ensure SSR safety (though this is a client component)
     if (typeof window !== 'undefined') {
       const currentPath = window.location.pathname + window.location.search
       const loginUrl = `/auth/login?session_expired=true&next=${encodeURIComponent(currentPath)}`
+      
+      // Redirect immediately - don't wait for logout
       window.location.href = loginUrl
+      
+      // Clear auth state in background (redirect will happen first)
+      logout().catch((err) => {
+        // Log for debugging but don't block - redirect is already in progress
+        console.debug('Logout during session expiration failed:', err)
+      })
     }
   }, [logout])
 

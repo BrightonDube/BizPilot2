@@ -1,5 +1,6 @@
 """Invoice models for invoicing."""
 
+from decimal import Decimal
 from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum as SQLEnum, Date
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 import enum
@@ -20,6 +21,13 @@ class InvoiceStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class InvoiceType(str, enum.Enum):
+    """Invoice type - customer invoice (sales) or supplier invoice (purchase)."""
+
+    CUSTOMER = "customer"  # Invoice to a customer (receivable)
+    SUPPLIER = "supplier"  # Invoice from a supplier (payable)
+
+
 class Invoice(BaseModel):
     """Invoice model."""
 
@@ -27,10 +35,17 @@ class Invoice(BaseModel):
 
     business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
     customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True)
+    supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True, index=True)
     order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), nullable=True, index=True)
     
     # Invoice reference
     invoice_number = Column(String(50), nullable=False, unique=True, index=True)
+    
+    # Invoice type
+    invoice_type = Column(
+        SQLEnum(InvoiceType, values_callable=lambda x: [e.value for e in x], name='invoicetype'),
+        default=InvoiceType.CUSTOMER
+    )
     
     # Status
     status = Column(
@@ -52,6 +67,11 @@ class Invoice(BaseModel):
     # Payment
     amount_paid = Column(Numeric(12, 2), default=0)
     
+    # Paystack payment tracking
+    payment_reference = Column(String(100), nullable=True, index=True)
+    payment_gateway_fees = Column(Numeric(12, 2), default=0)
+    gateway_status = Column(String(50), nullable=True)
+    
     # Addresses
     billing_address = Column(JSONB, nullable=True)
     
@@ -67,9 +87,11 @@ class Invoice(BaseModel):
         return f"<Invoice {self.invoice_number}>"
 
     @property
-    def balance_due(self) -> float:
+    def balance_due(self) -> Decimal:
         """Calculate balance due."""
-        return float(self.total - self.amount_paid)
+        total = self.total or Decimal("0")
+        paid = self.amount_paid or Decimal("0")
+        return total - paid
 
     @property
     def is_paid(self) -> bool:
@@ -82,6 +104,18 @@ class Invoice(BaseModel):
         if self.due_date and not self.is_paid:
             return date.today() > self.due_date
         return False
+    
+    @property
+    def is_supplier_invoice(self) -> bool:
+        """Check if this is a supplier invoice (payable)."""
+        return self.invoice_type == InvoiceType.SUPPLIER or self.supplier_id is not None
+    
+    @property
+    def total_with_fees(self) -> Decimal:
+        """Calculate total including gateway fees."""
+        total = self.total or Decimal("0")
+        fees = self.payment_gateway_fees or Decimal("0")
+        return total + fees
 
 
 class InvoiceItem(BaseModel):

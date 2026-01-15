@@ -1,0 +1,36 @@
+# AWS App Runner Service Configuration for BizPilot Web Frontend
+# Deploy with: aws apprunner create-service --cli-input-yaml file://apprunner-web.yaml
+
+ServiceName: bizpilot-web
+
+SourceConfiguration:
+  AuthenticationConfiguration:
+    AccessRoleArn: arn:aws:iam::YOUR_ACCOUNT_ID:role/AppRunnerECRAccessRole
+  ImageRepository:
+    ImageIdentifier: YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/bizpilot-web:latest
+    ImageRepositoryType: ECR
+    ImageConfiguration:
+      Port: "3000"
+      RuntimeEnvironmentVariables:
+        NODE_ENV: production
+        NEXT_PUBLIC_API_URL: https://your-api-service.us-east-1.awsapprunner.com/api/v1
+
+InstanceConfiguration:
+  Cpu: "0.25 vCPU"
+  Memory: "0.5 GB"
+
+HealthCheckConfiguration:
+  Protocol: HTTP
+  Path: /
+  Interval: 10
+  Timeout: 5
+  HealthyThreshold: 1
+  UnhealthyThreshold: 5
+
+AutoScalingConfigurationArn: arn:aws:apprunner:us-east-1:YOUR_ACCOUNT_ID:autoscalingconfiguration/DefaultConfiguration/1/00000000000000000000000000000001
+
+Tags:
+  - Key: Project
+    Value: BizPilot
+  - Key: Environment
+    Value: production

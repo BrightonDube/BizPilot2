@@ -10,9 +10,9 @@ from app.models.product import Product, ProductStatus, ProductCategory
 from app.models.customer import Customer, CustomerType
 from app.models.supplier import Supplier
 from app.models.order import Order, OrderStatus, PaymentStatus, OrderItem
-from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem
+from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem, InvoiceType
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
-from app.models.payment import Payment, PaymentMethod
+from app.models.product_supplier import ProductSupplier
 from app.models.product_ingredient import ProductIngredient
 from app.models.production import ProductionOrder, ProductionOrderItem, ProductionStatus
 from app.models.ai_conversation import AIConversation
@@ -24,6 +24,8 @@ from app.models.subscription_transaction import (
     TransactionStatus as SubscriptionTransactionStatus,
     TransactionType as SubscriptionTransactionType,
 )
+from app.models.time_entry import TimeEntry, TimeEntryType, TimeEntryStatus
+from app.models.pos_connection import POSConnection, POSProvider, POSConnectionStatus, POSSyncLog
 
 __all__ = [
     "BaseModel",
@@ -47,6 +49,8 @@ __all__ = [
     "CustomerType",
     # Supplier
     "Supplier",
+    # Product-Supplier relationship
+    "ProductSupplier",
     # Order
     "Order",
     "OrderStatus",
@@ -56,13 +60,11 @@ __all__ = [
     "Invoice",
     "InvoiceStatus",
     "InvoiceItem",
+    "InvoiceType",
     # Inventory
     "InventoryItem",
     "InventoryTransaction",
     "TransactionType",
-    # Payment
-    "Payment",
-    "PaymentMethod",
     "ProductIngredient",
     # Production
     "ProductionOrder",
@@ -78,4 +80,13 @@ __all__ = [
     "SubscriptionTransaction",
     "SubscriptionTransactionStatus",
     "SubscriptionTransactionType",
+    # Time Entry
+    "TimeEntry",
+    "TimeEntryType",
+    "TimeEntryStatus",
+    # POS Connection
+    "POSConnection",
+    "POSProvider",
+    "POSConnectionStatus",
+    "POSSyncLog",
 ]
