@@ -122,3 +122,53 @@ class ProfitMarginReport(BaseModel):
     average_margin: float
     highest_margin: float
     lowest_margin: float
+
+
+class UserActivityItem(BaseModel):
+    """User activity report item."""
+    
+    user_id: str
+    user_name: str
+    total_hours: float
+    total_entries: int
+    clock_ins: int
+    clock_outs: int
+    break_duration: float
+    last_activity: str | None  # ISO datetime
+    status: str  # 'active' | 'completed'
+
+
+class UserActivityReport(BaseModel):
+    """User activity summary report."""
+    
+    items: List[UserActivityItem]
+    total_users: int
+    total_hours: float
+    average_hours_per_user: float
+
+
+class LoginHistoryItem(BaseModel):
+    """Login history report item."""
+    
+    session_id: str
+    user_id: str
+    user_name: str
+    device_name: str | None
+    device_type: str | None
+    ip_address: str | None
+    location: str | None
+    login_time: str  # ISO datetime
+    logout_time: str | None  # ISO datetime
+    duration_minutes: float | None
+    is_active: bool
+    is_suspicious: bool
+
+
+class LoginHistoryReport(BaseModel):
+    """Login history summary report."""
+    
+    items: List[LoginHistoryItem]
+    total_sessions: int
+    active_sessions: int
+    unique_users: int
+    suspicious_count: int

@@ -17,6 +17,8 @@ from app.models.product import Product
 from app.models.business_user import BusinessUser
 from app.models.order import OrderItem
 from app.models.inventory import InventoryItem
+from app.models.session import Session
+from app.models.time_entry import TimeEntry
 from app.core.pdf import build_simple_pdf
 from app.schemas.report import (
     ReportStats,
@@ -31,6 +33,10 @@ from app.schemas.report import (
     COGSReportItem,
     ProfitMarginReport,
     ProfitMarginItem,
+    UserActivityReport,
+    UserActivityItem,
+    LoginHistoryReport,
+    LoginHistoryItem,
 )
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
@@ -713,4 +719,225 @@ async def export_reports_pdf(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+
+@router.get("/user-activity", response_model=UserActivityReport)
+async def get_user_activity_report(
+    range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
+    user_id: Optional[str] = Query(None),
+    current_user: User = Depends(has_permission("reports:view_user_activity")),
+    db: Session = Depends(get_db),
+):
+    """Get user activity report with time tracking data."""
+    business_id = get_user_business_id(db, current_user.id)
+    
+    if not business_id:
+        return UserActivityReport(
+            items=[],
+            total_users=0,
+            total_hours=0,
+            average_hours_per_user=0,
+        )
+
+    start_date, end_date = get_date_range(range)
+    
+    # Build query for time entries
+    query = (
+        db.query(
+            TimeEntry.user_id,
+            User.first_name,
+            User.last_name,
+            func.sum(TimeEntry.hours_worked).label("total_hours"),
+            func.count(TimeEntry.id).label("total_entries"),
+            func.sum(
+                func.case(
+                    (TimeEntry.clock_in.isnot(None), 1),
+                    else_=0
+                )
+            ).label("clock_ins"),
+            func.sum(
+                func.case(
+                    (TimeEntry.clock_out.isnot(None), 1),
+                    else_=0
+                )
+            ).label("clock_outs"),
+            func.sum(TimeEntry.break_duration).label("break_duration"),
+            func.max(TimeEntry.clock_in).label("last_activity"),
+        )
+        .join(User, User.id == TimeEntry.user_id)
+        .filter(
+            TimeEntry.business_id == business_id,
+            TimeEntry.clock_in >= start_date,
+            TimeEntry.clock_in <= end_date,
+            TimeEntry.deleted_at.is_(None),
+        )
+    )
+    
+    if user_id:
+        query = query.filter(TimeEntry.user_id == user_id)
+    
+    rows = (
+        query
+        .group_by(TimeEntry.user_id, User.first_name, User.last_name)
+        .order_by(func.sum(TimeEntry.hours_worked).desc())
+        .all()
+    )
+    
+    items = []
+    total_hours = 0.0
+    
+    for r in rows:
+        user_name = f"{r.first_name or ''} {r.last_name or ''}".strip() or "Unknown"
+        hours = float(r.total_hours or 0)
+        total_hours += hours
+        
+        # Check if user has any active sessions (clock_in without clock_out)
+        has_active = db.query(TimeEntry).filter(
+            TimeEntry.user_id == r.user_id,
+            TimeEntry.business_id == business_id,
+            TimeEntry.clock_in.isnot(None),
+            TimeEntry.clock_out.is_(None),
+            TimeEntry.deleted_at.is_(None),
+        ).first() is not None
+        
+        items.append(UserActivityItem(
+            user_id=str(r.user_id),
+            user_name=user_name,
+            total_hours=round(hours, 2),
+            total_entries=int(r.total_entries or 0),
+            clock_ins=int(r.clock_ins or 0),
+            clock_outs=int(r.clock_outs or 0),
+            break_duration=round(float(r.break_duration or 0), 2),
+            last_activity=r.last_activity.isoformat() if r.last_activity else None,
+            status="active" if has_active else "completed",
+        ))
+    
+    average_hours = total_hours / len(items) if items else 0
+    
+    return UserActivityReport(
+        items=items,
+        total_users=len(items),
+        total_hours=round(total_hours, 2),
+        average_hours_per_user=round(average_hours, 2),
+    )
+
+
+@router.get("/login-history", response_model=LoginHistoryReport)
+async def get_login_history_report(
+    range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
+    user_id: Optional[str] = Query(None),
+    include_active: bool = Query(True),
+    current_user: User = Depends(has_permission("reports:view_login_history")),
+    db: Session = Depends(get_db),
+):
+    """Get login history report with session tracking data."""
+    business_id = get_user_business_id(db, current_user.id)
+    
+    if not business_id:
+        return LoginHistoryReport(
+            items=[],
+            total_sessions=0,
+            active_sessions=0,
+            unique_users=0,
+            suspicious_count=0,
+        )
+
+    start_date, end_date = get_date_range(range)
+    
+    # Build query for sessions
+    # Need to join through business_user to filter by business
+    query = (
+        db.query(Session, User)
+        .join(User, User.id == Session.user_id)
+        .join(BusinessUser, BusinessUser.user_id == User.id)
+        .filter(
+            BusinessUser.business_id == business_id,
+            Session.created_at >= start_date,
+            Session.created_at <= end_date,
+        )
+    )
+    
+    if user_id:
+        query = query.filter(Session.user_id == user_id)
+    
+    if not include_active:
+        query = query.filter(Session.is_active == False)
+    
+    rows = query.order_by(Session.created_at.desc()).all()
+    
+    items = []
+    active_count = 0
+    suspicious_count = 0
+    unique_users = set()
+    
+    # Track IPs per user for suspicious activity detection
+    user_ips = {}
+    
+    for session, user in rows:
+        unique_users.add(str(session.user_id))
+        
+        # Calculate duration
+        duration_minutes = None
+        logout_time = None
+        
+        if session.revoked_at:
+            logout_time = session.revoked_at.isoformat()
+            duration = session.revoked_at - session.created_at
+            duration_minutes = round(duration.total_seconds() / 60, 1)
+        elif not session.is_active:
+            # Session expired
+            logout_time = session.expires_at.isoformat()
+            duration = session.expires_at - session.created_at
+            duration_minutes = round(duration.total_seconds() / 60, 1)
+        
+        if session.is_active:
+            active_count += 1
+        
+        # Detect suspicious activity
+        is_suspicious = False
+        user_id_str = str(session.user_id)
+        
+        # Track IPs for this user
+        if user_id_str not in user_ips:
+            user_ips[user_id_str] = set()
+        
+        if session.ip_address:
+            user_ips[user_id_str].add(session.ip_address)
+            
+            # Flag if user has multiple IPs in this period (possible account sharing)
+            if len(user_ips[user_id_str]) > 3:
+                is_suspicious = True
+        
+        # Flag very long sessions (>24 hours)
+        if duration_minutes and duration_minutes > 1440:
+            is_suspicious = True
+        
+        if is_suspicious:
+            suspicious_count += 1
+        
+        user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or user.email or "Unknown"
+        
+        items.append(LoginHistoryItem(
+            session_id=str(session.id),
+            user_id=str(session.user_id),
+            user_name=user_name,
+            device_name=session.device_name,
+            device_type=session.device_type,
+            ip_address=session.ip_address,
+            location=session.location,
+            login_time=session.created_at.isoformat(),
+            logout_time=logout_time,
+            duration_minutes=duration_minutes,
+            is_active=session.is_active,
+            is_suspicious=is_suspicious,
+        ))
+    
+    return LoginHistoryReport(
+        items=items,
+        total_sessions=len(items),
+        active_sessions=active_count,
+        unique_users=len(unique_users),
+        suspicious_count=suspicious_count,
     )
