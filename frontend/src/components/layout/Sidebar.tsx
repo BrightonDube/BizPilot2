@@ -27,6 +27,7 @@ import {
   User,
   Factory,
   Shield,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -40,6 +41,7 @@ const navigation = [
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Suppliers', href: '/suppliers', icon: Truck },
   { name: 'Invoices', href: '/invoices', icon: FileText },
+  { name: 'Time Tracking', href: '/time-tracking', icon: Clock },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'AI Assistant', href: '/ai', icon: Sparkles },
 ];
