@@ -207,29 +207,11 @@ function LoginForm() {
         <OAuthButtons onSuccess={() => router.push('/dashboard')} />
       </motion.div>
 
-      {/* Demo Credentials */}
-      <motion.div
-        className="mt-6 p-4 bg-slate-800/50 border border-slate-700 rounded-lg"
+      <motion.div 
+        className="text-center mt-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.55 }}
-      >
-        <p className="text-sm text-gray-400 text-center mb-2">Demo Credentials:</p>
-        <div className="text-center">
-          <p className="text-sm text-gray-300">
-            <span className="text-gray-500">Email:</span> demo@bizpilot.co.za
-          </p>
-          <p className="text-sm text-gray-300">
-            <span className="text-gray-500">Password:</span> Demo@2024
-          </p>
-        </div>
-      </motion.div>
-
-      <motion.div 
-        className="text-center mt-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
       >
         <p className="text-gray-400 text-sm">
           Don&apos;t have an account?{' '}
