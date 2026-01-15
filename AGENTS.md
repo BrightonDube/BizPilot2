@@ -2,6 +2,21 @@
 
 This document provides guidelines for AI coding agents working on the BizPilot2 project. It includes a session-ending protocol to ensure proper issue tracking hygiene and database synchronization.
 
+## 🎯 Project Management Philosophy
+
+**THE ONLY BUILDING GUIDE IS BEADS ISSUES**
+- All work must be tracked in Beads issues (`.beads/issues.jsonl`)
+- Use `bd` commands to check, create, and manage issues
+- Do not start work without a corresponding Beads issue
+- The project is built by working through Beads issues systematically
+
+## 📦 Package Manager
+
+**This project uses pnpm, NOT npm**
+- Always use `pnpm` commands (e.g., `pnpm install`, `pnpm run dev`)
+- Never use `npm` or `yarn` commands
+- Scripts are defined in `package.json` and run with `pnpm run <script>`
+
 ## ⚠️ FIRST: Read the Workflow Script
 
 **Before starting any work, read the workflow script:**
@@ -14,6 +29,8 @@ This document provides guidelines for AI coding agents working on the BizPilot2 
 This project uses [Beads](https://github.com/steveyegge/beads) for AI-native issue tracking. Issues are stored in `.beads/issues.jsonl` and synced via git.
 
 ### Essential Commands
+
+**Always use `bd` commands to interact with Beads:**
 
 ```bash
 # List all issues
@@ -29,7 +46,13 @@ bd show <issue-id>
 bd update <issue-id> --status in_progress
 bd update <issue-id> --status done
 
-# Sync with git remote
+# Find ready work (issues with no blockers)
+bd ready
+
+# List by priority
+bd list --sort priority
+
+# Sync with git remote (using pnpm)
 pnpm beads:sync
 ```
 
@@ -62,9 +85,18 @@ Only if code changes were made:
 - File P0 issues if builds are broken
 
 ```bash
-# Example quality gate commands (adjust for your stack)
-# npm run lint && npm run test && npm run build
-# pytest && flake8
+# Frontend quality gates (use pnpm)
+cd frontend
+pnpm run lint
+pnpm run build
+pnpm run test  # if tests exist
+
+# Backend quality gates
+cd backend
+pytest
+flake8
+
+# Always use pnpm for Node.js commands, never npm
 ```
 
 ### 3. Sync the Issue Tracker Carefully
@@ -131,11 +163,25 @@ Beads acts like a centralized database, but it's actually distributed via git:
 ## Best Practices for AI Agents
 
 1. **Start each session** by syncing: `pnpm beads:sync`
-2. **Track your work** by updating issue status as you go
-3. **Create issues** for anything you discover that needs follow-up
-4. **End each session** by following the Session-Ending Protocol above
-5. **Be descriptive** in issue titles and descriptions for context
-6. **Use priorities** (P0 = critical, P1 = high, P2 = medium, P3 = low)
+2. **Check Beads issues** using `bd` commands before starting work
+3. **Track your work** by updating issue status as you go
+4. **Create issues** for anything you discover that needs follow-up
+5. **End each session** by following the Session-Ending Protocol above
+6. **Be descriptive** in issue titles and descriptions for context
+7. **Use priorities** (P0 = critical, P1 = high, P2 = medium, P3 = low)
+8. **Always use pnpm** for Node.js package management, never npm or yarn
+9. **Refer to AGENTS.md** before ending any agent session
+
+## Before Ending Any Agent Session
+
+**MANDATORY CHECKLIST:**
+1. ✅ Review AGENTS.md Session-Ending Protocol
+2. ✅ Run quality gates (lint, test, build)
+3. ✅ Create/update Beads issues for any remaining work
+4. ✅ Sync Beads database: `pnpm beads:sync`
+5. ✅ Verify clean git state: `git status`
+6. ✅ Commit and push all changes
+7. ✅ Use `bd` commands to verify issue state
 
 ---
 
