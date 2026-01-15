@@ -11,7 +11,6 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
 const STORAGE_KEY = 'bizpilot-theme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -30,6 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark';
     const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
     if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
       return savedTheme;
@@ -37,10 +37,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return 'dark';
   });
 
+
   const resolvedTheme: 'dark' | 'light' = theme === 'system' ? systemTheme : theme;
 
   // Apply theme class to document
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme === 'system' ? resolvedTheme : theme);

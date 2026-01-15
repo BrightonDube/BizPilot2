@@ -61,14 +61,6 @@ export function AuthInitializer() {
   useEffect(() => {
     // Guard for SSR safety (though useEffect only runs on client)
     if (typeof window === 'undefined') return
-    
-    const oauthLoadingTime = window.localStorage.getItem('oauth_loading_time')
-    if (oauthLoadingTime) {
-      const timeDiff = Date.now() - Number(oauthLoadingTime)
-      if (Number.isFinite(timeDiff) && timeDiff > 30000) {
-        window.localStorage.removeItem('oauth_loading_time')
-      }
-    }
 
     if (!isInitialized) {
       fetchUser()
