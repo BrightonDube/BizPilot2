@@ -27,6 +27,11 @@ import {
   Zap,
   ExternalLink,
   Receipt,
+  Monitor,
+  Smartphone,
+  Tablet,
+  LogOut,
+  Trash2,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -85,6 +90,18 @@ interface BillingTransaction {
   tier_name?: string;
 }
 
+interface SessionInfo {
+  id: string;
+  device_name: string | null;
+  device_type: string | null;
+  ip_address: string | null;
+  location: string | null;
+  is_current: boolean;
+  created_at: string;
+  last_active_at: string;
+  expires_at: string;
+}
+
 export default function SettingsPage() {
   const { user, fetchUser } = useAuth();
   const router = useRouter();
@@ -139,6 +156,11 @@ export default function SettingsPage() {
   const [loadingBilling, setLoadingBilling] = useState(false);
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
+  // Sessions state
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [revokingSession, setRevokingSession] = useState<string | null>(null);
+
   // Clear messages after timeout
   useEffect(() => {
     if (successMessage) {
@@ -181,6 +203,82 @@ export default function SettingsPage() {
       loadBillingData();
     }
   }, [activeTab]);
+
+  // Load sessions when security tab is active
+  useEffect(() => {
+    if (activeTab === 'security') {
+      loadSessions();
+    }
+  }, [activeTab]);
+
+  const loadSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const response = await apiClient.get('/sessions');
+      setSessions(response.data.sessions || []);
+    } catch (err) {
+      console.error('Failed to load sessions:', err);
+      setSessions([]);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId: string) => {
+    setRevokingSession(sessionId);
+    try {
+      await apiClient.delete(`/sessions/${sessionId}`);
+      setSessions(sessions.filter(s => s.id !== sessionId));
+      setSuccessMessage('Session revoked successfully');
+    } catch (err) {
+      console.error('Failed to revoke session:', err);
+      setErrorMessage('Failed to revoke session');
+    } finally {
+      setRevokingSession(null);
+    }
+  };
+
+  const handleRevokeAllSessions = async () => {
+    if (!confirm('Are you sure you want to log out from all other devices?')) return;
+    
+    setLoadingSessions(true);
+    try {
+      await apiClient.delete('/sessions?keep_current=true');
+      await loadSessions();
+      setSuccessMessage('All other sessions revoked');
+    } catch (err) {
+      console.error('Failed to revoke sessions:', err);
+      setErrorMessage('Failed to revoke sessions');
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  const getDeviceIcon = (deviceType: string | null) => {
+    switch (deviceType) {
+      case 'mobile':
+        return <Smartphone className="w-5 h-5" />;
+      case 'tablet':
+        return <Tablet className="w-5 h-5" />;
+      default:
+        return <Monitor className="w-5 h-5" />;
+    }
+  };
+
+  const formatSessionDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
+  };
 
   const loadBillingData = async () => {
     setLoadingBilling(true);
@@ -895,16 +993,102 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="p-4 bg-muted rounded-lg">
-                  <h3 className="text-sm font-medium text-foreground mb-2">Active Sessions</h3>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Manage devices that are logged into your account
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => setErrorMessage('Session management is coming soon.')}
-                  >
-                    View Sessions
-                  </Button>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-medium text-foreground mb-1">Active Sessions</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Manage devices that are logged into your account
+                      </p>
+                    </div>
+                    {sessions.length > 1 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRevokeAllSessions}
+                        disabled={loadingSessions}
+                        className="text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-500/50"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout All Others
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {loadingSessions ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                    </div>
+                  ) : sessions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4">
+                      No active sessions found.
+                    </p>
+                  ) : (
+                    <div className="space-y-3 mt-4">
+                      {sessions.map((session) => (
+                        <div
+                          key={session.id}
+                          className={`p-3 rounded-lg border transition-colors ${
+                            session.is_current
+                              ? 'bg-green-900/10 border-green-500/30'
+                              : 'bg-card border-border'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className="mt-0.5 text-muted-foreground">
+                                {getDeviceIcon(session.device_type)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="text-sm font-medium text-foreground">
+                                    {session.device_name || 'Unknown Device'}
+                                  </p>
+                                  {session.is_current && (
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-green-600/20 text-green-400 rounded-full">
+                                      Current
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="space-y-0.5">
+                                  {session.ip_address && (
+                                    <p className="text-xs text-muted-foreground">
+                                      IP: {session.ip_address}
+                                    </p>
+                                  )}
+                                  {session.location && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Location: {session.location}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-muted-foreground">
+                                    Last active: {formatSessionDate(session.last_active_at)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            {!session.is_current && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRevokeSession(session.id)}
+                                disabled={revokingSession === session.id}
+                                className="text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-500/50 flex-shrink-0"
+                              >
+                                {revokingSession === session.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <Trash2 className="w-4 h-4 mr-1" />
+                                    Revoke
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

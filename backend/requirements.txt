@@ -51,3 +51,4 @@ gunicorn==23.0.0
 slowapi==0.1.9
 limits==5.6.0
 openpyxl==3.1.5
+user-agents==2.2.0

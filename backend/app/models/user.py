@@ -77,6 +77,7 @@ class User(BaseModel):
     settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
     current_tier = relationship("SubscriptionTier", back_populates="users")
     subscription_transactions = relationship("SubscriptionTransaction", back_populates="user", cascade="all, delete-orphan")
+    sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
 
     @property
     def full_name(self) -> str:
