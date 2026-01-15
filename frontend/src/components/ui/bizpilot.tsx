@@ -69,7 +69,7 @@ export function StatCard({
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card text-card-foreground p-6">
+    <div className="rounded-xl border border-slate-700 bg-slate-800/50 text-card-foreground p-6 transition-all duration-200 will-change-transform hover:-translate-y-1 hover:scale-[1.01] hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/20">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         {icon && (

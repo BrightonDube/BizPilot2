@@ -41,7 +41,9 @@ interface Invoice {
   invoice_number: string
   customer_id: string | null
   customer_name?: string
-  supplier_id?: string | null
+  supplier_id: string | null
+  supplier_name?: string
+  invoice_type: 'customer' | 'supplier'
   status: string
   issue_date: string
   due_date: string
@@ -58,6 +60,7 @@ interface Invoice {
   balance_due: number
   is_paid: boolean
   is_overdue: boolean
+  is_supplier_invoice: boolean
   pdf_url?: string
   // Paystack payment fields
   payment_reference?: string
@@ -693,21 +696,37 @@ export default function InvoiceDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Customer Info */}
+          {/* Customer/Supplier Info */}
           <Card className="bg-gray-800/50 border-gray-700">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Customer</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">
+                {invoice.is_supplier_invoice ? 'Supplier' : 'Customer'}
+              </h3>
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <User className="h-5 w-5 text-blue-400" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  invoice.is_supplier_invoice ? 'bg-purple-500/20' : 'bg-blue-500/20'
+                }`}>
+                  <User className={`h-5 w-5 ${
+                    invoice.is_supplier_invoice ? 'text-purple-400' : 'text-blue-400'
+                  }`} />
                 </div>
                 <div>
-                  <p className="text-white font-medium">{invoice.customer_name || 'Walk-in Customer'}</p>
+                  <p className="text-white font-medium">
+                    {invoice.is_supplier_invoice 
+                      ? (invoice.supplier_name || 'Unknown Supplier')
+                      : (invoice.customer_name || 'Walk-in Customer')
+                    }
+                  </p>
                   {invoice.billing_address && (
                     <div className="text-sm text-gray-400 mt-1">
                       {invoice.billing_address.street && <p>{invoice.billing_address.street}</p>}
                       {invoice.billing_address.city && <p>{invoice.billing_address.city}</p>}
                     </div>
+                  )}
+                  {invoice.is_supplier_invoice && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300 mt-2">
+                      Payable Invoice
+                    </span>
                   )}
                 </div>
               </div>

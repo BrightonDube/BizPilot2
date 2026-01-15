@@ -2,14 +2,14 @@
 
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
 
 from app.core.database import get_db
 from app.models.base import utc_now
-from app.api.deps import get_current_active_user, get_optional_user
+from app.api.deps import get_current_active_user
 from app.models.user import User, SubscriptionStatus
 from app.models.subscription_tier import SubscriptionTier
 from app.core.subscription import get_user_effective_features, get_user_tier_info
@@ -62,7 +62,7 @@ async def list_available_tiers(
     Used on pricing page and tier selection during registration.
     """
     tiers = db.query(SubscriptionTier).filter(
-        SubscriptionTier.is_active == True,
+        SubscriptionTier.is_active,
         SubscriptionTier.deleted_at.is_(None)
     ).order_by(SubscriptionTier.sort_order).all()
     
@@ -77,7 +77,7 @@ async def get_tier(
     """Get a specific tier by ID."""
     tier = db.query(SubscriptionTier).filter(
         SubscriptionTier.id == tier_id,
-        SubscriptionTier.is_active == True,
+        SubscriptionTier.is_active,
         SubscriptionTier.deleted_at.is_(None)
     ).first()
     
@@ -150,7 +150,7 @@ async def select_tier(
     """
     tier = db.query(SubscriptionTier).filter(
         SubscriptionTier.id == data.tier_id,
-        SubscriptionTier.is_active == True,
+        SubscriptionTier.is_active,
         SubscriptionTier.deleted_at.is_(None)
     ).first()
     
@@ -205,7 +205,7 @@ async def start_trial(
     # Get Professional tier
     pro_tier = db.query(SubscriptionTier).filter(
         SubscriptionTier.name == "professional",
-        SubscriptionTier.is_active == True
+        SubscriptionTier.is_active
     ).first()
     
     if not pro_tier:
@@ -243,7 +243,7 @@ async def cancel_subscription(
     # Get free tier
     free_tier = db.query(SubscriptionTier).filter(
         SubscriptionTier.name == "free",
-        SubscriptionTier.is_active == True
+        SubscriptionTier.is_active
     ).first()
     
     current_user.subscription_status = SubscriptionStatus.CANCELLED

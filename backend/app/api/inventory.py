@@ -305,7 +305,7 @@ async def import_inventory_excel(
     
     return {
         "success": True,
-        "message": f"Successfully imported inventory data",
+        "message": "Successfully imported inventory data",
         "updated": result["updated"],
         "created": result["created"],
         "skipped": result["skipped"],

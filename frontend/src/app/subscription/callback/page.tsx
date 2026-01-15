@@ -5,7 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { paymentApi } from '@/lib/payment-api'
+import { apiClient } from '@/lib/api'
+
+interface VerifyPaymentResponse {
+  status: 'success' | 'failed' | 'pending'
+  message: string
+  tier?: string
+}
 
 function SubscriptionCallbackContent() {
   const router = useRouter()
@@ -25,13 +31,15 @@ function SubscriptionCallbackContent() {
       }
 
       try {
-        const result = await paymentApi.verifyPayment(reference)
-        setStatus(result.status)
-        setMessage(result.message)
-        setTierName(result.tier || null)
+        const { data } = await apiClient.post<VerifyPaymentResponse>('/payments/checkout/verify', {
+          reference,
+        })
+        setStatus(data.status)
+        setMessage(data.message)
+        setTierName(data.tier || null)
 
         // Auto-redirect to dashboard on success after 3 seconds
-        if (result.status === 'success') {
+        if (data.status === 'success') {
           setTimeout(() => {
             router.push('/dashboard')
           }, 3000)

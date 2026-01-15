@@ -20,6 +20,9 @@ from app.api.admin import router as admin_router
 from app.api.subscriptions import router as subscriptions_router
 from app.api.payments_subscription import router as payments_subscription_router
 from app.api.production import router as production_router
+from app.api.time_entries import router as time_entries_router
+from app.api.pos_connections import router as pos_connections_router
+from app.api.roles import router as roles_router
 
 router = APIRouter()
 
@@ -42,6 +45,9 @@ router.include_router(admin_router)
 router.include_router(subscriptions_router)
 router.include_router(payments_subscription_router)
 router.include_router(production_router)
+router.include_router(time_entries_router)
+router.include_router(pos_connections_router)
+router.include_router(roles_router)
 
 
 @router.get("/")

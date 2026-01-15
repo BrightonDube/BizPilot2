@@ -224,7 +224,7 @@ export default function PurchasesPage() {
             const status = statusConfig[purchase.status] || statusConfig.pending;
             const totalValue = toNumber(purchase.total);
             return (
-              <Card key={purchase.id} className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors">
+              <Card key={purchase.id} className="bg-gray-800/50 border border-gray-700 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <Link href={`/purchases/${purchase.id}`} className="flex items-center gap-4 flex-1 cursor-pointer">

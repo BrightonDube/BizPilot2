@@ -92,8 +92,9 @@ export default function NewProductionPage() {
 
       await apiClient.post('/production', payload)
       router.push('/production')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create production order')
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } }
+      setError(error.response?.data?.detail || 'Failed to create production order')
     } finally {
       setIsLoading(false)
     }

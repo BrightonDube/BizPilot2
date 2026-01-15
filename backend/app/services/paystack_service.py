@@ -4,7 +4,7 @@ import os
 import hmac
 import hashlib
 from typing import Optional
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import httpx
 from pydantic import BaseModel
 

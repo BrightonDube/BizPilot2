@@ -12,9 +12,10 @@ from app.core.database import get_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
-from app.models.invoice import InvoiceStatus
+from app.models.invoice import InvoiceStatus, InvoiceType
 from app.models.customer import Customer
-from app.core.pdf import build_simple_pdf, build_invoice_pdf
+from app.models.supplier import Supplier
+from app.core.pdf import build_invoice_pdf
 from app.schemas.invoice import (
     InvoiceCreate,
     InvoiceUpdate,
@@ -34,7 +35,7 @@ from app.services.invoice_payment_service import InvoicePaymentService, calculat
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
 
-def _invoice_to_response(invoice, items=None, customer_name: str = None) -> InvoiceResponse:
+def _invoice_to_response(invoice, items=None, customer_name: str = None, supplier_name: str = None) -> InvoiceResponse:
     """Convert invoice model to response schema."""
     return InvoiceResponse(
         id=str(invoice.id),
@@ -42,8 +43,10 @@ def _invoice_to_response(invoice, items=None, customer_name: str = None) -> Invo
         customer_id=str(invoice.customer_id) if invoice.customer_id else None,
         customer_name=customer_name,
         supplier_id=str(invoice.supplier_id) if invoice.supplier_id else None,
+        supplier_name=supplier_name,
         order_id=str(invoice.order_id) if invoice.order_id else None,
         invoice_number=invoice.invoice_number,
+        invoice_type=invoice.invoice_type or InvoiceType.CUSTOMER,
         status=invoice.status,
         issue_date=invoice.issue_date,
         due_date=invoice.due_date,
@@ -60,10 +63,11 @@ def _invoice_to_response(invoice, items=None, customer_name: str = None) -> Invo
         balance_due=invoice.balance_due,
         is_paid=invoice.is_paid,
         is_overdue=invoice.is_overdue,
+        is_supplier_invoice=invoice.is_supplier_invoice,
         pdf_url=invoice.pdf_url,
         # Paystack payment fields
         payment_reference=invoice.payment_reference,
-        payment_gateway_fees=invoice.payment_gateway_fees or 0,
+        payment_gateway_fees=invoice.payment_gateway_fees or Decimal("0"),
         gateway_status=invoice.gateway_status,
         total_with_fees=invoice.total_with_fees,
         created_at=invoice.created_at,
@@ -135,11 +139,20 @@ async def list_invoices(
                 name = customer.company_name
             customer_names[str(customer.id)] = name
     
+    # Build a cache of supplier IDs to names
+    supplier_ids = [str(inv.supplier_id) for inv in invoices if inv.supplier_id]
+    supplier_names = {}
+    if supplier_ids:
+        suppliers = db.query(Supplier).filter(Supplier.id.in_(supplier_ids)).all()
+        for supplier in suppliers:
+            supplier_names[str(supplier.id)] = supplier.name
+    
     invoice_responses = []
     for invoice in invoices:
         items = service.get_invoice_items(str(invoice.id))
         customer_name = customer_names.get(str(invoice.customer_id)) if invoice.customer_id else None
-        invoice_responses.append(_invoice_to_response(invoice, items, customer_name))
+        supplier_name = supplier_names.get(str(invoice.supplier_id)) if invoice.supplier_id else None
+        invoice_responses.append(_invoice_to_response(invoice, items, customer_name, supplier_name))
     
     return InvoiceListResponse(
         items=invoice_responses,
@@ -206,12 +219,21 @@ async def get_unpaid_invoices(
                 name = customer.company_name
             customer_names[str(customer.id)] = name
     
+    # Build supplier names
+    supplier_ids = [str(inv.supplier_id) for inv in invoices if inv.supplier_id]
+    supplier_names = {}
+    if supplier_ids:
+        suppliers = db.query(Supplier).filter(Supplier.id.in_(supplier_ids)).all()
+        for supplier in suppliers:
+            supplier_names[str(supplier.id)] = supplier.name
+    
     service = InvoiceService(db)
     invoice_responses = []
     for invoice in invoices:
         items = service.get_invoice_items(str(invoice.id))
         customer_name = customer_names.get(str(invoice.customer_id)) if invoice.customer_id else None
-        invoice_responses.append(_invoice_to_response(invoice, items, customer_name))
+        supplier_name = supplier_names.get(str(invoice.supplier_id)) if invoice.supplier_id else None
+        invoice_responses.append(_invoice_to_response(invoice, items, customer_name, supplier_name))
     
     return InvoiceListResponse(
         items=invoice_responses,
@@ -239,8 +261,22 @@ async def get_invoice(
             detail="Invoice not found",
         )
     
+    # Get customer name if exists
+    customer_name = None
+    if invoice.customer_id:
+        customer = db.query(Customer).filter(Customer.id == invoice.customer_id).first()
+        if customer:
+            customer_name = customer.company_name or f"{customer.first_name} {customer.last_name}"
+    
+    # Get supplier name if exists
+    supplier_name = None
+    if invoice.supplier_id:
+        supplier = db.query(Supplier).filter(Supplier.id == invoice.supplier_id).first()
+        if supplier:
+            supplier_name = supplier.name
+    
     items = service.get_invoice_items(str(invoice.id))
-    return _invoice_to_response(invoice, items)
+    return _invoice_to_response(invoice, items, customer_name, supplier_name)
 
 
 @router.get("/{invoice_id}/pdf")
@@ -533,7 +569,7 @@ async def get_payment_preview(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Invoice not found",
         )
-    
+
     balance_due = Decimal(str(invoice.balance_due))
     gateway_fees = calculate_gateway_fees(balance_due)
     total_with_fees = balance_due + gateway_fees

@@ -23,8 +23,8 @@ load_dotenv()
 if not os.getenv("SECRET_KEY"):
     os.environ["SECRET_KEY"] = "0123456789abcdef"
 
-from app.core.database import Base
-from app.models import *  # Import all models to register them
+from app.core.database import Base  # noqa: E402
+from app.models import *  # noqa: E402, F403 - Import all models to register them
 
 # this is the Alembic Config object
 config = context.config

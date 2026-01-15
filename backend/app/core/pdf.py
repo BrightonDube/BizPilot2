@@ -281,8 +281,8 @@ class PDFBuilder:
         objects.append(b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n")
         objects.append(
             (
-                f"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
-                f"/Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>\nendobj\n"
+                "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+                "/Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>\nendobj\n"
             ).encode("utf-8")
         )
         objects.append(b"4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n")
