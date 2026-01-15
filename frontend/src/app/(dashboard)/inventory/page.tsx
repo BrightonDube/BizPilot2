@@ -345,7 +345,32 @@ export default function InventoryPage() {
             className="border-gray-600 hover:bg-gray-700"
           >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Export Excel
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              try {
+                const response = await apiClient.get('/inventory/export/pdf', {
+                  responseType: 'blob',
+                });
+                const blob = new Blob([response.data], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'inventory_report.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+              } catch (err) {
+                console.error('Failed to export PDF:', err);
+              }
+            }}
+            className="border-gray-600 hover:bg-gray-700"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
           </Button>
           <Link href="/inventory/new">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">

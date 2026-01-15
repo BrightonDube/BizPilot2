@@ -202,6 +202,79 @@ async def export_inventory_excel(
     )
 
 
+@router.get("/export/pdf")
+async def export_inventory_pdf(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """
+    Export inventory report to PDF.
+    
+    The exported file contains:
+    - Summary statistics (total items, value, low stock count)
+    - List of all inventory items with quantities and values
+    """
+    from fastapi.responses import Response
+    from app.core.pdf import build_simple_pdf
+    from datetime import date
+    
+    service = InventoryService(db)
+    items, total = service.get_inventory_items(
+        business_id=business_id,
+        page=1,
+        per_page=1000,  # Get all items for PDF
+    )
+    
+    # Calculate summary stats
+    total_value = 0.0
+    low_stock_count = 0
+    out_of_stock_count = 0
+    
+    for item in items:
+        qty = float(item.quantity_on_hand or 0)
+        cost = float(item.average_cost or 0)
+        total_value += qty * cost
+        if qty <= 0:
+            out_of_stock_count += 1
+        elif item.is_low_stock:
+            low_stock_count += 1
+    
+    # Build PDF content
+    lines: list[str] = []
+    lines.append("Inventory Report")
+    lines.append(f"Date: {date.today()}")
+    lines.append("")
+    lines.append("Summary")
+    lines.append(f"Total Items: {total}")
+    lines.append(f"Total Value: R {total_value:,.2f}")
+    lines.append(f"Low Stock Items: {low_stock_count}")
+    lines.append(f"Out of Stock Items: {out_of_stock_count}")
+    lines.append("")
+    lines.append("Inventory Items")
+    lines.append("-" * 60)
+    
+    for item in items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        name = product.name if product else "Unknown"
+        sku = product.sku if product else "-"
+        qty = float(item.quantity_on_hand or 0)
+        cost = float(item.average_cost or 0)
+        value = qty * cost
+        status = "OUT" if qty <= 0 else ("LOW" if item.is_low_stock else "OK")
+        lines.append(f"{name} ({sku})")
+        lines.append(f"  Qty: {qty:.0f} | Value: R {value:,.2f} | Status: {status}")
+    
+    pdf_bytes = build_simple_pdf(lines)
+    filename = f"inventory_report_{date.today()}.pdf"
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get("/template/excel")
 async def get_inventory_template(
     current_user: User = Depends(get_current_active_user),
