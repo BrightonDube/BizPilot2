@@ -1,13 +1,15 @@
 """Business API endpoints for business management and onboarding."""
 
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import re
+import math
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user, get_current_user_for_onboarding
+from app.api.deps import get_current_active_user, get_current_user_for_onboarding, get_current_business_id
+from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
@@ -380,3 +382,328 @@ async def update_current_business(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update business: {str(e)}"
         )
+
+
+# --- Business User Management Schemas ---
+
+class BusinessUserResponse(BaseModel):
+    """Response schema for a business user."""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: str
+    user_id: str
+    email: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role_id: Optional[str] = None
+    role_name: Optional[str] = None
+    status: str
+    is_primary: bool
+    created_at: Optional[str] = None
+
+
+class BusinessUserListResponse(BaseModel):
+    """Response schema for a list of business users."""
+    items: List[BusinessUserResponse]
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
+class InviteUserRequest(BaseModel):
+    """Request to invite a user to the business."""
+    email: str
+    role_id: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
+class UpdateBusinessUserRequest(BaseModel):
+    """Request to update a business user."""
+    role_id: Optional[str] = None
+    status: Optional[str] = None
+
+
+# --- Business User Management Endpoints ---
+
+@router.get("/users", response_model=BusinessUserListResponse)
+async def list_business_users(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=100),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    current_user: User = Depends(has_permission("users:view")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """List all users in the current business."""
+    query = db.query(BusinessUser).filter(
+        BusinessUser.business_id == business_id,
+        BusinessUser.deleted_at.is_(None),
+    )
+    
+    if status_filter:
+        try:
+            status_enum = BusinessUserStatus(status_filter)
+            query = query.filter(BusinessUser.status == status_enum)
+        except ValueError:
+            pass
+    
+    total = query.count()
+    offset = (page - 1) * per_page
+    business_users = query.offset(offset).limit(per_page).all()
+    
+    items = []
+    for bu in business_users:
+        user = db.query(User).filter(User.id == bu.user_id).first()
+        role = db.query(Role).filter(Role.id == bu.role_id).first() if bu.role_id else None
+        items.append(BusinessUserResponse(
+            id=str(bu.id),
+            user_id=str(bu.user_id),
+            email=user.email if user else "",
+            first_name=user.first_name if user else None,
+            last_name=user.last_name if user else None,
+            role_id=str(bu.role_id) if bu.role_id else None,
+            role_name=role.name if role else None,
+            status=bu.status.value,
+            is_primary=bu.is_primary,
+            created_at=bu.created_at.isoformat() if bu.created_at else None,
+        ))
+    
+    return BusinessUserListResponse(
+        items=items,
+        total=total,
+        page=page,
+        per_page=per_page,
+        pages=math.ceil(total / per_page) if total > 0 else 0,
+    )
+
+
+@router.post("/users/invite", response_model=BusinessUserResponse, status_code=status.HTTP_201_CREATED)
+async def invite_user_to_business(
+    data: InviteUserRequest,
+    current_user: User = Depends(has_permission("users:manage")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """Invite a user to join the business."""
+    # Check if role exists and belongs to this business
+    role = db.query(Role).filter(Role.id == data.role_id).first()
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    
+    if not role.is_system and str(role.business_id) != business_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
+    
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == data.email).first()
+    
+    if existing_user:
+        # Check if already in this business
+        existing_bu = db.query(BusinessUser).filter(
+            BusinessUser.user_id == existing_user.id,
+            BusinessUser.business_id == business_id,
+            BusinessUser.deleted_at.is_(None),
+        ).first()
+        
+        if existing_bu:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User is already a member of this business"
+            )
+        
+        # Add existing user to business
+        business_user = BusinessUser(
+            user_id=existing_user.id,
+            business_id=business_id,
+            role_id=data.role_id,
+            status=BusinessUserStatus.ACTIVE,
+            is_primary=False,
+        )
+        db.add(business_user)
+        db.commit()
+        db.refresh(business_user)
+        
+        return BusinessUserResponse(
+            id=str(business_user.id),
+            user_id=str(existing_user.id),
+            email=existing_user.email,
+            first_name=existing_user.first_name,
+            last_name=existing_user.last_name,
+            role_id=str(business_user.role_id) if business_user.role_id else None,
+            role_name=role.name,
+            status=business_user.status.value,
+            is_primary=business_user.is_primary,
+            created_at=business_user.created_at.isoformat() if business_user.created_at else None,
+        )
+    else:
+        # Create new user with invited status
+        from app.models.user import UserStatus
+        from app.core.security import get_password_hash
+        import secrets
+        
+        new_user = User(
+            email=data.email,
+            first_name=data.first_name or "",
+            last_name=data.last_name or "",
+            hashed_password=get_password_hash(secrets.token_urlsafe(32)),  # Random password
+            status=UserStatus.PENDING,
+        )
+        db.add(new_user)
+        db.flush()
+        
+        business_user = BusinessUser(
+            user_id=new_user.id,
+            business_id=business_id,
+            role_id=data.role_id,
+            status=BusinessUserStatus.INVITED,
+            is_primary=False,
+        )
+        db.add(business_user)
+        db.commit()
+        db.refresh(business_user)
+        
+        # TODO: Send invitation email
+        
+        return BusinessUserResponse(
+            id=str(business_user.id),
+            user_id=str(new_user.id),
+            email=new_user.email,
+            first_name=new_user.first_name,
+            last_name=new_user.last_name,
+            role_id=str(business_user.role_id) if business_user.role_id else None,
+            role_name=role.name,
+            status=business_user.status.value,
+            is_primary=business_user.is_primary,
+            created_at=business_user.created_at.isoformat() if business_user.created_at else None,
+        )
+
+
+@router.get("/users/{user_id}", response_model=BusinessUserResponse)
+async def get_business_user(
+    user_id: str,
+    current_user: User = Depends(has_permission("users:view")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """Get a specific user in the business."""
+    business_user = db.query(BusinessUser).filter(
+        BusinessUser.user_id == user_id,
+        BusinessUser.business_id == business_id,
+        BusinessUser.deleted_at.is_(None),
+    ).first()
+    
+    if not business_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found in this business")
+    
+    user = db.query(User).filter(User.id == business_user.user_id).first()
+    role = db.query(Role).filter(Role.id == business_user.role_id).first() if business_user.role_id else None
+    
+    return BusinessUserResponse(
+        id=str(business_user.id),
+        user_id=str(business_user.user_id),
+        email=user.email if user else "",
+        first_name=user.first_name if user else None,
+        last_name=user.last_name if user else None,
+        role_id=str(business_user.role_id) if business_user.role_id else None,
+        role_name=role.name if role else None,
+        status=business_user.status.value,
+        is_primary=business_user.is_primary,
+        created_at=business_user.created_at.isoformat() if business_user.created_at else None,
+    )
+
+
+@router.put("/users/{user_id}", response_model=BusinessUserResponse)
+async def update_business_user(
+    user_id: str,
+    data: UpdateBusinessUserRequest,
+    current_user: User = Depends(has_permission("users:manage")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """Update a user's role or status in the business."""
+    business_user = db.query(BusinessUser).filter(
+        BusinessUser.user_id == user_id,
+        BusinessUser.business_id == business_id,
+        BusinessUser.deleted_at.is_(None),
+    ).first()
+    
+    if not business_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found in this business")
+    
+    # Prevent modifying own role if you're the only admin
+    if str(business_user.user_id) == str(current_user.id) and data.role_id:
+        admin_count = db.query(BusinessUser).join(Role).filter(
+            BusinessUser.business_id == business_id,
+            BusinessUser.deleted_at.is_(None),
+            Role.name == "Admin",
+        ).count()
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot change your own role when you are the only admin"
+            )
+    
+    if data.role_id:
+        role = db.query(Role).filter(Role.id == data.role_id).first()
+        if not role:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+        if not role.is_system and str(role.business_id) != business_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
+        business_user.role_id = data.role_id
+    
+    if data.status:
+        try:
+            business_user.status = BusinessUserStatus(data.status)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid status")
+    
+    db.commit()
+    db.refresh(business_user)
+    
+    user = db.query(User).filter(User.id == business_user.user_id).first()
+    role = db.query(Role).filter(Role.id == business_user.role_id).first() if business_user.role_id else None
+    
+    return BusinessUserResponse(
+        id=str(business_user.id),
+        user_id=str(business_user.user_id),
+        email=user.email if user else "",
+        first_name=user.first_name if user else None,
+        last_name=user.last_name if user else None,
+        role_id=str(business_user.role_id) if business_user.role_id else None,
+        role_name=role.name if role else None,
+        status=business_user.status.value,
+        is_primary=business_user.is_primary,
+        created_at=business_user.created_at.isoformat() if business_user.created_at else None,
+    )
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_user_from_business(
+    user_id: str,
+    current_user: User = Depends(has_permission("users:manage")),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_db),
+):
+    """Remove a user from the business."""
+    business_user = db.query(BusinessUser).filter(
+        BusinessUser.user_id == user_id,
+        BusinessUser.business_id == business_id,
+        BusinessUser.deleted_at.is_(None),
+    ).first()
+    
+    if not business_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found in this business")
+    
+    # Prevent removing yourself
+    if str(business_user.user_id) == str(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove yourself from the business"
+        )
+    
+    # Soft delete
+    from datetime import datetime
+    business_user.deleted_at = datetime.utcnow()
+    business_user.status = BusinessUserStatus.INACTIVE
+    db.commit()
