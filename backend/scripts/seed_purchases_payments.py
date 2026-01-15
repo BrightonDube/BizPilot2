@@ -189,7 +189,7 @@ def main() -> None:
             total_purchases += purchases
             print(f"  ✓ Purchases seeded: {purchases}")
 
-        print(f"\n=== Summary ===")
+        print("\n=== Summary ===")
         print(f"Total purchases created: {total_purchases}")
 
     finally:

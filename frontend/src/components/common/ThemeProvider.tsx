@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   };
 
-  const systemTheme = useSyncExternalStore(
+  const systemTheme = useSyncExternalStore<'dark' | 'light'>(
     (onStoreChange) => {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       mediaQuery.addEventListener('change', onStoreChange);
@@ -39,6 +39,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const resolvedTheme: 'dark' | 'light' = theme === 'system' ? systemTheme : theme;
 
+  // Apply theme class to document
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');

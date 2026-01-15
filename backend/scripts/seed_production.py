@@ -87,7 +87,7 @@ def seed_superadmin(db: Session) -> tuple[bool, str]:
     
     # Ensure only this account is superadmin
     db.query(User).filter(
-        User.is_superadmin == True, 
+        User.is_superadmin.is_(True), 
         User.email != email
     ).update(
         {User.is_superadmin: False},
@@ -130,7 +130,7 @@ def main():
         print("ERROR: DATABASE_URL environment variable not set")
         sys.exit(1)
     
-    print(f"\nConnecting to database...")
+    print("\nConnecting to database...")
     print(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
     
     db = SessionLocal()
@@ -160,7 +160,7 @@ def main():
         print("\n" + "=" * 60)
         print("Seeding Complete!")
         print("=" * 60)
-        print(f"\nSummary:")
+        print("\nSummary:")
         print(f"  - Tiers created: {len(results['tiers'])}")
         print(f"  - Roles created: {len(results['roles'])}")
         print(f"  - Superadmin: {results['superadmin_email']}")
