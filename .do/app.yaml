@@ -128,6 +128,11 @@ services:
         scope: RUN_TIME
         value: production
       # NEXT_PUBLIC_API_URL set manually after app URL is known
+      # INTERNAL_API_URL for server-to-server communication (middleware auth checks)
+      # This uses the internal service URL to avoid routing through the public ingress
+      - key: INTERNAL_API_URL
+        scope: RUN_TIME
+        value: ${api.PRIVATE_URL}/api/v1
 
 jobs:
   # Run Alembic migrations before deploying services.

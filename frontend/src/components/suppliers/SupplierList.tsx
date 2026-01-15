@@ -9,27 +9,58 @@ import {
   Truck,
   Edit,
   Trash2,
-  Eye,
   Loader2,
   AlertTriangle,
-  Grid3X3,
+  LayoutGrid,
   List,
   Mail,
   Phone,
+  MapPin,
+  Users,
+  Package,
+  DollarSign,
 } from 'lucide-react'
 
-import { Badge, Button, Input } from '@/components/ui'
+import { Button, Input, Card, CardContent } from '@/components/ui'
 import { apiClient } from '@/lib/api'
+import { formatCurrency, toNumber } from '@/lib/utils'
+
+const statColorClasses: Record<
+  string,
+  {
+    container: string
+    icon: string
+  }
+> = {
+  blue: {
+    container: 'bg-blue-500/20 border-blue-500/30',
+    icon: 'text-blue-400',
+  },
+  green: {
+    container: 'bg-green-500/20 border-green-500/30',
+    icon: 'text-green-400',
+  },
+  purple: {
+    container: 'bg-purple-500/20 border-purple-500/30',
+    icon: 'text-purple-400',
+  },
+  yellow: {
+    container: 'bg-yellow-500/20 border-yellow-500/30',
+    icon: 'text-yellow-400',
+  },
+}
 
 interface Supplier {
   id: string
   business_id: string
   name: string
   contact_name: string | null
+  contact_person: string | null
   email: string | null
   phone: string | null
   tax_number: string | null
   website: string | null
+  address: string | null
   address_line1: string | null
   address_line2: string | null
   city: string | null
@@ -40,6 +71,8 @@ interface Supplier {
   tags: string[]
   display_name: string
   full_address: string
+  total_orders?: number
+  total_spent?: number
   created_at: string
   updated_at: string
 }
@@ -55,16 +88,13 @@ interface SupplierListResponse {
 function SupplierCardSkeleton() {
   return (
     <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
-      <div className="flex items-start justify-between mb-3">
-        <div className="space-y-2 flex-1">
-          <div className="h-5 bg-gray-700 rounded w-3/4" />
-          <div className="h-3 bg-gray-700 rounded w-1/2" />
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-full bg-gray-700" />
+        <div className="flex-1 space-y-2">
+          <div className="h-5 bg-gray-700 rounded w-1/2" />
+          <div className="h-4 bg-gray-700 rounded w-3/4" />
+          <div className="h-3 bg-gray-700 rounded w-1/3" />
         </div>
-      </div>
-      <div className="h-20 bg-gray-700/60 rounded-lg mb-3" />
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-700 rounded w-2/3" />
       </div>
     </div>
   )
@@ -112,7 +142,10 @@ export function SupplierList() {
     return () => clearTimeout(timeoutId)
   }, [page, searchTerm])
 
-  const handleDeleteSupplier = async (supplierId: string, supplierName: string) => {
+  const handleDeleteSupplier = async (supplierId: string, supplierName: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     if (!window.confirm(`Are you sure you want to delete "${supplierName}"? This action cannot be undone.`)) {
       return
     }
@@ -129,6 +162,12 @@ export function SupplierList() {
     }
   }
 
+  // Calculate stats
+  const totalSuppliers = total
+  const totalSpent = suppliers.reduce((sum, s) => sum + toNumber(s.total_spent, 0), 0)
+  const totalOrders = suppliers.reduce((sum, s) => sum + toNumber(s.total_orders, 0), 0)
+  const avgOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0
+
   if (isLoading && suppliers.length === 0) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -139,8 +178,8 @@ export function SupplierList() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
             <SupplierCardSkeleton key={i} />
           ))}
         </div>
@@ -172,6 +211,7 @@ export function SupplierList() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      {/* Header */}
       <motion.div
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
         initial={{ opacity: 0, y: 20 }}
@@ -180,21 +220,88 @@ export function SupplierList() {
       >
         <div>
           <h1 className="text-2xl font-bold text-gray-100">Suppliers</h1>
-          <p className="text-gray-400">Manage your suppliers ({total} suppliers)</p>
+          <p className="text-gray-400">Manage your suppliers ({totalSuppliers} suppliers)</p>
         </div>
-        <Link href="/suppliers/new">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Supplier
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center bg-gray-800/50 border border-gray-700 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                viewMode === 'list' ? 'bg-blue-600/20 text-blue-300' : 'text-gray-300 hover:text-white'
+              }`}
+              aria-label="List view"
+            >
+              <List className="h-4 w-4" />
+              List
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                viewMode === 'grid' ? 'bg-blue-600/20 text-blue-300' : 'text-gray-300 hover:text-white'
+              }`}
+              aria-label="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Grid
+            </button>
+          </div>
+
+          <Link href="/suppliers/new">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Supplier
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { icon: Users, label: 'Total Suppliers', value: totalSuppliers, color: 'blue' },
+          { icon: DollarSign, label: 'Total Spent', value: formatCurrency(totalSpent), color: 'green' },
+          { icon: Package, label: 'Total Orders', value: totalOrders, color: 'purple' },
+          { icon: Truck, label: 'Avg Order Value', value: formatCurrency(avgOrderValue), color: 'yellow' }
+        ].map((stat, index) => (
+          <motion.div 
+            key={stat.label}
+            className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + index * 0.1 }}
+            whileHover={{ scale: 1.02, y: -4 }}
+          >
+            <div className="flex items-center">
+              <motion.div 
+                className={`p-2 rounded-lg border ${statColorClasses[stat.color]?.container ?? 'bg-gray-500/20 border-gray-500/30'}`}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <stat.icon className={`h-6 w-6 ${statColorClasses[stat.color]?.icon ?? 'text-gray-400'}`} />
+              </motion.div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-400">{stat.label}</p>
+                <motion.p 
+                  className="text-2xl font-bold text-gray-100"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.4 + index * 0.1, type: "spring", stiffness: 300 }}
+                >
+                  {stat.value}
+                </motion.p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Search */}
       <motion.div
         className="bg-gray-800/50 border border-gray-700 rounded-xl p-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.3 }}
       >
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
@@ -210,30 +317,6 @@ export function SupplierList() {
               className="pl-10 bg-gray-900/50 border-gray-600"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <div className="bg-gray-900/50 rounded-lg p-1 border border-gray-600">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                }`}
-                title="Grid view"
-                type="button"
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                }`}
-                title="List view"
-                type="button"
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
         </div>
       </motion.div>
 
@@ -247,6 +330,7 @@ export function SupplierList() {
         </motion.div>
       )}
 
+      {/* Suppliers List/Grid */}
       {suppliers.length === 0 ? (
         <motion.div
           className="text-center py-12"
@@ -255,8 +339,12 @@ export function SupplierList() {
           transition={{ delay: 0.3 }}
         >
           <Truck className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-100 mb-2">{searchTerm ? 'No suppliers found' : 'No suppliers yet'}</h3>
-          <p className="text-gray-400 mb-6">{searchTerm ? 'Try adjusting your search terms' : 'Add your first supplier to get started'}</p>
+          <h3 className="text-lg font-medium text-gray-100 mb-2">
+            {searchTerm ? 'No suppliers found' : 'No suppliers yet'}
+          </h3>
+          <p className="text-gray-400 mb-6">
+            {searchTerm ? 'Try adjusting your search terms' : 'Add your first supplier to get started'}
+          </p>
           {!searchTerm && (
             <Link href="/suppliers/new">
               <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
@@ -266,171 +354,239 @@ export function SupplierList() {
             </Link>
           )}
         </motion.div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      ) : viewMode === 'list' ? (
+        <div className="space-y-3">
           {suppliers.map((supplier, index) => (
             <motion.div
               key={supplier.id}
-              className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition-all"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + index * 0.02 }}
+            >
+              <Link href={`/suppliers/${supplier.id}`} className="block">
+                <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-purple-500/20 text-purple-400">
+                          <Truck className="w-5 h-5" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <h3 className="text-sm sm:text-base font-semibold text-gray-100 truncate">
+                              {supplier.display_name || supplier.name}
+                            </h3>
+                          </div>
+
+                          <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap gap-x-4 gap-y-1 text-xs text-gray-300 min-w-0">
+                            {supplier.email && (
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Mail className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                                <span className="truncate">{supplier.email}</span>
+                              </div>
+                            )}
+                            {supplier.phone && (
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Phone className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                                <span className="truncate">{supplier.phone}</span>
+                              </div>
+                            )}
+                            {(supplier.city || supplier.full_address) && (
+                              <div className="flex items-center gap-2 min-w-0">
+                                <MapPin className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                                <span className="truncate">
+                                  {supplier.city || supplier.full_address}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3">
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="text-gray-300">
+                            <div className="text-xs text-gray-500">Orders</div>
+                            <div className="font-semibold">{supplier.total_orders || 0}</div>
+                          </div>
+                          <div className="text-gray-300">
+                            <div className="text-xs text-gray-500">Spent</div>
+                            <div className="font-semibold text-green-400">
+                              {formatCurrency(supplier.total_spent || 0)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-1">
+                          <Link
+                            href={`/suppliers/${supplier.id}/edit`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <motion.button
+                              className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                              title="Edit"
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </motion.button>
+                          </Link>
+                          <motion.button
+                            onClick={(e) => handleDeleteSupplier(supplier.id, supplier.name, e)}
+                            className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                            title="Delete"
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                            disabled={deletingId === supplier.id}
+                          >
+                            {deletingId === supplier.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </motion.button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {suppliers.map((supplier, index) => (
+            <motion.div
+              key={supplier.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + index * 0.05 }}
               whileHover={{ scale: 1.02, y: -4 }}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-100 mb-1 truncate">{supplier.display_name || supplier.name}</h3>
-                  {supplier.contact_name && <p className="text-sm text-gray-400 truncate">{supplier.contact_name}</p>}
-                </div>
-                <div className="flex space-x-1">
-                  <Link href={`/suppliers/${supplier.id}/edit`}>
-                    <motion.button
-                      className="p-1 text-gray-500 hover:text-gray-300"
-                      title="Edit supplier"
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </motion.button>
-                  </Link>
-                  <motion.button
-                    onClick={() => handleDeleteSupplier(supplier.id, supplier.display_name || supplier.name)}
-                    className="p-1 text-gray-500 hover:text-red-400"
-                    title="Delete supplier"
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                    disabled={deletingId === supplier.id}
-                  >
-                    {deletingId === supplier.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  </motion.button>
-                </div>
-              </div>
+              <Link href={`/suppliers/${supplier.id}`}>
+                <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-all cursor-pointer h-full overflow-hidden">
+                  <CardContent className="p-6">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-purple-500/20 text-purple-400">
+                          <Truck className="w-6 h-6" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold text-gray-100 truncate">
+                            {supplier.display_name || supplier.name}
+                          </h3>
+                          {supplier.contact_name && (
+                            <p className="text-sm text-gray-400 truncate">{supplier.contact_name}</p>
+                          )}
+                        </div>
+                      </div>
 
-              <div className="mb-3 h-20 bg-gray-700/40 rounded-lg flex items-center justify-center">
-                <Truck className="h-10 w-10 text-gray-500" />
-              </div>
+                      {/* Actions */}
+                      <div className="flex items-center space-x-1 shrink-0">
+                        <Link
+                          href={`/suppliers/${supplier.id}/edit`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <motion.button
+                            className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                            title="Edit"
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </motion.button>
+                        </Link>
+                        <motion.button
+                          onClick={(e) => handleDeleteSupplier(supplier.id, supplier.name, e)}
+                          className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                          title="Delete"
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                          disabled={deletingId === supplier.id}
+                        >
+                          {deletingId === supplier.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </motion.button>
+                      </div>
+                    </div>
 
-              <div className="space-y-2">
-                {supplier.email ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-300 min-w-0">
-                    <Mail className="h-4 w-4 text-gray-500 shrink-0" />
-                    <span className="truncate">{supplier.email}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Mail className="h-4 w-4 text-gray-600" />
-                    <span>No email</span>
-                  </div>
-                )}
+                    {/* Contact Info */}
+                    <div className="space-y-2 mb-4">
+                      {supplier.email && (
+                        <div className="flex items-center space-x-2 text-sm text-gray-300 min-w-0">
+                          <Mail className="h-4 w-4 text-gray-500 shrink-0" />
+                          <span className="truncate min-w-0">{supplier.email}</span>
+                        </div>
+                      )}
+                      {supplier.phone && (
+                        <div className="flex items-center space-x-2 text-sm text-gray-300 min-w-0">
+                          <Phone className="h-4 w-4 text-gray-500 shrink-0" />
+                          <span className="truncate min-w-0">{supplier.phone}</span>
+                        </div>
+                      )}
+                      {(supplier.city || supplier.full_address) && (
+                        <div className="flex items-center space-x-2 text-sm text-gray-300 min-w-0">
+                          <MapPin className="h-4 w-4 text-gray-500 shrink-0" />
+                          <span className="truncate min-w-0">{supplier.city || supplier.full_address}</span>
+                        </div>
+                      )}
+                    </div>
 
-                {supplier.phone ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-300 min-w-0">
-                    <Phone className="h-4 w-4 text-gray-500 shrink-0" />
-                    <span className="truncate">{supplier.phone}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Phone className="h-4 w-4 text-gray-600" />
-                    <span>No phone</span>
-                  </div>
-                )}
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
+                      <div>
+                        <div className="flex items-center space-x-1 text-xs text-gray-500 mb-1">
+                          <Package className="h-3 w-3" />
+                          <span>Orders</span>
+                        </div>
+                        <div className="text-lg font-semibold text-gray-200">
+                          {supplier.total_orders || 0}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-1 text-xs text-gray-500 mb-1">
+                          <DollarSign className="h-3 w-3" />
+                          <span>Total Spent</span>
+                        </div>
+                        <div className="text-lg font-semibold text-green-400">
+                          {formatCurrency(supplier.total_spent || 0)}
+                        </div>
+                      </div>
+                    </div>
 
-                {supplier.tags?.length ? (
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    {supplier.tags.slice(0, 3).map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs max-w-full truncate">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {supplier.tags.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{supplier.tags.length - 3}
-                      </Badge>
+                    {/* Tags */}
+                    {supplier.tags && supplier.tags.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1 min-w-0">
+                        {supplier.tags.slice(0, 3).map((tag, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 text-xs rounded-full bg-purple-900/30 text-purple-400 border border-purple-500/30 max-w-full truncate"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {supplier.tags.length > 3 && (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-gray-800 text-gray-400">
+                            +{supplier.tags.length - 3}
+                          </span>
+                        )}
+                      </div>
                     )}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-gray-700">
-                <Link href={`/suppliers/${supplier.id}`}>
-                  <motion.button
-                    className="w-full flex items-center justify-center text-sm text-blue-400 hover:text-blue-300"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View Details
-                  </motion.button>
-                </Link>
-              </div>
+                  </CardContent>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </div>
-      ) : (
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="p-4 text-left text-sm font-medium text-gray-400">Supplier</th>
-                <th className="p-4 text-left text-sm font-medium text-gray-400">Contact</th>
-                <th className="p-4 text-left text-sm font-medium text-gray-400">Email</th>
-                <th className="p-4 text-right text-sm font-medium text-gray-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {suppliers.map((supplier, index) => (
-                <motion.tr
-                  key={supplier.id}
-                  className="border-b border-gray-800 hover:bg-gray-800/50"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.05 }}
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center shrink-0">
-                        <Truck className="h-5 w-5 text-gray-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <span className="font-medium text-white truncate block">{supplier.display_name || supplier.name}</span>
-                        {supplier.tags?.length ? (
-                          <p className="text-xs text-gray-400 truncate max-w-xs">{supplier.tags.join(', ')}</p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-gray-400">{supplier.contact_name || '-'}</td>
-                  <td className="p-4 text-gray-400">{supplier.email || '-'}</td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link href={`/suppliers/${supplier.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link href={`/suppliers/${supplier.id}/edit`}>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-400 hover:text-red-300"
-                        onClick={() => handleDeleteSupplier(supplier.id, supplier.display_name || supplier.name)}
-                        disabled={deletingId === supplier.id}
-                      >
-                        {deletingId === supplier.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       )}
 
+      {/* Pagination */}
       {pages > 1 && (
         <motion.div
           className="flex items-center justify-between"
@@ -442,7 +598,12 @@ export function SupplierList() {
             Page {page} of {pages} ({total} suppliers)
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
               Previous
             </Button>
             <Button
@@ -453,6 +614,44 @@ export function SupplierList() {
             >
               Next
             </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Summary Stats */}
+      {suppliers.length > 0 && (
+        <motion.div
+          className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <h3 className="font-semibold text-gray-100 mb-4">Supplier Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Total Suppliers', value: totalSuppliers },
+              { label: 'Total Spent', value: formatCurrency(totalSpent) },
+              { label: 'Total Orders', value: totalOrders },
+              { label: 'Avg Order Value', value: formatCurrency(avgOrderValue) },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + index * 0.1 }}
+              >
+                <motion.p
+                  className="text-2xl font-bold text-gray-100"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.8 + index * 0.1, type: 'spring', stiffness: 300 }}
+                >
+                  {stat.value}
+                </motion.p>
+                <p className="text-sm text-gray-400">{stat.label}</p>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       )}

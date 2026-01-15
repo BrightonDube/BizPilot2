@@ -26,6 +26,9 @@ class BusinessCreate(BaseModel):
     email: Optional[str] = None
     website: Optional[str] = None
     currency: str = "ZAR"
+    bank_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    bank_branch_code: Optional[str] = None
 
 
 class BusinessUpdate(BaseModel):
@@ -43,6 +46,9 @@ class BusinessUpdate(BaseModel):
     currency: Optional[str] = None
     tax_number: Optional[str] = None
     vat_number: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    bank_branch_code: Optional[str] = None
 
 
 class BusinessResponse(BaseModel):
@@ -52,10 +58,17 @@ class BusinessResponse(BaseModel):
     slug: str
     description: Optional[str] = None
     address_street: Optional[str] = None
+    address_city: Optional[str] = None
+    address_country: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     website: Optional[str] = None
     currency: str
+    tax_number: Optional[str] = None
+    vat_number: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    bank_branch_code: Optional[str] = None
     
     model_config = {"from_attributes": True}
 
@@ -110,10 +123,17 @@ async def get_business_status(
             slug=business.slug,
             description=business.description,
             address_street=business.address_street,
+            address_city=business.address_city,
+            address_country=business.address_country,
             phone=business.phone,
             email=business.email,
             website=business.website,
             currency=business.currency,
+            tax_number=business.tax_number,
+            vat_number=business.vat_number,
+            bank_name=business.bank_name,
+            bank_account_number=business.bank_account_number,
+            bank_branch_code=business.bank_branch_code,
         ),
         role=role_name
     )
@@ -182,6 +202,9 @@ async def setup_business(
             email=business_data.email or current_user.email,
             website=business_data.website,
             currency=business_data.currency,
+            bank_name=business_data.bank_name,
+            bank_account_number=business_data.bank_account_number,
+            bank_branch_code=business_data.bank_branch_code,
         )
         db.add(business)
         db.flush()  # Get the business ID
@@ -221,10 +244,17 @@ async def setup_business(
             slug=business.slug,
             description=business.description,
             address_street=business.address_street,
+            address_city=business.address_city,
+            address_country=business.address_country,
             phone=business.phone,
             email=business.email,
             website=business.website,
             currency=business.currency,
+            tax_number=business.tax_number,
+            vat_number=business.vat_number,
+            bank_name=business.bank_name,
+            bank_account_number=business.bank_account_number,
+            bank_branch_code=business.bank_branch_code,
         )
         
     except Exception as e:
@@ -266,10 +296,17 @@ async def get_current_business(
         slug=business.slug,
         description=business.description,
         address_street=business.address_street,
+        address_city=business.address_city,
+        address_country=business.address_country,
         phone=business.phone,
         email=business.email,
         website=business.website,
         currency=business.currency,
+        tax_number=business.tax_number,
+        vat_number=business.vat_number,
+        bank_name=business.bank_name,
+        bank_account_number=business.bank_account_number,
+        bank_branch_code=business.bank_branch_code,
     )
 
 
@@ -324,10 +361,17 @@ async def update_current_business(
             slug=business.slug,
             description=business.description,
             address_street=business.address_street,
+            address_city=business.address_city,
+            address_country=business.address_country,
             phone=business.phone,
             email=business.email,
             website=business.website,
             currency=business.currency,
+            tax_number=business.tax_number,
+            vat_number=business.vat_number,
+            bank_name=business.bank_name,
+            bank_account_number=business.bank_account_number,
+            bank_branch_code=business.bank_branch_code,
         )
         
     except Exception as e:

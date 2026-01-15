@@ -112,6 +112,9 @@ export default function SettingsPage() {
     country: '',
     tax_id: '',
     currency: 'ZAR',
+    bank_name: '',
+    bank_account_number: '',
+    bank_branch_code: '',
   });
 
   const [aiSharingLevel, setAiSharingLevel] = useState<AISharingLevel>('none');
@@ -357,6 +360,9 @@ export default function SettingsPage() {
         country: business?.address_country || '',
         tax_id: business?.tax_number || business?.vat_number || '',
         currency: business?.currency || prev.currency || 'ZAR',
+        bank_name: business?.bank_name || '',
+        bank_account_number: business?.bank_account_number || '',
+        bank_branch_code: business?.bank_branch_code || '',
       }));
     } catch {
       // If user has no business yet, leave defaults
@@ -382,6 +388,9 @@ export default function SettingsPage() {
         address_country: businessData.country || null,
         currency: businessData.currency,
         tax_number: businessData.tax_id || null,
+        bank_name: businessData.bank_name || null,
+        bank_account_number: businessData.bank_account_number || null,
+        bank_branch_code: businessData.bank_branch_code || null,
       });
       setSuccessMessage('Business settings updated successfully');
     } catch {
@@ -686,6 +695,52 @@ export default function SettingsPage() {
                       }
                       className="w-full"
                     />
+                  </div>
+                </div>
+
+                {/* Bank Details Section */}
+                <div className="border-t border-border pt-6 mt-2">
+                  <h3 className="text-sm font-medium text-foreground mb-4">Bank Details (for invoices)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label htmlFor="bank_name" className="block text-sm font-medium text-muted-foreground mb-1">
+                        Bank Name
+                      </label>
+                      <Input
+                        id="bank_name"
+                        value={businessData.bank_name}
+                        onChange={(e) =>
+                          setBusinessData({ ...businessData, bank_name: e.target.value })
+                        }
+                        placeholder="e.g. FNB, Standard Bank"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="bank_account_number" className="block text-sm font-medium text-muted-foreground mb-1">
+                        Account Number
+                      </label>
+                      <Input
+                        id="bank_account_number"
+                        value={businessData.bank_account_number}
+                        onChange={(e) =>
+                          setBusinessData({ ...businessData, bank_account_number: e.target.value })
+                        }
+                        placeholder="Your account number"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="bank_branch_code" className="block text-sm font-medium text-muted-foreground mb-1">
+                        Branch Code
+                      </label>
+                      <Input
+                        id="bank_branch_code"
+                        value={businessData.bank_branch_code}
+                        onChange={(e) =>
+                          setBusinessData({ ...businessData, bank_branch_code: e.target.value })
+                        }
+                        placeholder="e.g. 250655"
+                      />
+                    </div>
                   </div>
                 </div>
 

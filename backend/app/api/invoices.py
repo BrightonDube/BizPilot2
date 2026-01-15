@@ -300,7 +300,7 @@ async def get_invoice_pdf(
 
     items = service.get_invoice_items(str(invoice.id))
     
-    # Get business name
+    # Get business name and bank details
     business = db.query(Business).filter(Business.id == business_id).first()
     business_name = business.name if business else "BizPilot"
     
@@ -342,7 +342,10 @@ async def get_invoice_pdf(
         balance_due=invoice.balance_due,
         notes=invoice.notes,
         terms=invoice.terms,
-        currency="ZAR",
+        currency=business.currency if business else "ZAR",
+        bank_name=business.bank_name if business else None,
+        bank_account_number=business.bank_account_number if business else None,
+        bank_branch_code=business.bank_branch_code if business else None,
     )
     
     filename = f"{invoice.invoice_number}.pdf"

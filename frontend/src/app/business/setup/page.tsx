@@ -16,6 +16,9 @@ interface BusinessFormData {
   email: string
   website: string
   currency: string
+  bank_name: string
+  bank_account_number: string
+  bank_branch_code: string
 }
 
 export default function BusinessSetupPage() {
@@ -32,7 +35,10 @@ export default function BusinessSetupPage() {
     phone: '',
     email: user?.email || '',
     website: '',
-    currency: 'ZAR'
+    currency: 'ZAR',
+    bank_name: '',
+    bank_account_number: '',
+    bank_branch_code: ''
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -251,6 +257,57 @@ export default function BusinessSetupPage() {
                 <option value="EUR">EUR - Euro</option>
                 <option value="GBP">GBP - British Pound</option>
               </select>
+            </div>
+
+            {/* Bank Details Section */}
+            <div className="border-t border-slate-700 pt-6 mt-6">
+              <h3 className="text-lg font-medium text-gray-200 mb-4">Bank Details (for invoices)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label htmlFor="bank_name" className="block text-sm font-medium text-gray-300 mb-2">
+                    Bank Name
+                  </label>
+                  <input
+                    type="text"
+                    id="bank_name"
+                    name="bank_name"
+                    value={formData.bank_name}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="e.g. FNB, Standard Bank"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="bank_account_number" className="block text-sm font-medium text-gray-300 mb-2">
+                    Account Number
+                  </label>
+                  <input
+                    type="text"
+                    id="bank_account_number"
+                    name="bank_account_number"
+                    value={formData.bank_account_number}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="Your account number"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="bank_branch_code" className="block text-sm font-medium text-gray-300 mb-2">
+                    Branch Code
+                  </label>
+                  <input
+                    type="text"
+                    id="bank_branch_code"
+                    name="bank_branch_code"
+                    value={formData.bank_branch_code}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="e.g. 250655"
+                  />
+                </div>
+              </div>
             </div>
 
             <motion.button

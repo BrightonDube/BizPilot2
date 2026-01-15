@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
+        extra="ignore",  # Ignore extra environment variables
     )
     
     @field_validator("CORS_ORIGINS", mode="before")
