@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, AlertTriangle, ShoppingBag, CreditCard, CalendarDays, Edit } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, ShoppingBag, CreditCard, CalendarDays, Edit, Download, Printer } from 'lucide-react';
 import { Badge, PageHeader, StatCard, EmptyState } from '@/components/ui/bizpilot';
 import { Card, CardContent, Button } from '@/components/ui';
 import { apiClient } from '@/lib/api';
@@ -86,6 +86,7 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     async function fetchOrder() {
@@ -116,6 +117,108 @@ export default function OrderDetailPage() {
       : order?.payment_status === 'partial'
       ? 'warning'
       : 'warning';
+
+  const handleDownloadPdf = async () => {
+    if (!order) return;
+    setPdfLoading(true);
+    try {
+      const response = await apiClient.get(`/orders/${orderId}/pdf`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${order.order_number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading PDF:', err);
+      alert('Failed to download PDF');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    if (!order) return;
+    const w = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700');
+    if (!w) {
+      alert('Pop-up blocked. Please allow pop-ups to print.');
+      return;
+    }
+    const itemsHtml = order.items
+      .map(
+        (item) => `
+          <tr>
+            <td>${item.name}</td>
+            <td style="text-align:right;">${item.quantity}</td>
+            <td style="text-align:right;">${formatCurrency(item.unit_price)}</td>
+            <td style="text-align:right;">${formatCurrency(item.total)}</td>
+          </tr>
+        `
+      )
+      .join('');
+    w.document.open();
+    w.document.write(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${order.order_number} - Print</title>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 32px; color: #111; }
+      .header { display:flex; justify-content:space-between; align-items:flex-start; gap: 24px; }
+      .title { font-size: 20px; font-weight: 700; margin: 0; }
+      .muted { color: #555; font-size: 12px; }
+      .badge { display:inline-block; padding: 4px 8px; border: 1px solid #ddd; border-radius: 999px; font-size: 12px; }
+      .section { margin-top: 20px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      th, td { padding: 10px 8px; border-bottom: 1px solid #e5e5e5; font-size: 12px; }
+      th { text-align: left; color: #444; }
+      .totals { width: 320px; margin-left: auto; margin-top: 16px; }
+      .totals-row { display:flex; justify-content:space-between; padding: 6px 0; font-size: 12px; }
+      .totals-row strong { font-size: 14px; }
+      @media print { body { margin: 0.5in; } }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>
+        <p class="title">${order.order_number}</p>
+        <div class="muted">Date: ${formatDate(order.order_date)}</div>
+        <div class="muted">Customer: ${order.customer_name || 'Walk-in'}</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="badge">${order.status}</span>
+        <div style="margin-top:10px; font-size: 14px;"><strong>Total:</strong> ${formatCurrency(order.total)}</div>
+      </div>
+    </div>
+    <div class="section">
+      <h3 style="margin:0 0 6px 0; font-size: 14px;">Items</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th style="text-align:right;">Qty</th>
+            <th style="text-align:right;">Unit Price</th>
+            <th style="text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <div class="totals">
+        <div class="totals-row"><span>Subtotal</span><span>${formatCurrency(order.subtotal)}</span></div>
+        <div class="totals-row"><span>Tax</span><span>${formatCurrency(order.tax_amount)}</span></div>
+        <div class="totals-row" style="border-top: 1px solid #e5e5e5; margin-top: 6px; padding-top: 10px;"><strong>Total</strong><strong>${formatCurrency(order.total)}</strong></div>
+      </div>
+    </div>
+    <script>window.addEventListener('load', () => { window.print(); });</script>
+  </body>
+</html>`);
+    w.document.close();
+  };
 
   const statusLabel = useMemo(() => {
     if (!order) return '';
@@ -170,6 +273,22 @@ export default function OrderDetailPage() {
         description={order.customer_name ? `Order for ${order.customer_name}` : 'Order details'}
         actions={
           <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={handleDownloadPdf}
+              disabled={pdfLoading}
+            >
+              {pdfLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              PDF
+            </Button>
+            <Button variant="outline" onClick={handlePrint}>
+              <Printer className="w-4 h-4 mr-2" />
+              Print
+            </Button>
             <Link href="/orders">
               <Button variant="outline">
                 <ArrowLeft className="w-4 h-4 mr-2" />

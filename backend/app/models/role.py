@@ -70,6 +70,8 @@ class Permission(str, enum.Enum):
     # Reports
     REPORTS_VIEW = "reports:view"
     REPORTS_EXPORT = "reports:export"
+    REPORTS_VIEW_USER_ACTIVITY = "reports:view_user_activity"
+    REPORTS_VIEW_LOGIN_HISTORY = "reports:view_login_history"
 
     # Settings
     SETTINGS_VIEW = "settings:view"
@@ -156,6 +158,8 @@ DEFAULT_ROLES = {
             Permission.PAYMENTS_VIEW.value,
             Permission.PAYMENTS_CREATE.value,
             Permission.REPORTS_VIEW.value,
+            Permission.REPORTS_VIEW_USER_ACTIVITY.value,
+            Permission.REPORTS_VIEW_LOGIN_HISTORY.value,
             Permission.AI_ACCESS.value,
         ],
     },

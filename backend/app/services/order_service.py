@@ -153,11 +153,17 @@ class OrderService:
 
     def _create_order_item(self, order_id: UUID, data: OrderItemCreate) -> OrderItem:
         """Create an order item."""
+        # Ensure proper Decimal arithmetic
+        unit_price = Decimal(str(data.unit_price))
+        quantity = Decimal(str(data.quantity))
+        discount_percent = Decimal(str(data.discount_percent))
+        tax_rate = Decimal(str(data.tax_rate))
+        
         # Calculate amounts
-        line_total = data.unit_price * data.quantity
-        discount_amount = line_total * (data.discount_percent / 100)
+        line_total = unit_price * quantity
+        discount_amount = line_total * (discount_percent / Decimal("100"))
         taxable_amount = line_total - discount_amount
-        tax_amount = taxable_amount * (data.tax_rate / 100)
+        tax_amount = taxable_amount * (tax_rate / Decimal("100"))
         total = taxable_amount + tax_amount
         
         return OrderItem(
@@ -166,11 +172,11 @@ class OrderService:
             name=data.name,
             sku=data.sku,
             description=data.description,
-            unit_price=data.unit_price,
-            quantity=data.quantity,
-            tax_rate=data.tax_rate,
+            unit_price=unit_price,
+            quantity=int(data.quantity),
+            tax_rate=tax_rate,
             tax_amount=tax_amount,
-            discount_percent=data.discount_percent,
+            discount_percent=discount_percent,
             discount_amount=discount_amount,
             total=total,
             notes=data.notes,
@@ -183,13 +189,24 @@ class OrderService:
             OrderItem.deleted_at.is_(None),
         ).all()
         
-        subtotal = sum(item.unit_price * item.quantity for item in items)
-        tax_amount = sum(item.tax_amount or 0 for item in items)
-        item_discounts = sum(item.discount_amount or 0 for item in items)
+        # Ensure proper Decimal arithmetic
+        subtotal = Decimal("0")
+        tax_amount = Decimal("0")
+        item_discounts = Decimal("0")
+        
+        for item in items:
+            unit_price = Decimal(str(item.unit_price)) if item.unit_price is not None else Decimal("0")
+            quantity = Decimal(str(item.quantity)) if item.quantity is not None else Decimal("0")
+            subtotal += unit_price * quantity
+            tax_amount += Decimal(str(item.tax_amount or 0))
+            item_discounts += Decimal(str(item.discount_amount or 0))
+        
+        shipping = Decimal(str(order.shipping_amount or 0))
+        order_discount = Decimal(str(order.discount_amount or 0))
         
         order.subtotal = subtotal
         order.tax_amount = tax_amount
-        order.total = subtotal + tax_amount + (order.shipping_amount or 0) - (order.discount_amount or 0) - item_discounts
+        order.total = subtotal + tax_amount + shipping - order_discount - item_discounts
 
     def update_order(self, order: Order, data: OrderUpdate) -> Order:
         """Update an order."""

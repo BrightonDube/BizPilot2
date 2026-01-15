@@ -110,8 +110,14 @@ export const useAuthStore = create<AuthState>()(
     register: async (data: RegisterData) => {
       set({ isLoading: true, error: null });
       try {
+        // Register the user
         await apiClient.post('/auth/register', data);
-        set({ isLoading: false });
+        
+        // Auto-login after successful registration
+        await apiClient.post('/auth/login', { email: data.email, password: data.password });
+        await get().fetchUser();
+        
+        set({ isAuthenticated: true, isLoading: false });
       } catch (err) {
         const error = err as AxiosError<ApiError>;
         const errorMessage = error.response?.data?.detail;

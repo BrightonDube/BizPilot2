@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Phone, UserPlus } from 'lucide-react';
+import { Mail, Lock, User, Phone, UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
+import { apiClient } from '@/lib/api';
 
 // Google Icon component
 const GoogleIcon = () => (
@@ -76,12 +77,13 @@ export default function RegisterPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [googleReady, setGoogleReady] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const googleClientRef = useRef<{ requestCode: () => void } | null>(null);
 
   // Redirect if already authenticated
   useGuestOnly();
 
-  // Initialize Google OAuth
+  // Initialize Google OAuth - fetch client_id from backend if not available
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
@@ -89,37 +91,70 @@ export default function RegisterPage() {
     script.defer = true;
     document.head.appendChild(script);
 
+    script.onerror = () => {
+      setGoogleError('Google sign-in is unavailable right now.');
+      setGoogleReady(false);
+    };
+
     script.onload = () => {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-      if (window.google && clientId) {
-        // Use OAuth2 code flow which works on localhost
-        googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
-          client_id: clientId,
-          scope: 'email profile openid',
-          ux_mode: 'popup',
-          callback: async (response) => {
-            if (response.error) {
-              setGoogleError('Google sign-up was cancelled.');
-              setGoogleLoading(false);
-              return;
-            }
-            if (response.code) {
-              setGoogleLoading(true);
-              setGoogleError(null);
-              try {
-                // Send auth code to backend to exchange for tokens
-                await loginWithGoogle(response.code);
-                router.push('/dashboard');
-              } catch {
-                setGoogleError('Google sign-up failed. Please try again.');
-              } finally {
+      const initGoogle = async () => {
+        let clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+        // Fallback: fetch client_id from backend if not available at build time
+        if (!clientId) {
+          try {
+            const resp = await apiClient.get('/oauth/google/url');
+            clientId = resp.data?.client_id;
+          } catch (err) {
+            console.error('[OAuth] Failed to fetch client_id from backend:', err);
+          }
+        }
+
+        if (!window.google) {
+          setGoogleError('Google sign-in script failed to load.');
+          setGoogleReady(false);
+          return;
+        }
+
+        if (!clientId) {
+          setGoogleError('Google sign-in is not configured.');
+          setGoogleReady(false);
+          return;
+        }
+
+        try {
+          googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
+            client_id: clientId,
+            scope: 'email profile openid',
+            ux_mode: 'popup',
+            callback: async (response) => {
+              if (response.error) {
+                setGoogleError('Google sign-up was cancelled.');
                 setGoogleLoading(false);
+                return;
               }
-            }
-          },
-        });
-        setGoogleReady(true);
-      }
+              if (response.code) {
+                setGoogleLoading(true);
+                setGoogleError(null);
+                try {
+                  await loginWithGoogle(response.code);
+                  router.push('/business/setup');
+                } catch {
+                  setGoogleError('Google sign-up failed. Please try again.');
+                } finally {
+                  setGoogleLoading(false);
+                }
+              }
+            },
+          });
+          setGoogleReady(true);
+        } catch {
+          setGoogleError('Failed to initialize Google sign-in.');
+          setGoogleReady(false);
+        }
+      };
+
+      void initGoogle();
     };
 
     return () => {
@@ -132,6 +167,8 @@ export default function RegisterPage() {
 
   const handleGoogleSignIn = () => {
     if (googleClientRef.current && googleReady) {
+      setGoogleLoading(true);
+      setGoogleError(null);
       googleClientRef.current.requestCode();
     }
   };
@@ -143,16 +180,48 @@ export default function RegisterPage() {
     }
   };
 
+  // Email validation
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Password validation
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!/[a-z]/.test(password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!/[0-9]/.test(password)) {
+      return 'Password must contain at least one number';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setSuccessMessage(null);
     
-    if (formData.password !== formData.confirmPassword) {
-      setPasswordError('Passwords do not match');
+    // Validate email
+    if (!validateEmail(formData.email)) {
+      setPasswordError('Please enter a valid email address');
       return;
     }
 
-    if (formData.password.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+    // Validate password
+    const passwordValidationError = validatePassword(formData.password);
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
+      return;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError('Passwords do not match');
       return;
     }
 
@@ -164,9 +233,20 @@ export default function RegisterPage() {
         last_name: formData.last_name,
         phone: formData.phone || undefined,
       });
-      router.push('/auth/login?registered=true');
-    } catch {
-      // Error is handled by the store
+      
+      // Show success message and redirect
+      setSuccessMessage('Account created successfully! Redirecting to business setup...');
+      
+      // Redirect to business setup after a short delay
+      setTimeout(() => {
+        router.push('/business/setup');
+      }, 1500);
+    } catch (err) {
+      // Error is handled by the store, but let's also show a clear message
+      const axiosError = err as { response?: { data?: { detail?: string } } };
+      if (axiosError.response?.data?.detail) {
+        setPasswordError(axiosError.response.data.detail);
+      }
     }
   };
 
@@ -179,17 +259,30 @@ export default function RegisterPage() {
       <h2 className="text-2xl font-semibold text-white mb-2">Create your account</h2>
       <p className="text-gray-400 mb-6">Start managing your business today</p>
       
-      {(error || passwordError || googleError) && (
+      {successMessage && (
         <motion.div 
-          className="bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-4"
+          className="bg-green-900/20 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg mb-4 flex items-center gap-2"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {error || passwordError || googleError}
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
+          <span>{successMessage}</span>
+        </motion.div>
+      )}
+      
+      {(error || passwordError || googleError) && !successMessage && (
+        <motion.div 
+          className="bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-4 flex items-start gap-2"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+          <span className="flex-1">{error || passwordError || googleError}</span>
           <button 
             onClick={() => { clearError(); setPasswordError(''); setGoogleError(null); }} 
-            className="float-right text-red-400 hover:text-red-300"
+            className="text-red-400 hover:text-red-300"
           >
             &times;
           </button>
@@ -201,9 +294,9 @@ export default function RegisterPage() {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={googleLoading || !googleReady}
-        className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-6"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        className="w-full py-3 px-4 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-6 shadow-lg"
+        whileHover={{ scale: googleReady ? 1.02 : 1 }}
+        whileTap={{ scale: googleReady ? 0.98 : 1 }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -213,9 +306,14 @@ export default function RegisterPage() {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="h-5 w-5 border-2 border-white border-t-transparent rounded-full"
+              className="h-5 w-5 border-2 border-gray-800 border-t-transparent rounded-full"
             />
             <span>Signing up with Google...</span>
+          </>
+        ) : !googleReady ? (
+          <>
+            <GoogleIcon />
+            <span className="text-gray-500">Google sign-up unavailable</span>
           </>
         ) : (
           <>
@@ -349,6 +447,9 @@ export default function RegisterPage() {
               placeholder="••••••••"
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Min 8 characters, with uppercase, lowercase, and number
+          </p>
         </motion.div>
 
         <motion.div
@@ -376,7 +477,7 @@ export default function RegisterPage() {
 
         <motion.button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !!successMessage}
           className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 flex items-center justify-center gap-2"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}

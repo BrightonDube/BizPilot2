@@ -26,6 +26,8 @@ from app.models.subscription_transaction import (
 )
 from app.models.time_entry import TimeEntry, TimeEntryType, TimeEntryStatus
 from app.models.pos_connection import POSConnection, POSProvider, POSConnectionStatus, POSSyncLog
+from app.models.session import Session
+from app.models.notification import Notification, NotificationType, NotificationPriority
 
 __all__ = [
     "BaseModel",
@@ -89,4 +91,10 @@ __all__ = [
     "POSProvider",
     "POSConnectionStatus",
     "POSSyncLog",
+    # Session
+    "Session",
+    # Notification
+    "Notification",
+    "NotificationType",
+    "NotificationPriority",
 ]

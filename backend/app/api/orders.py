@@ -30,7 +30,7 @@ from app.schemas.order import (
 from app.services.order_service import OrderService
 from app.services.inventory_service import InventoryService
 from app.services.email_service import EmailService, EmailAttachment
-from app.core.pdf import build_simple_pdf, build_invoice_pdf
+from app.core.pdf import build_simple_pdf, build_invoice_pdf, build_purchase_order_pdf
 from app.models.product import Product
 from app.models.base import utc_now
 
@@ -286,6 +286,8 @@ async def create_order(
     db: Session = Depends(get_db),
 ):
     """Create a new order."""
+    from app.models.business import Business
+    
     service = OrderService(db)
 
     supplier = None
@@ -318,26 +320,84 @@ async def create_order(
                 Supplier.deleted_at.is_(None),
             ).first()
 
+        # Get business details for the PDF
+        business = db.query(Business).filter(Business.id == business_id).first()
+        
+        # Build business address
+        business_address_parts = []
+        if business.address_street:
+            business_address_parts.append(business.address_street)
+        if business.address_city or business.address_state:
+            city_state = ", ".join(filter(None, [business.address_city, business.address_state]))
+            business_address_parts.append(city_state)
+        if business.address_postal_code:
+            business_address_parts.append(business.address_postal_code)
+        if business.address_country:
+            business_address_parts.append(business.address_country)
+        business_address = "\n".join(business_address_parts) if business_address_parts else None
+        
+        # Build supplier address
+        supplier_address = supplier.address if supplier else None
+
         items_for_pdf = service.get_order_items(str(order.id))
-        pdf_lines: list[str] = []
-        pdf_lines.append(f"Purchase Order: {order.order_number}")
-        pdf_lines.append(f"Supplier: {supplier.name if supplier else ''}")
-        pdf_lines.append(f"Date: {order.order_date}")
-        pdf_lines.append("")
-        pdf_lines.append("Items:")
-        for it in items_for_pdf:
-            pdf_lines.append(f"- {it.name} | Qty: {it.quantity} | Unit: {it.unit_price} | Total: {it.total}")
-        pdf_lines.append("")
-        pdf_lines.append(f"Total: {order.total}")
-        pdf_bytes = build_simple_pdf(pdf_lines)
+        
+        # Convert items to dict format for PDF builder
+        items_data = [
+            {
+                "description": it.name or "",
+                "quantity": it.quantity,
+                "unit_price": it.unit_price,
+                "tax_amount": it.tax_amount or 0,
+                "total": it.total,
+            }
+            for it in items_for_pdf
+        ]
+        
+        # Build the professional purchase order PDF
+        pdf_bytes = build_purchase_order_pdf(
+            # Business (buyer) details
+            business_name=business.name if business else "BizPilot",
+            business_address=business_address,
+            business_phone=business.phone if business else None,
+            business_email=business.email if business else None,
+            business_vat=business.vat_number if business else None,
+            # Supplier details
+            supplier_name=supplier.name if supplier else "",
+            supplier_contact=supplier.contact_person if supplier else None,
+            supplier_address=supplier_address,
+            supplier_phone=supplier.phone if supplier else None,
+            supplier_email=supplier.email if supplier else None,
+            # Order details
+            order_number=order.order_number,
+            order_date=order.order_date,
+            # Ordered by (current user)
+            ordered_by_name=f"{current_user.first_name} {current_user.last_name}".strip() or current_user.email,
+            ordered_by_email=current_user.email,
+            ordered_by_phone=current_user.phone if hasattr(current_user, 'phone') else None,
+            # Items
+            items=items_data,
+            subtotal=order.subtotal,
+            tax_amount=order.tax_amount,
+            total=order.total,
+            # Notes
+            notes=order.notes,
+            currency=business.currency if business else "ZAR",
+        )
 
         if settings.EMAILS_ENABLED and supplier.email:
             email_service = EmailService()
+            
+            # Build email body with reply-to instruction
+            reply_to_email = business.email if business else None
+            email_body = f"Please find attached purchase order {order.order_number}."
+            if reply_to_email:
+                email_body += f"\n\nFor any queries regarding this order, please reply to: {reply_to_email}"
+            
             try:
                 email_service.send_email(
                     to_email=supplier.email,
-                    subject=f"Purchase Order {order.order_number}",
-                    body_text=f"Please find attached purchase order {order.order_number}.",
+                    subject=f"Purchase Order {order.order_number} from {business.name if business else 'BizPilot'}",
+                    body_text=email_body,
                     attachments=[
                         EmailAttachment(
                             filename=f"{order.order_number}.pdf",
@@ -345,6 +405,7 @@ async def create_order(
                             content_type="application/pdf",
                         )
                     ],
+                    reply_to=reply_to_email,
                 )
             except Exception:
                 raise HTTPException(
@@ -534,6 +595,8 @@ async def receive_purchase_order(
     4. Updates product costs if price changed
     5. Marks the order as received
     """
+    from decimal import Decimal
+    
     order_service = OrderService(db)
     inventory_service = InventoryService(db)
     
@@ -577,26 +640,33 @@ async def receive_purchase_order(
         if receive_item.quantity_received <= 0:
             continue
         
-        # Update item price if changed
-        new_price = receive_item.unit_price if receive_item.unit_price is not None else item.unit_price
-        if receive_item.unit_price is not None and receive_item.unit_price != item.unit_price:
-            item.unit_price = receive_item.unit_price
+        # Update item price if changed - ensure Decimal type
+        current_price = Decimal(str(item.unit_price)) if item.unit_price is not None else Decimal("0")
+        new_price = Decimal(str(receive_item.unit_price)) if receive_item.unit_price is not None else current_price
+        
+        if receive_item.unit_price is not None and new_price != current_price:
+            item.unit_price = new_price
             # Recalculate item total (handle nullable discount_amount and tax_amount)
-            discount = item.discount_amount or 0
-            tax = item.tax_amount or 0
-            item.total = item.unit_price * item.quantity - discount + tax
+            discount = Decimal(str(item.discount_amount or 0))
+            tax = Decimal(str(item.tax_amount or 0))
+            item.total = new_price * item.quantity - discount + tax
         
         # Update inventory if product exists
         if item.product_id:
             try:
                 # Record purchase in inventory (updates quantity and average cost)
-                inventory_service.record_purchase(
+                result = inventory_service.record_purchase(
                     product_id=str(item.product_id),
                     business_id=business_id,
                     quantity=receive_item.quantity_received,
                     unit_cost=new_price,
                     purchase_order_id=str(order.id),
                 )
+                
+                # If no inventory item exists, log a warning but continue
+                if result is None:
+                    errors.append(f"No inventory record for {item.name} - inventory not updated")
+                    inventory_updated = False
                 
                 # Update product cost price if changed (verify product belongs to current business)
                 if receive_item.unit_price is not None:
@@ -606,7 +676,7 @@ async def receive_purchase_order(
                         Product.deleted_at.is_(None),
                     ).first()
                     if product:
-                        product.cost_price = receive_item.unit_price
+                        product.cost_price = new_price
                 
             except ValueError as e:
                 errors.append(f"Failed to update inventory for {item.name}: {str(e)}")

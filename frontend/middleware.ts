@@ -12,7 +12,11 @@ function resolveApiBaseUrl(request: NextRequest): string {
   if (configured && configured.trim().length > 0) {
     // If NEXT_PUBLIC_API_URL is relative (e.g. "/api/v1"), make it absolute.
     if (configured.startsWith('/')) {
-      return new URL(configured, request.nextUrl.origin).toString();
+      // Use the request's host header to construct the absolute URL
+      // This ensures we use the public-facing URL, not the internal Next.js server
+      const host = request.headers.get('host') || request.nextUrl.host;
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      return `${protocol}://${host}${configured}`;
     }
     return configured;
   }
@@ -23,7 +27,10 @@ function resolveApiBaseUrl(request: NextRequest): string {
   }
 
   // Production fallback - assume same-origin reverse proxy (best-effort)
-  return new URL('/api/v1', request.nextUrl.origin).toString();
+  // Use the request's host header to construct the absolute URL
+  const host = request.headers.get('host') || request.nextUrl.host;
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  return `${protocol}://${host}/api/v1`;
 }
 
 async function hasValidSession(request: NextRequest): Promise<boolean> {
@@ -43,6 +50,9 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
       headers: {
         // Forward cookies to backend for validation
         cookie: request.headers.get('cookie') ?? '',
+        // Explicitly request JSON to avoid RSC payload issues
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
       // Never cache auth checks at the edge
       cache: 'no-store',
