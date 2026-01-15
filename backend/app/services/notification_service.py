@@ -315,3 +315,104 @@ class NotificationService:
             notifications.append(notification)
         
         return notifications
+
+    # ==================== Order Notifications ====================
+
+    def create_order_received_notification(
+        self,
+        business_id: str,
+        order_id: str,
+        order_number: str,
+        customer_name: str,
+        total_amount: float,
+        user_id: Optional[str] = None,
+    ) -> Notification:
+        """Create notification for new order received."""
+        notification_data = NotificationCreate(
+            user_id=user_id,
+            notification_type=NotificationType.ORDER_RECEIVED,
+            priority=NotificationPriority.HIGH,
+            title=f"New Order Received: #{order_number}",
+            message=f"New order from {customer_name} for ${total_amount:.2f}",
+            reference_type="order",
+            reference_id=order_id,
+            action_url=f"/orders/{order_id}",
+            action_label="View Order",
+        )
+        
+        return self.create_notification(business_id, notification_data)
+
+    def create_order_shipped_notification(
+        self,
+        business_id: str,
+        order_id: str,
+        order_number: str,
+        customer_name: str,
+        user_id: Optional[str] = None,
+    ) -> Notification:
+        """Create notification for order shipped."""
+        notification_data = NotificationCreate(
+            user_id=user_id,
+            notification_type=NotificationType.ORDER_SHIPPED,
+            priority=NotificationPriority.MEDIUM,
+            title=f"Order Shipped: #{order_number}",
+            message=f"Order for {customer_name} has been shipped",
+            reference_type="order",
+            reference_id=order_id,
+            action_url=f"/orders/{order_id}",
+            action_label="View Order",
+        )
+        
+        return self.create_notification(business_id, notification_data)
+
+    # ==================== Payment Notifications ====================
+
+    def create_payment_received_notification(
+        self,
+        business_id: str,
+        invoice_id: str,
+        invoice_number: str,
+        customer_name: str,
+        amount: float,
+        user_id: Optional[str] = None,
+    ) -> Notification:
+        """Create notification for payment received."""
+        notification_data = NotificationCreate(
+            user_id=user_id,
+            notification_type=NotificationType.PAYMENT_RECEIVED,
+            priority=NotificationPriority.MEDIUM,
+            title=f"Payment Received: Invoice #{invoice_number}",
+            message=f"Received ${amount:.2f} from {customer_name}",
+            reference_type="invoice",
+            reference_id=invoice_id,
+            action_url=f"/invoices/{invoice_id}",
+            action_label="View Invoice",
+        )
+        
+        return self.create_notification(business_id, notification_data)
+
+    def create_payment_overdue_notification(
+        self,
+        business_id: str,
+        invoice_id: str,
+        invoice_number: str,
+        customer_name: str,
+        amount: float,
+        days_overdue: int,
+        user_id: Optional[str] = None,
+    ) -> Notification:
+        """Create notification for overdue payment."""
+        notification_data = NotificationCreate(
+            user_id=user_id,
+            notification_type=NotificationType.PAYMENT_OVERDUE,
+            priority=NotificationPriority.HIGH,
+            title=f"Payment Overdue: Invoice #{invoice_number}",
+            message=f"Invoice from {customer_name} for ${amount:.2f} is {days_overdue} days overdue",
+            reference_type="invoice",
+            reference_id=invoice_id,
+            action_url=f"/invoices/{invoice_id}",
+            action_label="View Invoice",
+        )
+        
+        return self.create_notification(business_id, notification_data)
+
