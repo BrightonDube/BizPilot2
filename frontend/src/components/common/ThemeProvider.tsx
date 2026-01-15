@@ -20,13 +20,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Load saved theme from localStorage
-    const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    if (typeof window === 'undefined') return;
+    const savedTheme = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
     if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
       setThemeState(savedTheme);
     }
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     
     const applyTheme = (newTheme: 'dark' | 'light') => {
@@ -53,7 +55,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem(STORAGE_KEY, newTheme);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, newTheme);
+    }
   };
 
   return (
