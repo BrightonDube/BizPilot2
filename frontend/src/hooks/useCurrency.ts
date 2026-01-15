@@ -8,8 +8,6 @@ export interface CurrencyConfig {
   symbol: string
 }
 
-const STORAGE_KEY = 'bizpilot_currency'
-
 const CURRENCIES: CurrencyConfig[] = [
   { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
   { code: 'USD', name: 'US Dollar', symbol: '$' },
@@ -40,15 +38,12 @@ export function getCurrencyConfig(code: string | null | undefined) {
 
 export function useCurrency() {
   const [currency, setCurrencyState] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'ZAR'
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    return stored ? stored.toUpperCase() : 'ZAR'
+    return 'ZAR'
   })
 
   const setCurrency = useCallback((currencyCode: string) => {
     const normalized = currencyCode.toUpperCase()
     setCurrencyState(normalized)
-    window.localStorage.setItem(STORAGE_KEY, normalized)
   }, [])
 
   const availableCurrencies = useMemo(() => getAvailableCurrencies(), [])

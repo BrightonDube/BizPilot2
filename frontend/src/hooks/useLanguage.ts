@@ -9,8 +9,6 @@ export interface LanguageConfig {
   flag?: string
 }
 
-const STORAGE_KEY = 'bizpilot_language'
-
 const LANGUAGES: LanguageConfig[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
   { code: 'af', name: 'Afrikaans', nativeName: 'Afrikaans', flag: '🇿🇦' },
@@ -43,15 +41,12 @@ export function getLanguageConfig(code: string | null | undefined) {
 
 export function useLanguage() {
   const [language, setLanguageState] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'en'
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    return stored ? stored.toLowerCase() : 'en'
+    return 'en'
   })
 
   const setLanguage = useCallback((languageCode: string) => {
     const normalized = languageCode.toLowerCase()
     setLanguageState(normalized)
-    window.localStorage.setItem(STORAGE_KEY, normalized)
   }, [])
 
   const availableLanguages = useMemo(() => getAvailableLanguages(), [])
