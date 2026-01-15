@@ -25,6 +25,7 @@ from app.api.pos_connections import router as pos_connections_router
 from app.api.roles import router as roles_router
 from app.api.sessions import router as sessions_router
 from app.api.notifications import router as notifications_router
+from app.api.favorites import router as favorites_router
 
 router = APIRouter()
 
@@ -52,6 +53,7 @@ router.include_router(pos_connections_router)
 router.include_router(roles_router)
 router.include_router(sessions_router)
 router.include_router(notifications_router)
+router.include_router(favorites_router)
 
 
 @router.get("/")
