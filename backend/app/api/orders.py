@@ -534,6 +534,8 @@ async def receive_purchase_order(
     4. Updates product costs if price changed
     5. Marks the order as received
     """
+    from decimal import Decimal
+    
     order_service = OrderService(db)
     inventory_service = InventoryService(db)
     
@@ -577,26 +579,33 @@ async def receive_purchase_order(
         if receive_item.quantity_received <= 0:
             continue
         
-        # Update item price if changed
-        new_price = receive_item.unit_price if receive_item.unit_price is not None else item.unit_price
-        if receive_item.unit_price is not None and receive_item.unit_price != item.unit_price:
-            item.unit_price = receive_item.unit_price
+        # Update item price if changed - ensure Decimal type
+        current_price = Decimal(str(item.unit_price)) if item.unit_price is not None else Decimal("0")
+        new_price = Decimal(str(receive_item.unit_price)) if receive_item.unit_price is not None else current_price
+        
+        if receive_item.unit_price is not None and new_price != current_price:
+            item.unit_price = new_price
             # Recalculate item total (handle nullable discount_amount and tax_amount)
-            discount = item.discount_amount or 0
-            tax = item.tax_amount or 0
-            item.total = item.unit_price * item.quantity - discount + tax
+            discount = Decimal(str(item.discount_amount or 0))
+            tax = Decimal(str(item.tax_amount or 0))
+            item.total = new_price * item.quantity - discount + tax
         
         # Update inventory if product exists
         if item.product_id:
             try:
                 # Record purchase in inventory (updates quantity and average cost)
-                inventory_service.record_purchase(
+                result = inventory_service.record_purchase(
                     product_id=str(item.product_id),
                     business_id=business_id,
                     quantity=receive_item.quantity_received,
                     unit_cost=new_price,
                     purchase_order_id=str(order.id),
                 )
+                
+                # If no inventory item exists, log a warning but continue
+                if result is None:
+                    errors.append(f"No inventory record for {item.name} - inventory not updated")
+                    inventory_updated = False
                 
                 # Update product cost price if changed (verify product belongs to current business)
                 if receive_item.unit_price is not None:
@@ -606,7 +615,7 @@ async def receive_purchase_order(
                         Product.deleted_at.is_(None),
                     ).first()
                     if product:
-                        product.cost_price = receive_item.unit_price
+                        product.cost_price = new_price
                 
             except ValueError as e:
                 errors.append(f"Failed to update inventory for {item.name}: {str(e)}")

@@ -162,6 +162,11 @@ class PDFBuilder:
         
         self.y_position -= 25
         
+        # Draw header bottom border
+        self._set_color(0.7, 0.7, 0.7)
+        self._add_line(self.left_margin, self.y_position + 8, self.right_margin, self.y_position + 8, 0.5)
+        self._reset_color()
+        
         # Table rows
         for item in items:
             desc = str(item.get("description", ""))[:40]  # Truncate long descriptions
@@ -176,11 +181,11 @@ class PDFBuilder:
             self._add_text(format_currency(tax, currency), 440, 9)
             self._add_text(format_currency(total, currency), 490, 9)
             
-            self.y_position -= 15
+            self.y_position -= 18  # Increased spacing between rows
             
-            # Row separator
+            # Row separator - draw below the text with proper spacing
             self._set_color(0.9, 0.9, 0.9)
-            self._add_line(self.left_margin, self.y_position + 5, self.right_margin, self.y_position + 5, 0.5)
+            self._add_line(self.left_margin, self.y_position + 3, self.right_margin, self.y_position + 3, 0.3)
             self._reset_color()
             
         self.y_position -= 10
