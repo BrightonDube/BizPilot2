@@ -25,6 +25,7 @@ htmlcov/
 .tox/
 coverage.xml
 *.cover
+.hypothesis/
 
 # IDE
 .idea/
