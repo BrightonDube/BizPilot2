@@ -116,6 +116,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   
   const [profileData, setProfileData] = useState({
     first_name: '',
@@ -451,6 +452,11 @@ export default function SettingsPage() {
       const resp = await apiClient.get('/business/current');
       const business = resp.data;
 
+      // Store business ID for departments tab
+      if (business?.id) {
+        setBusinessId(business.id);
+      }
+
       setBusinessData((prev) => ({
         ...prev,
         name: business?.name || '',
@@ -471,7 +477,7 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    if (activeTab === 'business') {
+    if (activeTab === 'business' || activeTab === 'departments') {
       loadBusinessData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -645,8 +651,8 @@ export default function SettingsPage() {
           )}
 
           {/* Departments Settings */}
-          {activeTab === 'departments' && user?.business_id && (
-            <DepartmentManagement businessId={user.business_id} />
+          {activeTab === 'departments' && businessId && (
+            <DepartmentManagement businessId={businessId} />
           )}
 
           {/* AI Settings */}

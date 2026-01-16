@@ -30,6 +30,10 @@ from app.models.pos_connection import POSConnection, POSProvider, POSConnectionS
 from app.models.session import Session
 from app.models.notification import Notification, NotificationType, NotificationPriority
 from app.models.favorite_product import FavoriteProduct
+from app.models.layby_config import LaybyConfig
+from app.models.layby import Layby, LaybyStatus, PaymentFrequency
+from app.models.layby_item import LaybyItem
+from app.models.layby_schedule import LaybySchedule, ScheduleStatus
 
 __all__ = [
     "BaseModel",
@@ -102,4 +106,12 @@ __all__ = [
     "NotificationPriority",
     # Favorite Product
     "FavoriteProduct",
+    # Layby
+    "LaybyConfig",
+    "Layby",
+    "LaybyStatus",
+    "PaymentFrequency",
+    "LaybyItem",
+    "LaybySchedule",
+    "ScheduleStatus",
 ]

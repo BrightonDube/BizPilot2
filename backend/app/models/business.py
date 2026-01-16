@@ -49,6 +49,7 @@ class Business(BaseModel):
     organization = relationship("Organization", back_populates="businesses")
     business_users = relationship("BusinessUser", back_populates="business", cascade="all, delete-orphan")
     departments = relationship("Department", back_populates="business", cascade="all, delete-orphan")
+    layby_configs = relationship("LaybyConfig", back_populates="business", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Business {self.name}>"
