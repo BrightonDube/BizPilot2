@@ -712,7 +712,6 @@ def create_suppliers(db: Session, business: Business) -> list:
             city=s["city"],
             state="Western Cape",
             country="South Africa",
-            payment_terms="Net 30",
         )
         db.add(supplier)
         suppliers.append(supplier)
