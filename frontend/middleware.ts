@@ -76,6 +76,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check if this is an RSC request (React Server Components)
+  const isRSCRequest = request.headers.get('RSC') === '1' || 
+                       request.headers.get('Next-Router-Prefetch') === '1' ||
+                       request.nextUrl.searchParams.has('_rsc');
+
   const authed = await hasValidSession(request);
 
   // Authenticated users should not see public/auth pages.
@@ -83,6 +88,10 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     url.search = '';
+    // For RSC requests, return a proper redirect response
+    if (isRSCRequest) {
+      return NextResponse.redirect(url, { status: 303 });
+    }
     return NextResponse.redirect(url);
   }
 
@@ -93,7 +102,18 @@ export async function middleware(request: NextRequest) {
     // Prevent leaking Next.js internal params (e.g. ?_rsc=...) into the login URL.
     url.search = '';
     url.searchParams.set('next', pathname);
+    // For RSC requests, return a proper redirect response
+    if (isRSCRequest) {
+      return NextResponse.redirect(url, { status: 303 });
+    }
     return NextResponse.redirect(url);
+  }
+
+  // For RSC requests on allowed routes, ensure proper headers
+  if (isRSCRequest) {
+    const response = NextResponse.next();
+    response.headers.set('Content-Type', 'text/x-component');
+    return response;
   }
 
   return NextResponse.next();
