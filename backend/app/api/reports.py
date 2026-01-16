@@ -8,13 +8,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.order import Order, OrderDirection
 from app.models.customer import Customer
 from app.models.product import Product
-from app.models.business_user import BusinessUser
 from app.models.order import OrderItem
 from app.models.inventory import InventoryItem
 from app.models.session import Session
@@ -57,23 +56,15 @@ def get_date_range(range_str: str) -> tuple[date, date]:
         return today - timedelta(days=30), today
 
 
-def get_user_business_id(db: Session, user_id) -> Optional[str]:
-    """Get the business ID for a user."""
-    business_user = db.query(BusinessUser).filter(
-        BusinessUser.user_id == user_id
-    ).first()
-    return business_user.business_id if business_user else None
-
-
 @router.get("/stats", response_model=ReportStats)
 async def get_report_stats(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     direction: Optional[OrderDirection] = Query(None),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get overall business statistics."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return ReportStats(
@@ -164,10 +155,10 @@ async def get_top_products(
     limit: int = Query(5, ge=1, le=20),
     direction: Optional[OrderDirection] = Query(None),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get top-selling products."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return []
@@ -219,10 +210,10 @@ async def get_top_customers(
     limit: int = Query(5, ge=1, le=20),
     direction: Optional[OrderDirection] = Query(None),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get top customers by spending."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return []
@@ -284,10 +275,10 @@ async def get_revenue_trend(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     direction: Optional[OrderDirection] = Query(None),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get revenue over time for chart visualization."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return RevenueTrend(data=[], total=0, average=0)
@@ -376,10 +367,10 @@ async def get_orders_trend(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     direction: Optional[OrderDirection] = Query(None),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get orders count over time for chart visualization."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return OrdersTrend(data=[], total=0, average=0)
@@ -450,10 +441,10 @@ async def get_orders_trend(
 @router.get("/inventory", response_model=InventoryReport)
 async def get_inventory_report(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get inventory status report."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return InventoryReport(
@@ -520,10 +511,10 @@ async def get_inventory_report(
 async def get_cogs_report(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get Cost of Goods Sold report."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return COGSReport(
@@ -602,10 +593,10 @@ async def get_cogs_report(
 @router.get("/profit-margins", response_model=ProfitMarginReport)
 async def get_profit_margins_report(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get profit margins by product."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return ProfitMarginReport(
@@ -663,9 +654,9 @@ async def export_reports_pdf(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     direction: Optional[OrderDirection] = Query(None),
     current_user: User = Depends(has_permission("reports:export")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
-    business_id = get_user_business_id(db, current_user.id)
     start_date, end_date = get_date_range(range)
 
     lines: list[str] = []
@@ -728,10 +719,10 @@ async def get_user_activity_report(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     user_id: Optional[str] = Query(None),
     current_user: User = Depends(has_permission("reports:view_user_activity")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get user activity report with time tracking data."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return UserActivityReport(
@@ -830,10 +821,10 @@ async def get_login_history_report(
     user_id: Optional[str] = Query(None),
     include_active: bool = Query(True),
     current_user: User = Depends(has_permission("reports:view_login_history")),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """Get login history report with session tracking data."""
-    business_id = get_user_business_id(db, current_user.id)
     
     if not business_id:
         return LoginHistoryReport(
