@@ -229,7 +229,7 @@ class DepartmentService:
         ).count()
 
     def _validate_business_owner(self, business_id: UUID, user_id: UUID) -> None:
-        """Validate that the user is a business owner or superadmin."""
+        """Validate that the user is a business owner/admin or superadmin."""
         # Check if user is superadmin
         user = self.db.query(User).filter(User.id == user_id).first()
         if user and user.is_superadmin:
@@ -248,12 +248,16 @@ class DepartmentService:
                 detail="You do not have permission to manage departments for this business"
             )
         
-        # Check if user has owner role
-        if business_user.role and business_user.role.name != 'owner':
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only business owners can manage departments"
-            )
+        # Check if user has owner or admin role (case-insensitive)
+        if business_user.role:
+            role_name_lower = business_user.role.name.lower()
+            if role_name_lower in ('owner', 'admin'):
+                return
+        
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only business owners and admins can manage departments"
+        )
 
     def _validate_business_access(self, business_id: UUID, user_id: UUID) -> None:
         """Validate that the user has access to the business."""

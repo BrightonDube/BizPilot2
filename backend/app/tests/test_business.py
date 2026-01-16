@@ -99,12 +99,20 @@ class TestBusinessSetup:
             db=mock_db
         )
         
-        # Verify that objects were added
-        assert len(added_objects) >= 4  # Organization, Business, Role, BusinessUser, Department
+        # Verify that objects were added (Organization, Business, Role, BusinessUser, Department)
+        assert len(added_objects) >= 5, f"Expected at least 5 objects, got {len(added_objects)}"
         
         # Check that a Department was created
         departments = [obj for obj in added_objects if isinstance(obj, Department)]
         assert len(departments) == 1, "Expected exactly one department to be created"
+        
+        # Check that a Role was created
+        roles = [obj for obj in added_objects if isinstance(obj, Role)]
+        assert len(roles) == 1, "Expected exactly one role to be created"
+        
+        # Check that a BusinessUser was created
+        business_users = [obj for obj in added_objects if isinstance(obj, BusinessUser)]
+        assert len(business_users) == 1, "Expected exactly one business user to be created"
         
         # Verify the department is named "General"
         default_dept = departments[0]

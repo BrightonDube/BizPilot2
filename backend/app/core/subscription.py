@@ -126,13 +126,16 @@ def check_limit(limit_name: str, current_count: int):
     """
     Dependency that checks if a user is within their tier limits.
     
+    Available limits in current tiers: max_users, max_orders_per_month, max_terminals
+    A limit value of -1 means unlimited.
+    
     Usage:
         # First get current count
-        product_count = db.query(Product).filter(...).count()
+        user_count = db.query(BusinessUser).filter(...).count()
         
-        @router.post("/products")
-        async def create_product(
-            user: User = Depends(check_limit("max_products", product_count))
+        @router.post("/users")
+        async def add_user(
+            user: User = Depends(check_limit("max_users", user_count))
         ):
             ...
     """

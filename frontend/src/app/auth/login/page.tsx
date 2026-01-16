@@ -34,12 +34,28 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [messageDismissed, setMessageDismissed] = useState(false);
 
-  // Derive session expired message from URL params
+  // Derive session expired message from URL params or sessionStorage
   const sessionExpiredMessage = useMemo(() => {
     if (messageDismissed) return null;
+    
+    // Check sessionStorage first (set by session manager)
+    if (typeof window !== 'undefined') {
+      const storedMessage = sessionStorage.getItem('session_expired_message');
+      if (storedMessage) {
+        // Clear the message so it doesn't show again
+        sessionStorage.removeItem('session_expired_message');
+        return storedMessage;
+      }
+    }
+    
+    // Fall back to URL params
     if (searchParams.get('session_expired') === 'true') {
       return 'Your session has expired. Please log in again.';
     }
+    if (searchParams.get('idle') === 'true') {
+      return 'You were logged out due to inactivity.';
+    }
+    
     return null;
   }, [searchParams, messageDismissed]);
 

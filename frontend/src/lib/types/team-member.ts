@@ -11,8 +11,9 @@ import type { DepartmentSummary } from './department';
 
 /**
  * Team member status values.
+ * Note: Must match backend BusinessUserStatus enum (active, invited, inactive)
  */
-export type TeamMemberStatus = 'active' | 'invited' | 'inactive' | 'suspended';
+export type TeamMemberStatus = 'active' | 'invited' | 'inactive';
 
 /**
  * Team member entity representing a user assigned to a business.

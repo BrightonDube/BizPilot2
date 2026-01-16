@@ -70,7 +70,7 @@ DEFAULT_TIERS = {
     "pilot_solo": {
         "name": "pilot_solo",
         "display_name": "Pilot Solo",
-        "description": "Demo tier for testing the system",
+        "description": "Free starter tier for getting started with BizPilot",
         "price_monthly_cents": 0,
         "price_yearly_cents": 0,
         "sort_order": 0,

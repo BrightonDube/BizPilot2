@@ -9,14 +9,14 @@ Validates: Requirements 1.2
 
 from decimal import Decimal
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base, utc_now
+from app.models.base import BaseModel
 
 
-class LaybyItem(Base):
+class LaybyItem(BaseModel):
     """LaybyItem model for items within a layby.
     
     This model represents individual products/items that are part of a layby
@@ -24,7 +24,7 @@ class LaybyItem(Base):
     stores denormalized product information for historical record keeping.
     
     Attributes:
-        id: Unique identifier for the layby item
+        id: Unique identifier for the layby item (inherited from BaseModel)
         layby_id: Reference to the parent layby (CASCADE delete)
         product_id: Reference to the product (RESTRICT delete)
         product_name: Denormalized product name for historical records
@@ -35,19 +35,14 @@ class LaybyItem(Base):
         tax_amount: Tax amount for this item
         total_amount: Total amount for this item (quantity * unit_price - discount + tax)
         notes: Optional notes about this item
-        created_at: Timestamp when the item was added
+        created_at: Timestamp when the item was added (inherited from BaseModel)
+        updated_at: Timestamp when the item was last updated (inherited from BaseModel)
+        deleted_at: Soft delete timestamp (inherited from BaseModel)
     
     Validates: Requirements 1.2 (multiple products per layby)
     """
 
     __tablename__ = "layby_items"
-
-    # Primary key
-    id = Column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        server_default="gen_random_uuid()",
-    )
 
     # Foreign key to laybys table (Requirement 1.2 - multiple products per layby)
     layby_id = Column(
@@ -104,13 +99,6 @@ class LaybyItem(Base):
     notes = Column(
         Text,
         nullable=True,
-    )
-
-    # Timestamp (not using BaseModel to match migration schema)
-    created_at = Column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=utc_now,
     )
 
     # Relationships
