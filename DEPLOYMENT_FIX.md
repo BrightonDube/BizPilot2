@@ -46,9 +46,14 @@ const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
 ## Deployment Status
 
 ### Current Status
-- ✅ Fix committed to `dev` branch
+- ✅ Fix committed to `dev` branch (commit `f72ce5a`)
 - ✅ Fix pushed to GitHub
+- ✅ Local build verified successful (Next.js compiled without errors)
 - ⏳ **Awaiting PR merge to `main` branch**
+- ⚠️ **DigitalOcean is currently in rollback state** (using old commit `6eba7a9`)
+
+### Why Deployment Failed
+The deployment system automatically rolled back to an older commit after the build with the typo failed. The current active deployment is using commit `6eba7a9` which predates the fix.
 
 ### Next Steps
 
@@ -58,17 +63,24 @@ const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
 2. **Merge the PR** (the repository has branch protection rules requiring PRs)
 3. **DigitalOcean will automatically deploy** when changes are pushed to `main`
 
+### Branch Status
+- `dev` branch: commit `4222f04` (includes fix at `f72ce5a`)
+- `main` branch: commit `459a862` (outdated, needs update)
+- Commits ahead: `dev` is ~20+ commits ahead of `main`
+
 ### Alternative: Manual PR Creation
 
-You can create the PR via GitHub CLI or web interface:
+You can create the PR via GitHub web interface:
 
-**Via GitHub Web**:
-1. Go to https://github.com/BrightonDube/BizPilot2
-2. Click "Pull requests" → "New pull request"
-3. Set base: `main`, compare: `dev`
-4. Create and merge the PR
+**Via GitHub Web** (RECOMMENDED):
+1. Go to https://github.com/BrightonDube/BizPilot2/compare/main...dev
+2. Click "Create pull request"
+3. Title: "Fix: Resolve frontend build error in reports page"
+4. Description: "Fixes typo in setTopCustomer -> setTopCustomers that caused deployment failure. Includes dashboard and reports endpoint fixes."
+5. Click "Create pull request"
+6. Review and merge the PR
 
-**Via GitHub CLI** (if installed):
+**Via GitHub CLI** (if authenticated):
 ```bash
 gh pr create --base main --head dev --title "Fix: Resolve frontend build error in reports page" --body "Fixes typo in setTopCustomer -> setTopCustomers that caused deployment failure"
 gh pr merge --merge
