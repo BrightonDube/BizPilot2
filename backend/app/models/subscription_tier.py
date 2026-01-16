@@ -67,24 +67,23 @@ class SubscriptionTier(BaseModel):
 
 # Default tier configurations for seeding
 DEFAULT_TIERS = {
-    "free": {
-        "name": "free",
-        "display_name": "Starter",
-        "description": "Perfect for getting started",
+    "pilot_solo": {
+        "name": "pilot_solo",
+        "display_name": "Pilot Solo",
+        "description": "Demo tier for testing the system",
         "price_monthly_cents": 0,
         "price_yearly_cents": 0,
         "sort_order": 0,
         "is_default": True,
         "features": {
-            "max_products": 5,
             "max_users": 1,
-            "max_customers": 20,
             "max_orders_per_month": 50,
+            "max_terminals": 1,
         },
         "feature_flags": {
-            "basic_reports": True,
-            "inventory_tracking": True,
-            "cost_calculations": True,
+            "basic_reports": False,
+            "inventory_tracking": False,
+            "cost_calculations": False,
             "email_support": True,
             "export_reports": False,
             "ai_insights": False,
@@ -95,19 +94,45 @@ DEFAULT_TIERS = {
             "team_collaboration": False,
         },
     },
-    "professional": {
-        "name": "professional",
-        "display_name": "Professional",
-        "description": "Best for growing businesses",
-        "price_monthly_cents": 49900,  # R499/month
-        "price_yearly_cents": 479900,  # R4799/year (20% discount)
+    "pilot_lite": {
+        "name": "pilot_lite",
+        "display_name": "Pilot Lite",
+        "description": "Coffee stalls and trucks: cash/card tracking with basic sales reports",
+        "price_monthly_cents": 19900,  # R199/month
+        "price_yearly_cents": 191040,  # 20% discount
         "sort_order": 1,
         "is_default": False,
         "features": {
-            "max_products": -1,  # -1 means unlimited
-            "max_users": 5,
-            "max_customers": -1,
+            "max_users": 3,
             "max_orders_per_month": -1,
+            "max_terminals": 1,
+        },
+        "feature_flags": {
+            "basic_reports": True,
+            "inventory_tracking": False,
+            "cost_calculations": False,
+            "email_support": True,
+            "export_reports": False,
+            "ai_insights": False,
+            "custom_categories": False,
+            "priority_support": False,
+            "multi_location": False,
+            "api_access": False,
+            "team_collaboration": True,
+        },
+    },
+    "pilot_core": {
+        "name": "pilot_core",
+        "display_name": "Pilot Core",
+        "description": "Standard restaurants: inventory tracking with ingredient tracking and recipes",
+        "price_monthly_cents": 79900,  # R799/month
+        "price_yearly_cents": 767040,  # 20% discount
+        "sort_order": 2,
+        "is_default": False,
+        "features": {
+            "max_users": -1,
+            "max_orders_per_month": -1,
+            "max_terminals": 2,
         },
         "feature_flags": {
             "basic_reports": True,
@@ -115,7 +140,7 @@ DEFAULT_TIERS = {
             "cost_calculations": True,
             "email_support": True,
             "export_reports": True,
-            "ai_insights": True,
+            "ai_insights": False,
             "custom_categories": True,
             "priority_support": False,
             "multi_location": False,
@@ -123,19 +148,18 @@ DEFAULT_TIERS = {
             "team_collaboration": True,
         },
     },
-    "enterprise": {
-        "name": "enterprise",
-        "display_name": "Enterprise",
-        "description": "For established businesses",
+    "pilot_pro": {
+        "name": "pilot_pro",
+        "display_name": "Pilot Pro",
+        "description": "High volume: full AI suite and automation",
         "price_monthly_cents": 149900,  # R1499/month
-        "price_yearly_cents": 1439900,  # R14399/year (20% discount)
-        "sort_order": 2,
+        "price_yearly_cents": 1439040,  # 20% discount
+        "sort_order": 3,
         "is_default": False,
         "features": {
-            "max_products": -1,
             "max_users": -1,
-            "max_customers": -1,
             "max_orders_per_month": -1,
+            "max_terminals": -1,
         },
         "feature_flags": {
             "basic_reports": True,
@@ -149,8 +173,6 @@ DEFAULT_TIERS = {
             "multi_location": True,
             "api_access": True,
             "team_collaboration": True,
-            "custom_integrations": True,
-            "advanced_reporting": True,
         },
     },
 }
