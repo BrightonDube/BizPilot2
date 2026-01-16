@@ -148,6 +148,22 @@ async def get_current_business_id(
     db: Session = Depends(get_db),
 ) -> str:
     """Get the current user's active business ID."""
+    # Superadmins can access all businesses - return the first available business
+    if current_user.is_superadmin:
+        from app.models.business import Business
+        first_business = db.query(Business).filter(
+            Business.deleted_at.is_(None)
+        ).first()
+        
+        if not first_business:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No businesses found in the system."
+            )
+        
+        return str(first_business.id)
+    
+    # Regular users need an active BusinessUser record
     business_user = db.query(BusinessUser).filter(
         BusinessUser.user_id == current_user.id,
         BusinessUser.status == BusinessUserStatus.ACTIVE
