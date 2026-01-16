@@ -13,37 +13,36 @@ def reset_database():
         sys.exit(1)
     
     print(f"Connecting to database...")
-    engine = create_engine(database_url)
+    engine = create_engine(database_url, isolation_level="AUTOCOMMIT")
     
     with engine.connect() as conn:
         print("Dropping all tables...")
         
         # Drop all tables in public schema
-        conn.execute(text("""
-            DO $$ DECLARE
-                r RECORD;
-            BEGIN
-                FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
-                END LOOP;
-            END $$;
+        result = conn.execute(text("""
+            SELECT tablename FROM pg_tables WHERE schemaname = 'public'
         """))
+        tables = [row[0] for row in result]
         
-        # Drop all types
-        conn.execute(text("""
-            DO $$ DECLARE
-                r RECORD;
-            BEGIN
-                FOR r IN (SELECT typname FROM pg_type WHERE typnamespace = 'public'::regnamespace AND typtype = 'e') LOOP
-                    EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
-                END LOOP;
-            END $$;
+        for table in tables:
+            print(f"  Dropping table: {table}")
+            conn.execute(text(f'DROP TABLE IF EXISTS "{table}" CASCADE'))
+        
+        print("Dropping all enum types...")
+        
+        # Drop all enum types
+        result = conn.execute(text("""
+            SELECT t.typname
+            FROM pg_type t
+            JOIN pg_namespace n ON t.typnamespace = n.oid
+            WHERE n.nspname = 'public' AND t.typtype = 'e'
         """))
+        types = [row[0] for row in result]
         
-        # Drop alembic version table
-        conn.execute(text("DROP TABLE IF EXISTS alembic_version CASCADE"))
+        for type_name in types:
+            print(f"  Dropping type: {type_name}")
+            conn.execute(text(f'DROP TYPE IF EXISTS "{type_name}" CASCADE'))
         
-        conn.commit()
         print("Database reset complete!")
 
 if __name__ == "__main__":
