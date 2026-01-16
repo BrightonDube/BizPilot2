@@ -4,6 +4,7 @@ from app.models.base import BaseModel, TimestampMixin
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.organization import Organization
 from app.models.business import Business
+from app.models.department import Department
 from app.models.role import Role, Permission, DEFAULT_ROLES
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.product import Product, ProductStatus, ProductCategory
@@ -29,6 +30,10 @@ from app.models.pos_connection import POSConnection, POSProvider, POSConnectionS
 from app.models.session import Session
 from app.models.notification import Notification, NotificationType, NotificationPriority
 from app.models.favorite_product import FavoriteProduct
+from app.models.layby_config import LaybyConfig
+from app.models.layby import Layby, LaybyStatus, PaymentFrequency
+from app.models.layby_item import LaybyItem
+from app.models.layby_schedule import LaybySchedule, ScheduleStatus
 
 __all__ = [
     "BaseModel",
@@ -38,6 +43,7 @@ __all__ = [
     "SubscriptionStatus",
     "Organization",
     "Business",
+    "Department",
     "Role",
     "Permission",
     "DEFAULT_ROLES",
@@ -100,4 +106,12 @@ __all__ = [
     "NotificationPriority",
     # Favorite Product
     "FavoriteProduct",
+    # Layby
+    "LaybyConfig",
+    "Layby",
+    "LaybyStatus",
+    "PaymentFrequency",
+    "LaybyItem",
+    "LaybySchedule",
+    "ScheduleStatus",
 ]

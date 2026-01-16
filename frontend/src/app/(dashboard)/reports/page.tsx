@@ -28,6 +28,8 @@ import {
   StatCard,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
+import { RevenueTrendChart } from '@/components/charts/RevenueTrendChart';
+import { OrdersTrendChart } from '@/components/charts/OrdersTrendChart';
 
 interface ReportStats {
   total_revenue: number;
@@ -53,10 +55,30 @@ interface TopCustomer {
   total_spent: number;
 }
 
+interface TrendDataPoint {
+  date: string;
+  value: number;
+  label: string;
+}
+
+interface RevenueTrend {
+  data: TrendDataPoint[];
+  total: number;
+  average: number;
+}
+
+interface OrdersTrend {
+  data: TrendDataPoint[];
+  total: number;
+  average: number;
+}
+
 export default function ReportsPage() {
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
-  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
+  const [topCustomers, setTopCustomer] = useState<TopCustomer[]>([]);
+  const [revenueTrend, setRevenueTrend] = useState<RevenueTrend | null>(null);
+  const [ordersTrend, setOrdersTrend] = useState<OrdersTrend | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [dateRange, setDateRange] = useState('30d');
@@ -70,14 +92,18 @@ export default function ReportsPage() {
     setIsLoading(true);
     try {
       const direction = category === 'sales' ? 'inbound' : category === 'purchases' ? 'outbound' : undefined;
-      const [statsRes, productsRes, customersRes] = await Promise.all([
+      const [statsRes, productsRes, customersRes, revenueTrendRes, ordersTrendRes] = await Promise.all([
         apiClient.get('/reports/stats', { params: { range: dateRange, direction } }),
         apiClient.get('/reports/top-products', { params: { range: dateRange, limit: 5, direction } }),
         apiClient.get('/reports/top-customers', { params: { range: dateRange, limit: 5, direction } }),
+        apiClient.get('/reports/revenue-trend', { params: { range: dateRange, direction } }),
+        apiClient.get('/reports/orders-trend', { params: { range: dateRange, direction } }),
       ]);
       setStats(statsRes.data);
       setTopProducts(productsRes.data || []);
       setTopCustomers(customersRes.data || []);
+      setRevenueTrend(revenueTrendRes.data || { data: [], total: 0, average: 0 });
+      setOrdersTrend(ordersTrendRes.data || { data: [], total: 0, average: 0 });
     } catch (error) {
       // Use default values if API is not available
       setStats({
@@ -91,6 +117,8 @@ export default function ReportsPage() {
       });
       setTopProducts([]);
       setTopCustomers([]);
+      setRevenueTrend({ data: [], total: 0, average: 0 });
+      setOrdersTrend({ data: [], total: 0, average: 0 });
     } finally {
       setIsLoading(false);
     }
@@ -228,7 +256,7 @@ export default function ReportsPage() {
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Revenue Chart Placeholder */}
+            {/* Revenue Chart */}
             <Card className="bg-gray-800/50 border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -237,17 +265,11 @@ export default function ReportsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-gray-900/50 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Revenue chart visualization</p>
-                    <p className="text-sm">Coming soon</p>
-                  </div>
-                </div>
+                {revenueTrend && <RevenueTrendChart {...revenueTrend} />}
               </CardContent>
             </Card>
 
-            {/* Orders Chart Placeholder */}
+            {/* Orders Chart */}
             <Card className="bg-gray-800/50 border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -256,13 +278,7 @@ export default function ReportsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-gray-900/50 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Orders trend visualization</p>
-                    <p className="text-sm">Coming soon</p>
-                  </div>
-                </div>
+                {ordersTrend && <OrdersTrendChart {...ordersTrend} />}
               </CardContent>
             </Card>
           </div>

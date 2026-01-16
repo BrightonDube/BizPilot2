@@ -27,6 +27,7 @@ from app.api.sessions import router as sessions_router
 from app.api.notifications import router as notifications_router
 from app.api.favorites import router as favorites_router
 from app.api.scheduler import router as scheduler_router
+from app.api.departments import router as departments_router
 
 router = APIRouter()
 
@@ -55,6 +56,7 @@ router.include_router(roles_router)
 router.include_router(sessions_router)
 router.include_router(notifications_router)
 router.include_router(favorites_router)
+router.include_router(departments_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 

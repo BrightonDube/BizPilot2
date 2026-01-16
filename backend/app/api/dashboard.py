@@ -9,9 +9,8 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
-from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.product import Product, ProductStatus, ProductCategory
 from app.models.customer import Customer
 from app.models.order import Order
@@ -85,32 +84,15 @@ class DashboardResponse(BaseModel):
     inventory_status: List[InventoryStatus]
 
 
-def get_user_business_id(user: User, db: Session) -> str:
-    """Get the current business ID for a user."""
-    # Get user's primary business
-    business_user = db.query(BusinessUser).filter(
-        BusinessUser.user_id == user.id,
-        BusinessUser.status == BusinessUserStatus.ACTIVE
-    ).first()
-    
-    if not business_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No business found for user"
-        )
-    
-    return str(business_user.business_id)
-
-
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
     Get dashboard statistics for the current user's business.
     """
-    business_id = get_user_business_id(current_user, db)
     
     # Calculate date ranges
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -201,13 +183,13 @@ async def get_dashboard_stats(
 async def get_recent_orders(
     limit: int = 5,
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
     Get recent orders for the dashboard.
     Uses eager loading to avoid N+1 queries.
     """
-    business_id = get_user_business_id(current_user, db)
     
     # Eager load customer relationship to avoid N+1 queries
     from sqlalchemy.orm import joinedload
@@ -243,13 +225,13 @@ async def get_recent_orders(
 async def get_top_products(
     limit: int = 5,
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
     Get top selling products for the dashboard.
     Based on quantity in stock (as a proxy for popularity - in real app would use order data).
     """
-    business_id = get_user_business_id(current_user, db)
     
     # Get top products by quantity (simulating popularity)
     products = db.query(Product).filter(
@@ -274,13 +256,13 @@ async def get_top_products(
 async def get_revenue_by_month(
     months: int = 6,
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
     Get revenue data by month for charts.
     Optimized: Single query with GROUP BY instead of 2N queries.
     """
-    business_id = get_user_business_id(current_user, db)
     
     today = datetime.now()
     start_date = (today - relativedelta(months=months-1)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -321,12 +303,12 @@ async def get_revenue_by_month(
 @router.get("/products-by-category", response_model=List[ProductByCategory])
 async def get_products_by_category(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
     Get product distribution by category for pie chart.
     """
-    business_id = get_user_business_id(current_user, db)
     
     # Get products grouped by category
     products_with_category = db.query(
@@ -367,6 +349,7 @@ async def get_products_by_category(
 @router.get("/inventory-status", response_model=List[InventoryStatus])
 async def get_inventory_status(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
@@ -375,7 +358,6 @@ async def get_inventory_status(
     Note: Since inventory is a current snapshot (not historical), 
     we show the same current values for all days.
     """
-    business_id = get_user_business_id(current_user, db)
     
     # Single query for current inventory status (reduces 14 queries to 2)
     in_stock = db.query(func.coalesce(func.sum(Product.quantity), 0)).filter(
@@ -410,17 +392,18 @@ async def get_inventory_status(
 @router.get("", response_model=DashboardResponse)
 async def get_full_dashboard(
     current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """
     Get complete dashboard data including stats, recent orders, top products, and chart data.
     """
-    stats = await get_dashboard_stats(current_user, db)
-    recent_orders = await get_recent_orders(5, current_user, db)
-    top_products = await get_top_products(5, current_user, db)
-    revenue_by_month = await get_revenue_by_month(6, current_user, db)
-    products_by_category = await get_products_by_category(current_user, db)
-    inventory_status = await get_inventory_status(current_user, db)
+    stats = await get_dashboard_stats(current_user, business_id, db)
+    recent_orders = await get_recent_orders(5, current_user, business_id, db)
+    top_products = await get_top_products(5, current_user, business_id, db)
+    revenue_by_month = await get_revenue_by_month(6, current_user, business_id, db)
+    products_by_category = await get_products_by_category(current_user, business_id, db)
+    inventory_status = await get_inventory_status(current_user, business_id, db)
     
     return DashboardResponse(
         stats=stats,

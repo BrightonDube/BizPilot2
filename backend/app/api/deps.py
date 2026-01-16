@@ -144,10 +144,52 @@ def get_optional_user(
 
 
 async def get_current_business_id(
+    request: Request,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ) -> str:
-    """Get the current user's active business ID."""
+    """
+    Get the current user's active business ID.
+    
+    Superadmins can specify a business via X-Business-ID header to target
+    specific businesses. If not provided, defaults to the oldest business.
+    """
+    from app.models.business import Business
+    
+    # Superadmins can access all businesses
+    if current_user.is_superadmin:
+        # Check for X-Business-ID header to allow targeting specific business
+        requested_business_id = request.headers.get("X-Business-ID")
+        
+        if requested_business_id:
+            # Validate the requested business exists
+            business = db.query(Business).filter(
+                Business.id == requested_business_id,
+                Business.deleted_at.is_(None)
+            ).first()
+            
+            if not business:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Business with ID {requested_business_id} not found."
+                )
+            
+            return str(business.id)
+        
+        # Default: return the oldest available business
+        first_business = db.query(Business).filter(
+            Business.deleted_at.is_(None)
+        ).order_by(Business.created_at.asc()).first()
+        
+        if not first_business:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No businesses found in the system."
+            )
+        
+        return str(first_business.id)
+    
+    # Regular users need an active BusinessUser record
     business_user = db.query(BusinessUser).filter(
         BusinessUser.user_id == current_user.id,
         BusinessUser.status == BusinessUserStatus.ACTIVE

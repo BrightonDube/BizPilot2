@@ -2,6 +2,13 @@
 
 /**
  * Team Management page - Manage business users and roles.
+ * 
+ * Requirements:
+ * - 4.1: Display each team member's assigned department
+ * - 4.2: Display department name, color, and icon for each team member
+ * - 4.4: Provide a filter to show team members from specific departments
+ * - 4.5: Provide a search function that includes department names in the search criteria
+ * - 8.2: Allow viewing team members without department with "No Department" indicator
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,13 +17,11 @@ import {
   UserPlus,
   Shield,
   Mail,
-  MoreVertical,
   Edit,
   Trash2,
   Check,
   X,
   AlertTriangle,
-  Search,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -29,7 +34,16 @@ import {
   Select,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
+import { departmentApi } from '@/lib/department-api';
+import { DepartmentBadge } from '@/components/departments/DepartmentBadge';
+import { DepartmentFilter, NO_DEPARTMENT_VALUE } from '@/components/departments/DepartmentFilter';
+import type { DepartmentFilterState } from '@/components/departments/DepartmentFilter';
+import type { Department, DepartmentSummary } from '@/lib/types';
 
+/**
+ * BusinessUser interface with department fields.
+ * Requirements: 4.1, 4.2 - Display department information for team members
+ */
 interface BusinessUser {
   id: string;
   user_id: string;
@@ -41,6 +55,15 @@ interface BusinessUser {
   status: string;
   is_primary: boolean;
   created_at?: string;
+  /** Department ID if assigned */
+  department_id?: string | null;
+  /** Department details when joined */
+  department?: {
+    id: string;
+    name: string;
+    color: string | null;
+    icon: string | null;
+  } | null;
 }
 
 interface Role {
@@ -54,13 +77,18 @@ interface Role {
 export default function TeamPage() {
   const [users, setUsers] = useState<BusinessUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<BusinessUser | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Filter state for department filtering and search
+  // Requirements: 4.4, 4.5 - Department filter and search functionality
+  const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState('');
 
   // Invite form state
   const [inviteData, setInviteData] = useState({
@@ -68,25 +96,42 @@ export default function TeamPage() {
     first_name: '',
     last_name: '',
     role_id: '',
+    department_id: '',
   });
   const [isInviting, setIsInviting] = useState(false);
 
   // Edit form state
+  // Requirements: 3.5, 3.6 - Allow changing department assignment
   const [editData, setEditData] = useState({
     role_id: '',
     status: '',
+    department_id: '',
   });
   const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [usersRes, rolesRes] = await Promise.all([
+      // Fetch users, roles, and business data in parallel
+      const [usersRes, rolesRes, businessRes] = await Promise.all([
         apiClient.get('/business/users'),
         apiClient.get('/roles'),
+        apiClient.get('/business/current'),
       ]);
       setUsers(usersRes.data.items || []);
       setRoles(rolesRes.data.items || []);
+      
+      // Fetch departments if we have a business ID
+      const businessId = businessRes.data?.id;
+      if (businessId) {
+        try {
+          const departmentsData = await departmentApi.getDepartments(businessId);
+          setDepartments(departmentsData);
+        } catch {
+          // Departments are optional, don't fail if fetch fails
+          console.warn('Failed to load departments');
+        }
+      }
     } catch {
       setErrorMessage('Failed to load team data');
     } finally {
@@ -120,10 +165,15 @@ export default function TeamPage() {
 
     setIsInviting(true);
     try {
-      await apiClient.post('/business/users/invite', inviteData);
+      // Prepare invite payload, converting empty department_id to null
+      const payload = {
+        ...inviteData,
+        department_id: inviteData.department_id || null,
+      };
+      await apiClient.post('/business/users/invite', payload);
       setSuccessMessage('User invited successfully');
       setShowInviteModal(false);
-      setInviteData({ email: '', first_name: '', last_name: '', role_id: '' });
+      setInviteData({ email: '', first_name: '', last_name: '', role_id: '', department_id: '' });
       await fetchData();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } };
@@ -135,9 +185,12 @@ export default function TeamPage() {
 
   const handleEdit = (user: BusinessUser) => {
     setSelectedUser(user);
+    // Initialize edit form with current values including department
+    // Requirements: 3.5, 3.6 - Allow changing department assignment
     setEditData({
       role_id: user.role_id || '',
       status: user.status,
+      department_id: user.department_id || '',
     });
     setShowEditModal(true);
   };
@@ -147,7 +200,13 @@ export default function TeamPage() {
 
     setIsUpdating(true);
     try {
-      await apiClient.put(`/business/users/${selectedUser.user_id}`, editData);
+      // Prepare update payload, converting empty department_id to null
+      // Requirements: 3.5, 3.6 - Allow changing or clearing department assignment
+      const payload = {
+        ...editData,
+        department_id: editData.department_id || null,
+      };
+      await apiClient.put(`/business/users/${selectedUser.user_id}`, payload);
       setSuccessMessage('User updated successfully');
       setShowEditModal(false);
       setSelectedUser(null);
@@ -175,12 +234,72 @@ export default function TeamPage() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.first_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (user.last_name?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-  );
+  /**
+   * Filter users based on department and search criteria.
+   * Requirements:
+   * - 4.4: Filter by specific department
+   * - 4.5: Search includes department names
+   * - 8.2: Handle team members without departments
+   */
+  const filteredUsers = users.filter((user) => {
+    // Department filter
+    // - null: show all users
+    // - NO_DEPARTMENT_VALUE: show only users without a department
+    // - UUID: show only users in that specific department
+    if (departmentFilter !== null) {
+      if (departmentFilter === NO_DEPARTMENT_VALUE) {
+        // Show only users without a department
+        if (user.department_id) {
+          return false;
+        }
+      } else {
+        // Show only users in the selected department
+        if (user.department_id !== departmentFilter) {
+          return false;
+        }
+      }
+    }
+
+    // Search filter - search by name, email, and department name
+    if (searchFilter) {
+      const searchLower = searchFilter.toLowerCase();
+      const matchesEmail = user.email.toLowerCase().includes(searchLower);
+      const matchesFirstName = (user.first_name?.toLowerCase() || '').includes(searchLower);
+      const matchesLastName = (user.last_name?.toLowerCase() || '').includes(searchLower);
+      const matchesDepartment = (user.department?.name?.toLowerCase() || '').includes(searchLower);
+      
+      if (!matchesEmail && !matchesFirstName && !matchesLastName && !matchesDepartment) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  /**
+   * Handle filter changes from DepartmentFilter component.
+   * Requirements: 4.4, 4.5
+   */
+  const handleFilterChange = useCallback((filter: DepartmentFilterState) => {
+    setDepartmentFilter(filter.departmentId);
+    setSearchFilter(filter.search);
+  }, []);
+
+  /**
+   * Convert department data to DepartmentSummary format for DepartmentBadge.
+   * Requirements: 4.2 - Display department name, color, and icon
+   */
+  const getDepartmentSummary = (user: BusinessUser): DepartmentSummary | null => {
+    if (!user.department) {
+      return null;
+    }
+    return {
+      id: user.department.id,
+      name: user.department.name,
+      color: user.department.color,
+      icon: user.department.icon,
+    };
+  };
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, { bg: string; text: string }> = {
@@ -225,16 +344,13 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input
-          placeholder="Search team members..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      {/* Department Filter and Search */}
+      {/* Requirements: 4.4, 4.5 - Department filter and search functionality */}
+      <DepartmentFilter
+        departments={departments}
+        onFilterChange={handleFilterChange}
+        searchPlaceholder="Search by name, email, or department..."
+      />
 
       {/* Team Members List */}
       <Card className="bg-gray-800/50 border-gray-700">
@@ -260,6 +376,7 @@ export default function TeamPage() {
                 <thead>
                   <tr className="border-b border-gray-700">
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Member</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Department</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Role</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Status</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Joined</th>
@@ -290,6 +407,13 @@ export default function TeamPage() {
                             </span>
                           )}
                         </div>
+                      </td>
+                      {/* Department column - Requirements: 4.1, 4.2, 8.2 */}
+                      <td className="py-3 px-4">
+                        <DepartmentBadge 
+                          department={getDepartmentSummary(user)} 
+                          size="sm"
+                        />
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
@@ -392,6 +516,23 @@ export default function TeamPage() {
                   ))}
                 </Select>
               </div>
+              <div>
+                <label htmlFor="invite-department" className="block text-sm font-medium text-gray-400 mb-1">
+                  Department
+                </label>
+                <Select
+                  id="invite-department"
+                  value={inviteData.department_id}
+                  onChange={(e) => setInviteData({ ...inviteData, department_id: e.target.value })}
+                >
+                  <option value="">No Department</option>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" onClick={() => setShowInviteModal(false)}>
                   Cancel
@@ -451,6 +592,24 @@ export default function TeamPage() {
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
+                </Select>
+              </div>
+              {/* Department dropdown - Requirements: 3.5, 3.6 */}
+              <div>
+                <label htmlFor="edit-department" className="block text-sm font-medium text-gray-400 mb-1">
+                  Department
+                </label>
+                <Select
+                  id="edit-department"
+                  value={editData.department_id}
+                  onChange={(e) => setEditData({ ...editData, department_id: e.target.value })}
+                >
+                  <option value="">No Department</option>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div className="flex justify-end gap-3 pt-4">

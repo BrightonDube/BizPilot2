@@ -232,6 +232,15 @@ async def setup_business(
         )
         db.add(business_user)
         
+        # Create default "General" department
+        from app.models.department import Department
+        default_department = Department(
+            business_id=business.id,
+            name="General",
+            description="Default department for general team members",
+        )
+        db.add(default_department)
+        
         # Activate user if still pending
         from app.models.user import UserStatus
         if current_user.status == UserStatus.PENDING:
@@ -397,6 +406,8 @@ class BusinessUserResponse(BaseModel):
     last_name: Optional[str] = None
     role_id: Optional[str] = None
     role_name: Optional[str] = None
+    department_id: Optional[str] = None
+    department: Optional[dict] = None  # Joined department data
     status: str
     is_primary: bool
     created_at: Optional[str] = None
@@ -415,6 +426,7 @@ class InviteUserRequest(BaseModel):
     """Request to invite a user to the business."""
     email: str
     role_id: str
+    department_id: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
 
@@ -422,6 +434,7 @@ class InviteUserRequest(BaseModel):
 class UpdateBusinessUserRequest(BaseModel):
     """Request to update a business user."""
     role_id: Optional[str] = None
+    department_id: Optional[str] = None
     status: Optional[str] = None
 
 
@@ -432,11 +445,15 @@ async def list_business_users(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
     status_filter: Optional[str] = Query(None, alias="status"),
+    department_id: Optional[str] = Query(None, description="Filter by department ID"),
+    search: Optional[str] = Query(None, description="Search by name, email, or department name"),
     current_user: User = Depends(has_permission("users:view")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
     """List all users in the current business."""
+    from app.models.department import Department
+    
     query = db.query(BusinessUser).filter(
         BusinessUser.business_id == business_id,
         BusinessUser.deleted_at.is_(None),
@@ -449,6 +466,22 @@ async def list_business_users(
         except ValueError:
             pass
     
+    # Filter by department
+    if department_id:
+        query = query.filter(BusinessUser.department_id == department_id)
+    
+    # Search by name, email, or department name
+    if search:
+        search_term = f"%{search}%"
+        query = query.join(User, BusinessUser.user_id == User.id).outerjoin(
+            Department, BusinessUser.department_id == Department.id
+        ).filter(
+            (User.first_name.ilike(search_term)) |
+            (User.last_name.ilike(search_term)) |
+            (User.email.ilike(search_term)) |
+            (Department.name.ilike(search_term))
+        )
+    
     total = query.count()
     offset = (page - 1) * per_page
     business_users = query.offset(offset).limit(per_page).all()
@@ -457,6 +490,18 @@ async def list_business_users(
     for bu in business_users:
         user = db.query(User).filter(User.id == bu.user_id).first()
         role = db.query(Role).filter(Role.id == bu.role_id).first() if bu.role_id else None
+        department = db.query(Department).filter(Department.id == bu.department_id).first() if bu.department_id else None
+        
+        department_data = None
+        if department:
+            department_data = {
+                "id": str(department.id),
+                "name": department.name,
+                "description": department.description,
+                "color": department.color,
+                "icon": department.icon,
+            }
+        
         items.append(BusinessUserResponse(
             id=str(bu.id),
             user_id=str(bu.user_id),
@@ -465,6 +510,8 @@ async def list_business_users(
             last_name=user.last_name if user else None,
             role_id=str(bu.role_id) if bu.role_id else None,
             role_name=role.name if role else None,
+            department_id=str(bu.department_id) if bu.department_id else None,
+            department=department_data,
             status=bu.status.value,
             is_primary=bu.is_primary,
             created_at=bu.created_at.isoformat() if bu.created_at else None,
@@ -487,6 +534,8 @@ async def invite_user_to_business(
     db: Session = Depends(get_db),
 ):
     """Invite a user to join the business."""
+    from app.models.department import Department
+    
     # Check if role exists and belongs to this business
     role = db.query(Role).filter(Role.id == data.role_id).first()
     if not role:
@@ -494,6 +543,14 @@ async def invite_user_to_business(
     
     if not role.is_system and str(role.business_id) != business_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
+    
+    # Validate department if provided
+    if data.department_id:
+        department = db.query(Department).filter(Department.id == data.department_id).first()
+        if not department:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
+        if str(department.business_id) != business_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use departments from other businesses")
     
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == data.email).first()
@@ -517,12 +574,26 @@ async def invite_user_to_business(
             user_id=existing_user.id,
             business_id=business_id,
             role_id=data.role_id,
+            department_id=data.department_id,
             status=BusinessUserStatus.ACTIVE,
             is_primary=False,
         )
         db.add(business_user)
         db.commit()
         db.refresh(business_user)
+        
+        # Get department data if assigned
+        department_data = None
+        if business_user.department_id:
+            department = db.query(Department).filter(Department.id == business_user.department_id).first()
+            if department:
+                department_data = {
+                    "id": str(department.id),
+                    "name": department.name,
+                    "description": department.description,
+                    "color": department.color,
+                    "icon": department.icon,
+                }
         
         return BusinessUserResponse(
             id=str(business_user.id),
@@ -532,6 +603,8 @@ async def invite_user_to_business(
             last_name=existing_user.last_name,
             role_id=str(business_user.role_id) if business_user.role_id else None,
             role_name=role.name,
+            department_id=str(business_user.department_id) if business_user.department_id else None,
+            department=department_data,
             status=business_user.status.value,
             is_primary=business_user.is_primary,
             created_at=business_user.created_at.isoformat() if business_user.created_at else None,
@@ -556,12 +629,26 @@ async def invite_user_to_business(
             user_id=new_user.id,
             business_id=business_id,
             role_id=data.role_id,
+            department_id=data.department_id,
             status=BusinessUserStatus.INVITED,
             is_primary=False,
         )
         db.add(business_user)
         db.commit()
         db.refresh(business_user)
+        
+        # Get department data if assigned
+        department_data = None
+        if business_user.department_id:
+            department = db.query(Department).filter(Department.id == business_user.department_id).first()
+            if department:
+                department_data = {
+                    "id": str(department.id),
+                    "name": department.name,
+                    "description": department.description,
+                    "color": department.color,
+                    "icon": department.icon,
+                }
         
         # TODO: Send invitation email
         
@@ -573,6 +660,8 @@ async def invite_user_to_business(
             last_name=new_user.last_name,
             role_id=str(business_user.role_id) if business_user.role_id else None,
             role_name=role.name,
+            department_id=str(business_user.department_id) if business_user.department_id else None,
+            department=department_data,
             status=business_user.status.value,
             is_primary=business_user.is_primary,
             created_at=business_user.created_at.isoformat() if business_user.created_at else None,
@@ -587,6 +676,8 @@ async def get_business_user(
     db: Session = Depends(get_db),
 ):
     """Get a specific user in the business."""
+    from app.models.department import Department
+    
     business_user = db.query(BusinessUser).filter(
         BusinessUser.user_id == user_id,
         BusinessUser.business_id == business_id,
@@ -599,6 +690,19 @@ async def get_business_user(
     user = db.query(User).filter(User.id == business_user.user_id).first()
     role = db.query(Role).filter(Role.id == business_user.role_id).first() if business_user.role_id else None
     
+    # Get department data if assigned
+    department_data = None
+    if business_user.department_id:
+        department = db.query(Department).filter(Department.id == business_user.department_id).first()
+        if department:
+            department_data = {
+                "id": str(department.id),
+                "name": department.name,
+                "description": department.description,
+                "color": department.color,
+                "icon": department.icon,
+            }
+    
     return BusinessUserResponse(
         id=str(business_user.id),
         user_id=str(business_user.user_id),
@@ -607,6 +711,8 @@ async def get_business_user(
         last_name=user.last_name if user else None,
         role_id=str(business_user.role_id) if business_user.role_id else None,
         role_name=role.name if role else None,
+        department_id=str(business_user.department_id) if business_user.department_id else None,
+        department=department_data,
         status=business_user.status.value,
         is_primary=business_user.is_primary,
         created_at=business_user.created_at.isoformat() if business_user.created_at else None,
@@ -622,6 +728,8 @@ async def update_business_user(
     db: Session = Depends(get_db),
 ):
     """Update a user's role or status in the business."""
+    from app.models.department import Department
+    
     business_user = db.query(BusinessUser).filter(
         BusinessUser.user_id == user_id,
         BusinessUser.business_id == business_id,
@@ -652,6 +760,20 @@ async def update_business_user(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
         business_user.role_id = data.role_id
     
+    # Handle department reassignment
+    if data.department_id is not None:
+        if data.department_id == "":
+            # Allow clearing department assignment
+            business_user.department_id = None
+        else:
+            # Validate department exists and belongs to this business
+            department = db.query(Department).filter(Department.id == data.department_id).first()
+            if not department:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
+            if str(department.business_id) != business_id:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use departments from other businesses")
+            business_user.department_id = data.department_id
+    
     if data.status:
         try:
             business_user.status = BusinessUserStatus(data.status)
@@ -664,6 +786,19 @@ async def update_business_user(
     user = db.query(User).filter(User.id == business_user.user_id).first()
     role = db.query(Role).filter(Role.id == business_user.role_id).first() if business_user.role_id else None
     
+    # Get department data if assigned
+    department_data = None
+    if business_user.department_id:
+        department = db.query(Department).filter(Department.id == business_user.department_id).first()
+        if department:
+            department_data = {
+                "id": str(department.id),
+                "name": department.name,
+                "description": department.description,
+                "color": department.color,
+                "icon": department.icon,
+            }
+    
     return BusinessUserResponse(
         id=str(business_user.id),
         user_id=str(business_user.user_id),
@@ -672,6 +807,8 @@ async def update_business_user(
         last_name=user.last_name if user else None,
         role_id=str(business_user.role_id) if business_user.role_id else None,
         role_name=role.name if role else None,
+        department_id=str(business_user.department_id) if business_user.department_id else None,
+        department=department_data,
         status=business_user.status.value,
         is_primary=business_user.is_primary,
         created_at=business_user.created_at.isoformat() if business_user.created_at else None,

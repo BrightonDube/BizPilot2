@@ -488,7 +488,7 @@ async def test_get_current_business_id_returns_id(monkeypatch):
     q.filter.return_value = q
     q.first.return_value = SimpleNamespace(business_id="b1")
 
-    biz_id = await deps.get_current_business_id(current_user=SimpleNamespace(id="u1"), db=db)
+    biz_id = await deps.get_current_business_id(current_user=SimpleNamespace(id="u1", is_superadmin=False), db=db)
     assert biz_id == "b1"
 
 
