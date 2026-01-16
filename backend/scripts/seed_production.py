@@ -55,7 +55,7 @@ def seed_subscription_tiers(db: Session) -> list[str]:
 def seed_default_roles(db: Session) -> list[str]:
     """Seed default user roles."""
     created = []
-    for role_data in DEFAULT_ROLES:
+    for role_data in DEFAULT_ROLES.values():
         existing = db.query(Role).filter(Role.name == role_data["name"]).first()
         if not existing:
             role = Role(**role_data)
