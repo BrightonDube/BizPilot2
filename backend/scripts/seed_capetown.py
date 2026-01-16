@@ -53,17 +53,20 @@ from app.models.inventory import InventoryItem, InventoryTransaction, Transactio
 from app.models.supplier import Supplier
 from app.models.department import Department
 from app.models.time_entry import TimeEntry, TimeEntryStatus
-from app.models.session import Session as POSSession, SessionStatus
+# POS sessions not implemented yet
+# from app.models.session import Session as POSSession, SessionStatus
 from app.models.notification import Notification, NotificationType, NotificationPriority
 from app.models.favorite_product import FavoriteProduct
-from app.models.production import ProductionOrder, ProductionOrderStatus
+from app.models.production import ProductionOrder, ProductionStatus
 from app.models.layby import Layby, LaybyStatus
 from app.models.layby_item import LaybyItem
-from app.models.layby_payment import LaybyPayment, LaybyPaymentStatus
+from app.models.layby_payment import LaybyPayment, PaymentStatus as LaybyPaymentStatus
 from app.models.layby_schedule import LaybySchedule
 from app.models.layby_config import LaybyConfig
+from app.models.layby_audit import LaybyAudit  # Import for SQLAlchemy
+from app.models.layby_notification import LaybyNotification  # Import for SQLAlchemy
 from app.models.ai_conversation import AIConversation
-from app.models.ai_message import AIMessage, MessageRole
+from app.models.ai_message import AIMessage
 
 
 def clear_all_data(db: Session):
@@ -805,42 +808,9 @@ def create_time_entries(db: Session, business: Business, user: User, departments
 
 
 def create_sessions(db: Session, business: Business, user: User) -> list:
-    """Create POS sessions."""
-    print("Creating POS sessions...")
-    
-    sessions = []
-    # Create 5 recent sessions
-    for i in range(5):
-        session_date = datetime.now() - timedelta(days=i)
-        opened_at = session_date.replace(hour=8, minute=0)
-        closed_at = session_date.replace(hour=18, minute=0) if i > 0 else None
-        
-        opening_cash = Decimal("500.00")
-        cash_sales = Decimal(str(random.randint(1000, 3000)))
-        card_sales = Decimal(str(random.randint(2000, 5000)))
-        
-        session = POSSession(
-            business_id=business.id,
-            user_id=user.id,
-            status=SessionStatus.CLOSED if i > 0 else SessionStatus.OPEN,
-            opened_at=opened_at,
-            closed_at=closed_at,
-            opening_cash=opening_cash,
-            closing_cash=opening_cash + cash_sales if i > 0 else None,
-            expected_cash=opening_cash + cash_sales if i > 0 else None,
-            cash_sales=cash_sales if i > 0 else Decimal("0"),
-            card_sales=card_sales if i > 0 else Decimal("0"),
-            total_sales=cash_sales + card_sales if i > 0 else Decimal("0"),
-        )
-        db.add(session)
-        sessions.append(session)
-    
-    db.commit()
-    for sess in sessions:
-        db.refresh(sess)
-    
-    print(f"  ✓ POS sessions: {len(sessions)}")
-    return sessions
+    """Create POS sessions - SKIPPED (not implemented yet)."""
+    print("Skipping POS sessions (not implemented)...")
+    return []
 
 
 def create_notifications(db: Session, business: Business, user: User) -> list:
@@ -905,18 +875,18 @@ def create_production_orders(db: Session, business: Business, products: list) ->
         product = random.choice(products)
         quantity = random.randint(50, 200)
         
-        statuses = [ProductionOrderStatus.PENDING, ProductionOrderStatus.IN_PROGRESS, ProductionOrderStatus.COMPLETED]
+        statuses = [ProductionStatus.PENDING, ProductionStatus.IN_PROGRESS, ProductionStatus.COMPLETED]
         status = statuses[i % 3]
         
         prod_order = ProductionOrder(
             business_id=business.id,
             product_id=product.id,
-            batch_number=f"BATCH-{1000 + i}",
-            quantity_planned=quantity,
-            quantity_produced=quantity if status == ProductionOrderStatus.COMPLETED else 0,
+            order_number=f"BATCH-{1000 + i}",
+            quantity_to_produce=quantity,
+            quantity_produced=quantity if status == ProductionStatus.COMPLETED else 0,
             status=status,
-            start_date=datetime.now() - timedelta(days=7-i),
-            end_date=datetime.now() - timedelta(days=1) if status == ProductionOrderStatus.COMPLETED else None,
+            started_at=datetime.now() - timedelta(days=7-i),
+            completed_at=datetime.now() - timedelta(days=1) if status == ProductionStatus.COMPLETED else None,
             notes=f"Production batch for {product.name}",
         )
         db.add(prod_order)
@@ -1038,14 +1008,14 @@ def create_ai_conversations(db: Session, user: User) -> list:
         
         # Add messages
         messages_data = [
-            {"role": MessageRole.USER, "content": "What are my top selling products this month?"},
-            {"role": MessageRole.ASSISTANT, "content": "Based on your sales data, your top 3 selling products this month are: 1) Coca-Cola (2L) with 45 units sold, 2) White Bread (700g) with 38 units sold, and 3) Full Cream Milk (2L) with 32 units sold."},
+            {"is_user": True, "content": "What are my top selling products this month?"},
+            {"is_user": False, "content": "Based on your sales data, your top 3 selling products this month are: 1) Coca-Cola (2L) with 45 units sold, 2) White Bread (700g) with 38 units sold, and 3) Full Cream Milk (2L) with 32 units sold."},
         ]
         
         for msg_data in messages_data:
             msg = AIMessage(
                 conversation_id=conv.id,
-                role=msg_data["role"],
+                is_user=msg_data["is_user"],
                 content=msg_data["content"],
             )
             db.add(msg)
@@ -1119,9 +1089,11 @@ def main():
 
         print("\n🔐 Superadmin Login (BizPilot platform admin):")
         print("   Email: admin@bizpilot.co.za")
-        print(f"   Password: {superadmin_password}")
-        if not os.getenv("BIZPILOT_SUPERADMIN_PASSWORD"):
-            print("   NOTE: Password was generated. Set BIZPILOT_SUPERADMIN_PASSWORD to control it.")
+        if os.getenv("BIZPILOT_SUPERADMIN_PASSWORD"):
+            print("   Password: (from BIZPILOT_SUPERADMIN_PASSWORD env var)")
+        else:
+            print(f"   Password: {superadmin_password}")
+            print("   NOTE: Password was auto-generated. Set BIZPILOT_SUPERADMIN_PASSWORD to control it.")
         print(f"\n🏢 Business: {business.name}")
         print("   Location: Cape Town, Western Cape")
         print("   Currency: ZAR | VAT: 15%")
