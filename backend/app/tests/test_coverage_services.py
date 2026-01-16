@@ -509,6 +509,7 @@ async def test_get_current_business_id_superadmin_fallback(monkeypatch):
     # Create mock for Business query (returns first business)
     first_business = SimpleNamespace(id="first-business-id")
     business_query = MagicMock()
+    business_query.filter.return_value = business_query
     business_query.order_by.return_value = business_query
     business_query.first.return_value = first_business
 
@@ -527,6 +528,8 @@ async def test_get_current_business_id_superadmin_fallback(monkeypatch):
     biz_id = await deps.get_current_business_id(current_user=superadmin_user, db=db)
     
     assert biz_id == "first-business-id"
+    # Verify that filter was called (filtering out deleted businesses)
+    business_query.filter.assert_called_once()
     # Verify that order_by was called (ensuring deterministic ordering)
     business_query.order_by.assert_called_once()
 
@@ -547,6 +550,7 @@ async def test_get_current_business_id_superadmin_no_business_raises(monkeypatch
 
     # Create mock for Business query (returns None - no businesses)
     business_query = MagicMock()
+    business_query.filter.return_value = business_query
     business_query.order_by.return_value = business_query
     business_query.first.return_value = None
 

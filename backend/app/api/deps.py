@@ -159,6 +159,7 @@ async def get_current_business_id(
         if current_user.is_superadmin:
             first_business = (
                 db.query(Business)
+                .filter(Business.deleted_at.is_(None))
                 .order_by(Business.created_at.asc())
                 .first()
             )
