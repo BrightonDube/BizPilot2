@@ -76,7 +76,7 @@ interface OrdersTrend {
 export default function ReportsPage() {
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
-  const [topCustomers, setTopCustomer] = useState<TopCustomer[]>([]);
+  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
   const [revenueTrend, setRevenueTrend] = useState<RevenueTrend | null>(null);
   const [ordersTrend, setOrdersTrend] = useState<OrdersTrend | null>(null);
   const [isLoading, setIsLoading] = useState(true);
