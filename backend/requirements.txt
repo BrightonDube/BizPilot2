@@ -52,3 +52,5 @@ slowapi==0.1.9
 limits==5.6.0
 openpyxl==3.1.5
 user-agents==2.2.0
+hypothesis==6.122.3
+apscheduler==3.10.4

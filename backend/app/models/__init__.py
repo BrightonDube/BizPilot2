@@ -28,6 +28,7 @@ from app.models.time_entry import TimeEntry, TimeEntryType, TimeEntryStatus
 from app.models.pos_connection import POSConnection, POSProvider, POSConnectionStatus, POSSyncLog
 from app.models.session import Session
 from app.models.notification import Notification, NotificationType, NotificationPriority
+from app.models.favorite_product import FavoriteProduct
 
 __all__ = [
     "BaseModel",
@@ -97,4 +98,6 @@ __all__ = [
     "Notification",
     "NotificationType",
     "NotificationPriority",
+    # Favorite Product
+    "FavoriteProduct",
 ]
