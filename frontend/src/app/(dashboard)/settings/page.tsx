@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Settings as SettingsIcon,
   User,
+  Users,
   Building2,
   Bell,
   Shield,
@@ -51,8 +52,9 @@ import { CurrencySelector } from '@/components/common/CurrencySelector';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { useTheme } from '@/components/common/ThemeProvider';
 import { subscriptionApi, SubscriptionTier, UserSubscription } from '@/lib/subscription-api';
+import { DepartmentManagement } from '@/components/departments';
 
-type SettingsTab = 'profile' | 'business' | 'ai' | 'notifications' | 'security' | 'billing' | 'appearance';
+type SettingsTab = 'profile' | 'business' | 'departments' | 'ai' | 'notifications' | 'security' | 'billing' | 'appearance';
 
 type AISharingLevel =
   | 'none'
@@ -74,6 +76,7 @@ interface TabConfig {
 const tabs: TabConfig[] = [
   { id: 'profile', name: 'Profile', icon: <User className="w-4 h-4" /> },
   { id: 'business', name: 'Business', icon: <Building2 className="w-4 h-4" /> },
+  { id: 'departments', name: 'Departments', icon: <Users className="w-4 h-4" /> },
   { id: 'ai', name: 'AI', icon: <Sparkles className="w-4 h-4" /> },
   { id: 'notifications', name: 'Notifications', icon: <Bell className="w-4 h-4" /> },
   { id: 'security', name: 'Security', icon: <Shield className="w-4 h-4" /> },
@@ -639,6 +642,11 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Departments Settings */}
+          {activeTab === 'departments' && user?.business_id && (
+            <DepartmentManagement businessId={user.business_id} />
           )}
 
           {/* AI Settings */}
