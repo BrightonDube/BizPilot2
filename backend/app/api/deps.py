@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User, UserStatus
+from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.services.auth_service import AuthService
 
@@ -154,6 +155,15 @@ async def get_current_business_id(
     ).first()
     
     if not business_user:
+        # Superadmins can access any business even without a BusinessUser record
+        if current_user.is_superadmin:
+            first_business = (
+                db.query(Business)
+                .order_by(Business.created_at.asc())
+                .first()
+            )
+            if first_business:
+                return str(first_business.id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No business found for user. Please create or join a business first."

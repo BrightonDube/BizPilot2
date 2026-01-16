@@ -473,7 +473,7 @@ async def test_get_current_business_id_raises_when_missing(monkeypatch):
     q.first.return_value = None
 
     with pytest.raises(Exception):
-        await deps.get_current_business_id(current_user=SimpleNamespace(id="u1"), db=db)
+        await deps.get_current_business_id(current_user=SimpleNamespace(id="u1", is_superadmin=False), db=db)
 
 
 @pytest.mark.asyncio
@@ -488,8 +488,82 @@ async def test_get_current_business_id_returns_id(monkeypatch):
     q.filter.return_value = q
     q.first.return_value = SimpleNamespace(business_id="b1")
 
-    biz_id = await deps.get_current_business_id(current_user=SimpleNamespace(id="u1"), db=db)
+    biz_id = await deps.get_current_business_id(current_user=SimpleNamespace(id="u1", is_superadmin=False), db=db)
     assert biz_id == "b1"
+
+
+@pytest.mark.asyncio
+async def test_get_current_business_id_superadmin_fallback(monkeypatch):
+    """Test that superadmin without BusinessUser record gets first business ordered by created_at."""
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+
+    import app.api.deps as deps
+    from app.models.business_user import BusinessUser
+    from app.models.business import Business
+
+    # Create mock for BusinessUser query (returns None)
+    business_user_query = MagicMock()
+    business_user_query.filter.return_value = business_user_query
+    business_user_query.first.return_value = None
+
+    # Create mock for Business query (returns first business)
+    first_business = SimpleNamespace(id="first-business-id")
+    business_query = MagicMock()
+    business_query.order_by.return_value = business_query
+    business_query.first.return_value = first_business
+
+    # Set up db.query to return different mocks based on model
+    def query_side_effect(model):
+        if model is BusinessUser:
+            return business_user_query
+        elif model is Business:
+            return business_query
+        return MagicMock()
+
+    db = MagicMock()
+    db.query.side_effect = query_side_effect
+
+    superadmin_user = SimpleNamespace(id="u1", is_superadmin=True)
+    biz_id = await deps.get_current_business_id(current_user=superadmin_user, db=db)
+    
+    assert biz_id == "first-business-id"
+    # Verify that order_by was called (ensuring deterministic ordering)
+    business_query.order_by.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_current_business_id_superadmin_no_business_raises(monkeypatch):
+    """Test that superadmin without BusinessUser record and no businesses raises exception."""
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+
+    import app.api.deps as deps
+    from app.models.business_user import BusinessUser
+    from app.models.business import Business
+
+    # Create mock for BusinessUser query (returns None)
+    business_user_query = MagicMock()
+    business_user_query.filter.return_value = business_user_query
+    business_user_query.first.return_value = None
+
+    # Create mock for Business query (returns None - no businesses)
+    business_query = MagicMock()
+    business_query.order_by.return_value = business_query
+    business_query.first.return_value = None
+
+    def query_side_effect(model):
+        if model is BusinessUser:
+            return business_user_query
+        elif model is Business:
+            return business_query
+        return MagicMock()
+
+    db = MagicMock()
+    db.query.side_effect = query_side_effect
+
+    superadmin_user = SimpleNamespace(id="u1", is_superadmin=True)
+    
+    with pytest.raises(Exception):
+        await deps.get_current_business_id(current_user=superadmin_user, db=db)
 
 
 @pytest.mark.asyncio
