@@ -100,7 +100,7 @@ def clear_auth_cookies(response: Response) -> None:
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit(REGISTER_RATE_LIMIT)
+# @limiter.limit(REGISTER_RATE_LIMIT)  # Temporarily disabled for debugging
 async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user."""
     auth_service = AuthService(db)
@@ -158,8 +158,123 @@ The BizPilot Team
     )
 
 
+@router.get("/test-auth-components")
+async def test_auth_components():
+    """Test individual authentication components to isolate the issue."""
+    try:
+        # Test 1: Basic imports
+        from app.core.security import get_password_hash, verify_password
+        from app.core.security import create_access_token
+        
+        # Test 2: Password hashing
+        test_password = "test123"
+        hashed = get_password_hash(test_password)
+        verified = verify_password(test_password, hashed)
+        
+        # Test 3: JWT token creation
+        test_token = create_access_token(data={"sub": "test-user"})
+        
+        return {
+            "status": "success",
+            "tests": {
+                "imports": "ok",
+                "password_hash": "ok" if verified else "failed",
+                "jwt_creation": "ok" if test_token else "failed",
+                "token_length": len(test_token) if test_token else 0
+            }
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
+@router.get("/test-db-query")
+async def test_db_query(db: Session = Depends(get_db)):
+    """Test database connection and user query."""
+    try:
+        from app.models.user import User
+        
+        # Test 1: Simple count query
+        user_count = db.query(User).count()
+        
+        # Test 2: Try to get first user (if any)
+        first_user = db.query(User).first()
+        user_info = None
+        if first_user:
+            user_info = {
+                "id": str(first_user.id),
+                "email": first_user.email,
+                "has_password": first_user.hashed_password is not None,
+                "status": first_user.status.value if first_user.status else None,
+            }
+        
+        return {
+            "status": "success",
+            "tests": {
+                "db_connection": "ok",
+                "user_count": user_count,
+                "first_user": user_info
+            }
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
+@router.post("/test-login")
+async def test_login(
+    request: Request,
+    credentials: UserLogin,
+    db: Session = Depends(get_db),
+):
+    """Debug endpoint to test login and capture exact errors."""
+    import traceback
+    try:
+        auth_service = AuthService(db)
+        
+        # Step 1: Try to get user
+        user = auth_service.get_user_by_email(credentials.email)
+        if not user:
+            return {"status": "error", "step": "get_user", "error": "User not found"}
+        
+        # Step 2: Check password
+        if not user.hashed_password:
+            return {"status": "error", "step": "check_password", "error": "No password set (OAuth user)"}
+        
+        password_ok = verify_password(credentials.password, user.hashed_password)
+        if not password_ok:
+            return {"status": "error", "step": "verify_password", "error": "Password mismatch"}
+        
+        # Step 3: Create tokens
+        access_token = create_access_token(data={"sub": str(user.id)})
+        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+        
+        return {
+            "status": "success",
+            "user_id": str(user.id),
+            "email": user.email,
+            "access_token_length": len(access_token),
+            "refresh_token_length": len(refresh_token),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "step": "exception",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
 @router.post("/login", response_model=Token)
-@limiter.limit(AUTH_RATE_LIMIT)
+# @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
 async def login(
     request: Request,
     credentials: UserLogin,
@@ -303,7 +418,7 @@ async def verify_email(data: EmailVerification, db: Session = Depends(get_db)):
 
 
 @router.post("/forgot-password")
-@limiter.limit(PASSWORD_RESET_RATE_LIMIT)
+# @limiter.limit(PASSWORD_RESET_RATE_LIMIT)  # Temporarily disabled for debugging
 async def forgot_password(request: Request, data: PasswordReset, db: Session = Depends(get_db)):
     """Request password reset email."""
     auth_service = AuthService(db)
@@ -352,7 +467,7 @@ The BizPilot Team
 
 
 @router.post("/reset-password")
-@limiter.limit(PASSWORD_RESET_RATE_LIMIT)
+# @limiter.limit(PASSWORD_RESET_RATE_LIMIT)  # Temporarily disabled for debugging
 async def reset_password(request: Request, data: PasswordResetConfirm, db: Session = Depends(get_db)):
     """Reset password with token."""
     email = verify_password_reset_token(data.token)
@@ -472,7 +587,7 @@ async def setup_pin(
 
 
 @router.post("/pin/login", response_model=Token)
-@limiter.limit(AUTH_RATE_LIMIT)
+# @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
 async def pin_login(
     request: Request,
     credentials: PINLogin,

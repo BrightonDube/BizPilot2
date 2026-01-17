@@ -1,15 +1,23 @@
 """
-Comprehensive Seed Script for BizPilot - Cape Town, South Africa
+Comprehensive Production Seed Script for BizPilot - Cape Town, South Africa
 
-This script seeds ALL data needed for every UI component:
-- Dashboard: stats, recent_orders, top_products
-- Products: products with categories
-- Inventory: inventory_items with locations
-- Categories: categories with colors and product_count
-- Customers: individual and business customers with metrics
-- Orders: orders with order_items
-- Invoices: invoices with invoice_items
-- Reports: uses data from orders, customers, products
+This script seeds ALL data needed for EVERY UI component and feature:
+- Core: Users, Organizations, Businesses, Roles
+- Subscription: Tiers and Transactions
+- Products: Products with categories, ingredients, suppliers
+- Inventory: Inventory items with locations and transactions
+- Customers: Individual and business customers with metrics
+- Orders: Orders with items and various statuses
+- Invoices: Invoices with items and payment tracking
+- Suppliers: Suppliers with products and purchase orders
+- Departments: Departments with staff assignments
+- Time Tracking: Time entries for staff
+- Sessions: POS sessions with transactions
+- Notifications: System notifications
+- Favorites: Favorite products for quick access
+- Production: Production orders and batch tracking
+- Layby: Layby orders with payment schedules
+- AI: AI conversation history
 
 Run: python -m scripts.seed_capetown
 """
@@ -28,16 +36,37 @@ from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
-from app.models.user import User, UserStatus
+from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.organization import Organization
 from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.role import Role, DEFAULT_ROLES
+from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
+from app.models.subscription_transaction import SubscriptionTransaction, TransactionStatus, TransactionType
 from app.models.product import Product, ProductCategory, ProductStatus
+from app.models.product_ingredient import ProductIngredient
+from app.models.product_supplier import ProductSupplier
 from app.models.customer import Customer, CustomerType
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus as OrderPaymentStatus
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
-from app.models.inventory import InventoryItem
+from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType as InvTransactionType
+from app.models.supplier import Supplier
+from app.models.department import Department
+from app.models.time_entry import TimeEntry, TimeEntryStatus
+# POS sessions not implemented yet
+# from app.models.session import Session as POSSession, SessionStatus
+from app.models.notification import Notification, NotificationType, NotificationPriority
+from app.models.favorite_product import FavoriteProduct
+from app.models.production import ProductionOrder, ProductionStatus
+from app.models.layby import Layby, LaybyStatus, PaymentFrequency
+from app.models.layby_item import LaybyItem
+from app.models.layby_payment import LaybyPayment, PaymentStatus as LaybyPaymentStatus, PaymentType
+from app.models.layby_schedule import LaybySchedule, ScheduleStatus
+from app.models.layby_config import LaybyConfig
+from app.models.layby_audit import LaybyAudit  # Import for SQLAlchemy
+from app.models.layby_notification import LaybyNotification  # Import for SQLAlchemy
+from app.models.ai_conversation import AIConversation
+from app.models.ai_message import AIMessage
 
 
 def clear_all_data(db: Session):
@@ -49,6 +78,20 @@ def clear_all_data(db: Session):
     # Use TRUNCATE ... CASCADE to reliably clear data even when there are
     # foreign keys or additional dependent tables.
     tables = [
+        "ai_messages",
+        "ai_conversations",
+        "layby_payments",
+        "layby_schedules",
+        "layby_items",
+        "laybys",
+        "layby_configs",
+        "production_orders",
+        "favorite_products",
+        "notifications",
+        "sessions",
+        "time_entries",
+        "departments",
+        "product_suppliers",
         "inventory_transactions",
         "inventory_items",
         "invoice_items",
@@ -59,12 +102,13 @@ def clear_all_data(db: Session):
         "products",
         "product_categories",
         "customers",
+        "suppliers",
         "business_users",
         "roles",
         "businesses",
         "organizations",
-        "ai_messages",
-        "ai_conversations",
+        "subscription_transactions",
+        "subscription_tiers",
         "user_settings",
         "users",
     ]
@@ -91,7 +135,25 @@ def clear_all_data(db: Session):
         print("  ✓ All data cleared")
 
 
-def create_user(db: Session) -> User:
+def create_subscription_tiers(db: Session) -> dict:
+    """Create subscription tiers."""
+    print("Creating subscription tiers...")
+    
+    tiers = {}
+    for tier_key, tier_data in DEFAULT_TIERS.items():
+        tier = SubscriptionTier(**tier_data)
+        db.add(tier)
+        tiers[tier_key] = tier
+    
+    db.commit()
+    for tier in tiers.values():
+        db.refresh(tier)
+    
+    print(f"  ✓ Subscription tiers: {len(tiers)}")
+    return tiers
+
+
+def create_user(db: Session, tiers: dict) -> User:
     """Create demo user."""
     print("Creating demo user...")
 
@@ -109,6 +171,10 @@ def create_user(db: Session) -> User:
     user.status = UserStatus.ACTIVE
     user.is_admin = True
     user.is_superadmin = False
+    user.subscription_status = SubscriptionStatus.ACTIVE
+    user.current_tier_id = tiers["pilot_pro"].id
+    user.subscription_started_at = datetime.now() - timedelta(days=30)
+    user.subscription_expires_at = datetime.now() + timedelta(days=335)
 
     db.commit()
     db.refresh(user)
@@ -116,7 +182,7 @@ def create_user(db: Session) -> User:
     return user
 
 
-def create_superadmin(db: Session) -> tuple[User, str]:
+def create_superadmin(db: Session, tiers: dict) -> tuple[User, str]:
     """Create the single BizPilot superadmin user."""
     print("Creating superadmin user...")
 
@@ -145,6 +211,8 @@ def create_superadmin(db: Session) -> tuple[User, str]:
     user.status = UserStatus.ACTIVE
     user.is_admin = False
     user.is_superadmin = True
+    user.subscription_status = SubscriptionStatus.NONE
+    user.current_tier_id = None
 
     db.commit()
     db.refresh(user)
@@ -622,10 +690,353 @@ def update_customer_metrics(db: Session, business: Business):
     print("  ✓ Metrics updated")
 
 
+def create_suppliers(db: Session, business: Business) -> list:
+    """Create suppliers."""
+    print("Creating suppliers...")
+    
+    suppliers_data = [
+        {"name": "Cape Wholesale Distributors", "email": "orders@capewholesale.co.za", "phone": "+27 21 555 2001", "city": "Parow"},
+        {"name": "Fresh Produce SA", "email": "supply@freshproduce.co.za", "phone": "+27 21 555 2002", "city": "Epping"},
+        {"name": "Electronics Direct", "email": "sales@elecdirect.co.za", "phone": "+27 21 555 2003", "city": "Bellville"},
+        {"name": "Clothing Importers Ltd", "email": "orders@clothingimport.co.za", "phone": "+27 21 555 2004", "city": "Salt River"},
+        {"name": "Home & Garden Supplies", "email": "info@homegardensupp.co.za", "phone": "+27 21 555 2005", "city": "Montague Gardens"},
+    ]
+    
+    suppliers = []
+    for s in suppliers_data:
+        supplier = Supplier(
+            business_id=business.id,
+            name=s["name"],
+            email=s["email"],
+            phone=s["phone"],
+            city=s["city"],
+            state="Western Cape",
+            country="South Africa",
+        )
+        db.add(supplier)
+        suppliers.append(supplier)
+    
+    db.commit()
+    for supp in suppliers:
+        db.refresh(supp)
+    
+    print(f"  ✓ Suppliers: {len(suppliers)}")
+    return suppliers
+
+
+def link_products_suppliers(db: Session, products: list, suppliers: list):
+    """Link products to suppliers."""
+    print("Linking products to suppliers...")
+    
+    count = 0
+    for product in products:
+        # Each product has 1-2 suppliers
+        num_suppliers = random.randint(1, 2)
+        selected_suppliers = random.sample(suppliers, min(num_suppliers, len(suppliers)))
+        
+        for supplier in selected_suppliers:
+            ps = ProductSupplier(
+                product_id=product.id,
+                supplier_id=supplier.id,
+            )
+            db.add(ps)
+            count += 1
+    
+    db.commit()
+    print(f"  ✓ Product-Supplier links: {count}")
+
+
+def create_departments(db: Session, business: Business) -> list:
+    """Create departments."""
+    print("Creating departments...")
+    
+    departments_data = [
+        {"name": "Sales", "desc": "Customer-facing sales team"},
+        {"name": "Warehouse", "desc": "Inventory and logistics"},
+        {"name": "Management", "desc": "Business management and administration"},
+        {"name": "Customer Service", "desc": "Customer support and relations"},
+    ]
+    
+    departments = []
+    for d in departments_data:
+        dept = Department(
+            business_id=business.id,
+            name=d["name"],
+            description=d["desc"],
+        )
+        db.add(dept)
+        departments.append(dept)
+    
+    db.commit()
+    for dept in departments:
+        db.refresh(dept)
+    
+    print(f"  ✓ Departments: {len(departments)}")
+    return departments
+
+
+def create_time_entries(db: Session, business: Business, user: User, departments: list) -> list:
+    """Create time entries for staff."""
+    print("Creating time entries...")
+    
+    entries = []
+    # Create entries for past 14 days
+    for i in range(14):
+        entry_date = datetime.now() - timedelta(days=i)
+        clock_in = entry_date.replace(hour=8, minute=random.randint(0, 30))
+        clock_out = entry_date.replace(hour=17, minute=random.randint(0, 30))
+        
+        entry = TimeEntry(
+            business_id=business.id,
+            user_id=user.id,
+            clock_in=clock_in,
+            clock_out=clock_out,
+            status=TimeEntryStatus.APPROVED,
+            notes=f"Regular shift - Day {i+1}",
+        )
+        db.add(entry)
+        entries.append(entry)
+    
+    db.commit()
+    print(f"  ✓ Time entries: {len(entries)}")
+    return entries
+
+
+def create_sessions(db: Session, business: Business, user: User) -> list:
+    """Create POS sessions - SKIPPED (not implemented yet)."""
+    print("Skipping POS sessions (not implemented)...")
+    return []
+
+
+def create_notifications(db: Session, business: Business, user: User) -> list:
+    """Create notifications."""
+    print("Creating notifications...")
+    
+    notifications_data = [
+        {"type": "system", "priority": "low", "title": "Welcome to BizPilot", "message": "Your account has been set up successfully."},
+        {"type": "order_shipped", "priority": "medium", "title": "Order Completed", "message": "Order TBS-1025 has been delivered."},
+        {"type": "low_stock", "priority": "high", "title": "Low Stock Alert", "message": "5 products are running low on stock."},
+        {"type": "system", "priority": "low", "title": "New Customer", "message": "A new customer has been added to your database."},
+        {"type": "payment_received", "priority": "medium", "title": "Payment Received", "message": "Payment of R2,500 received from Table Mountain Catering."},
+    ]
+    
+    notifications = []
+    for i, n in enumerate(notifications_data):
+        notif = Notification(
+            business_id=business.id,
+            user_id=user.id,
+            notification_type=n["type"],
+            priority=n["priority"],
+            title=n["title"],
+            message=n["message"],
+            is_read=i < 2,  # First 2 are read
+            created_at=datetime.now() - timedelta(hours=i*6),
+        )
+        db.add(notif)
+        notifications.append(notif)
+    
+    db.commit()
+    print(f"  ✓ Notifications: {len(notifications)}")
+    return notifications
+
+
+def create_favorites(db: Session, business: Business, user: User, products: list) -> list:
+    """Create favorite products."""
+    print("Creating favorite products...")
+    
+    favorites = []
+    # Add 5 random products as favorites
+    for product in random.sample(products, min(5, len(products))):
+        fav = FavoriteProduct(
+            business_id=business.id,
+            user_id=user.id,
+            product_id=product.id,
+        )
+        db.add(fav)
+        favorites.append(fav)
+    
+    db.commit()
+    print(f"  ✓ Favorite products: {len(favorites)}")
+    return favorites
+
+
+def create_production_orders(db: Session, business: Business, products: list) -> list:
+    """Create production orders."""
+    print("Creating production orders...")
+    
+    production_orders = []
+    # Create 3 production orders
+    for i in range(3):
+        product = random.choice(products)
+        quantity = random.randint(50, 200)
+        
+        statuses = [ProductionStatus.PENDING, ProductionStatus.IN_PROGRESS, ProductionStatus.COMPLETED]
+        status = statuses[i % 3]
+        
+        prod_order = ProductionOrder(
+            business_id=business.id,
+            product_id=product.id,
+            order_number=f"BATCH-{1000 + i}",
+            quantity_to_produce=quantity,
+            quantity_produced=quantity if status == ProductionStatus.COMPLETED else 0,
+            status=status,
+            started_at=datetime.now() - timedelta(days=7-i),
+            completed_at=datetime.now() - timedelta(days=1) if status == ProductionStatus.COMPLETED else None,
+            notes=f"Production batch for {product.name}",
+        )
+        db.add(prod_order)
+        production_orders.append(prod_order)
+    
+    db.commit()
+    print(f"  ✓ Production orders: {len(production_orders)}")
+    return production_orders
+
+
+def create_layby_config(db: Session, business: Business) -> LaybyConfig:
+    """Create layby configuration."""
+    print("Creating layby configuration...")
+    
+    config = LaybyConfig(
+        business_id=business.id,
+        min_deposit_percentage=Decimal("20.00"),
+        max_duration_days=90,
+        cancellation_fee_percentage=Decimal("10.00"),
+        cancellation_fee_minimum=Decimal("10.00"),
+        restocking_fee_per_item=Decimal("0.00"),
+        extension_fee=Decimal("0.00"),
+        max_extensions=2,
+        reminder_days_before=7,
+        collection_grace_days=14,
+        is_enabled=True,
+    )
+    db.add(config)
+    db.commit()
+    db.refresh(config)
+    
+    print("  ✓ Layby configuration created")
+    return config
+
+
+def create_laybys(db: Session, business: Business, customers: list, products: list, user: User) -> list:
+    """Create layby orders."""
+    print("Creating layby orders...")
+    
+    laybys = []
+    # Create 3 layby orders
+    for i in range(3):
+        customer = random.choice(customers)
+        product = random.choice(products)
+        
+        total_amount = product.selling_price * 2  # 2 units
+        deposit = total_amount * Decimal("0.20")
+        
+        statuses = [LaybyStatus.ACTIVE, LaybyStatus.ACTIVE, LaybyStatus.COMPLETED]
+        status = statuses[i]
+        
+        layby = Layby(
+            business_id=business.id,
+            customer_id=customer.id,
+            reference_number=f"LAY-{1000 + i}",
+            status=status,
+            subtotal=total_amount,
+            tax_amount=Decimal("0.00"),
+            total_amount=total_amount,
+            deposit_amount=deposit,
+            amount_paid=total_amount if status == LaybyStatus.COMPLETED else deposit,
+            balance_due=Decimal("0") if status == LaybyStatus.COMPLETED else total_amount - deposit,
+            payment_frequency=PaymentFrequency.MONTHLY,
+            start_date=datetime.now() - timedelta(days=30-i*10),
+            end_date=datetime.now() + timedelta(days=60-i*10),
+            created_by=user.id,
+        )
+        db.add(layby)
+        db.flush()
+        
+        # Add layby item
+        item = LaybyItem(
+            layby_id=layby.id,
+            product_id=product.id,
+            product_name=product.name,
+            product_sku=product.sku,
+            quantity=2,
+            unit_price=product.selling_price,
+            total_amount=total_amount,
+        )
+        db.add(item)
+        
+        # Add deposit payment
+        payment = LaybyPayment(
+            layby_id=layby.id,
+            payment_type=PaymentType.DEPOSIT,
+            amount=deposit,
+            payment_method="cash",
+            status=LaybyPaymentStatus.COMPLETED,
+            processed_by=user.id,
+        )
+        db.add(payment)
+        
+        # Add payment schedule
+        remaining = total_amount - deposit
+        num_payments = 3
+        payment_amount = remaining / num_payments
+        
+        for j in range(num_payments):
+            schedule = LaybySchedule(
+                layby_id=layby.id,
+                installment_number=j + 1,
+                due_date=layby.start_date + timedelta(days=20*(j+1)),
+                amount_due=payment_amount,
+                amount_paid=payment_amount if status == LaybyStatus.COMPLETED else Decimal("0"),
+                status=ScheduleStatus.PAID if status == LaybyStatus.COMPLETED else ScheduleStatus.PENDING,
+            )
+            db.add(schedule)
+        
+        laybys.append(layby)
+    
+    db.commit()
+    print(f"  ✓ Layby orders: {len(laybys)}")
+    return laybys
+
+
+def create_ai_conversations(db: Session, user: User) -> list:
+    """Create AI conversation history."""
+    print("Creating AI conversations...")
+    
+    conversations = []
+    # Create 2 conversations
+    for i in range(2):
+        conv = AIConversation(
+            user_id=user.id,
+            title=f"Business Query {i+1}",
+        )
+        db.add(conv)
+        db.flush()
+        
+        # Add messages
+        messages_data = [
+            {"is_user": True, "content": "What are my top selling products this month?"},
+            {"is_user": False, "content": "Based on your sales data, your top 3 selling products this month are: 1) Coca-Cola (2L) with 45 units sold, 2) White Bread (700g) with 38 units sold, and 3) Full Cream Milk (2L) with 32 units sold."},
+        ]
+        
+        for msg_data in messages_data:
+            msg = AIMessage(
+                conversation_id=conv.id,
+                is_user=msg_data["is_user"],
+                content=msg_data["content"],
+            )
+            db.add(msg)
+        
+        conversations.append(conv)
+    
+    db.commit()
+    print(f"  ✓ AI conversations: {len(conversations)}")
+    return conversations
+
+
 def main():
     """Run seed script."""
     print("\n" + "=" * 60)
-    print("BizPilot Cape Town Seed Script")
+    print("BizPilot Cape Town Comprehensive Seed Script")
     print("=" * 60 + "\n")
     
     db = SessionLocal()
@@ -634,8 +1045,9 @@ def main():
         clear_all_data(db)
         
         # Core entities
-        user = create_user(db)
-        superadmin_user, superadmin_password = create_superadmin(db)
+        tiers = create_subscription_tiers(db)
+        user = create_user(db, tiers)
+        superadmin_user, superadmin_password = create_superadmin(db, tiers)
         org = create_organization(db, user)
         business = create_business(db, org)
         roles = create_roles(db, business)
@@ -647,40 +1059,74 @@ def main():
         products = create_products(db, business, categories)
         inventory = create_inventory(db, business, products)
         customers = create_customers(db, business)
+        suppliers = create_suppliers(db, business)
+        link_products_suppliers(db, products, suppliers)
+        
+        # Orders and invoices
         orders = create_orders(db, business, customers, products)
         invoices = create_invoices(db, business, orders)
+        
+        # Staff and operations
+        departments = create_departments(db, business)
+        time_entries = create_time_entries(db, business, user, departments)
+        sessions = create_sessions(db, business, user)
+        
+        # User features
+        notifications = create_notifications(db, business, user)
+        favorites = create_favorites(db, business, user, products)
+        ai_conversations = create_ai_conversations(db, user)
+        
+        # Advanced features
+        production_orders = create_production_orders(db, business, products)
+        layby_config = create_layby_config(db, business)
+        laybys = create_laybys(db, business, customers, products, user)
         
         # Metrics
         update_customer_metrics(db, business)
         
         # Summary
         print("\n" + "=" * 60)
-        print("✅ SEEDING COMPLETE")
+        print("✅ COMPREHENSIVE SEEDING COMPLETE")
         print("=" * 60)
         print("\n📧 Demo Login:")
         print("   Email: demo@bizpilot.co.za")
         print("   Password: Demo@2024")
+        print("   Subscription: Pilot Pro (Active)")
 
         print("\n🔐 Superadmin Login (BizPilot platform admin):")
         print("   Email: admin@bizpilot.co.za")
-        print(f"   Password: {superadmin_password}")
-        if not os.getenv("BIZPILOT_SUPERADMIN_PASSWORD"):
-            print("   NOTE: Password was generated. Set BIZPILOT_SUPERADMIN_PASSWORD to control it.")
+        if os.getenv("BIZPILOT_SUPERADMIN_PASSWORD"):
+            print("   Password: (from BIZPILOT_SUPERADMIN_PASSWORD env var)")
+        else:
+            print(f"   Password: {superadmin_password}")
+            print("   NOTE: Password was auto-generated. Set BIZPILOT_SUPERADMIN_PASSWORD to control it.")
         print(f"\n🏢 Business: {business.name}")
         print("   Location: Cape Town, Western Cape")
         print("   Currency: ZAR | VAT: 15%")
         print("\n📊 Data Summary:")
-        print(f"   Categories:      {len(categories)}")
-        print(f"   Products:        {len(products)}")
-        print(f"   Inventory Items: {len(inventory)}")
-        print(f"   Customers:       {len(customers)}")
-        print(f"   Orders:          {len(orders)}")
-        print(f"   Invoices:        {len(invoices)}")
+        print(f"   Subscription Tiers:  {len(tiers)}")
+        print(f"   Categories:          {len(categories)}")
+        print(f"   Products:            {len(products)}")
+        print(f"   Inventory Items:     {len(inventory)}")
+        print(f"   Customers:           {len(customers)}")
+        print(f"   Suppliers:           {len(suppliers)}")
+        print(f"   Orders:              {len(orders)}")
+        print(f"   Invoices:            {len(invoices)}")
+        print(f"   Departments:         {len(departments)}")
+        print(f"   Time Entries:        {len(time_entries)}")
+        print(f"   POS Sessions:        {len(sessions)}")
+        print(f"   Notifications:       {len(notifications)}")
+        print(f"   Favorite Products:   {len(favorites)}")
+        print(f"   Production Orders:   {len(production_orders)}")
+        print(f"   Layby Orders:        {len(laybys)}")
+        print(f"   AI Conversations:    {len(ai_conversations)}")
         print("=" * 60 + "\n")
         
     except Exception as e:
         db.rollback()
         print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
         raise
     finally:
         db.close()
