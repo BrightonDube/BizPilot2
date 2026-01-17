@@ -192,6 +192,87 @@ async def test_auth_components():
         }
 
 
+@router.get("/test-db-query")
+async def test_db_query(db: Session = Depends(get_db)):
+    """Test database connection and user query."""
+    try:
+        from app.models.user import User
+        
+        # Test 1: Simple count query
+        user_count = db.query(User).count()
+        
+        # Test 2: Try to get first user (if any)
+        first_user = db.query(User).first()
+        user_info = None
+        if first_user:
+            user_info = {
+                "id": str(first_user.id),
+                "email": first_user.email,
+                "has_password": first_user.hashed_password is not None,
+                "status": first_user.status.value if first_user.status else None,
+            }
+        
+        return {
+            "status": "success",
+            "tests": {
+                "db_connection": "ok",
+                "user_count": user_count,
+                "first_user": user_info
+            }
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
+@router.post("/test-login")
+async def test_login(
+    request: Request,
+    credentials: UserLogin,
+    db: Session = Depends(get_db),
+):
+    """Debug endpoint to test login and capture exact errors."""
+    import traceback
+    try:
+        auth_service = AuthService(db)
+        
+        # Step 1: Try to get user
+        user = auth_service.get_user_by_email(credentials.email)
+        if not user:
+            return {"status": "error", "step": "get_user", "error": "User not found"}
+        
+        # Step 2: Check password
+        if not user.hashed_password:
+            return {"status": "error", "step": "check_password", "error": "No password set (OAuth user)"}
+        
+        password_ok = verify_password(credentials.password, user.hashed_password)
+        if not password_ok:
+            return {"status": "error", "step": "verify_password", "error": "Password mismatch"}
+        
+        # Step 3: Create tokens
+        access_token = create_access_token(data={"sub": str(user.id)})
+        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+        
+        return {
+            "status": "success",
+            "user_id": str(user.id),
+            "email": user.email,
+            "access_token_length": len(access_token),
+            "refresh_token_length": len(refresh_token),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "step": "exception",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
 @router.post("/login", response_model=Token)
 # @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
 async def login(
