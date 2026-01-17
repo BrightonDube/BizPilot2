@@ -100,7 +100,7 @@ def clear_auth_cookies(response: Response) -> None:
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit(REGISTER_RATE_LIMIT)
+# @limiter.limit(REGISTER_RATE_LIMIT)  # Temporarily disabled for debugging
 async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """Register a new user."""
     auth_service = AuthService(db)
@@ -159,7 +159,7 @@ The BizPilot Team
 
 
 @router.post("/login", response_model=Token)
-@limiter.limit(AUTH_RATE_LIMIT)
+# @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
 async def login(
     request: Request,
     credentials: UserLogin,
@@ -303,7 +303,7 @@ async def verify_email(data: EmailVerification, db: Session = Depends(get_db)):
 
 
 @router.post("/forgot-password")
-@limiter.limit(PASSWORD_RESET_RATE_LIMIT)
+# @limiter.limit(PASSWORD_RESET_RATE_LIMIT)  # Temporarily disabled for debugging
 async def forgot_password(request: Request, data: PasswordReset, db: Session = Depends(get_db)):
     """Request password reset email."""
     auth_service = AuthService(db)
@@ -352,7 +352,7 @@ The BizPilot Team
 
 
 @router.post("/reset-password")
-@limiter.limit(PASSWORD_RESET_RATE_LIMIT)
+# @limiter.limit(PASSWORD_RESET_RATE_LIMIT)  # Temporarily disabled for debugging
 async def reset_password(request: Request, data: PasswordResetConfirm, db: Session = Depends(get_db)):
     """Reset password with token."""
     email = verify_password_reset_token(data.token)
@@ -472,7 +472,7 @@ async def setup_pin(
 
 
 @router.post("/pin/login", response_model=Token)
-@limiter.limit(AUTH_RATE_LIMIT)
+# @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
 async def pin_login(
     request: Request,
     credentials: PINLogin,
