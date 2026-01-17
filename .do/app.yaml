@@ -50,13 +50,13 @@ services:
         value: "30"
       - key: COOKIE_DOMAIN
         scope: RUN_TIME
-        value: "bizpilotpro.app"
+        value: ""  # Empty for same-origin (recommended for security)
       - key: COOKIE_SECURE
         scope: RUN_TIME
         value: "true"
       - key: COOKIE_SAMESITE
         scope: RUN_TIME
-        value: "lax"
+        value: "lax"  # Allows cookies in navigation but blocks CSRF
       - key: CORS_ORIGINS
         scope: RUN_TIME
         value: '["https://bizpilot-ajp9i.ondigitalocean.app","https://bizpilotpro.app"]'

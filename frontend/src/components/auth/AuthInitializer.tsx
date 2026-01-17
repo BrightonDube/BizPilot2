@@ -33,8 +33,7 @@ export function AuthInitializer() {
 
   /**
    * Handle session expiration.
-   * Redirects immediately to login, then clears auth state.
-   * The immediate redirect prevents any error states from being rendered.
+   * Uses hard navigation to prevent RSC/JSON response issues.
    */
   const handleSessionExpired = useCallback(() => {
     // Prevent multiple redirects
@@ -46,7 +45,7 @@ export function AuthInitializer() {
       const currentPath = window.location.pathname + window.location.search
       const loginUrl = `/auth/login?session_expired=true&next=${encodeURIComponent(currentPath)}`
       
-      // Redirect immediately - don't wait for logout
+      // Use hard navigation to prevent RSC issues - this ensures proper HTML response
       window.location.href = loginUrl
       
       // Clear auth state in background (redirect will happen first)

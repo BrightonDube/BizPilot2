@@ -489,8 +489,17 @@ async def reset_password(request: Request, data: PasswordResetConfirm, db: Sessi
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_profile(current_user: User = Depends(get_current_active_user)):
+async def get_current_user_profile(
+    current_user: User = Depends(get_current_active_user),
+    response: Response = None,
+):
     """Get current user profile."""
+    # Add cache control headers to prevent stale auth responses
+    if response:
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    
     # Get current tier name if available
     current_tier_name = None
     if current_user.current_tier:
