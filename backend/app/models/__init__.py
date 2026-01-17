@@ -37,6 +37,7 @@ from app.models.layby_schedule import LaybySchedule, ScheduleStatus
 from app.models.layby_payment import LaybyPayment, PaymentType, PaymentStatus
 from app.models.layby_audit import LaybyAudit
 from app.models.layby_notification import LaybyNotification, NotificationChannel, NotificationStatus as LaybyNotificationStatus
+from app.models.job_execution_log import JobExecutionLog, JobStatus
 
 __all__ = [
     "BaseModel",
@@ -124,4 +125,7 @@ __all__ = [
     "LaybyNotification",
     "NotificationChannel",
     "LaybyNotificationStatus",
+    # Job Execution
+    "JobExecutionLog",
+    "JobStatus",
 ]
