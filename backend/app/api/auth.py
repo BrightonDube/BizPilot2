@@ -158,6 +158,40 @@ The BizPilot Team
     )
 
 
+@router.get("/test-auth-components")
+async def test_auth_components():
+    """Test individual authentication components to isolate the issue."""
+    try:
+        # Test 1: Basic imports
+        from app.core.security import get_password_hash, verify_password
+        from app.core.security import create_access_token
+        
+        # Test 2: Password hashing
+        test_password = "test123"
+        hashed = get_password_hash(test_password)
+        verified = verify_password(test_password, hashed)
+        
+        # Test 3: JWT token creation
+        test_token = create_access_token(data={"sub": "test-user"})
+        
+        return {
+            "status": "success",
+            "tests": {
+                "imports": "ok",
+                "password_hash": "ok" if verified else "failed",
+                "jwt_creation": "ok" if test_token else "failed",
+                "token_length": len(test_token) if test_token else 0
+            }
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
 @router.post("/login", response_model=Token)
 # @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
 async def login(
