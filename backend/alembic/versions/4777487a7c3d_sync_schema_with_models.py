@@ -281,10 +281,13 @@ def upgrade() -> None:
     # Only run type conversions when the column is actually still VARCHAR / timestamptz.
     # Avoiding failed DDL is critical because Postgres aborts the whole transaction on the first failure.
     # Use raw SQL with USING clause for VARCHAR->ENUM conversions (Postgres requires explicit cast).
+    # Must drop DEFAULT before type change, then re-add it with proper ENUM cast.
     if column_is_varchar('layby_notifications', 'channel'):
         op.execute(sa.text("ALTER TABLE layby_notifications ALTER COLUMN channel TYPE notificationchannel USING channel::notificationchannel"))
     if column_is_varchar('layby_notifications', 'status'):
+        op.execute(sa.text("ALTER TABLE layby_notifications ALTER COLUMN status DROP DEFAULT"))
         op.execute(sa.text("ALTER TABLE layby_notifications ALTER COLUMN status TYPE notificationstatus USING status::notificationstatus"))
+        op.execute(sa.text("ALTER TABLE layby_notifications ALTER COLUMN status SET DEFAULT 'pending'"))
     if column_is_timestamptz('layby_notifications', 'sent_at'):
         op.alter_column('layby_notifications', 'sent_at',
                    existing_type=postgresql.TIMESTAMP(timezone=True),
@@ -306,20 +309,24 @@ def upgrade() -> None:
     if not index_exists('layby_notifications', 'ix_layby_notifications_status'):
         op.create_index(op.f('ix_layby_notifications_status'), 'layby_notifications', ['status'], unique=False)
     
-    # Layby payments - use raw SQL with USING clause
+    # Layby payments - use raw SQL with USING clause (drop/restore defaults)
     if column_is_varchar('layby_payments', 'payment_type'):
         op.execute(sa.text("ALTER TABLE layby_payments ALTER COLUMN payment_type TYPE laybypaymenttype USING payment_type::laybypaymenttype"))
     if column_is_varchar('layby_payments', 'status'):
+        op.execute(sa.text("ALTER TABLE layby_payments ALTER COLUMN status DROP DEFAULT"))
         op.execute(sa.text("ALTER TABLE layby_payments ALTER COLUMN status TYPE laybypaymentstatus USING status::laybypaymentstatus"))
+        op.execute(sa.text("ALTER TABLE layby_payments ALTER COLUMN status SET DEFAULT 'completed'"))
     
     if index_exists('layby_payments', 'idx_layby_payments_layby'):
         op.drop_index(op.f('idx_layby_payments_layby'), table_name='layby_payments')
     if not index_exists('layby_payments', 'ix_layby_payments_layby_id'):
         op.create_index(op.f('ix_layby_payments_layby_id'), 'layby_payments', ['layby_id'], unique=False)
     
-    # Layby schedules - use raw SQL with USING clause
+    # Layby schedules - use raw SQL with USING clause (drop/restore defaults)
     if column_is_varchar('layby_schedules', 'status'):
+        op.execute(sa.text("ALTER TABLE layby_schedules ALTER COLUMN status DROP DEFAULT"))
         op.execute(sa.text("ALTER TABLE layby_schedules ALTER COLUMN status TYPE schedulestatus USING status::schedulestatus"))
+        op.execute(sa.text("ALTER TABLE layby_schedules ALTER COLUMN status SET DEFAULT 'pending'"))
     
     if index_exists('layby_schedules', 'idx_layby_schedules_due'):
         op.drop_index(op.f('idx_layby_schedules_due'), table_name='layby_schedules')
@@ -330,11 +337,13 @@ def upgrade() -> None:
     if not index_exists('layby_schedules', 'ix_layby_schedules_layby_id'):
         op.create_index(op.f('ix_layby_schedules_layby_id'), 'layby_schedules', ['layby_id'], unique=False)
     
-    # Laybys - use raw SQL with USING clause
+    # Laybys - use raw SQL with USING clause (drop/restore defaults)
     if not column_exists('laybys', 'deleted_at'):
         op.add_column('laybys', sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True))
     if column_is_varchar('laybys', 'status'):
+        op.execute(sa.text("ALTER TABLE laybys ALTER COLUMN status DROP DEFAULT"))
         op.execute(sa.text("ALTER TABLE laybys ALTER COLUMN status TYPE laybystatus USING status::laybystatus"))
+        op.execute(sa.text("ALTER TABLE laybys ALTER COLUMN status SET DEFAULT 'active'"))
     if column_is_varchar('laybys', 'payment_frequency'):
         op.execute(sa.text("ALTER TABLE laybys ALTER COLUMN payment_frequency TYPE paymentfrequency USING payment_frequency::paymentfrequency"))
     
