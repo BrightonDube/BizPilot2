@@ -65,7 +65,8 @@ class CORSDebugMiddleware(BaseHTTPMiddleware):
             try:
                 response = await call_next(request)
             except Exception as e:
-                # Log the error for debugging
+                # Log the error for debugging with full traceback
+                logger.error(f"Error processing request {request.method} {request.url.path}: {e}", exc_info=True)
                 print(f"Error processing request: {e}")
                 traceback.print_exc()
                 response = JSONResponse(
