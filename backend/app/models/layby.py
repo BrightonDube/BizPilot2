@@ -319,6 +319,12 @@ class Layby(BaseModel):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    stock_reservations = relationship(
+        "StockReservation",
+        back_populates="layby",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Layby {self.reference_number} ({self.status.value})>"
