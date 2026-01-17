@@ -96,3 +96,12 @@ frontend/.env.local
 reset-admin-password.ps1
 check_db.py
 DEPLOYMENT_VERIFICATION.md
+debug_auth_flow.py
+debug_database.py
+debug_login.py
+test_auth_flow.py
+test_db_auth.py
+test_password.py
+test_login.py
+test_rate_limit_issue.py
+test_simple_password.py

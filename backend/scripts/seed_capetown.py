@@ -58,10 +58,10 @@ from app.models.time_entry import TimeEntry, TimeEntryStatus
 from app.models.notification import Notification, NotificationType, NotificationPriority
 from app.models.favorite_product import FavoriteProduct
 from app.models.production import ProductionOrder, ProductionStatus
-from app.models.layby import Layby, LaybyStatus
+from app.models.layby import Layby, LaybyStatus, PaymentFrequency
 from app.models.layby_item import LaybyItem
-from app.models.layby_payment import LaybyPayment, PaymentStatus as LaybyPaymentStatus
-from app.models.layby_schedule import LaybySchedule
+from app.models.layby_payment import LaybyPayment, PaymentStatus as LaybyPaymentStatus, PaymentType
+from app.models.layby_schedule import LaybySchedule, ScheduleStatus
 from app.models.layby_config import LaybyConfig
 from app.models.layby_audit import LaybyAudit  # Import for SQLAlchemy
 from app.models.layby_notification import LaybyNotification  # Import for SQLAlchemy
@@ -738,9 +738,6 @@ def link_products_suppliers(db: Session, products: list, suppliers: list):
             ps = ProductSupplier(
                 product_id=product.id,
                 supplier_id=supplier.id,
-                supplier_sku=f"SUP-{random.randint(1000, 9999)}",
-                cost_price=float(product.cost_price) if product.cost_price else 0,
-                is_preferred=count == 0,
             )
             db.add(ps)
             count += 1
@@ -792,7 +789,6 @@ def create_time_entries(db: Session, business: Business, user: User, departments
         entry = TimeEntry(
             business_id=business.id,
             user_id=user.id,
-            department_id=random.choice(departments).id if departments else None,
             clock_in=clock_in,
             clock_out=clock_out,
             status=TimeEntryStatus.APPROVED,
@@ -817,11 +813,11 @@ def create_notifications(db: Session, business: Business, user: User) -> list:
     print("Creating notifications...")
     
     notifications_data = [
-        {"type": NotificationType.INFO, "priority": NotificationPriority.LOW, "title": "Welcome to BizPilot", "message": "Your account has been set up successfully."},
-        {"type": NotificationType.SUCCESS, "priority": NotificationPriority.MEDIUM, "title": "Order Completed", "message": "Order TBS-1025 has been delivered."},
-        {"type": NotificationType.WARNING, "priority": NotificationPriority.HIGH, "title": "Low Stock Alert", "message": "5 products are running low on stock."},
-        {"type": NotificationType.INFO, "priority": NotificationPriority.LOW, "title": "New Customer", "message": "A new customer has been added to your database."},
-        {"type": NotificationType.SUCCESS, "priority": NotificationPriority.MEDIUM, "title": "Payment Received", "message": "Payment of R2,500 received from Table Mountain Catering."},
+        {"type": "system", "priority": "low", "title": "Welcome to BizPilot", "message": "Your account has been set up successfully."},
+        {"type": "order_shipped", "priority": "medium", "title": "Order Completed", "message": "Order TBS-1025 has been delivered."},
+        {"type": "low_stock", "priority": "high", "title": "Low Stock Alert", "message": "5 products are running low on stock."},
+        {"type": "system", "priority": "low", "title": "New Customer", "message": "A new customer has been added to your database."},
+        {"type": "payment_received", "priority": "medium", "title": "Payment Received", "message": "Payment of R2,500 received from Table Mountain Catering."},
     ]
     
     notifications = []
@@ -829,7 +825,7 @@ def create_notifications(db: Session, business: Business, user: User) -> list:
         notif = Notification(
             business_id=business.id,
             user_id=user.id,
-            type=n["type"],
+            notification_type=n["type"],
             priority=n["priority"],
             title=n["title"],
             message=n["message"],
@@ -902,13 +898,16 @@ def create_layby_config(db: Session, business: Business) -> LaybyConfig:
     
     config = LaybyConfig(
         business_id=business.id,
-        minimum_deposit_percentage=Decimal("20.00"),
-        maximum_duration_days=90,
+        min_deposit_percentage=Decimal("20.00"),
+        max_duration_days=90,
         cancellation_fee_percentage=Decimal("10.00"),
-        allow_partial_payments=True,
-        require_deposit=True,
-        send_payment_reminders=True,
+        cancellation_fee_minimum=Decimal("10.00"),
+        restocking_fee_per_item=Decimal("0.00"),
+        extension_fee=Decimal("0.00"),
+        max_extensions=2,
         reminder_days_before=7,
+        collection_grace_days=14,
+        is_enabled=True,
     )
     db.add(config)
     db.commit()
@@ -918,7 +917,7 @@ def create_layby_config(db: Session, business: Business) -> LaybyConfig:
     return config
 
 
-def create_laybys(db: Session, business: Business, customers: list, products: list) -> list:
+def create_laybys(db: Session, business: Business, customers: list, products: list, user: User) -> list:
     """Create layby orders."""
     print("Creating layby orders...")
     
@@ -937,14 +936,18 @@ def create_laybys(db: Session, business: Business, customers: list, products: li
         layby = Layby(
             business_id=business.id,
             customer_id=customer.id,
-            layby_number=f"LAY-{1000 + i}",
+            reference_number=f"LAY-{1000 + i}",
             status=status,
+            subtotal=total_amount,
+            tax_amount=Decimal("0.00"),
             total_amount=total_amount,
             deposit_amount=deposit,
             amount_paid=total_amount if status == LaybyStatus.COMPLETED else deposit,
             balance_due=Decimal("0") if status == LaybyStatus.COMPLETED else total_amount - deposit,
+            payment_frequency=PaymentFrequency.MONTHLY,
             start_date=datetime.now() - timedelta(days=30-i*10),
-            due_date=datetime.now() + timedelta(days=60-i*10),
+            end_date=datetime.now() + timedelta(days=60-i*10),
+            created_by=user.id,
         )
         db.add(layby)
         db.flush()
@@ -953,19 +956,22 @@ def create_laybys(db: Session, business: Business, customers: list, products: li
         item = LaybyItem(
             layby_id=layby.id,
             product_id=product.id,
+            product_name=product.name,
+            product_sku=product.sku,
             quantity=2,
             unit_price=product.selling_price,
-            total_price=total_amount,
+            total_amount=total_amount,
         )
         db.add(item)
         
         # Add deposit payment
         payment = LaybyPayment(
             layby_id=layby.id,
+            payment_type=PaymentType.DEPOSIT,
             amount=deposit,
             payment_method="cash",
             status=LaybyPaymentStatus.COMPLETED,
-            payment_date=layby.start_date,
+            processed_by=user.id,
         )
         db.add(payment)
         
@@ -977,10 +983,11 @@ def create_laybys(db: Session, business: Business, customers: list, products: li
         for j in range(num_payments):
             schedule = LaybySchedule(
                 layby_id=layby.id,
+                installment_number=j + 1,
                 due_date=layby.start_date + timedelta(days=20*(j+1)),
                 amount_due=payment_amount,
                 amount_paid=payment_amount if status == LaybyStatus.COMPLETED else Decimal("0"),
-                is_paid=status == LaybyStatus.COMPLETED,
+                status=ScheduleStatus.PAID if status == LaybyStatus.COMPLETED else ScheduleStatus.PENDING,
             )
             db.add(schedule)
         
@@ -1072,7 +1079,7 @@ def main():
         # Advanced features
         production_orders = create_production_orders(db, business, products)
         layby_config = create_layby_config(db, business)
-        laybys = create_laybys(db, business, customers, products)
+        laybys = create_laybys(db, business, customers, products, user)
         
         # Metrics
         update_customer_metrics(db, business)
