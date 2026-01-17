@@ -280,17 +280,11 @@ def upgrade() -> None:
 
     # Only run type conversions when the column is actually still VARCHAR / timestamptz.
     # Avoiding failed DDL is critical because Postgres aborts the whole transaction on the first failure.
+    # Use raw SQL with USING clause for VARCHAR->ENUM conversions (Postgres requires explicit cast).
     if column_is_varchar('layby_notifications', 'channel'):
-        op.alter_column('layby_notifications', 'channel',
-                   existing_type=sa.VARCHAR(length=20),
-                   type_=sa.Enum('email', 'sms', 'push', 'in_app', name='notificationchannel'),
-                   existing_nullable=False)
+        op.execute(sa.text("ALTER TABLE layby_notifications ALTER COLUMN channel TYPE notificationchannel USING channel::notificationchannel"))
     if column_is_varchar('layby_notifications', 'status'):
-        op.alter_column('layby_notifications', 'status',
-                   existing_type=sa.VARCHAR(length=20),
-                   type_=sa.Enum('pending', 'sent', 'failed', 'cancelled', name='notificationstatus'),
-                   existing_nullable=False,
-                   existing_server_default=sa.text("'pending'::character varying"))
+        op.execute(sa.text("ALTER TABLE layby_notifications ALTER COLUMN status TYPE notificationstatus USING status::notificationstatus"))
     if column_is_timestamptz('layby_notifications', 'sent_at'):
         op.alter_column('layby_notifications', 'sent_at',
                    existing_type=postgresql.TIMESTAMP(timezone=True),
@@ -312,37 +306,20 @@ def upgrade() -> None:
     if not index_exists('layby_notifications', 'ix_layby_notifications_status'):
         op.create_index(op.f('ix_layby_notifications_status'), 'layby_notifications', ['status'], unique=False)
     
-    # Layby payments
-    try:
-        op.alter_column('layby_payments', 'payment_type',
-                   existing_type=sa.VARCHAR(length=20),
-                   type_=sa.Enum('deposit', 'installment', 'final', 'overpayment', name='laybypaymenttype'),
-                   existing_nullable=False)
-    except Exception:
-        pass
-    try:
-        op.alter_column('layby_payments', 'status',
-                   existing_type=sa.VARCHAR(length=20),
-                   type_=sa.Enum('pending', 'completed', 'failed', 'refunded', name='laybypaymentstatus'),
-                   existing_nullable=False,
-                   existing_server_default=sa.text("'completed'::character varying"))
-    except Exception:
-        pass
+    # Layby payments - use raw SQL with USING clause
+    if column_is_varchar('layby_payments', 'payment_type'):
+        op.execute(sa.text("ALTER TABLE layby_payments ALTER COLUMN payment_type TYPE laybypaymenttype USING payment_type::laybypaymenttype"))
+    if column_is_varchar('layby_payments', 'status'):
+        op.execute(sa.text("ALTER TABLE layby_payments ALTER COLUMN status TYPE laybypaymentstatus USING status::laybypaymentstatus"))
     
     if index_exists('layby_payments', 'idx_layby_payments_layby'):
         op.drop_index(op.f('idx_layby_payments_layby'), table_name='layby_payments')
     if not index_exists('layby_payments', 'ix_layby_payments_layby_id'):
         op.create_index(op.f('ix_layby_payments_layby_id'), 'layby_payments', ['layby_id'], unique=False)
     
-    # Layby schedules
-    try:
-        op.alter_column('layby_schedules', 'status',
-                   existing_type=sa.VARCHAR(length=20),
-                   type_=sa.Enum('pending', 'partial', 'paid', 'overdue', name='schedulestatus'),
-                   existing_nullable=False,
-                   existing_server_default=sa.text("'pending'::character varying"))
-    except Exception:
-        pass
+    # Layby schedules - use raw SQL with USING clause
+    if column_is_varchar('layby_schedules', 'status'):
+        op.execute(sa.text("ALTER TABLE layby_schedules ALTER COLUMN status TYPE schedulestatus USING status::schedulestatus"))
     
     if index_exists('layby_schedules', 'idx_layby_schedules_due'):
         op.drop_index(op.f('idx_layby_schedules_due'), table_name='layby_schedules')
@@ -353,24 +330,13 @@ def upgrade() -> None:
     if not index_exists('layby_schedules', 'ix_layby_schedules_layby_id'):
         op.create_index(op.f('ix_layby_schedules_layby_id'), 'layby_schedules', ['layby_id'], unique=False)
     
-    # Laybys
+    # Laybys - use raw SQL with USING clause
     if not column_exists('laybys', 'deleted_at'):
         op.add_column('laybys', sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True))
-    try:
-        op.alter_column('laybys', 'status',
-                   existing_type=sa.VARCHAR(length=20),
-                   type_=sa.Enum('draft', 'active', 'ready_for_collection', 'completed', 'cancelled', 'overdue', name='laybystatus'),
-                   existing_nullable=False,
-                   existing_server_default=sa.text("'active'::character varying"))
-    except Exception:
-        pass
-    try:
-        op.alter_column('laybys', 'payment_frequency',
-                   existing_type=sa.VARCHAR(length=20),
-                   type_=sa.Enum('weekly', 'bi_weekly', 'monthly', name='paymentfrequency'),
-                   existing_nullable=False)
-    except Exception:
-        pass
+    if column_is_varchar('laybys', 'status'):
+        op.execute(sa.text("ALTER TABLE laybys ALTER COLUMN status TYPE laybystatus USING status::laybystatus"))
+    if column_is_varchar('laybys', 'payment_frequency'):
+        op.execute(sa.text("ALTER TABLE laybys ALTER COLUMN payment_frequency TYPE paymentfrequency USING payment_frequency::paymentfrequency"))
     
     if index_exists('laybys', 'ix_laybys_business_customer'):
         op.drop_index(op.f('ix_laybys_business_customer'), table_name='laybys')
