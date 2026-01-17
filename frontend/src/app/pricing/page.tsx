@@ -186,6 +186,18 @@ export default function PricingPage() {
               <span className="text-xl font-bold text-white">BizPilot</span>
             </Link>
             <div className="flex items-center space-x-8">
+              <Link href="/features" className="text-gray-300 hover:text-white transition-colors">
+                Features
+              </Link>
+              <Link href="/industries" className="text-gray-300 hover:text-white transition-colors">
+                Industries
+              </Link>
+              <Link href="/pricing" className="text-purple-400 font-medium">
+                Pricing
+              </Link>
+              <Link href="/faq" className="text-gray-300 hover:text-white transition-colors">
+                FAQ
+              </Link>
               <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
                 Sign In
               </Link>

@@ -15,21 +15,21 @@ export function HeroSection() {
       
       <div className="relative z-10 flex flex-col items-center">
         <motion.h1 
-          className="max-w-3xl bg-gradient-to-br from-white to-gray-400 bg-clip-text text-center text-3xl font-medium leading-tight text-transparent sm:text-5xl sm:leading-tight md:text-7xl md:leading-tight"
+          className="max-w-4xl bg-gradient-to-br from-white to-gray-400 bg-clip-text text-center text-3xl font-medium leading-tight text-transparent sm:text-5xl sm:leading-tight md:text-7xl md:leading-tight"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          Smarter margins, pricing, and inventory—built for modern businesses
+          Complete POS & ERP System for Modern Businesses
         </motion.h1>
         
         <motion.p 
-          className="my-6 max-w-xl text-center text-base leading-relaxed md:text-lg md:leading-relaxed"
+          className="my-6 max-w-3xl text-center text-base leading-relaxed md:text-lg md:leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          Track true costs, price with confidence, stay in stock, and get AI guidance that turns every product into profit—all in one platform.
+          From point-of-sale to inventory management, accounting integration to customer loyalty, staff scheduling to multi-location management. Everything you need to run, manage, and scale your business efficiently—all in one powerful, integrated platform.
         </motion.p>
         
         <motion.div

@@ -20,47 +20,140 @@ import {
   Menu,
   X,
   Receipt,
-  DollarSign
+  DollarSign,
+  Users,
+  ShoppingCart,
+  Smartphone,
+  Globe,
+  Star,
+  Building2,
+  Coffee,
+  Hotel,
+  Store
 } from 'lucide-react'
 
 const features = [
   {
-    icon: DollarSign,
-    title: 'Smart Cost Calculations',
-    description: 'Calculate product costs with precision, including ingredients, labor, and overhead.'
-  },
-  {
-    icon: BarChart3,
-    title: 'Intelligent Pricing',
-    description: 'Get AI-powered pricing recommendations based on costs, market data, and profit margins.'
+    icon: Receipt,
+    title: 'Complete POS System',
+    description: 'Lightning-fast transaction processing with mobile POS, table management, kitchen display integration, and multi-payment support including cards, mobile payments, and cash.'
   },
   {
     icon: Warehouse,
-    title: 'Inventory Management',
-    description: 'Track stock levels, set reorder points, and never run out of essential supplies.'
+    title: 'Smart Inventory Control',
+    description: 'Real-time stock tracking across multiple locations, automated reordering with supplier integration, barcode scanning, waste tracking, and intelligent stock transfers.'
   },
   {
-    icon: Receipt,
-    title: 'Invoice Generation',
-    description: 'Create professional invoices instantly and track payments with ease.'
+    icon: BarChart3,
+    title: 'Advanced Reporting & Analytics',
+    description: 'Comprehensive sales analytics, staff performance tracking, inventory reports, custom dashboards, profit analysis, and real-time business intelligence with export capabilities.'
+  },
+  {
+    icon: DollarSign,
+    title: 'Integrated Financial Management',
+    description: 'Seamless Xero and Sage integration, automated invoicing, tax management, multi-currency support, and complete general ledger with financial reporting.'
   },
   {
     icon: Package,
-    title: 'Product Analytics',
-    description: 'Understand which products are most profitable and optimize your offerings.'
+    title: 'Menu & Recipe Engineering',
+    description: 'Advanced recipe costing, menu engineering with profit optimization, modifier management, ingredient tracking, nutritional information, and yield management.'
   },
   {
     icon: MessageSquare,
-    title: 'AI Business Assistant',
-    description: 'Chat with our AI to get instant insights and recommendations for your business.'
+    title: 'Customer Relationship Management',
+    description: 'Complete CRM with customer profiles, loyalty programs with tier management, customer accounts, targeted marketing campaigns, and customer analytics.'
   },
+  {
+    icon: Users,
+    title: 'Staff Management & Scheduling',
+    description: 'Time and attendance tracking, staff scheduling, role-based permissions, performance monitoring, commission management, and training progress tracking.'
+  },
+  {
+    icon: Globe,
+    title: 'E-commerce & Online Ordering',
+    description: 'WooCommerce integration, online ordering platform, delivery management, digital signage, and seamless omnichannel experience.'
+  },
+  {
+    icon: Building2,
+    title: 'Multi-Location Management',
+    description: 'Centralized dashboard for multiple locations, consolidated reporting, inter-location transfers, franchise management, and brand consistency controls.'
+  }
 ]
 
 const benefits = [
-  'Track real-time profitability',
-  'Make data-driven pricing decisions',
-  'Reduce waste and overhead costs',
-  'Scale your business with confidence'
+  'Complete POS system with mobile and desktop support',
+  'Real-time inventory across multiple locations with automated reordering',
+  'Integrated accounting with Xero, Sage, and general ledger management',
+  'Advanced reporting with custom dashboards and business intelligence',
+  'Customer loyalty programs and comprehensive CRM management',
+  'Staff management with scheduling, performance tracking, and time attendance',
+  'E-commerce integration with WooCommerce and online ordering platform',
+  'Multi-location management with centralized control and reporting',
+  'Recipe management with costing and menu engineering optimization',
+  'Digital signage and property management system integration'
+]
+
+const industries = [
+  {
+    icon: Building2,
+    title: 'Restaurants & Cafes',
+    description: 'Complete restaurant management from table service to kitchen operations with specialized hospitality features.',
+    features: ['Table Management & Floor Plans', 'Menu Engineering & Recipe Costing', 'Kitchen Display System', 'Order Management (Dine-in, Takeaway, Delivery)', 'Staff Scheduling & Performance', 'Ingredient Inventory Tracking', 'PMS Integration for Hotels']
+  },
+  {
+    icon: ShoppingCart,
+    title: 'Retail Stores',
+    description: 'Comprehensive retail management for single and multi-location stores with advanced inventory control.',
+    features: ['Multi-Location Stock Control', 'Barcode Scanning & SKU Management', 'Layby & Payment Plans', 'E-commerce Integration', 'Customer Loyalty Programs', 'Supplier Management', 'Automated Reordering']
+  },
+  {
+    icon: Users,
+    title: 'Multi-Location Chains',
+    description: 'Centralized management for franchise and chain operations with enterprise-grade features.',
+    features: ['Central Dashboard & Reporting', 'Location Performance Comparison', 'Consolidated Financial Reports', 'Inter-Location Transfers', 'Franchise Management', 'Brand Consistency Controls', 'Digital Signage Management']
+  },
+  {
+    icon: Coffee,
+    title: 'Coffee Shops & Bakeries',
+    description: 'Specialized features for coffee shops and bakery operations with fresh product management.',
+    features: ['Recipe Management & Costing', 'Fresh Product Tracking', 'Loyalty Card Integration', 'Mobile Ordering & Pickup', 'Waste Tracking & Reporting', 'Supplier Integration']
+  },
+  {
+    icon: Hotel,
+    title: 'Hotels & Hospitality',
+    description: 'Integrated POS and property management for hospitality businesses with guest management.',
+    features: ['PMS Integration', 'Room Service Management', 'Guest Profile Management', 'Event & Banquet Management', 'Multi-Outlet Reporting', 'Guest Billing Integration']
+  },
+  {
+    icon: Store,
+    title: 'Specialty Retail',
+    description: 'Tailored solutions for specialty retail businesses with complex product management needs.',
+    features: ['Product Variant Management', 'Seasonal Inventory Planning', 'Customer Special Orders', 'Consignment Management', 'Repair & Service Tracking', 'Vendor Management']
+  }
+]
+
+const testimonials = [
+  {
+    name: 'Sarah Mitchell',
+    role: 'Restaurant Owner',
+    company: 'The Garden Bistro',
+    content: 'BizPilot transformed our operations. We now know our exact food costs and can price confidently. Our profit margins improved by 15% in just 3 months.',
+    rating: 5
+  },
+  {
+    name: 'David Chen',
+    role: 'Retail Manager',
+    company: 'Urban Fashion Co.',
+    content: 'The multi-location inventory management is incredible. We never run out of stock and our waste has dropped significantly. The ROI was immediate.',
+    rating: 5
+  },
+  {
+    name: 'Maria Rodriguez',
+    role: 'Operations Director',
+    company: 'Coffee Culture Chain',
+    content: 'Managing 12 locations was a nightmare before BizPilot. Now we have real-time visibility across all stores and our staff productivity has increased by 25%.',
+    rating: 5
+  }
 ]
 
 export default function HomePage() {
@@ -84,11 +177,20 @@ export default function HomePage() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
-                Sign In
+              <Link href="/features" className="text-gray-300 hover:text-white transition-colors">
+                Features
+              </Link>
+              <Link href="/industries" className="text-gray-300 hover:text-white transition-colors">
+                Industries
               </Link>
               <Link href="/pricing" className="text-gray-300 hover:text-white transition-colors">
                 Pricing
+              </Link>
+              <Link href="/faq" className="text-gray-300 hover:text-white transition-colors">
+                FAQ
+              </Link>
+              <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
+                Sign In
               </Link>
               <Link 
                 href="/auth/register" 
@@ -118,11 +220,18 @@ export default function HomePage() {
               >
                 <div className="py-4 space-y-2">
                   <Link 
-                    href="/auth/login" 
+                    href="/features" 
                     className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Sign In
+                    Features
+                  </Link>
+                  <Link 
+                    href="/industries" 
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Industries
                   </Link>
                   <Link 
                     href="/pricing" 
@@ -130,6 +239,20 @@ export default function HomePage() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Pricing
+                  </Link>
+                  <Link 
+                    href="/faq" 
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    FAQ
+                  </Link>
+                  <Link 
+                    href="/auth/login" 
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign In
                   </Link>
                   <Link 
                     href="/auth/register" 
@@ -153,10 +276,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Everything you need to run and grow your business
+              Complete POS & ERP System for Modern Businesses
             </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Track costs, price with confidence, control inventory, and get AI guidance so every decision improves profit.
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              From point-of-sale to inventory management, accounting integration to customer loyalty - everything you need to run and scale your business efficiently.
             </p>
           </div>
           
@@ -180,7 +303,109 @@ export default function HomePage() {
                   </motion.div>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-300">{feature.description}</p>
+                <p className="text-gray-300 text-sm leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Industries Section */}
+      <div className="py-20 bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Built for Every Industry
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Whether you're running a restaurant, retail store, or multi-location chain, BizPilot adapts to your specific needs.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {industries.map((industry, index) => (
+              <motion.div 
+                key={index} 
+                className="p-8 rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700 hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/20"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -4 }}
+              >
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-xl flex items-center justify-center mb-6 border border-purple-500/30">
+                  <motion.div
+                    whileHover={{ rotate: 5, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <industry.icon className="h-8 w-8 text-purple-400" />
+                  </motion.div>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">{industry.title}</h3>
+                <p className="text-gray-300 mb-6 text-sm leading-relaxed">{industry.description}</p>
+                
+                <div className="space-y-2">
+                  {industry.features.slice(0, 4).map((feature, featureIndex) => (
+                    <motion.div 
+                      key={featureIndex} 
+                      className="flex items-center"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: (index * 0.1) + (featureIndex * 0.05) }}
+                    >
+                      <CheckCircle className="h-4 w-4 text-green-400 mr-2 flex-shrink-0" />
+                      <span className="text-sm text-gray-300">{feature}</span>
+                    </motion.div>
+                  ))}
+                  {industry.features.length > 4 && (
+                    <div className="text-xs text-purple-400 mt-2">
+                      +{industry.features.length - 4} more features
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Testimonials Section */}
+      <div className="py-20 bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Trusted by Businesses Worldwide
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              See how BizPilot is helping businesses increase profits, reduce costs, and scale efficiently.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <motion.div 
+                key={index} 
+                className="p-6 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/30 transition-all"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -2 }}
+              >
+                <div className="flex items-center mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                
+                <p className="text-gray-300 mb-6 italic">"{testimonial.content}"</p>
+                
+                <div className="border-t border-slate-700 pt-4">
+                  <p className="font-semibold text-white">{testimonial.name}</p>
+                  <p className="text-sm text-gray-400">{testimonial.role}</p>
+                  <p className="text-sm text-purple-400">{testimonial.company}</p>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -193,34 +418,29 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                Stop guessing. Start growing with clear, profitable decisions.
+                Complete Business Management in One Platform
               </h2>
               <p className="text-lg text-gray-300 mb-8">
-                Make confident moves with live cost tracking, AI-powered pricing, and clear inventory signals that keep you in stock and in profit.
+                From your first sale to multi-location expansion, BizPilot grows with your business. Manage everything from POS transactions to financial reporting in one integrated system.
               </p>
               
-              <div className="space-y-4">
-                {[
-                  'Know your true margins across products and channels.',
-                  'Price with confidence using AI and live cost data.',
-                  'Prevent stockouts and waste with smart inventory alerts.',
-                  'Get paid faster with invoices and payment tracking.',
-                ].map((benefit, index) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {benefits.map((benefit, index) => (
                   <motion.div 
                     key={index} 
-                    className="flex items-center"
+                    className="flex items-start"
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    transition={{ duration: 0.4, delay: index * 0.05 }}
                   >
                     <motion.div
                       whileHover={{ scale: 1.2, rotate: 5 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                      <CheckCircle className="h-5 w-5 text-green-400 mr-3" />
+                      <CheckCircle className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
                     </motion.div>
-                    <span className="text-gray-200">{benefit}</span>
+                    <span className="text-gray-200 text-sm leading-relaxed">{benefit}</span>
                   </motion.div>
                 ))}
               </div>
@@ -323,7 +543,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            Ready to turn every product into profit?
+            Ready to Transform Your Business Operations?
           </motion.h2>
           <motion.p 
             className="text-xl text-gray-400 mb-8"
@@ -332,39 +552,58 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Join teams using BizPilot to turn their costs, prices, and inventory into an advantage.
+            Join thousands of businesses using BizPilot to streamline operations, increase profits, and scale efficiently. 
+            Start your free trial today and see the difference in 24 hours.
           </motion.p>
           <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
-            <Link 
-              href="/auth/register" 
-              className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 group"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Start Your Free Trial
-              <motion.div
-                className="ml-2"
-                whileHover={{ x: 5 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              <Link 
+                href="/auth/register" 
+                className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 group"
               >
-                <ArrowRight className="h-5 w-5" />
-              </motion.div>
-            </Link>
+                Start Your Free Trial
+                <motion.div
+                  className="ml-2"
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <ArrowRight className="h-5 w-5" />
+                </motion.div>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link 
+                href="/features" 
+                className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg border border-slate-600 text-white hover:border-purple-500/50 hover:bg-slate-800/50 transition-all"
+              >
+                View All Features
+              </Link>
+            </motion.div>
           </motion.div>
-          <motion.p 
-            className="text-gray-500 mt-4 text-sm"
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-8 text-sm text-gray-500"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            No credit card required • 14-day free trial • Cancel anytime
-          </motion.p>
+            <span>✓ No credit card required</span>
+            <span>✓ 14-day free trial</span>
+            <span>✓ Cancel anytime</span>
+            <span>✓ Setup in under 10 minutes</span>
+          </motion.div>
         </div>
       </div>
 
