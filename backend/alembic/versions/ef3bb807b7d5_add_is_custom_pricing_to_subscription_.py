@@ -20,9 +20,28 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Add is_custom_pricing column to subscription_tiers table
-    op.add_column('subscription_tiers', sa.Column('is_custom_pricing', sa.Boolean(), nullable=False, server_default=sa.text('false')))
+    # Check if table exists first
+    op.execute("""
+        DO $
+        BEGIN
+            IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'subscription_tiers') THEN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                              WHERE table_name = 'subscription_tiers' AND column_name = 'is_custom_pricing') THEN
+                    ALTER TABLE subscription_tiers ADD COLUMN is_custom_pricing BOOLEAN NOT NULL DEFAULT false;
+                END IF;
+            END IF;
+        END $;
+    """)
 
 
 def downgrade() -> None:
     # Remove is_custom_pricing column from subscription_tiers table
-    op.drop_column('subscription_tiers', 'is_custom_pricing')
+    op.execute("""
+        DO $
+        BEGIN
+            IF EXISTS (SELECT 1 FROM information_schema.columns 
+                      WHERE table_name = 'subscription_tiers' AND column_name = 'is_custom_pricing') THEN
+                ALTER TABLE subscription_tiers DROP COLUMN is_custom_pricing;
+            END IF;
+        END $;
+    """)
