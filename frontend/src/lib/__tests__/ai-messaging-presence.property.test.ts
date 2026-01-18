@@ -461,7 +461,7 @@ describe('Property 7: AI-Powered Messaging Presence', () => {
     const contexts = generateMarketingContexts();
     contexts.forEach(context => {
       const components = AIMessagingUtils.getComponentsByContext(context);
-      const valueProps = AIMessagingUtils.getValuePropositionsByContext(context as any);
+      const valueProps = AIMessagingUtils.getValuePropositionsByContext(context as AIValueProposition['context']);
       
       // Each context should have either components or value propositions
       expect(components.length + valueProps.length).toBeGreaterThan(0);
