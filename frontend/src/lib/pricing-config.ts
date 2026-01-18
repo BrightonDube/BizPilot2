@@ -1,14 +1,25 @@
 /**
- * Centralized Pricing Configuration
+ * Frontend Pricing Configuration
  * 
- * This file contains all pricing data, plan definitions, and AI feature configurations
- * for BizPilot's marketing pages. It serves as the single source of truth for
- * consistent pricing information across all marketing displays.
+ * This file imports the shared pricing configuration and provides additional
+ * marketing-specific interfaces and utilities for the frontend.
  * 
- * Requirements: 3.1, 3.4
+ * Requirements: 1.1, 3.1, 3.4
  */
 
-// Core pricing plan interface
+// Import shared pricing configuration
+import { 
+  SUBSCRIPTION_TIERS, 
+  PricingUtils as SharedPricingUtils,
+  SubscriptionTier,
+  BillingCycle,
+  Currency
+} from '../../../shared/pricing-config';
+
+// Re-export shared types for frontend use
+export type { SubscriptionTier, BillingCycle, Currency };
+
+// Legacy interface for backward compatibility with existing marketing components
 export interface PricingPlan {
   id: string;
   name: string;
@@ -22,6 +33,7 @@ export interface PricingPlan {
   recommended?: boolean;
   aiFeatures: AIFeatures;
   sortOrder: number;
+  isCustomPricing?: boolean;
 }
 
 // AI-specific features and capabilities
@@ -46,142 +58,126 @@ export interface FeatureBenefit {
   description?: string;
 }
 
-// Billing cycle options
-export type BillingCycle = 'monthly' | 'yearly';
-
-// Currency options
-export type Currency = 'ZAR' | 'USD' | 'EUR';
-
-// Plan tier names for type safety
-export type PlanTier = 'starter' | 'professional' | 'enterprise';
+// Plan tier names for type safety - updated to match backend
+export type PlanTier = 'pilot_solo' | 'pilot_lite' | 'pilot_core' | 'pilot_pro' | 'enterprise';
 
 /**
- * Complete pricing plans configuration
+ * Convert shared subscription tiers to marketing-friendly pricing plans
+ * This provides backward compatibility with existing marketing components
+ */
+function convertTierToPlan(tier: SubscriptionTier): PricingPlan {
+  // Map feature flags to AI features for marketing display
+  const aiFeatures: AIFeatures = {
+    smartAnalytics: tier.feature_flags.basic_reports || false,
+    predictiveInsights: tier.feature_flags.ai_insights || false,
+    automatedReordering: tier.feature_flags.ai_insights || false,
+    intelligentPricing: tier.feature_flags.ai_insights || false,
+    aiPoweredInventoryTracking: tier.feature_flags.inventory_tracking || false,
+    smartCustomerSegmentation: tier.feature_flags.ai_insights || false,
+    predictiveStockAlerts: tier.feature_flags.inventory_tracking || false,
+    intelligentCostOptimization: tier.feature_flags.cost_calculations || false,
+    aiDrivenSalesForecasting: tier.feature_flags.ai_insights || false,
+    automatedSupplierRecommendations: tier.feature_flags.ai_insights || false
+  };
+
+  // Generate marketing-friendly features list
+  const features: string[] = [];
+  const limitations: string[] = [];
+
+  // Add core features based on tier capabilities
+  if (tier.id === 'pilot_solo') {
+    features.push(
+      'Basic POS system',
+      'Simple inventory tracking',
+      'Customer management',
+      'Email support'
+    );
+    limitations.push(
+      'Up to 1 user',
+      'Up to 50 orders per month',
+      'Single terminal',
+      'No advanced reports'
+    );
+  } else if (tier.id === 'pilot_lite') {
+    features.push(
+      'Complete POS system',
+      'Cash/card tracking',
+      'Basic sales reports',
+      'Team collaboration (up to 3 users)',
+      'Email support'
+    );
+    limitations.push(
+      'Up to 3 users',
+      'Single terminal',
+      'Basic reports only'
+    );
+  } else if (tier.id === 'pilot_core') {
+    features.push(
+      'Everything in Pilot Lite',
+      'Advanced inventory tracking',
+      'Ingredient tracking and recipes',
+      'Cost calculations',
+      'Export reports',
+      'Custom categories',
+      'Multi-user access',
+      'Up to 2 terminals'
+    );
+    limitations.push(
+      'Up to 2 terminals',
+      'Single location'
+    );
+  } else if (tier.id === 'pilot_pro') {
+    features.push(
+      'Everything in Pilot Core',
+      'Full AI suite and automation',
+      'Multi-location support',
+      'API access',
+      'Priority support',
+      'Unlimited terminals',
+      'Advanced analytics'
+    );
+    limitations.push(
+      'Standard integrations'
+    );
+  } else if (tier.id === 'enterprise') {
+    features.push(
+      'Everything in Pilot Pro',
+      'Custom enterprise features',
+      'White-label options',
+      'Custom development',
+      'Dedicated account manager',
+      'SLA guarantees',
+      'Advanced security',
+      'Custom workflows',
+      'Unlimited everything'
+    );
+    limitations.push(
+      'Contact sales for pricing'
+    );
+  }
+
+  return {
+    id: tier.id,
+    name: tier.name,
+    displayName: tier.display_name,
+    description: tier.description,
+    monthlyPrice: tier.price_monthly_cents,
+    yearlyPrice: tier.price_yearly_cents,
+    currency: tier.currency,
+    features,
+    limitations,
+    recommended: tier.id === 'pilot_core', // Make Pilot Core the recommended tier
+    aiFeatures,
+    sortOrder: tier.sort_order,
+    isCustomPricing: tier.is_custom_pricing
+  };
+}
+
+/**
+ * Complete pricing plans configuration - converted from shared subscription tiers
  * Includes all plan details, AI capabilities, and feature limitations
  */
-export const PRICING_PLANS: PricingPlan[] = [
-  {
-    id: 'starter',
-    name: 'starter',
-    displayName: 'Starter',
-    description: 'Complete business management system with smart features for small businesses getting started',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    currency: 'ZAR',
-    sortOrder: 1,
-    features: [
-      'Complete POS system with payment processing',
-      'Inventory management with smart tracking',
-      'Customer management and loyalty programs',
-      'Mobile POS application',
-      'Real-time stock monitoring',
-      'Smart analytics and reporting dashboard',
-      'Automated alerts and notifications',
-      'Email support'
-    ],
-    limitations: [
-      'Up to 100 products',
-      'Single location',
-      'Basic AI insights only',
-      'Limited integrations',
-      'Standard support only'
-    ],
-    aiFeatures: {
-      smartAnalytics: true,
-      predictiveInsights: false,
-      automatedReordering: false,
-      intelligentPricing: false,
-      aiPoweredInventoryTracking: true,
-      smartCustomerSegmentation: false,
-      predictiveStockAlerts: true,
-      intelligentCostOptimization: false,
-      aiDrivenSalesForecasting: false,
-      automatedSupplierRecommendations: false
-    }
-  },
-  {
-    id: 'professional',
-    name: 'professional',
-    displayName: 'Professional',
-    description: 'Advanced business management with intelligent automation and multi-location capabilities for growing businesses',
-    monthlyPrice: 49900, // R499 in cents
-    yearlyPrice: 479000, // R4,790 in cents (20% discount)
-    currency: 'ZAR',
-    sortOrder: 2,
-    recommended: true,
-    features: [
-      'Everything in Starter',
-      'Multi-location management',
-      'Advanced analytics and reporting suite',
-      'Automated reordering and smart suggestions',
-      'Intelligent pricing optimization tools',
-      'Customer segmentation and insights',
-      'Sales forecasting and trend analysis',
-      'Accounting system integrations (Xero, Sage)',
-      'Advanced inventory management',
-      'Priority support and training',
-      'API access for custom integrations'
-    ],
-    limitations: [
-      'Up to 10,000 products',
-      'Up to 5 locations',
-      'Standard integrations'
-    ],
-    aiFeatures: {
-      smartAnalytics: true,
-      predictiveInsights: true,
-      automatedReordering: true,
-      intelligentPricing: true,
-      aiPoweredInventoryTracking: true,
-      smartCustomerSegmentation: true,
-      predictiveStockAlerts: true,
-      intelligentCostOptimization: true,
-      aiDrivenSalesForecasting: true,
-      automatedSupplierRecommendations: true
-    }
-  },
-  {
-    id: 'enterprise',
-    name: 'enterprise',
-    displayName: 'Enterprise',
-    description: 'Complete enterprise business management with custom features and advanced automation for large organizations',
-    monthlyPrice: 149900, // R1,499 in cents
-    yearlyPrice: 1439000, // R14,390 in cents (20% discount)
-    currency: 'ZAR',
-    sortOrder: 3,
-    features: [
-      'Everything in Professional',
-      'Unlimited locations and products',
-      'Custom business process automation',
-      'Advanced predictive analytics and BI',
-      'Enterprise-grade security and compliance',
-      'Custom integrations and API access',
-      'White-label and branding options',
-      'Dedicated account manager',
-      'Custom training and onboarding',
-      'Advanced workflow automation',
-      'Custom reporting and dashboards',
-      '24/7 priority support',
-      'Data migration assistance',
-      'Custom feature development'
-    ],
-    limitations: [
-      'Custom pricing for 50+ locations'
-    ],
-    aiFeatures: {
-      smartAnalytics: true,
-      predictiveInsights: true,
-      automatedReordering: true,
-      intelligentPricing: true,
-      aiPoweredInventoryTracking: true,
-      smartCustomerSegmentation: true,
-      predictiveStockAlerts: true,
-      intelligentCostOptimization: true,
-      aiDrivenSalesForecasting: true,
-      automatedSupplierRecommendations: true
-    }
-  }
-];
+export const PRICING_PLANS: PricingPlan[] = SUBSCRIPTION_TIERS.map(convertTierToPlan);
 
 /**
  * AI messaging configuration for marketing content
@@ -216,59 +212,25 @@ export const AI_MESSAGING: AIMessaging = {
 
 /**
  * Utility functions for pricing calculations and formatting
+ * Uses shared utilities and adds marketing-specific functionality
  */
 export class PricingUtils {
   /**
-   * Format price in cents to display string
+   * Format price in cents to display string (delegated to shared utils)
    */
   static formatPrice(cents: number, currency: Currency = 'ZAR'): string {
-    if (cents === 0) return 'Free';
-    
-    const amount = cents / 100;
-    
-    switch (currency) {
-      case 'ZAR':
-        return `R${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
-      case 'USD':
-        return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
-      case 'EUR':
-        return `€${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
-      default:
-        return `${currency} ${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
-    }
+    return SharedPricingUtils.formatPrice(cents, currency);
   }
 
   /**
-   * Calculate yearly savings percentage
+   * Calculate yearly savings percentage (delegated to shared utils)
    */
   static calculateYearlySavings(monthlyPrice: number, yearlyPrice: number): number {
-    if (monthlyPrice === 0 || yearlyPrice === 0) return 0;
-    const monthlyTotal = monthlyPrice * 12;
-    return Math.round(((monthlyTotal - yearlyPrice) / monthlyTotal) * 100);
+    return SharedPricingUtils.calculateYearlySavings(monthlyPrice, yearlyPrice);
   }
 
   /**
-   * Get price for specific billing cycle
-   */
-  static getPriceForCycle(plan: PricingPlan, cycle: BillingCycle): number {
-    return cycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
-  }
-
-  /**
-   * Format price with billing cycle
-   */
-  static formatPriceWithCycle(plan: PricingPlan, cycle: BillingCycle): string {
-    const price = this.getPriceForCycle(plan, cycle);
-    const formattedPrice = this.formatPrice(price, plan.currency as Currency);
-    
-    if (price === 0) return formattedPrice;
-    
-    const cycleSuffix = cycle === 'monthly' ? '/mo' : '/yr';
-    return `${formattedPrice}${cycleSuffix}`;
-  }
-
-  /**
-   * Get plan by ID
+   * Get plan by ID (legacy compatibility)
    */
   static getPlanById(planId: string): PricingPlan | undefined {
     return PRICING_PLANS.find(plan => plan.id === planId);
@@ -279,6 +241,30 @@ export class PricingUtils {
    */
   static getRecommendedPlan(): PricingPlan | undefined {
     return PRICING_PLANS.find(plan => plan.recommended);
+  }
+
+  /**
+   * Get price for specific billing cycle
+   */
+  static getPriceForCycle(plan: PricingPlan, cycle: BillingCycle): number {
+    return cycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+  }
+
+  /**
+   * Format price with cycle - handles custom pricing
+   */
+  static formatPriceWithCycle(plan: PricingPlan, cycle: BillingCycle): string {
+    if (plan.isCustomPricing) {
+      return 'Contact Sales';
+    }
+    
+    const price = this.getPriceForCycle(plan, cycle);
+    const formattedPrice = this.formatPrice(price, plan.currency as Currency);
+    
+    if (price === 0) return formattedPrice;
+    
+    const cycleSuffix = cycle === 'monthly' ? '/mo' : '/yr';
+    return `${formattedPrice}${cycleSuffix}`;
   }
 
   /**
@@ -324,9 +310,9 @@ export class PricingUtils {
    * Check if a feature is AI-powered based on keywords
    */
   private static isAIPoweredFeature(feature: string): boolean {
-    const aiKeywords = ['smart', 'intelligent', 'automated', 'analytics', 'optimization', 'forecasting', 'segmentation'];
+    const aiKeywords = ['smart', 'intelligent', 'automated', 'analytics', 'optimization', 'forecasting', 'segmentation', 'AI'];
     return aiKeywords.some(keyword => 
-      feature.toLowerCase().includes(keyword)
+      feature.toLowerCase().includes(keyword.toLowerCase())
     );
   }
 
@@ -359,13 +345,16 @@ export class PricingUtils {
 
 /**
  * Feature comparison matrix for detailed plan comparisons
+ * Updated to match the new 5-tier structure
  */
 export interface FeatureComparison {
   category: string;
   features: {
     name: string;
-    starter: boolean | string;
-    professional: boolean | string;
+    pilot_solo: boolean | string;
+    pilot_lite: boolean | string;
+    pilot_core: boolean | string;
+    pilot_pro: boolean | string;
     enterprise: boolean | string;
     aiPowered?: boolean;
   }[];
@@ -377,26 +366,34 @@ export const FEATURE_COMPARISON: FeatureComparison[] = [
     features: [
       {
         name: "POS System & Payment Processing",
-        starter: true,
-        professional: true,
+        pilot_solo: "Basic",
+        pilot_lite: true,
+        pilot_core: true,
+        pilot_pro: true,
         enterprise: true
       },
       {
         name: "Inventory Management",
-        starter: "Basic",
-        professional: "Advanced",
+        pilot_solo: "Basic",
+        pilot_lite: "Basic",
+        pilot_core: "Advanced",
+        pilot_pro: "Advanced",
         enterprise: "Enterprise"
       },
       {
         name: "Customer Management & CRM",
-        starter: true,
-        professional: true,
+        pilot_solo: true,
+        pilot_lite: true,
+        pilot_core: true,
+        pilot_pro: true,
         enterprise: true
       },
       {
         name: "Reporting & Analytics",
-        starter: "Basic",
-        professional: "Advanced",
+        pilot_solo: false,
+        pilot_lite: "Basic",
+        pilot_core: "Advanced",
+        pilot_pro: "Advanced",
         enterprise: "Custom"
       }
     ]
@@ -406,29 +403,37 @@ export const FEATURE_COMPARISON: FeatureComparison[] = [
     features: [
       {
         name: "Smart Analytics & Insights",
-        starter: true,
-        professional: true,
+        pilot_solo: false,
+        pilot_lite: true,
+        pilot_core: true,
+        pilot_pro: true,
         enterprise: true,
         aiPowered: true
       },
       {
         name: "Automated Reordering Suggestions",
-        starter: false,
-        professional: true,
+        pilot_solo: false,
+        pilot_lite: false,
+        pilot_core: false,
+        pilot_pro: true,
         enterprise: true,
         aiPowered: true
       },
       {
         name: "Intelligent Pricing Tools",
-        starter: false,
-        professional: true,
+        pilot_solo: false,
+        pilot_lite: false,
+        pilot_core: false,
+        pilot_pro: true,
         enterprise: true,
         aiPowered: true
       },
       {
         name: "Predictive Analytics",
-        starter: false,
-        professional: "Standard",
+        pilot_solo: false,
+        pilot_lite: false,
+        pilot_core: false,
+        pilot_pro: "Standard",
         enterprise: "Advanced",
         aiPowered: true
       }
@@ -438,27 +443,35 @@ export const FEATURE_COMPARISON: FeatureComparison[] = [
     category: "Business Scale & Integration",
     features: [
       {
-        name: "Products",
-        starter: "Up to 100",
-        professional: "Up to 10,000",
+        name: "Users",
+        pilot_solo: "1",
+        pilot_lite: "Up to 3",
+        pilot_core: "Unlimited",
+        pilot_pro: "Unlimited",
+        enterprise: "Unlimited"
+      },
+      {
+        name: "Terminals",
+        pilot_solo: "1",
+        pilot_lite: "1",
+        pilot_core: "Up to 2",
+        pilot_pro: "Unlimited",
         enterprise: "Unlimited"
       },
       {
         name: "Locations",
-        starter: "1",
-        professional: "Up to 5",
+        pilot_solo: "1",
+        pilot_lite: "1",
+        pilot_core: "1",
+        pilot_pro: "Multiple",
         enterprise: "Unlimited"
       },
       {
-        name: "Accounting Integrations",
-        starter: false,
-        professional: "Xero, Sage",
-        enterprise: "Custom"
-      },
-      {
         name: "API Access",
-        starter: false,
-        professional: "Standard",
+        pilot_solo: false,
+        pilot_lite: false,
+        pilot_core: false,
+        pilot_pro: "Standard",
         enterprise: "Advanced"
       }
     ]
@@ -468,20 +481,26 @@ export const FEATURE_COMPARISON: FeatureComparison[] = [
     features: [
       {
         name: "Support Level",
-        starter: "Email",
-        professional: "Priority",
+        pilot_solo: "Email",
+        pilot_lite: "Email",
+        pilot_core: "Email",
+        pilot_pro: "Priority",
         enterprise: "24/7 Dedicated"
       },
       {
         name: "Training & Onboarding",
-        starter: "Self-service",
-        professional: "Guided",
+        pilot_solo: "Self-service",
+        pilot_lite: "Self-service",
+        pilot_core: "Self-service",
+        pilot_pro: "Guided",
         enterprise: "Custom"
       },
       {
         name: "Custom Development",
-        starter: false,
-        professional: false,
+        pilot_solo: false,
+        pilot_lite: false,
+        pilot_core: false,
+        pilot_pro: false,
         enterprise: true
       }
     ]
