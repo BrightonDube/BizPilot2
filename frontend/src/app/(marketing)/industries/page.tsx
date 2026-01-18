@@ -1,11 +1,4 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Logo } from '@/components/common/Logo'
-import { ShaderBackground } from '@/components/ui'
-import { MarketingFooter } from '@/components/common/MarketingFooter'
-import { useGuestOnly } from '@/hooks/useAuth'
 import { 
   Building2,
   ShoppingCart,
@@ -15,11 +8,8 @@ import {
   Hotel,
   ArrowRight,
   CheckCircle,
-  Menu,
-  X,
   Star
 } from 'lucide-react'
-import { useState } from 'react'
 
 const industries = [
   {
@@ -187,75 +177,17 @@ const industries = [
 ]
 
 export default function IndustriesPage() {
-  useGuestOnly('/dashboard')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
   return (
-    <div className="min-h-screen">
-      <ShaderBackground />
-      
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <Logo width={32} height={32} />
-              <span className="text-xl font-bold text-white">BizPilot</span>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/features" className="text-gray-300 hover:text-white transition-colors">
-                Features
-              </Link>
-              <Link href="/industries" className="text-purple-400 font-medium">
-                Industries
-              </Link>
-              <Link href="/pricing" className="text-gray-300 hover:text-white transition-colors">
-                Pricing
-              </Link>
-              <Link href="/faq" className="text-gray-300 hover:text-white transition-colors">
-                FAQ
-              </Link>
-              <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
-                Sign In
-              </Link>
-              <Link 
-                href="/auth/register" 
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-gray-300 hover:text-white"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-        </div>
-      </nav>
-
+    <>
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.h1 
-            className="text-4xl md:text-6xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in-up">
             Built for Your Industry
-          </motion.h1>
-          <motion.p 
-            className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
+          </h1>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
             BizPilot adapts to your specific industry needs with specialized features and workflows designed to maximize efficiency and profitability.
-          </motion.p>
+          </p>
         </div>
       </section>
 
@@ -264,13 +196,10 @@ export default function IndustriesPage() {
         <div className="max-w-7xl mx-auto">
           <div className="space-y-32">
             {industries.map((industry, index) => (
-              <motion.div 
+              <div 
                 key={index}
-                className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center animate-fade-in-up ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-xl flex items-center justify-center mb-6 border border-purple-500/30">
@@ -284,17 +213,14 @@ export default function IndustriesPage() {
                     <h3 className="text-xl font-semibold text-white mb-4">Key Features</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {industry.features.map((feature, featureIndex) => (
-                        <motion.div 
+                        <div 
                           key={featureIndex} 
-                          className="flex items-center"
-                          initial={{ opacity: 0, x: -20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.4, delay: featureIndex * 0.05 }}
+                          className="flex items-center animate-fade-in-left"
+                          style={{ animationDelay: `${(index * 100) + (featureIndex * 50)}ms` }}
                         >
                           <CheckCircle className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
                           <span className="text-sm text-gray-300">{feature}</span>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -303,44 +229,37 @@ export default function IndustriesPage() {
                     <h3 className="text-xl font-semibold text-white mb-4">Business Benefits</h3>
                     <div className="space-y-2">
                       {industry.benefits.map((benefit, benefitIndex) => (
-                        <motion.div 
+                        <div 
                           key={benefitIndex} 
-                          className="flex items-center"
-                          initial={{ opacity: 0, x: -20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.4, delay: benefitIndex * 0.05 }}
+                          className="flex items-center animate-fade-in-left"
+                          style={{ animationDelay: `${(index * 100) + (benefitIndex * 50)}ms` }}
                         >
                           <ArrowRight className="h-4 w-4 text-purple-400 mr-3 flex-shrink-0" />
                           <span className="text-gray-300">{benefit}</span>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
                 <div className={index % 2 === 1 ? 'lg:col-start-1' : ''}>
-                  <motion.div 
-                    className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700"
-                    whileHover={{ y: -4 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  >
+                  <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700 hover:transform hover:-translate-y-1 transition-all duration-300">
                     <div className="flex items-center mb-4">
                       {[...Array(industry.testimonial.rating)].map((_, i) => (
                         <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
                       ))}
                     </div>
                     
-                    <p className="text-gray-300 mb-6 italic text-lg">"{industry.testimonial.content}"</p>
+                    <p className="text-gray-300 mb-6 italic text-lg">&ldquo;{industry.testimonial.content}&rdquo;</p>
                     
                     <div className="border-t border-slate-700 pt-4">
                       <p className="font-semibold text-white">{industry.testimonial.name}</p>
                       <p className="text-sm text-gray-400">{industry.testimonial.role}</p>
                       <p className="text-sm text-purple-400">{industry.testimonial.company}</p>
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -349,44 +268,23 @@ export default function IndustriesPage() {
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.h2 
-            className="text-3xl md:text-4xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-fade-in-up">
             Ready to Transform Your Industry?
-          </motion.h2>
-          <motion.p 
-            className="text-xl text-gray-400 mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
+          </h2>
+          <p className="text-xl text-gray-400 mb-8 animate-fade-in-up animation-delay-100">
             Join businesses in your industry who are already using BizPilot to increase efficiency and profitability.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          </p>
+          <div className="animate-fade-in-up animation-delay-200">
             <Link 
               href="/auth/register" 
-              className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 group"
+              className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 group hover:scale-105 hover:-translate-y-0.5"
             >
               Start Your Free Trial
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
-          </motion.div>
+          </div>
         </div>
       </section>
-
-      <MarketingFooter />
-    </div>
+    </>
   )
 }

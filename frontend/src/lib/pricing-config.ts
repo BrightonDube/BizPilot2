@@ -104,7 +104,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     displayName: 'Professional',
     description: 'Advanced AI capabilities for growing businesses that need intelligent automation',
     monthlyPrice: 49900, // R499 in cents
-    yearlyPrice: 479040, // R4,790.40 in cents (20% discount)
+    yearlyPrice: 479000, // R4,790 in cents (20% discount)
     currency: 'ZAR',
     sortOrder: 2,
     recommended: true,
@@ -144,7 +144,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     displayName: 'Enterprise',
     description: 'Complete AI-powered business management for large organizations with custom needs',
     monthlyPrice: 149900, // R1,499 in cents
-    yearlyPrice: 1439040, // R14,390.40 in cents (20% discount)
+    yearlyPrice: 1439000, // R14,390 in cents (20% discount)
     currency: 'ZAR',
     sortOrder: 3,
     features: [
@@ -225,13 +225,13 @@ export class PricingUtils {
     
     switch (currency) {
       case 'ZAR':
-        return `R${amount.toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`;
+        return `R${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
       case 'USD':
         return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
       case 'EUR':
-        return `€${amount.toLocaleString('en-EU', { minimumFractionDigits: 0 })}`;
+        return `€${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
       default:
-        return `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`;
+        return `${currency} ${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
     }
   }
 

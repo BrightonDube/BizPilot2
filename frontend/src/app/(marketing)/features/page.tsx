@@ -1,11 +1,5 @@
-'use client'
-
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Logo } from '@/components/common/Logo'
-import { ShaderBackground } from '@/components/ui'
-import { MarketingFooter } from '@/components/common/MarketingFooter'
-import { useGuestOnly } from '@/hooks/useAuth'
+import { Metadata } from 'next'
 import { 
   Receipt, 
   Warehouse, 
@@ -16,11 +10,14 @@ import {
   Package,
   Clock,
   ArrowRight,
-  Menu,
-  X,
   Building2
 } from 'lucide-react'
-import { useState } from 'react'
+
+export const metadata: Metadata = {
+  title: 'Features - Powerful Tools for Modern Businesses',
+  description: 'Discover BizPilot&apos;s comprehensive AI-powered feature set including POS systems, inventory management, business intelligence, CRM, and more.',
+  keywords: ['business features', 'POS system', 'inventory management', 'business intelligence', 'CRM', 'AI automation'],
+}
 
 const featureCategories = [
   {
@@ -161,75 +158,18 @@ const featureCategories = [
 ]
 
 export default function FeaturesPage() {
-  useGuestOnly('/dashboard')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
   return (
-    <div className="min-h-screen">
-      <ShaderBackground />
-      
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <Logo width={32} height={32} />
-              <span className="text-xl font-bold text-white">BizPilot</span>
-            </Link>
-
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/features" className="text-purple-400 font-medium">
-                Features
-              </Link>
-              <Link href="/industries" className="text-gray-300 hover:text-white transition-colors">
-                Industries
-              </Link>
-              <Link href="/pricing" className="text-gray-300 hover:text-white transition-colors">
-                Pricing
-              </Link>
-              <Link href="/faq" className="text-gray-300 hover:text-white transition-colors">
-                FAQ
-              </Link>
-              <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
-                Sign In
-              </Link>
-              <Link 
-                href="/auth/register" 
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-gray-300 hover:text-white"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div className="relative">{/* Navigation is handled by the marketing layout */}
 
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.h1 
-            className="text-4xl md:text-6xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in-up">
             Powerful Features for Modern Businesses
-          </motion.h1>
-          <motion.p 
-            className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Discover how BizPilot's comprehensive feature set can transform your business operations, increase efficiency, and drive growth.
-          </motion.p>
+          </h1>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
+            Discover how BizPilot&apos;s comprehensive feature set can transform your business operations, increase efficiency, and drive growth.
+          </p>
         </div>
       </section>
 
@@ -238,13 +178,10 @@ export default function FeaturesPage() {
         <div className="max-w-7xl mx-auto">
           <div className="space-y-20">
             {featureCategories.map((category, categoryIndex) => (
-              <motion.div 
+              <div 
                 key={categoryIndex}
-                className="relative"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: categoryIndex * 0.1 }}
+                className="relative animate-fade-in-up"
+                style={{ animationDelay: `${categoryIndex * 100}ms` }}
               >
                 <div className="text-center mb-12">
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-xl flex items-center justify-center mx-auto mb-6 border border-purple-500/30">
@@ -256,21 +193,17 @@ export default function FeaturesPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {category.features.map((feature, featureIndex) => (
-                    <motion.div 
+                    <div 
                       key={featureIndex}
-                      className="p-6 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/20"
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: featureIndex * 0.05 }}
-                      whileHover={{ y: -4 }}
+                      className="p-6 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-1 animate-fade-in-up"
+                      style={{ animationDelay: `${(categoryIndex * 100) + (featureIndex * 50)}ms` }}
                     >
                       <h3 className="text-lg font-semibold text-white mb-3">{feature.name}</h3>
                       <p className="text-gray-300">{feature.description}</p>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -279,44 +212,23 @@ export default function FeaturesPage() {
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.h2 
-            className="text-3xl md:text-4xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-fade-in-up">
             Ready to Transform Your Business?
-          </motion.h2>
-          <motion.p 
-            className="text-xl text-gray-400 mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
+          </h2>
+          <p className="text-xl text-gray-400 mb-8 animate-fade-in-up animation-delay-100">
             Join thousands of businesses already using BizPilot to streamline operations and increase profits.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          </p>
+          <div className="animate-fade-in-up animation-delay-200">
             <Link 
               href="/auth/register" 
-              className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 group"
+              className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 group"
             >
               Start Your Free Trial
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
-          </motion.div>
+          </div>
         </div>
       </section>
-
-      <MarketingFooter />
     </div>
   )
 }
