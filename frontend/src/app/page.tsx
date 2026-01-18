@@ -318,7 +318,7 @@ export default function HomePage() {
               Built for Every Industry
             </h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Whether you're running a restaurant, retail store, or multi-location chain, BizPilot adapts to your specific needs.
+              Whether you&apos;re running a restaurant, retail store, or multi-location chain, BizPilot adapts to your specific needs.
             </p>
           </div>
           
