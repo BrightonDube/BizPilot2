@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Metadata } from 'next'
 import { Check, X } from 'lucide-react'
-import { PRICING_PLANS, PricingUtils, type PricingPlan, type BillingCycle } from '@/lib/pricing-config'
+import { PRICING_PLANS, PricingUtils, type BillingCycle } from '@/lib/pricing-config'
 import { PricingClientWrapper } from '@/components/pricing/PricingClientWrapper'
 
 export const metadata: Metadata = {
@@ -211,7 +211,7 @@ export default function PricingPage() {
                 question: "How does the AI protect my business data?",
                 answer: "Your data privacy is our priority. All AI processing happens with your consent, data is encrypted, and we never share your information. You maintain complete ownership and can export or delete data anytime."
               }
-            ].map((faq, index) => (
+            ].map((faq) => (
               <div 
                 key={faq.question}
                 className="bg-slate-900 rounded-lg p-6 border border-slate-700 hover:border-slate-600 transition-colors"

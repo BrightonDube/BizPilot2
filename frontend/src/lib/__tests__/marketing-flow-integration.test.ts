@@ -21,8 +21,8 @@ describe('Marketing Flow Integration Tests', () => {
   // Test configuration
   const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
   const MARKETING_PAGES = [
-    { path: '/', title: 'BizPilot' },
-    { path: '/features', title: 'Features' },
+    { path: '/', title: 'BizPilot - AI-Powered Business Management Platform' },
+    { path: '/features', title: 'AI-Powered Features - Intelligent Business Management | BizPilot - AI-Powered Business Management' },
     { path: '/industries', title: 'Industries' },
     { path: '/faq', title: 'FAQ' },
     { path: '/pricing', title: 'Pricing' }
@@ -413,7 +413,7 @@ describe('Marketing Flow Integration Tests', () => {
       await page.goto(`${BASE_URL}/pricing`, { waitUntil: 'networkidle0' });
 
       // Look for FAQ section
-      const faqSection = await page.$('[class*="faq"], [data-testid*="faq"], h3:contains("Questions")');
+      const faqSection = await page.$('[class*="faq"], [data-testid*="faq"]');
       if (faqSection) {
         // Check for pricing-related questions
         const faqContent = await page.evaluate(() => {

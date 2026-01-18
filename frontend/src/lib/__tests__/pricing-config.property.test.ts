@@ -181,7 +181,10 @@ describe('Property 6: Pricing Data Structure Completeness', () => {
       // Property: Benefits conversion should preserve information
       const benefits = PricingUtils.convertFeaturesToBenefits(plan);
       expect(Array.isArray(benefits)).toBe(true);
-      expect(benefits.length).toBe(plan.features.length + plan.limitations.length);
+      // Expected length: features + AI summary benefit + limitations
+      const aiFeatureCount = PricingUtils.getAIFeaturesCount(plan);
+      const expectedLength = plan.features.length + (aiFeatureCount > 0 ? 1 : 0) + plan.limitations.length;
+      expect(benefits.length).toBe(expectedLength);
       
       // Property: All features should be marked as checked
       const featureBenefits = benefits.slice(0, plan.features.length);
@@ -192,7 +195,9 @@ describe('Property 6: Pricing Data Structure Completeness', () => {
       });
       
       // Property: All limitations should be marked as unchecked
-      const limitationBenefits = benefits.slice(plan.features.length);
+      // Skip the AI summary benefit (if present) to get to limitations
+      const limitationStartIndex = plan.features.length + (aiFeatureCount > 0 ? 1 : 0);
+      const limitationBenefits = benefits.slice(limitationStartIndex);
       limitationBenefits.forEach(benefit => {
         expect(benefit.checked).toBe(false);
         expect(typeof benefit.text).toBe('string');

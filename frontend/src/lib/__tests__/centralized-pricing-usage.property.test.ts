@@ -121,17 +121,24 @@ describe('Property 5: Centralized Pricing Data Usage', () => {
       expect(isFeatured).toBe(plan.recommended || false);
       
       // Property: Benefits should be derived from centralized features and limitations
-      expect(benefits.length).toBe(plan.features.length + plan.limitations.length);
+      // Expected length: features + AI summary benefit + limitations
+      const aiFeatureCount = PricingUtils.getAIFeaturesCount(plan);
+      const expectedLength = plan.features.length + (aiFeatureCount > 0 ? 1 : 0) + plan.limitations.length;
+      expect(benefits.length).toBe(expectedLength);
       
       // Property: All features should be marked as included (checked: true)
       const featureBenefits = benefits.slice(0, plan.features.length);
       featureBenefits.forEach((benefit, index) => {
         expect(benefit.checked).toBe(true);
-        expect(benefit.text).toBe(plan.features[index]);
+        // The benefit text may include AI emoji prefix, so check if it contains the original feature text
+        const originalFeature = plan.features[index];
+        expect(benefit.text).toMatch(new RegExp(originalFeature.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
       });
       
       // Property: All limitations should be marked as not included (checked: false)
-      const limitationBenefits = benefits.slice(plan.features.length);
+      // Skip the AI summary benefit (if present) to get to limitations
+      const limitationStartIndex = plan.features.length + (aiFeatureCount > 0 ? 1 : 0);
+      const limitationBenefits = benefits.slice(limitationStartIndex);
       limitationBenefits.forEach((benefit, index) => {
         expect(benefit.checked).toBe(false);
         expect(benefit.text).toBe(plan.limitations[index]);
