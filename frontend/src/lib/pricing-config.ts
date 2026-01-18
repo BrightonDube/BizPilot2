@@ -64,24 +64,25 @@ export const PRICING_PLANS: PricingPlan[] = [
     id: 'starter',
     name: 'starter',
     displayName: 'Starter',
-    description: 'Perfect for small businesses getting started with AI-powered management',
+    description: 'Perfect for small businesses starting their AI-powered journey with intelligent automation',
     monthlyPrice: 0,
     yearlyPrice: 0,
     currency: 'ZAR',
     sortOrder: 1,
     features: [
       'AI-powered inventory tracking',
-      'Smart sales analytics',
-      'Basic customer management',
-      'Mobile POS application',
+      'Smart sales analytics with insights',
+      'Intelligent customer management',
+      'Mobile POS with AI recommendations',
       'Real-time stock monitoring',
-      'Basic reporting dashboard',
+      'Predictive stock alerts (basic)',
+      'AI-driven reporting dashboard',
       'Email support'
     ],
     limitations: [
       'Up to 100 products',
       'Single location',
-      'Basic AI insights',
+      'Basic AI insights only',
       'Limited integrations',
       'Standard support only'
     ],
@@ -102,7 +103,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     id: 'professional',
     name: 'professional',
     displayName: 'Professional',
-    description: 'Advanced AI capabilities for growing businesses that need intelligent automation',
+    description: 'Advanced AI capabilities for growing businesses that need intelligent automation and predictive insights',
     monthlyPrice: 49900, // R499 in cents
     yearlyPrice: 479000, // R4,790 in cents (20% discount)
     currency: 'ZAR',
@@ -115,6 +116,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       'Automated reordering suggestions',
       'Intelligent pricing optimization',
       'Smart customer segmentation',
+      'AI-driven sales forecasting',
       'Multi-location management',
       'Advanced reporting suite',
       'Priority support',
@@ -142,7 +144,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     id: 'enterprise',
     name: 'enterprise',
     displayName: 'Enterprise',
-    description: 'Complete AI-powered business management for large organizations with custom needs',
+    description: 'Complete AI-powered business management with custom AI models and advanced predictive analytics for large organizations',
     monthlyPrice: 149900, // R1,499 in cents
     yearlyPrice: 1439000, // R14,390 in cents (20% discount)
     currency: 'ZAR',
@@ -152,14 +154,15 @@ export const PRICING_PLANS: PricingPlan[] = [
       'Custom AI model training',
       'Advanced predictive analytics',
       'Automated workflow optimization',
+      'AI-powered business intelligence',
       'Enterprise-grade security',
       'Unlimited locations',
       'Unlimited products',
-      'Custom integrations',
+      'Custom AI integrations',
       'Dedicated account manager',
       'White-label options',
       'Advanced API access',
-      'Custom reporting',
+      'Custom AI reporting',
       '24/7 priority support'
     ],
     limitations: [
@@ -279,19 +282,32 @@ export class PricingUtils {
   }
 
   /**
-   * Convert plan features to benefit format for UI
+   * Convert plan features to benefit format for UI with AI emphasis
    */
   static convertFeaturesToBenefits(plan: PricingPlan): FeatureBenefit[] {
     const benefits: FeatureBenefit[] = [];
     
-    // Add included features
+    // Add included features with AI emphasis
     plan.features.forEach(feature => {
+      const isAIPowered = this.isAIPoweredFeature(feature);
       benefits.push({
-        text: feature,
+        text: isAIPowered ? `🤖 ${feature}` : feature,
         checked: true,
-        aiPowered: this.isAIPoweredFeature(feature)
+        aiPowered: isAIPowered,
+        description: isAIPowered ? 'AI-powered feature' : undefined
       });
     });
+    
+    // Add AI-specific benefits based on plan capabilities
+    const aiFeatureCount = this.getAIFeaturesCount(plan);
+    if (aiFeatureCount > 0) {
+      benefits.push({
+        text: `✨ ${aiFeatureCount} AI-powered capabilities included`,
+        checked: true,
+        aiPowered: true,
+        description: 'Intelligent automation features'
+      });
+    }
     
     // Add limitations as unchecked benefits
     plan.limitations.forEach(limitation => {
