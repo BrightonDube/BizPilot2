@@ -176,8 +176,8 @@ describe('Property 5: Centralized Pricing Data Usage', () => {
       }
       
       // Property: Currency formatting should be consistent
-      const formattedMonthly = PricingUtils.formatPrice(plan.monthlyPrice, plan.currency as any);
-      const formattedYearly = PricingUtils.formatPrice(plan.yearlyPrice, plan.currency as any);
+      const formattedMonthly = PricingUtils.formatPrice(plan.monthlyPrice, plan.currency as 'ZAR' | 'USD' | 'EUR');
+      const formattedYearly = PricingUtils.formatPrice(plan.yearlyPrice, plan.currency as 'ZAR' | 'USD' | 'EUR');
       
       if (plan.monthlyPrice === 0) {
         expect(formattedMonthly).toBe('Free');

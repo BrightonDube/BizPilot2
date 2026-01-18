@@ -399,7 +399,7 @@ export default function HomePage() {
                   ))}
                 </div>
                 
-                <p className="text-gray-300 mb-6 italic">"{testimonial.content}"</p>
+                <p className="text-gray-300 mb-6 italic">&quot;{testimonial.content}&quot;</p>
                 
                 <div className="border-t border-slate-700 pt-4">
                   <p className="font-semibold text-white">{testimonial.name}</p>
