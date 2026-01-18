@@ -70,7 +70,11 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isMarketingRoute = pathname === '/' || pathname === '/pricing';
+  const isMarketingRoute = pathname === '/' || 
+                        pathname === '/pricing' ||
+                        pathname === '/features' ||
+                        pathname === '/industries' ||
+                        pathname === '/faq';
   const isAuthRoute = pathname === '/auth' || pathname.startsWith('/auth/');
 
   // Never interfere with Next internals or static files
