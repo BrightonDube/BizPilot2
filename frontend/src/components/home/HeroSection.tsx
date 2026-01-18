@@ -9,7 +9,7 @@ export function HeroSection() {
 
   return (
     <motion.section
-      className="relative grid min-h-screen place-content-center overflow-hidden px-4 py-24 text-gray-200"
+      className="relative grid min-h-screen place-content-center overflow-hidden px-4 py-24 text-gray-200 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}

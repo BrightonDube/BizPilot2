@@ -192,7 +192,7 @@ export default function FAQPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
             Frequently Asked Questions
@@ -204,7 +204,7 @@ export default function FAQPage() {
       </section>
 
       {/* Privacy & Control Assurance */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900">
         <div className="max-w-4xl mx-auto">
           <AIPrivacyControl 
             showBoth={true} 
@@ -223,13 +223,17 @@ export default function FAQPage() {
       </section>
 
       {/* FAQ Categories */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-950">
         <div className="max-w-4xl mx-auto">
           <div className="space-y-12">
             {faqCategories.map((category, categoryIndex) => (
               <div 
                 key={categoryIndex}
-                className="relative animate-slide-up"
+                className={`relative animate-slide-up p-8 rounded-2xl border ${
+                  categoryIndex % 2 === 0 
+                    ? 'bg-slate-900/50 border-slate-700' 
+                    : 'bg-gradient-to-br from-slate-900/30 to-slate-800/30 border-slate-600'
+                }`}
                 style={{ animationDelay: `${categoryIndex * 0.1}s` }}
               >
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 text-center">
@@ -244,7 +248,7 @@ export default function FAQPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-fade-in">
             Ready to Experience Complete Business Management?
