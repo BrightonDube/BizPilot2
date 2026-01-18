@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-01-18T14:37:26.063Z",
+  "summary": {
+    "totalTests": 20,
+    "passed": 0,
+    "failed": 20,
+    "successRate": "0.0%"
+  },
+  "issues": [
+    {
+      "page": "http://localhost:3000/",
+      "viewport": "mobile",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/",
+      "viewport": "tablet",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/",
+      "viewport": "desktop",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/",
+      "viewport": "largeDesktop",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/features",
+      "viewport": "mobile",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/features",
+      "viewport": "tablet",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/features",
+      "viewport": "desktop",
+      "error": "page.waitForTimeout is not a function"
+    },
+    {
+      "page": "http://localhost:3000/features",
+      "viewport": "largeDesktop",
+      "error": "page.waitForTimeout is not a function"
+    },
+    {
+      "page": "http://localhost:3000/industries",
+      "viewport": "mobile",
+      "error": "page.waitForTimeout is not a function"
+    },
+    {
+      "page": "http://localhost:3000/industries",
+      "viewport": "tablet",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/industries",
+      "viewport": "desktop",
+      "error": "page.waitForTimeout is not a function"
+    },
+    {
+      "page": "http://localhost:3000/industries",
+      "viewport": "largeDesktop",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/pricing",
+      "viewport": "mobile",
+      "error": "page.waitForTimeout is not a function"
+    },
+    {
+      "page": "http://localhost:3000/pricing",
+      "viewport": "tablet",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/pricing",
+      "viewport": "desktop",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/pricing",
+      "viewport": "largeDesktop",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/faq",
+      "viewport": "mobile",
+      "error": "page.waitForTimeout is not a function"
+    },
+    {
+      "page": "http://localhost:3000/faq",
+      "viewport": "tablet",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/faq",
+      "viewport": "desktop",
+      "error": "Navigation timeout of 30000 ms exceeded"
+    },
+    {
+      "page": "http://localhost:3000/faq",
+      "viewport": "largeDesktop",
+      "error": "page.waitForTimeout is not a function"
+    }
+  ],
+  "testedPages": [
+    "/",
+    "/features",
+    "/industries",
+    "/pricing",
+    "/faq"
+  ],
+  "testedViewports": [
+    "mobile",
+    "tablet",
+    "desktop",
+    "largeDesktop"
+  ]
+}

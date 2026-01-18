@@ -1,7 +1,5 @@
 import Link from 'next/link'
 import { Metadata } from 'next'
-import { Logo } from '@/components/common/Logo'
-import { MarketingFooter } from '@/components/common/MarketingFooter'
 import { Check, X } from 'lucide-react'
 import { PRICING_PLANS, PricingUtils, type PricingPlan, type BillingCycle } from '@/lib/pricing-config'
 import { PricingClientWrapper } from '@/components/pricing/PricingClientWrapper'
@@ -128,41 +126,6 @@ export default function PricingPage() {
 
   return (
     <section className="min-h-screen relative overflow-hidden bg-slate-950 text-gray-100">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <Logo width={32} height={32} />
-              <span className="text-xl font-bold text-white">BizPilot</span>
-            </Link>
-            <div className="flex items-center space-x-8">
-              <Link href="/features" className="text-gray-300 hover:text-white transition-colors">
-                Features
-              </Link>
-              <Link href="/industries" className="text-gray-300 hover:text-white transition-colors">
-                Industries
-              </Link>
-              <Link href="/pricing" className="text-purple-400 font-medium">
-                Pricing
-              </Link>
-              <Link href="/faq" className="text-gray-300 hover:text-white transition-colors">
-                FAQ
-              </Link>
-              <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
-                Sign In
-              </Link>
-              <Link 
-                href="/auth/register" 
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 md:px-8">
         <div className="mb-12 space-y-3">
           <h2 className="text-center text-3xl font-semibold leading-tight sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight text-gray-100">
@@ -260,9 +223,6 @@ export default function PricingPage() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <MarketingFooter />
     </section>
   )
 }

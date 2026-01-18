@@ -1,13 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
-import { Logo } from '@/components/common/Logo'
+import { motion } from 'framer-motion'
 import { HeroSection } from '@/components/home/HeroSection'
-import { ShaderBackground } from '@/components/ui'
-import { MarketingFooter } from '@/components/common/MarketingFooter'
-import { useGuestOnly } from '@/hooks/useAuth'
+import { MarketingLayoutClient } from '@/components/layout/MarketingLayoutClient'
 import { 
   BarChart3, 
   Package, 
@@ -16,8 +12,6 @@ import {
   ArrowRight,
   CheckCircle,
   TrendingUp,
-  Menu,
-  X,
   Receipt,
   DollarSign,
   Users,
@@ -155,116 +149,10 @@ const testimonials = [
 ]
 
 export default function HomePage() {
-  useGuestOnly('/dashboard')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
   return (
-    <div className="min-h-screen">
-      {/* WebGL Shader Background - placed at root for persistent animation */}
-      <ShaderBackground />
-      
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <Logo width={32} height={32} />
-              <span className="text-xl font-bold text-white">BizPilot</span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/features" className="text-gray-300 hover:text-white transition-colors">
-                Features
-              </Link>
-              <Link href="/industries" className="text-gray-300 hover:text-white transition-colors">
-                Industries
-              </Link>
-              <Link href="/pricing" className="text-gray-300 hover:text-white transition-colors">
-                Pricing
-              </Link>
-              <Link href="/faq" className="text-gray-300 hover:text-white transition-colors">
-                FAQ
-              </Link>
-              <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
-                Sign In
-              </Link>
-              <Link 
-                href="/auth/register" 
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-gray-300 hover:text-white"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {mobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="md:hidden overflow-hidden"
-              >
-                <div className="py-4 space-y-2">
-                  <Link 
-                    href="/features" 
-                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Features
-                  </Link>
-                  <Link 
-                    href="/industries" 
-                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Industries
-                  </Link>
-                  <Link 
-                    href="/pricing" 
-                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Pricing
-                  </Link>
-                  <Link 
-                    href="/faq" 
-                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    FAQ
-                  </Link>
-                  <Link 
-                    href="/auth/login" 
-                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link 
-                    href="/auth/register" 
-                    className="block px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Get Started
-                  </Link>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </nav>
+    <MarketingLayoutClient>
+      {/* Hero Section */}
+      <HeroSection />
 
       {/* Hero Section */}
       <HeroSection />
@@ -731,9 +619,6 @@ export default function HomePage() {
           </motion.div>
         </div>
       </div>
-
-      {/* Footer */}
-      <MarketingFooter />
-    </div>
+    </MarketingLayoutClient>
   )
 }
