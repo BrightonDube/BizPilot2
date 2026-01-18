@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, X, Zap, Crown, Building2 } from 'lucide-react'
-import { subscriptionApi, SubscriptionTier } from '@/lib/subscription-api'
+import { subscriptionApi } from '@/lib/subscription-api'
+import type { SubscriptionTier } from '@/shared/pricing-config'
 
 interface TierSelectorProps {
   selectedTierId?: string

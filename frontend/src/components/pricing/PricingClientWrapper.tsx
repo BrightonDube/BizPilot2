@@ -133,6 +133,13 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
   }, [])
 
   const handleSelectTier = async (planId: string) => {
+    // Handle Enterprise tier differently - redirect to contact sales
+    if (planId === 'enterprise') {
+      // For Enterprise tier, redirect to contact sales
+      window.location.href = 'mailto:sales@bizpilot.co.za?subject=Enterprise%20Plan%20Inquiry&body=Hi,%0A%0AI%27m%20interested%20in%20learning%20more%20about%20the%20Enterprise%20plan.%20Please%20contact%20me%20to%20discuss%20custom%20pricing%20and%20features.%0A%0AThank%20you!';
+      return;
+    }
+
     if (!user) {
       router.push('/auth/register')
       return
@@ -198,16 +205,20 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
             <span className="ml-1 text-xs text-green-400">Save 20%</span>
           </button>
         </div>
+        <p className="text-xs text-gray-400 mt-2 text-center">
+          * Enterprise pricing is custom - contact sales for details
+        </p>
       </motion.div>
 
       <motion.div 
-        className="grid grid-cols-1 gap-6 md:grid-cols-3"
+        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
       >
         {currentCards.map((card) => {
           const isProcessing = isPurchasing === card.planId
+          const isEnterprise = card.planId === 'enterprise'
           const ctaText = user
             ? (isProcessing ? 'Processing...' : card.cta)
             : card.cta
@@ -223,7 +234,7 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
               benefits={card.benefits}
               ctaHref={card.ctaHref}
               planId={card.planId}
-              onCtaClick={user ? () => handleSelectTier(card.planId) : undefined}
+              onCtaClick={isEnterprise || user ? () => handleSelectTier(card.planId) : undefined}
             />
           )
         })}

@@ -6,6 +6,12 @@ from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
 
+# Import shared pricing configuration
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'shared'))
+from pricing_config import DEFAULT_TIERS
+
 
 class SubscriptionTier(BaseModel):
     """Subscription tier model defining pricing and features."""
@@ -31,6 +37,9 @@ class SubscriptionTier(BaseModel):
     # Is this the default tier for new users?
     is_default = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Custom pricing flag for Enterprise tier
+    is_custom_pricing = Column(Boolean, default=False, nullable=False)
     
     # Features and limits as JSONB for flexibility
     # Example: {"max_products": 5, "max_users": 1, "features": ["basic_reports"]}
@@ -64,115 +73,26 @@ class SubscriptionTier(BaseModel):
         """Get a specific limit value from features."""
         return self.features.get(limit_name, default) if self.features else default
 
+    def has_custom_pricing(self) -> bool:
+        """Check if tier has custom pricing (Enterprise tier)."""
+        return self.is_custom_pricing or self.price_monthly_cents == -1
 
-# Default tier configurations for seeding
-DEFAULT_TIERS = {
-    "pilot_solo": {
-        "name": "pilot_solo",
-        "display_name": "Pilot Solo",
-        "description": "Free starter tier for getting started with BizPilot",
-        "price_monthly_cents": 0,
-        "price_yearly_cents": 0,
-        "sort_order": 0,
-        "is_default": True,
-        "features": {
-            "max_users": 1,
-            "max_orders_per_month": 50,
-            "max_terminals": 1,
-        },
-        "feature_flags": {
-            "basic_reports": False,
-            "inventory_tracking": False,
-            "cost_calculations": False,
-            "email_support": True,
-            "export_reports": False,
-            "ai_insights": False,
-            "custom_categories": False,
-            "priority_support": False,
-            "multi_location": False,
-            "api_access": False,
-            "team_collaboration": False,
-        },
-    },
-    "pilot_lite": {
-        "name": "pilot_lite",
-        "display_name": "Pilot Lite",
-        "description": "Coffee stalls and trucks: cash/card tracking with basic sales reports",
-        "price_monthly_cents": 19900,  # R199/month
-        "price_yearly_cents": 191040,  # 20% discount
-        "sort_order": 1,
-        "is_default": False,
-        "features": {
-            "max_users": 3,
-            "max_orders_per_month": -1,
-            "max_terminals": 1,
-        },
-        "feature_flags": {
-            "basic_reports": True,
-            "inventory_tracking": False,
-            "cost_calculations": False,
-            "email_support": True,
-            "export_reports": False,
-            "ai_insights": False,
-            "custom_categories": False,
-            "priority_support": False,
-            "multi_location": False,
-            "api_access": False,
-            "team_collaboration": True,
-        },
-    },
-    "pilot_core": {
-        "name": "pilot_core",
-        "display_name": "Pilot Core",
-        "description": "Standard restaurants: inventory tracking with ingredient tracking and recipes",
-        "price_monthly_cents": 79900,  # R799/month
-        "price_yearly_cents": 767040,  # 20% discount
-        "sort_order": 2,
-        "is_default": False,
-        "features": {
-            "max_users": -1,
-            "max_orders_per_month": -1,
-            "max_terminals": 2,
-        },
-        "feature_flags": {
-            "basic_reports": True,
-            "inventory_tracking": True,
-            "cost_calculations": True,
-            "email_support": True,
-            "export_reports": True,
-            "ai_insights": False,
-            "custom_categories": True,
-            "priority_support": False,
-            "multi_location": False,
-            "api_access": False,
-            "team_collaboration": True,
-        },
-    },
-    "pilot_pro": {
-        "name": "pilot_pro",
-        "display_name": "Pilot Pro",
-        "description": "High volume: full AI suite and automation",
-        "price_monthly_cents": 149900,  # R1499/month
-        "price_yearly_cents": 1439040,  # 20% discount
-        "sort_order": 3,
-        "is_default": False,
-        "features": {
-            "max_users": -1,
-            "max_orders_per_month": -1,
-            "max_terminals": -1,
-        },
-        "feature_flags": {
-            "basic_reports": True,
-            "inventory_tracking": True,
-            "cost_calculations": True,
-            "email_support": True,
-            "export_reports": True,
-            "ai_insights": True,
-            "custom_categories": True,
-            "priority_support": True,
-            "multi_location": True,
-            "api_access": True,
-            "team_collaboration": True,
-        },
-    },
-}
+    def get_display_price(self, cycle: str = 'monthly') -> str:
+        """Get formatted display price for the tier."""
+        if self.has_custom_pricing():
+            return "Contact Sales"
+        
+        price = self.price_monthly_cents if cycle == 'monthly' else self.price_yearly_cents
+        if price == 0:
+            return "Free"
+        
+        amount = price / 100
+        currency_symbol = "R" if self.currency == "ZAR" else "$"
+        cycle_suffix = "/mo" if cycle == 'monthly' else "/yr"
+        
+        return f"{currency_symbol}{amount:,.0f}{cycle_suffix}"
+
+
+# Default tier configurations imported from shared configuration
+# This ensures consistency between frontend and backend pricing
+# Requirements: 1.2, 3.1, 3.5, 3.6, 3.7

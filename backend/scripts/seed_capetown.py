@@ -136,20 +136,20 @@ def clear_all_data(db: Session):
 
 
 def create_subscription_tiers(db: Session) -> dict:
-    """Create subscription tiers."""
+    """Create subscription tiers using shared pricing configuration."""
     print("Creating subscription tiers...")
     
     tiers = {}
-    for tier_key, tier_data in DEFAULT_TIERS.items():
+    for tier_name, tier_data in DEFAULT_TIERS.items():
         tier = SubscriptionTier(**tier_data)
         db.add(tier)
-        tiers[tier_key] = tier
+        tiers[tier_name] = tier
     
     db.commit()
     for tier in tiers.values():
         db.refresh(tier)
     
-    print(f"  ✓ Subscription tiers: {len(tiers)}")
+    print(f"  ✓ Subscription tiers: {len(tiers)} (using shared pricing config)")
     return tiers
 
 

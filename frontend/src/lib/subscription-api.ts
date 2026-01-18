@@ -3,20 +3,7 @@
  */
 
 import { apiClient } from './api';
-
-export interface SubscriptionTier {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string | null;
-  price_monthly_cents: number;
-  price_yearly_cents: number;
-  currency: string;
-  sort_order: number;
-  is_default: boolean;
-  features: Record<string, number>;
-  feature_flags: Record<string, boolean>;
-}
+import type { SubscriptionTier } from '@/shared/pricing-config';
 
 export interface UserSubscription {
   tier: {

@@ -26,81 +26,9 @@ interface PricingCardProps {
   planId: string
 }
 
-function PricingCard({ tier, price, bestFor, cta, benefits, featured = false, ctaHref, planId }: PricingCardProps) {
-  return (
-    <div className="h-full">
-      <div
-        className={`relative h-full w-full overflow-hidden rounded-xl border p-6 ${
-          featured 
-            ? "border-purple-500/50 bg-gradient-to-br from-purple-900/20 to-blue-900/20 shadow-xl shadow-purple-500/20" 
-            : "border-slate-700/50 bg-slate-900"
-        }`}
-      >
-        {featured && (
-          <div className="absolute -top-px left-1/2 -translate-x-1/2">
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-3 py-1 text-xs font-medium text-white rounded-b-md">
-              Most Popular
-            </div>
-          </div>
-        )}
-        <div className="flex flex-col items-center border-b pb-6 border-slate-700">
-          <span className="mb-6 inline-block text-gray-100 font-medium">
-            {tier}
-          </span>
-          <span className="mb-3 inline-block text-4xl font-bold text-gray-100">
-            {price}
-          </span>
-          <span className="bg-gradient-to-br from-gray-300 to-gray-500 bg-clip-text text-center text-transparent">
-            {bestFor}
-          </span>
-        </div>
-        <div className="space-y-4 py-9">
-          {benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center gap-3">
-              {benefit.checked ? (
-                <span className="grid size-5 place-content-center rounded-full bg-purple-600 text-sm text-white">
-                  <Check className="size-3" />
-                </span>
-              ) : (
-                <span className="grid size-5 place-content-center rounded-full bg-slate-800 text-sm text-gray-500">
-                  <X className="size-3" />
-                </span>
-              )}
-              <span className="text-sm text-gray-300">{benefit.text}</span>
-            </div>
-          ))}
-        </div>
-        {ctaHref ? (
-          <Link
-            href={ctaHref}
-            className={`block w-full py-3 px-4 rounded-lg font-medium text-center transition-all ${
-              featured
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
-                : 'bg-slate-700 text-white hover:bg-slate-600'
-            }`}
-          >
-            {cta}
-          </Link>
-        ) : (
-          <div 
-            data-plan-id={planId}
-            className={`block w-full py-3 px-4 rounded-lg font-medium text-center transition-all cursor-pointer ${
-              featured
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
-                : 'bg-slate-700 text-white hover:bg-slate-600'
-            }`}
-          >
-            {cta}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export default function PricingPage() {
-  // Use centralized pricing configuration instead of API calls
-  const displayTiers = PRICING_PLANS.slice(0, 3) // Show first 3 plans
+  // Use centralized pricing configuration - show all 5 tiers including Enterprise
+  const displayTiers = PRICING_PLANS // Show all plans including Enterprise
 
   const generatePricingCards = (billingCycle: BillingCycle) => {
     return displayTiers.map((plan) => {
@@ -115,10 +43,10 @@ export default function PricingPage() {
         tier: plan.displayName,
         price: priceLabel,
         bestFor: plan.description,
-        cta: plan.monthlyPrice === 0 ? 'Get Started Free' : 'Get Started',
+        cta: plan.isCustomPricing ? 'Contact Sales' : (plan.monthlyPrice === 0 ? 'Get Started Free' : 'Get Started'),
         featured: isFeatured,
         benefits: benefits,
-        ctaHref: '/auth/register',
+        ctaHref: plan.isCustomPricing ? '#' : '/auth/register', // Don't redirect for Enterprise
         planId: plan.id
       }
     })
@@ -129,11 +57,12 @@ export default function PricingPage() {
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 md:px-8">
         <div className="mb-12 space-y-3">
           <h2 className="text-center text-3xl font-semibold leading-tight sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight text-gray-100">
-            Complete Business Management Plans That Scale With You
+            Choose Your Perfect Business Management Plan
           </h2>
           <p className="text-center text-base text-gray-400 md:text-lg">
-            Comprehensive POS and ERP system with smart features that enhance your business operations. 
-            Get complete inventory management, customer tools, reporting, and intelligent automation that grows with your business.
+            From free starter to enterprise-grade solutions. Comprehensive POS and ERP system with smart features 
+            that enhance your business operations. Get complete inventory management, customer tools, reporting, 
+            and intelligent automation that grows with your business.
           </p>
           <div className="flex justify-center mt-6">
             <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 max-w-2xl">
@@ -189,7 +118,11 @@ export default function PricingPage() {
             {[
               {
                 question: "What's included in each business management plan?",
-                answer: "All plans include complete POS system, inventory management, customer tools, and reporting. Professional adds advanced analytics, automated features, and multi-location support. Enterprise includes custom integrations and dedicated support."
+                answer: "All plans include complete POS system, inventory management, customer tools, and reporting. Pilot Lite adds team collaboration, Pilot Core adds advanced inventory and cost calculations, Pilot Pro includes full AI suite and multi-location support. Enterprise includes custom integrations, white-labeling, and dedicated support."
+              },
+              {
+                question: "How does Enterprise tier pricing work?",
+                answer: "Enterprise tier pricing is customized based on your specific business needs, number of locations, required integrations, and support level. Contact our sales team for a personalized quote that includes unlimited everything plus custom development and dedicated account management."
               },
               {
                 question: "How do the smart features enhance my business operations?",
@@ -197,19 +130,19 @@ export default function PricingPage() {
               },
               {
                 question: "Is there a free trial for the complete business system?",
-                answer: "Yes! Our Starter plan includes core business management features at no cost. Paid plans come with a 14-day free trial including all advanced features. Experience the complete system before you commit."
+                answer: "Yes! Our Pilot Solo plan includes core business management features at no cost. Paid plans come with a 14-day free trial including all advanced features. Experience the complete system before you commit."
               },
               {
                 question: "Can I upgrade as my business grows?",
-                answer: "Absolutely! Start with any plan and upgrade anytime as your business needs grow. All your data transfers seamlessly, and you get immediate access to advanced features when you upgrade."
+                answer: "Absolutely! Start with any plan and upgrade anytime as your business needs grow. All your data transfers seamlessly, and you get immediate access to advanced features when you upgrade. Enterprise customers get dedicated migration support."
               },
               {
                 question: "Do you offer discounts for annual billing?",
-                answer: "Yes, save 20% when you pay annually for any paid plan. This gives you full access to all business management features at a significant discount. Contact us for custom enterprise pricing."
+                answer: "Yes, save 20% when you pay annually for Pilot Lite, Core, and Pro plans. Enterprise tier includes flexible billing options and custom payment terms. Contact us for volume discounts and multi-year agreements."
               },
               {
                 question: "How secure is my business data?",
-                answer: "Your business data security is our top priority. All data is encrypted, regularly backed up, and stored securely. You maintain complete ownership and can export or delete your data anytime. Smart features work with full transparency and your consent."
+                answer: "Your business data security is our top priority. All data is encrypted, regularly backed up, and stored securely. You maintain complete ownership and can export or delete your data anytime. Enterprise tier includes advanced security features and compliance certifications."
               }
             ].map((faq) => (
               <div 
