@@ -1,9 +1,11 @@
-"""add_is_custom_pricing_to_subscription_tiers
+"""add_is_custom_pricing_to_subscription_tiers (no-op)
 
 Revision ID: ef3bb807b7d5
 Revises: 4777487a7c3d
 Create Date: 2026-01-18 22:27:11.050416
 
+Note: This is a no-op migration as the is_custom_pricing column
+already exists in the subscription_tiers table.
 """
 from typing import Sequence, Union
 
@@ -31,5 +33,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # This migration is a no-op, so downgrade is also a no-op
+    """
+    No-op migration downgrade.
+    
+    Since the upgrade is a no-op, the downgrade is also a no-op.
+    The is_custom_pricing column should remain in the table as it's
+    part of the expected schema.
+    """
     pass
