@@ -23,522 +23,565 @@ import {
 } from '@/components/marketing/AIMessagingComponents'
 
 export const metadata: Metadata = {
-  title: 'AI-Powered Features - Intelligent Business Management',
-  description: 'Discover BizPilot&apos;s AI-powered feature set including intelligent POS systems, smart inventory management, predictive analytics, and automated business insights that put you in control.',
-  keywords: ['AI business features', 'intelligent POS system', 'smart inventory management', 'predictive analytics', 'AI automation', 'business intelligence'],
+  title: 'Complete Business Management Features - BizPilot',
+  description: 'Discover BizPilot&apos;s comprehensive business management features including POS systems, inventory management, reporting, customer management, and smart automation that enhances your operations.',
+  keywords: ['business management features', 'POS system', 'inventory management', 'business reporting', 'customer management', 'smart automation', 'business intelligence'],
 }
 
 const featureCategories = [
   {
-    title: 'AI-Powered Point of Sale & Transactions',
-    description: 'Intelligent POS system with AI-driven insights, predictive analytics, and smart automation that learns your business patterns',
+    title: 'Point of Sale & Transaction Management',
+    description: 'Complete POS system with fast processing, multiple payment options, and smart features that help optimize your sales operations',
     icon: Receipt,
-    aiPowered: true,
-    aiCapabilities: ['Smart transaction analysis', 'Predictive customer behavior', 'Automated pricing suggestions', 'Intelligent inventory alerts'],
+    aiPowered: false,
+    smartFeatures: ['Smart transaction analysis', 'Predictive customer suggestions', 'Automated pricing rules', 'Intelligent inventory alerts'],
     features: [
       { 
-        name: 'Lightning-Fast AI-Enhanced Processing', 
-        description: 'Process sales in seconds with AI-powered barcode recognition, intelligent product search, and predictive checkout workflows that learn from your patterns',
-        aiEnhanced: true,
-        aiFeatures: ['Smart product suggestions', 'Predictive text search', 'Automated discount application']
+        name: 'Lightning-Fast Transaction Processing', 
+        description: 'Process sales in seconds with barcode scanning, product search, and streamlined checkout workflows. Handle high-volume periods with ease.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Barcode scanning', 'Product search', 'Quick checkout', 'Receipt printing']
       },
       { 
-        name: 'Intelligent Mobile POS Application', 
-        description: 'Native mobile app with AI-powered offline capabilities, smart sync optimization, and predictive inventory alerts based on sales patterns',
-        aiEnhanced: true,
-        aiFeatures: ['Predictive offline mode', 'Smart sync prioritization', 'AI-driven alerts']
+        name: 'Mobile POS Application', 
+        description: 'Native mobile app with offline capabilities, automatic sync, and real-time inventory updates. Take your POS anywhere in your store.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Offline mode', 'Auto sync', 'Mobile payments', 'Real-time updates']
       },
       { 
-        name: 'Smart Table Management System', 
-        description: 'AI-optimized floor plans with predictive table turnover, intelligent reservation management, and automated order-to-table assignment',
+        name: 'Table Management System', 
+        description: 'Comprehensive table management with floor plans, reservation handling, and order-to-table assignment for restaurants.',
         aiEnhanced: true,
-        aiFeatures: ['Predictive table availability', 'Smart seating optimization', 'Automated workflow suggestions']
+        smartFeatures: ['Predictive table availability', 'Smart seating optimization'],
+        traditionalFeatures: ['Floor plan management', 'Reservation system', 'Order tracking', 'Table status']
       },
       { 
-        name: 'AI-Driven Multi-Channel Order Management', 
-        description: 'Intelligently handle dine-in, takeaway, delivery, and online orders with AI-powered priority optimization and predictive fulfillment timing',
+        name: 'Multi-Channel Order Management', 
+        description: 'Handle dine-in, takeaway, delivery, and online orders from one unified system with priority management and timing controls.',
         aiEnhanced: true,
-        aiFeatures: ['Smart order prioritization', 'Predictive delivery times', 'Automated channel optimization']
+        smartFeatures: ['Smart order prioritization', 'Predictive delivery times'],
+        traditionalFeatures: ['Order queue management', 'Channel integration', 'Status tracking', 'Customer notifications']
       },
       { 
-        name: 'Intelligent Kitchen Display Integration', 
-        description: 'AI-enhanced order display with predictive timing, smart priority management, and automated completion tracking that learns from kitchen performance',
+        name: 'Kitchen Display Integration', 
+        description: 'Digital kitchen displays with order management, timing controls, and completion tracking to streamline kitchen operations.',
         aiEnhanced: true,
-        aiFeatures: ['Predictive cooking times', 'Smart priority algorithms', 'Performance learning']
+        smartFeatures: ['Predictive cooking times', 'Smart priority management'],
+        traditionalFeatures: ['Order display', 'Timer management', 'Status updates', 'Kitchen workflow']
       },
       { 
-        name: 'Smart Payment Processing', 
-        description: 'Accept all payment methods with AI-powered fraud detection, intelligent payment routing, and automated reconciliation',
+        name: 'Payment Processing', 
+        description: 'Accept all payment methods including cash, cards, mobile payments, and digital wallets with secure processing and automatic reconciliation.',
         aiEnhanced: true,
-        aiFeatures: ['Fraud detection', 'Smart payment routing', 'Automated reconciliation']
+        smartFeatures: ['Fraud detection', 'Smart payment routing'],
+        traditionalFeatures: ['Multiple payment types', 'Secure processing', 'Auto reconciliation', 'Payment reporting']
       },
       { 
-        name: 'AI-Generated Receipts & Invoices', 
-        description: 'Professional receipts and invoices with AI-powered template optimization, smart delivery timing, and personalized customer messaging',
-        aiEnhanced: true,
-        aiFeatures: ['Template optimization', 'Smart delivery timing', 'Personalized messaging']
+        name: 'Receipts & Invoicing', 
+        description: 'Professional receipts and invoices with customizable templates, automatic delivery options, and customer communication features.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Custom templates', 'Email delivery', 'Print options', 'Customer details']
       },
       { 
-        name: 'Intelligent Shift Management', 
-        description: 'AI-optimized shift procedures with predictive cash flow management, smart reconciliation, and automated performance tracking',
+        name: 'Shift Management', 
+        description: 'Complete shift procedures with cash management, reconciliation tools, and performance tracking for staff accountability.',
         aiEnhanced: true,
-        aiFeatures: ['Predictive cash flow', 'Smart reconciliation', 'Performance insights']
+        smartFeatures: ['Predictive cash flow', 'Performance insights'],
+        traditionalFeatures: ['Cash counting', 'Shift reports', 'Till reconciliation', 'Staff tracking']
       }
     ]
   },
   {
-    title: 'Smart Inventory & AI-Powered Stock Control',
-    description: 'Revolutionary inventory management with AI that predicts demand, optimizes stock levels, and automates reordering while keeping you in complete control',
+    title: 'Inventory Management & Stock Control',
+    description: 'Comprehensive inventory system with real-time tracking, automated processes, and smart insights to optimize your stock levels',
     icon: Warehouse,
-    aiPowered: true,
-    aiCapabilities: ['Predictive demand forecasting', 'Automated reorder optimization', 'Smart waste reduction', 'Intelligent stock alerts'],
+    aiPowered: false,
+    smartFeatures: ['Predictive demand forecasting', 'Automated reorder suggestions', 'Smart waste reduction', 'Intelligent stock alerts'],
     features: [
       { 
-        name: 'AI-Powered Real-Time Stock Tracking', 
-        description: 'Live inventory with AI that predicts stock movements, identifies patterns, and provides intelligent alerts before you run out',
+        name: 'Real-Time Stock Tracking', 
+        description: 'Live inventory monitoring with automatic updates from sales, deliveries, and adjustments. Always know your exact stock levels.',
         aiEnhanced: true,
-        aiFeatures: ['Predictive stock alerts', 'Pattern recognition', 'Smart movement analysis']
+        smartFeatures: ['Predictive stock alerts', 'Pattern recognition'],
+        traditionalFeatures: ['Real-time updates', 'Stock level monitoring', 'Movement tracking', 'Audit trails']
       },
       { 
-        name: 'Intelligent Multi-Location Inventory', 
-        description: 'AI-optimized stock distribution across locations with predictive transfer suggestions and automated rebalancing recommendations',
+        name: 'Multi-Location Inventory', 
+        description: 'Manage stock across multiple locations with centralized control, transfer management, and consolidated reporting.',
         aiEnhanced: true,
-        aiFeatures: ['Smart transfer suggestions', 'Predictive rebalancing', 'Automated optimization']
+        smartFeatures: ['Smart transfer suggestions', 'Predictive rebalancing'],
+        traditionalFeatures: ['Multi-location tracking', 'Transfer management', 'Centralized control', 'Location reporting']
       },
       { 
-        name: 'AI-Driven Automated Reordering', 
-        description: 'Smart reordering system that learns your business patterns, predicts demand fluctuations, and automatically generates optimized purchase orders',
+        name: 'Automated Reordering System', 
+        description: 'Set reorder points and automatic purchase order generation based on sales patterns, lead times, and business rules.',
         aiEnhanced: true,
-        aiFeatures: ['Demand prediction', 'Pattern learning', 'Optimized order quantities']
+        smartFeatures: ['Demand prediction', 'Optimized order quantities'],
+        traditionalFeatures: ['Reorder points', 'Purchase orders', 'Supplier management', 'Lead time tracking']
       },
       { 
-        name: 'Smart Barcode Scanning & Recognition', 
-        description: 'AI-enhanced barcode scanning with intelligent product identification, automated data entry, and smart error correction',
-        aiEnhanced: true,
-        aiFeatures: ['Intelligent recognition', 'Automated data entry', 'Smart error correction']
+        name: 'Barcode Scanning & Product Management', 
+        description: 'Comprehensive product database with barcode scanning, category management, and detailed product information tracking.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Barcode scanning', 'Product database', 'Category management', 'Product details']
       },
       { 
-        name: 'AI-Powered Waste Tracking & Reduction', 
-        description: 'Intelligent waste monitoring that identifies patterns, predicts waste hotspots, and provides actionable recommendations to reduce losses',
+        name: 'Waste Tracking & Loss Prevention', 
+        description: 'Monitor and track waste, spoilage, and losses with detailed reporting and analysis to identify improvement opportunities.',
         aiEnhanced: true,
-        aiFeatures: ['Waste pattern analysis', 'Predictive hotspot identification', 'Reduction recommendations']
+        smartFeatures: ['Waste pattern analysis', 'Reduction recommendations'],
+        traditionalFeatures: ['Waste logging', 'Loss tracking', 'Spoilage monitoring', 'Waste reporting']
       },
       { 
-        name: 'Intelligent Stock Adjustment Management', 
-        description: 'Smart stock adjustments with AI-powered variance analysis, automated reason detection, and intelligent approval workflows',
-        aiEnhanced: true,
-        aiFeatures: ['Variance analysis', 'Automated reason detection', 'Smart workflows']
+        name: 'Stock Adjustment Management', 
+        description: 'Handle stock adjustments, corrections, and variance management with approval workflows and detailed audit trails.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Stock adjustments', 'Variance tracking', 'Approval workflows', 'Audit trails']
       },
       { 
-        name: 'AI-Enhanced Supplier Integration', 
-        description: 'Intelligent supplier management with predictive ordering, automated cost optimization, and smart vendor performance analysis',
+        name: 'Supplier Management', 
+        description: 'Comprehensive supplier database with contact management, order history, performance tracking, and cost analysis.',
         aiEnhanced: true,
-        aiFeatures: ['Predictive ordering', 'Cost optimization', 'Performance analysis']
+        smartFeatures: ['Performance analysis', 'Cost optimization'],
+        traditionalFeatures: ['Supplier database', 'Contact management', 'Order history', 'Performance tracking']
       },
       { 
-        name: 'Smart Month-End Stock Procedures', 
-        description: 'AI-streamlined stock take workflows with intelligent variance detection, predictive adjustments, and automated audit trail generation',
+        name: 'Stock Take & Auditing', 
+        description: 'Streamlined stock take procedures with mobile scanning, variance detection, and automated reporting for accurate inventory counts.',
         aiEnhanced: true,
-        aiFeatures: ['Variance detection', 'Predictive adjustments', 'Automated auditing']
+        smartFeatures: ['Variance detection', 'Automated auditing'],
+        traditionalFeatures: ['Mobile stock take', 'Count verification', 'Variance reporting', 'Audit procedures']
       }
     ]
   },
   {
-    title: 'AI-Driven Reporting & Business Intelligence',
-    description: 'Advanced AI analytics that transform your data into actionable insights, predictive forecasts, and intelligent recommendations for data-driven decisions',
+    title: 'Business Reporting & Analytics',
+    description: 'Powerful reporting suite with comprehensive analytics, customizable dashboards, and intelligent insights for data-driven decisions',
     icon: BarChart3,
-    aiPowered: true,
-    aiCapabilities: ['Predictive analytics', 'Intelligent trend analysis', 'Automated insights generation', 'Smart forecasting'],
+    aiPowered: false,
+    smartFeatures: ['Predictive analytics', 'Intelligent trend analysis', 'Automated insights generation', 'Smart forecasting'],
     features: [
       { 
-        name: 'AI-Powered Sales Analytics', 
-        description: 'Advanced sales analysis with AI-driven trend identification, predictive forecasting, and intelligent performance comparisons that reveal hidden opportunities',
+        name: 'Sales Analytics & Reporting', 
+        description: 'Comprehensive sales analysis with detailed reports, performance tracking, and trend identification across all channels and time periods.',
         aiEnhanced: true,
-        aiFeatures: ['Trend prediction', 'Opportunity identification', 'Performance insights']
+        smartFeatures: ['Trend prediction', 'Opportunity identification'],
+        traditionalFeatures: ['Sales reports', 'Performance tracking', 'Channel analysis', 'Time period comparisons']
       },
       { 
-        name: 'Intelligent Inventory Reports', 
-        description: 'Smart inventory reporting with AI-powered movement analysis, predictive valuation, and automated reorder recommendations based on your business patterns',
+        name: 'Inventory Reports & Analysis', 
+        description: 'Detailed inventory reporting with movement analysis, valuation reports, and reorder recommendations based on historical data.',
         aiEnhanced: true,
-        aiFeatures: ['Movement prediction', 'Smart valuation', 'Automated recommendations']
+        smartFeatures: ['Movement prediction', 'Smart recommendations'],
+        traditionalFeatures: ['Stock reports', 'Movement analysis', 'Valuation reports', 'Reorder analysis']
       },
       { 
-        name: 'AI-Enhanced Staff Performance Tracking', 
-        description: 'Intelligent performance metrics with AI-driven productivity analysis, predictive target setting, and personalized improvement recommendations',
-        aiEnhanced: true,
-        aiFeatures: ['Productivity analysis', 'Predictive targets', 'Personalized recommendations']
+        name: 'Staff Performance Tracking', 
+        description: 'Monitor staff performance with sales tracking, productivity metrics, and detailed performance reports for better management.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Performance metrics', 'Sales tracking', 'Productivity reports', 'Staff comparisons']
       },
       { 
-        name: 'Smart Dashboard Builder with AI Insights', 
-        description: 'Build intelligent dashboards with AI-powered widget recommendations, automated KPI selection, and predictive metric highlighting',
+        name: 'Custom Dashboard Builder', 
+        description: 'Build personalized dashboards with drag-and-drop widgets, custom KPIs, and real-time data visualization.',
         aiEnhanced: true,
-        aiFeatures: ['Widget recommendations', 'Automated KPI selection', 'Predictive highlighting']
+        smartFeatures: ['Widget recommendations', 'Automated KPI selection'],
+        traditionalFeatures: ['Custom dashboards', 'Drag-and-drop builder', 'Real-time data', 'Custom KPIs']
       },
       { 
-        name: 'AI-Driven Profit Analysis', 
-        description: 'Intelligent profit analysis with AI-powered margin optimization, predictive pricing recommendations, and automated profitability insights',
+        name: 'Profit & Loss Analysis', 
+        description: 'Detailed profitability analysis with margin tracking, cost analysis, and profit optimization recommendations.',
         aiEnhanced: true,
-        aiFeatures: ['Margin optimization', 'Pricing recommendations', 'Profitability insights']
+        smartFeatures: ['Margin optimization', 'Profitability insights'],
+        traditionalFeatures: ['P&L reports', 'Margin tracking', 'Cost analysis', 'Profit calculations']
       },
       { 
-        name: 'Smart Export & Distribution', 
-        description: 'Intelligent report distribution with AI-powered scheduling, automated recipient optimization, and smart format selection',
-        aiEnhanced: true,
-        aiFeatures: ['Smart scheduling', 'Recipient optimization', 'Format selection']
+        name: 'Report Export & Distribution', 
+        description: 'Export reports in multiple formats and set up automated distribution to stakeholders with customizable scheduling.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Multiple export formats', 'Automated distribution', 'Custom scheduling', 'Email delivery']
       },
       { 
-        name: 'Real-Time AI Business Intelligence', 
-        description: 'Live AI-powered data visualization with predictive analytics, intelligent trend analysis, and proactive decision-making recommendations',
+        name: 'Real-Time Business Intelligence', 
+        description: 'Live data visualization with interactive charts, real-time KPIs, and comprehensive business intelligence dashboards.',
         aiEnhanced: true,
-        aiFeatures: ['Predictive visualization', 'Trend analysis', 'Decision recommendations']
+        smartFeatures: ['Predictive visualization', 'Decision recommendations'],
+        traditionalFeatures: ['Real-time charts', 'Interactive dashboards', 'Live KPIs', 'Data visualization']
       },
       { 
-        name: 'AI-Enhanced Multi-Location Reporting', 
-        description: 'Intelligent consolidated reporting with AI-powered location comparison, predictive benchmarking, and automated performance insights',
+        name: 'Multi-Location Consolidated Reporting', 
+        description: 'Unified reporting across all locations with consolidated views, location comparisons, and centralized performance tracking.',
         aiEnhanced: true,
-        aiFeatures: ['Smart comparisons', 'Predictive benchmarking', 'Performance insights']
+        smartFeatures: ['Smart comparisons', 'Performance insights'],
+        traditionalFeatures: ['Consolidated reports', 'Location comparisons', 'Centralized tracking', 'Multi-location KPIs']
       }
     ]
   },
   {
-    title: 'Intelligent Customer Relationship Management',
-    description: 'AI-powered CRM that understands your customers, predicts their needs, and automates personalized experiences while respecting their privacy',
+    title: 'Customer Relationship Management',
+    description: 'Complete CRM system with customer profiles, loyalty programs, and marketing tools to build stronger customer relationships',
     icon: Users,
-    aiPowered: true,
-    aiCapabilities: ['Customer behavior prediction', 'Personalized recommendations', 'Automated segmentation', 'Intelligent loyalty optimization'],
+    aiPowered: false,
+    smartFeatures: ['Customer behavior insights', 'Personalized recommendations', 'Automated segmentation', 'Intelligent loyalty optimization'],
     features: [
       { 
-        name: 'AI-Enhanced Customer Profiles', 
-        description: 'Intelligent customer profiles with AI-powered behavioral analysis, predictive preferences, and automated insight generation that respects privacy',
+        name: 'Customer Profiles & Database', 
+        description: 'Comprehensive customer database with contact information, purchase history, preferences, and detailed customer insights.',
         aiEnhanced: true,
-        aiFeatures: ['Behavioral analysis', 'Predictive preferences', 'Automated insights']
+        smartFeatures: ['Behavioral analysis', 'Predictive preferences'],
+        traditionalFeatures: ['Customer database', 'Contact management', 'Purchase history', 'Customer notes']
       },
       { 
-        name: 'Smart Loyalty Programs', 
-        description: 'AI-optimized loyalty programs with intelligent tier management, personalized offers, and predictive campaign automation',
+        name: 'Loyalty Programs & Rewards', 
+        description: 'Flexible loyalty program management with points, tiers, rewards, and promotional campaigns to increase customer retention.',
         aiEnhanced: true,
-        aiFeatures: ['Smart tier management', 'Personalized offers', 'Predictive campaigns']
+        smartFeatures: ['Smart tier management', 'Personalized offers'],
+        traditionalFeatures: ['Points system', 'Tier management', 'Reward tracking', 'Promotional campaigns']
       },
       { 
-        name: 'Intelligent Account Management', 
-        description: 'AI-powered account management with predictive balance monitoring, smart credit limit optimization, and automated statement generation',
-        aiEnhanced: true,
-        aiFeatures: ['Predictive monitoring', 'Credit optimization', 'Automated statements']
+        name: 'Customer Account Management', 
+        description: 'Manage customer accounts with credit limits, payment terms, account balances, and automated statement generation.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Account management', 'Credit limits', 'Payment terms', 'Statement generation']
       },
       { 
-        name: 'AI-Driven Marketing Campaigns', 
-        description: 'Intelligent marketing automation with AI-powered segmentation, predictive timing optimization, and smart performance tracking',
+        name: 'Marketing Campaign Management', 
+        description: 'Create and manage marketing campaigns with customer segmentation, targeted messaging, and performance tracking.',
         aiEnhanced: true,
-        aiFeatures: ['Smart segmentation', 'Timing optimization', 'Performance tracking']
+        smartFeatures: ['Smart segmentation', 'Timing optimization'],
+        traditionalFeatures: ['Campaign creation', 'Customer segmentation', 'Message templates', 'Performance tracking']
       },
       { 
-        name: 'Predictive Customer Analytics', 
-        description: 'AI-powered customer analytics with lifetime value prediction, behavioral modeling, and intelligent retention recommendations',
+        name: 'Customer Analytics & Insights', 
+        description: 'Analyze customer behavior with lifetime value calculations, purchase patterns, and retention analysis for better decision making.',
         aiEnhanced: true,
-        aiFeatures: ['Lifetime value prediction', 'Behavioral modeling', 'Retention recommendations']
+        smartFeatures: ['Lifetime value prediction', 'Retention recommendations'],
+        traditionalFeatures: ['Customer analytics', 'Purchase patterns', 'Retention analysis', 'Value calculations']
       },
       { 
-        name: 'Smart Feedback & Review Management', 
-        description: 'Intelligent feedback collection with AI-powered sentiment analysis, automated response suggestions, and predictive improvement tracking',
+        name: 'Feedback & Review Management', 
+        description: 'Collect and manage customer feedback with review tracking, response management, and improvement action planning.',
         aiEnhanced: true,
-        aiFeatures: ['Sentiment analysis', 'Response suggestions', 'Improvement tracking']
+        smartFeatures: ['Sentiment analysis', 'Response suggestions'],
+        traditionalFeatures: ['Feedback collection', 'Review tracking', 'Response management', 'Action planning']
       },
       { 
-        name: 'AI-Enhanced Customer Display Integration', 
-        description: 'Smart customer displays with AI-powered content personalization, predictive offer timing, and intelligent engagement optimization',
-        aiEnhanced: true,
-        aiFeatures: ['Content personalization', 'Predictive timing', 'Engagement optimization']
+        name: 'Customer Display Integration', 
+        description: 'Customer-facing displays with promotional content, loyalty information, and interactive features for enhanced engagement.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Customer displays', 'Promotional content', 'Loyalty display', 'Interactive features']
       },
       { 
-        name: 'Advanced AI Personalization Engine', 
-        description: 'Sophisticated AI that learns customer preferences, predicts needs, and delivers personalized experiences while maintaining complete privacy control',
+        name: 'Customer Communication Tools', 
+        description: 'Integrated communication tools with email marketing, SMS notifications, and automated customer messaging.',
         aiEnhanced: true,
-        aiFeatures: ['Preference learning', 'Need prediction', 'Privacy-first personalization']
+        smartFeatures: ['Personalized messaging', 'Engagement optimization'],
+        traditionalFeatures: ['Email marketing', 'SMS notifications', 'Automated messaging', 'Communication tracking']
       }
     ]
   },
   {
-    title: 'Smart Financial Management & AI Accounting',
-    description: 'Intelligent financial management with AI-powered insights, automated processes, and predictive analytics that integrate seamlessly with your accounting systems',
+    title: 'Financial Management & Accounting',
+    description: 'Comprehensive financial tools with payment processing, invoicing, and seamless integration with popular accounting systems',
     icon: DollarSign,
-    aiPowered: true,
-    aiCapabilities: ['Automated financial analysis', 'Predictive cash flow', 'Smart tax optimization', 'Intelligent reconciliation'],
+    aiPowered: false,
+    smartFeatures: ['Automated financial analysis', 'Predictive cash flow', 'Smart tax optimization', 'Intelligent reconciliation'],
     features: [
       { 
-        name: 'AI-Enhanced Payment Processing', 
-        description: 'Intelligent payment processing with AI-powered fraud detection, smart routing optimization, and predictive transaction analysis',
+        name: 'Payment Processing & Management', 
+        description: 'Secure payment processing with multiple payment methods, automatic reconciliation, and detailed transaction tracking.',
         aiEnhanced: true,
-        aiFeatures: ['Fraud detection', 'Routing optimization', 'Transaction analysis']
+        smartFeatures: ['Fraud detection', 'Smart routing'],
+        traditionalFeatures: ['Multiple payment methods', 'Secure processing', 'Transaction tracking', 'Payment reconciliation']
       },
       { 
-        name: 'Smart Invoice Generation', 
-        description: 'AI-powered invoicing with intelligent template optimization, predictive payment timing, and automated reminder scheduling',
-        aiEnhanced: true,
-        aiFeatures: ['Template optimization', 'Payment prediction', 'Smart reminders']
+        name: 'Invoice Generation & Management', 
+        description: 'Professional invoice creation with customizable templates, automatic delivery, and payment tracking for better cash flow.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Invoice creation', 'Custom templates', 'Automatic delivery', 'Payment tracking']
       },
       { 
-        name: 'Intelligent Accounting Integration', 
-        description: 'Smart integration with accounting systems featuring AI-powered data mapping, automated reconciliation, and predictive error detection',
+        name: 'Accounting System Integration', 
+        description: 'Seamless integration with popular accounting systems like Xero, Sage, and QuickBooks for streamlined financial management.',
         aiEnhanced: true,
-        aiFeatures: ['Smart data mapping', 'Automated reconciliation', 'Error prediction']
+        smartFeatures: ['Smart data mapping', 'Automated reconciliation'],
+        traditionalFeatures: ['Xero integration', 'Sage integration', 'QuickBooks sync', 'Data mapping']
       },
       { 
-        name: 'AI-Driven Tax Management', 
-        description: 'Intelligent tax calculations with AI-powered compliance monitoring, predictive filing optimization, and automated reporting',
-        aiEnhanced: true,
-        aiFeatures: ['Compliance monitoring', 'Filing optimization', 'Automated reporting']
+        name: 'Tax Management & Compliance', 
+        description: 'Automated tax calculations, compliance monitoring, and reporting tools to ensure accurate tax management and filing.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Tax calculations', 'Compliance monitoring', 'Tax reporting', 'Filing assistance']
       },
       { 
-        name: 'Smart Financial Reports', 
-        description: 'AI-enhanced financial reporting with intelligent analysis, predictive insights, and automated variance detection',
+        name: 'Financial Reporting Suite', 
+        description: 'Comprehensive financial reports including P&L, balance sheets, cash flow statements, and custom financial analysis.',
         aiEnhanced: true,
-        aiFeatures: ['Intelligent analysis', 'Predictive insights', 'Variance detection']
+        smartFeatures: ['Intelligent analysis', 'Predictive insights'],
+        traditionalFeatures: ['P&L reports', 'Balance sheets', 'Cash flow reports', 'Financial analysis']
       },
       { 
-        name: 'AI-Powered Multi-Currency Support', 
-        description: 'Intelligent currency management with AI-driven exchange rate optimization, predictive hedging suggestions, and automated conversion',
-        aiEnhanced: true,
-        aiFeatures: ['Rate optimization', 'Hedging suggestions', 'Smart conversion']
+        name: 'Multi-Currency Support', 
+        description: 'Handle multiple currencies with automatic conversion, exchange rate management, and multi-currency reporting.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Multi-currency support', 'Exchange rates', 'Currency conversion', 'Multi-currency reports']
       },
       { 
-        name: 'Smart General Ledger Management', 
-        description: 'AI-enhanced ledger management with intelligent account mapping, automated journal entries, and predictive audit trail analysis',
-        aiEnhanced: true,
-        aiFeatures: ['Account mapping', 'Automated entries', 'Audit analysis']
+        name: 'General Ledger Management', 
+        description: 'Complete general ledger with chart of accounts, journal entries, and detailed financial transaction tracking.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Chart of accounts', 'Journal entries', 'Transaction tracking', 'Ledger management']
       },
       { 
-        name: 'Intelligent Cost Center Accounting', 
-        description: 'AI-powered cost tracking with smart allocation algorithms, predictive profitability analysis, and automated cost optimization',
+        name: 'Cost Center & Department Accounting', 
+        description: 'Track costs by department or cost center with detailed allocation, profitability analysis, and budget management.',
         aiEnhanced: true,
-        aiFeatures: ['Smart allocation', 'Profitability prediction', 'Cost optimization']
+        smartFeatures: ['Smart allocation', 'Profitability prediction'],
+        traditionalFeatures: ['Cost center tracking', 'Department accounting', 'Budget management', 'Allocation rules']
       }
     ]
   },
   {
-    title: 'AI-Enhanced Staff Management & Operations',
-    description: 'Intelligent workforce management with AI-powered scheduling optimization, predictive performance analysis, and automated operational insights',
+    title: 'Staff Management & Operations',
+    description: 'Complete workforce management with time tracking, scheduling, performance management, and operational controls',
     icon: Clock,
-    aiPowered: true,
-    aiCapabilities: ['Predictive scheduling', 'Performance optimization', 'Automated compliance', 'Smart workforce analytics'],
+    aiPowered: false,
+    smartFeatures: ['Predictive scheduling', 'Performance optimization', 'Automated compliance', 'Smart workforce analytics'],
     features: [
       { 
-        name: 'AI-Powered Time & Attendance Tracking', 
-        description: 'Intelligent time tracking with AI-powered pattern recognition, predictive overtime alerts, and automated attendance analysis',
+        name: 'Time & Attendance Tracking', 
+        description: 'Comprehensive time tracking with clock in/out, break management, overtime tracking, and detailed attendance reporting.',
         aiEnhanced: true,
-        aiFeatures: ['Pattern recognition', 'Overtime prediction', 'Attendance analysis']
+        smartFeatures: ['Pattern recognition', 'Overtime prediction'],
+        traditionalFeatures: ['Time clock', 'Break tracking', 'Overtime management', 'Attendance reports']
       },
       { 
-        name: 'Smart Staff Scheduling', 
-        description: 'AI-optimized scheduling with predictive demand forecasting, intelligent availability matching, and automated labor cost optimization',
+        name: 'Staff Scheduling System', 
+        description: 'Advanced scheduling tools with shift planning, availability management, and labor cost optimization for efficient staffing.',
         aiEnhanced: true,
-        aiFeatures: ['Demand forecasting', 'Availability matching', 'Cost optimization']
+        smartFeatures: ['Demand forecasting', 'Cost optimization'],
+        traditionalFeatures: ['Shift planning', 'Availability tracking', 'Schedule templates', 'Labor cost tracking']
       },
       { 
-        name: 'Intelligent Role-Based Access Control', 
-        description: 'AI-enhanced security with smart permission optimization, predictive access patterns, and automated compliance monitoring',
-        aiEnhanced: true,
-        aiFeatures: ['Permission optimization', 'Access prediction', 'Compliance monitoring']
+        name: 'Role-Based Access Control', 
+        description: 'Secure access management with customizable user roles, permission settings, and activity monitoring for system security.',
+        aiEnhanced: false,
+        traditionalFeatures: ['User roles', 'Permission settings', 'Access control', 'Activity monitoring']
       },
       { 
-        name: 'AI-Driven Performance Management', 
-        description: 'Intelligent performance tracking with AI-powered goal optimization, predictive improvement recommendations, and automated review scheduling',
+        name: 'Performance Management Tools', 
+        description: 'Track staff performance with goal setting, performance reviews, and detailed analytics for better team management.',
         aiEnhanced: true,
-        aiFeatures: ['Goal optimization', 'Improvement predictions', 'Automated reviews']
+        smartFeatures: ['Goal optimization', 'Improvement recommendations'],
+        traditionalFeatures: ['Performance tracking', 'Goal setting', 'Review management', 'Performance analytics']
       },
       { 
-        name: 'Smart Commission & Incentive Management', 
-        description: 'AI-powered commission tracking with intelligent calculation optimization, predictive earning forecasts, and automated payroll integration',
-        aiEnhanced: true,
-        aiFeatures: ['Calculation optimization', 'Earning forecasts', 'Payroll integration']
+        name: 'Commission & Incentive Management', 
+        description: 'Automated commission calculations, incentive tracking, and payroll integration for transparent compensation management.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Commission tracking', 'Incentive management', 'Payroll integration', 'Compensation reports']
       },
       { 
-        name: 'Intelligent Training & Development Tracking', 
-        description: 'AI-enhanced training management with smart skill gap analysis, predictive development paths, and automated compliance tracking',
+        name: 'Training & Development Tracking', 
+        description: 'Monitor staff training progress, skill development, and certification management for continuous improvement.',
         aiEnhanced: true,
-        aiFeatures: ['Skill gap analysis', 'Development paths', 'Compliance tracking']
+        smartFeatures: ['Skill gap analysis', 'Development paths'],
+        traditionalFeatures: ['Training tracking', 'Skill management', 'Certification tracking', 'Development planning']
       },
       { 
-        name: 'Smart Department-Based Team Roles', 
-        description: 'AI-optimized team organization with intelligent role matching, predictive workflow optimization, and automated reporting structures',
-        aiEnhanced: true,
-        aiFeatures: ['Role matching', 'Workflow optimization', 'Automated reporting']
+        name: 'Department & Team Management', 
+        description: 'Organize staff by departments and teams with hierarchical management, reporting structures, and team performance tracking.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Department organization', 'Team management', 'Hierarchical structure', 'Team reporting']
       },
       { 
-        name: 'AI-Powered Labor Cost Analysis', 
-        description: 'Intelligent labor analysis with AI-driven productivity optimization, predictive cost forecasting, and automated efficiency recommendations',
+        name: 'Labor Cost Analysis', 
+        description: 'Detailed labor cost tracking with productivity analysis, efficiency metrics, and cost optimization recommendations.',
         aiEnhanced: true,
-        aiFeatures: ['Productivity optimization', 'Cost forecasting', 'Efficiency recommendations']
+        smartFeatures: ['Productivity optimization', 'Efficiency recommendations'],
+        traditionalFeatures: ['Labor cost tracking', 'Productivity metrics', 'Efficiency analysis', 'Cost reporting']
       }
     ]
   },
   {
-    title: 'Intelligent Menu & Recipe Management',
-    description: 'AI-powered menu optimization with smart recipe costing, predictive demand analysis, and automated profitability recommendations',
+    title: 'Menu & Recipe Management',
+    description: 'Complete menu management system with recipe costing, nutritional tracking, and menu optimization tools for food businesses',
     icon: Package,
-    aiPowered: true,
-    aiCapabilities: ['Menu optimization', 'Predictive costing', 'Smart ingredient tracking', 'Automated profitability analysis'],
+    aiPowered: false,
+    smartFeatures: ['Menu optimization', 'Predictive costing', 'Smart ingredient tracking', 'Automated profitability analysis'],
     features: [
       { 
-        name: 'AI-Enhanced Recipe Management & Costing', 
-        description: 'Intelligent recipe creation with AI-powered cost optimization, predictive ingredient pricing, and automated portion control',
+        name: 'Recipe Management & Costing', 
+        description: 'Comprehensive recipe database with ingredient tracking, cost calculations, and portion control for accurate menu pricing.',
         aiEnhanced: true,
-        aiFeatures: ['Cost optimization', 'Price prediction', 'Portion control']
+        smartFeatures: ['Cost optimization', 'Price prediction'],
+        traditionalFeatures: ['Recipe database', 'Ingredient tracking', 'Cost calculations', 'Portion control']
       },
       { 
-        name: 'Smart Menu Engineering Optimization', 
-        description: 'AI-driven menu analysis with intelligent performance tracking, predictive profitability optimization, and automated promotion recommendations',
+        name: 'Menu Engineering & Optimization', 
+        description: 'Analyze menu performance with profitability tracking, popularity analysis, and menu optimization recommendations.',
         aiEnhanced: true,
-        aiFeatures: ['Performance tracking', 'Profitability optimization', 'Promotion recommendations']
+        smartFeatures: ['Performance tracking', 'Optimization recommendations'],
+        traditionalFeatures: ['Menu analysis', 'Profitability tracking', 'Popularity metrics', 'Menu design']
       },
       { 
-        name: 'Intelligent Modifier & Add-On Management', 
-        description: 'AI-powered modifier optimization with smart pricing rules, predictive selection patterns, and automated combo deal suggestions',
-        aiEnhanced: true,
-        aiFeatures: ['Pricing optimization', 'Selection prediction', 'Combo suggestions']
+        name: 'Modifier & Add-On Management', 
+        description: 'Flexible modifier system with pricing rules, combination management, and upselling tools to increase average order value.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Modifier management', 'Pricing rules', 'Combination tracking', 'Upselling tools']
       },
       { 
-        name: 'Smart Ingredient Inventory Integration', 
-        description: 'AI-enhanced ingredient tracking with predictive usage patterns, intelligent deduction algorithms, and automated reorder suggestions',
+        name: 'Ingredient Inventory Integration', 
+        description: 'Connect recipes to inventory with automatic ingredient deduction, usage tracking, and reorder suggestions.',
         aiEnhanced: true,
-        aiFeatures: ['Usage prediction', 'Smart deduction', 'Reorder suggestions']
+        smartFeatures: ['Usage prediction', 'Reorder suggestions'],
+        traditionalFeatures: ['Ingredient tracking', 'Auto deduction', 'Usage monitoring', 'Recipe costing']
       },
       { 
-        name: 'AI-Powered Nutritional Information Tracking', 
-        description: 'Intelligent nutritional analysis with automated calculation, smart allergen management, and predictive health trend integration',
-        aiEnhanced: true,
-        aiFeatures: ['Automated calculation', 'Allergen management', 'Health trend integration']
+        name: 'Nutritional Information Tracking', 
+        description: 'Track nutritional information, allergen data, and dietary requirements with automatic calculations and compliance reporting.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Nutritional tracking', 'Allergen management', 'Dietary requirements', 'Compliance reporting']
       },
       { 
-        name: 'Smart Yield Management', 
-        description: 'AI-optimized yield tracking with intelligent waste factor analysis, predictive portion optimization, and automated cost control',
+        name: 'Yield Management & Waste Control', 
+        description: 'Monitor recipe yields, track waste factors, and optimize portion sizes for better cost control and profitability.',
         aiEnhanced: true,
-        aiFeatures: ['Waste analysis', 'Portion optimization', 'Cost control']
+        smartFeatures: ['Waste analysis', 'Portion optimization'],
+        traditionalFeatures: ['Yield tracking', 'Waste monitoring', 'Portion control', 'Cost analysis']
       },
       { 
-        name: 'Intelligent Seasonal Menu Planning', 
-        description: 'AI-powered seasonal planning with predictive demand analysis, smart cost forecasting, and automated profitability optimization',
-        aiEnhanced: true,
-        aiFeatures: ['Demand prediction', 'Cost forecasting', 'Profitability optimization']
+        name: 'Seasonal Menu Planning', 
+        description: 'Plan seasonal menus with cost forecasting, availability tracking, and profitability analysis for better menu management.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Seasonal planning', 'Cost forecasting', 'Availability tracking', 'Menu scheduling']
       },
       { 
-        name: 'Smart Menu Category Management', 
-        description: 'AI-enhanced category organization with intelligent presentation optimization, predictive promotional features, and automated visual management',
-        aiEnhanced: true,
-        aiFeatures: ['Presentation optimization', 'Promotional predictions', 'Visual management']
+        name: 'Menu Category & Display Management', 
+        description: 'Organize menu items by category with visual management, promotional features, and customer-facing display controls.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Category management', 'Visual organization', 'Promotional features', 'Display controls']
       }
     ]
   },
   {
-    title: 'AI-Powered E-Commerce & Online Integration',
-    description: 'Intelligent omnichannel experience with AI-driven optimization, predictive customer behavior analysis, and automated cross-platform synchronization',
+    title: 'E-Commerce & Online Integration',
+    description: 'Seamless omnichannel experience with online ordering, delivery management, and integration with popular e-commerce platforms',
     icon: Globe,
-    aiPowered: true,
-    aiCapabilities: ['Omnichannel optimization', 'Predictive customer behavior', 'Smart inventory sync', 'Automated marketing'],
+    aiPowered: false,
+    smartFeatures: ['Omnichannel optimization', 'Predictive customer behavior', 'Smart inventory sync', 'Automated marketing'],
     features: [
       { 
-        name: 'Smart WooCommerce Integration', 
-        description: 'AI-enhanced WooCommerce integration with intelligent product sync, predictive order management, and automated inventory optimization',
-        aiEnhanced: true,
-        aiFeatures: ['Smart sync', 'Order prediction', 'Inventory optimization']
+        name: 'WooCommerce Integration', 
+        description: 'Seamless integration with WooCommerce for unified inventory, order management, and customer data synchronization.',
+        aiEnhanced: false,
+        traditionalFeatures: ['WooCommerce sync', 'Inventory integration', 'Order management', 'Customer sync']
       },
       { 
-        name: 'Intelligent Online Ordering Platform', 
-        description: 'AI-powered ordering system with smart menu personalization, predictive order suggestions, and automated payment optimization',
+        name: 'Online Ordering Platform', 
+        description: 'Complete online ordering system with menu display, order customization, and integrated payment processing.',
         aiEnhanced: true,
-        aiFeatures: ['Menu personalization', 'Order suggestions', 'Payment optimization']
+        smartFeatures: ['Menu personalization', 'Order suggestions'],
+        traditionalFeatures: ['Online menu', 'Order customization', 'Payment processing', 'Order tracking']
       },
       { 
-        name: 'Smart Delivery Management System', 
-        description: 'AI-optimized delivery management with intelligent route planning, predictive delivery times, and automated driver assignment',
+        name: 'Delivery Management System', 
+        description: 'Comprehensive delivery management with driver assignment, route planning, and real-time tracking for efficient delivery operations.',
         aiEnhanced: true,
-        aiFeatures: ['Route optimization', 'Time prediction', 'Driver assignment']
+        smartFeatures: ['Route optimization', 'Time prediction'],
+        traditionalFeatures: ['Driver management', 'Route planning', 'Delivery tracking', 'Customer notifications']
       },
       { 
-        name: 'AI-Enhanced Digital Signage Integration', 
-        description: 'Intelligent digital signage with AI-powered content optimization, predictive display timing, and automated promotional management',
-        aiEnhanced: true,
-        aiFeatures: ['Content optimization', 'Display timing', 'Promotional automation']
+        name: 'Digital Signage Integration', 
+        description: 'Connect with digital signage systems for dynamic menu displays, promotional content, and real-time pricing updates.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Digital menu boards', 'Promotional displays', 'Real-time updates', 'Content management']
       },
       { 
-        name: 'Smart Mobile App Integration', 
-        description: 'AI-powered mobile app with intelligent user experience optimization, predictive feature recommendations, and automated engagement',
-        aiEnhanced: true,
-        aiFeatures: ['UX optimization', 'Feature recommendations', 'Engagement automation']
+        name: 'Mobile App Integration', 
+        description: 'Native mobile app support with customer ordering, loyalty integration, and push notification capabilities.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Mobile ordering', 'Loyalty integration', 'Push notifications', 'Customer accounts']
       },
       { 
-        name: 'Intelligent Social Media Integration', 
-        description: 'AI-enhanced social media management with smart content optimization, predictive engagement analysis, and automated customer interaction',
-        aiEnhanced: true,
-        aiFeatures: ['Content optimization', 'Engagement prediction', 'Interaction automation']
+        name: 'Social Media Integration', 
+        description: 'Connect with social media platforms for marketing, customer engagement, and online reputation management.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Social media posting', 'Customer engagement', 'Review management', 'Marketing integration']
       },
       { 
-        name: 'Smart Third-Party Marketplace Integration', 
-        description: 'AI-optimized marketplace management with intelligent platform optimization, predictive performance analysis, and automated order routing',
-        aiEnhanced: true,
-        aiFeatures: ['Platform optimization', 'Performance prediction', 'Order routing']
+        name: 'Third-Party Marketplace Integration', 
+        description: 'Integrate with delivery platforms and marketplaces for expanded reach and unified order management.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Marketplace integration', 'Unified orders', 'Platform management', 'Commission tracking']
       },
       { 
-        name: 'AI-Powered Omnichannel Inventory Sync', 
-        description: 'Intelligent inventory synchronization with AI-driven demand prediction, smart allocation optimization, and automated overselling prevention',
+        name: 'Omnichannel Inventory Synchronization', 
+        description: 'Keep inventory synchronized across all sales channels with real-time updates and overselling prevention.',
         aiEnhanced: true,
-        aiFeatures: ['Demand prediction', 'Allocation optimization', 'Overselling prevention']
+        smartFeatures: ['Demand prediction', 'Overselling prevention'],
+        traditionalFeatures: ['Multi-channel sync', 'Real-time updates', 'Inventory allocation', 'Channel management']
       }
     ]
   },
   {
-    title: 'AI-Enhanced Multi-Location & Enterprise Features',
-    description: 'Enterprise-grade AI capabilities for multi-location businesses with intelligent centralized management, predictive analytics, and automated optimization',
+    title: 'Multi-Location & Enterprise Features',
+    description: 'Enterprise-grade capabilities for multi-location businesses with centralized management, consolidated reporting, and scalable operations',
     icon: Building2,
-    aiPowered: true,
-    aiCapabilities: ['Centralized AI analytics', 'Predictive performance optimization', 'Smart resource allocation', 'Automated compliance monitoring'],
+    aiPowered: false,
+    smartFeatures: ['Centralized analytics', 'Predictive performance optimization', 'Smart resource allocation', 'Automated compliance monitoring'],
     features: [
       { 
-        name: 'AI-Powered Centralized Multi-Location Dashboard', 
-        description: 'Intelligent unified dashboard with AI-driven performance monitoring, predictive analytics, and automated alert systems across all locations',
+        name: 'Centralized Multi-Location Dashboard', 
+        description: 'Unified dashboard for monitoring all locations with real-time performance metrics, alerts, and consolidated views.',
         aiEnhanced: true,
-        aiFeatures: ['Performance monitoring', 'Predictive analytics', 'Automated alerts']
+        smartFeatures: ['Performance monitoring', 'Automated alerts'],
+        traditionalFeatures: ['Multi-location dashboard', 'Real-time metrics', 'Consolidated views', 'Location comparison']
       },
       { 
-        name: 'Smart Location Performance Comparison', 
-        description: 'AI-enhanced performance analysis with intelligent benchmarking, predictive improvement recommendations, and automated best practice identification',
+        name: 'Location Performance Comparison', 
+        description: 'Compare performance across locations with benchmarking tools, best practice identification, and improvement recommendations.',
         aiEnhanced: true,
-        aiFeatures: ['Smart benchmarking', 'Improvement predictions', 'Best practice identification']
+        smartFeatures: ['Smart benchmarking', 'Best practice identification'],
+        traditionalFeatures: ['Performance comparison', 'Benchmarking tools', 'Location analytics', 'Improvement tracking']
       },
       { 
-        name: 'AI-Driven Consolidated Financial Reporting', 
-        description: 'Intelligent financial consolidation with AI-powered variance analysis, predictive trend identification, and automated drill-down capabilities',
-        aiEnhanced: true,
-        aiFeatures: ['Variance analysis', 'Trend prediction', 'Automated drill-down']
+        name: 'Consolidated Financial Reporting', 
+        description: 'Unified financial reporting across all locations with consolidated statements, variance analysis, and drill-down capabilities.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Consolidated reports', 'Financial statements', 'Variance analysis', 'Drill-down reporting']
       },
       { 
-        name: 'Smart Inter-Location Stock Transfers', 
-        description: 'AI-optimized stock transfers with intelligent demand prediction, automated workflow optimization, and smart tracking systems',
+        name: 'Inter-Location Stock Transfers', 
+        description: 'Manage stock transfers between locations with automated workflows, tracking systems, and approval processes.',
         aiEnhanced: true,
-        aiFeatures: ['Demand prediction', 'Workflow optimization', 'Smart tracking']
+        smartFeatures: ['Demand prediction', 'Workflow optimization'],
+        traditionalFeatures: ['Transfer management', 'Tracking systems', 'Approval workflows', 'Transfer reporting']
       },
       { 
-        name: 'Intelligent Franchise Management Tools', 
-        description: 'AI-powered franchise operations with smart royalty tracking, automated brand compliance monitoring, and predictive performance analysis',
-        aiEnhanced: true,
-        aiFeatures: ['Smart royalty tracking', 'Compliance monitoring', 'Performance prediction']
+        name: 'Franchise Management Tools', 
+        description: 'Comprehensive franchise management with royalty tracking, brand compliance monitoring, and performance analysis.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Royalty tracking', 'Brand compliance', 'Franchise reporting', 'Performance monitoring']
       },
       { 
-        name: 'AI-Enhanced Brand Consistency Controls', 
-        description: 'Intelligent brand management with automated consistency monitoring, smart pricing optimization, and predictive promotional coordination',
-        aiEnhanced: true,
-        aiFeatures: ['Consistency monitoring', 'Pricing optimization', 'Promotional coordination']
+        name: 'Brand Consistency Controls', 
+        description: 'Maintain brand consistency across locations with pricing controls, promotional coordination, and compliance monitoring.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Pricing controls', 'Promotional coordination', 'Brand compliance', 'Consistency monitoring']
       },
       { 
-        name: 'Smart Hierarchical User Management', 
-        description: 'AI-optimized user management with intelligent permission optimization, predictive access patterns, and automated corporate oversight',
-        aiEnhanced: true,
-        aiFeatures: ['Permission optimization', 'Access prediction', 'Corporate oversight']
+        name: 'Hierarchical User Management', 
+        description: 'Advanced user management with hierarchical permissions, corporate oversight, and role-based access across locations.',
+        aiEnhanced: false,
+        traditionalFeatures: ['Hierarchical permissions', 'Corporate oversight', 'Role management', 'Access control']
       },
       { 
-        name: 'AI-Powered Enterprise Security & Compliance', 
-        description: 'Advanced AI security with intelligent threat detection, predictive compliance monitoring, and automated audit trail analysis',
+        name: 'Enterprise Security & Compliance', 
+        description: 'Advanced security features with compliance monitoring, audit trails, and enterprise-grade data protection.',
         aiEnhanced: true,
-        aiFeatures: ['Threat detection', 'Compliance prediction', 'Audit analysis']
+        smartFeatures: ['Threat detection', 'Compliance prediction'],
+        traditionalFeatures: ['Security monitoring', 'Audit trails', 'Data protection', 'Compliance reporting']
       }
     ]
   }
@@ -549,24 +592,24 @@ export default function FeaturesPage() {
     <div className="relative">
       {/* Navigation is handled by the marketing layout */}
 
-      {/* AI-Enhanced Hero Section */}
+      {/* Balanced Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <Brain className="h-8 w-8 text-purple-400" />
-            <span className="text-purple-400 font-semibold text-lg">AI-Powered</span>
+            <Building2 className="h-8 w-8 text-blue-400" />
+            <span className="text-blue-400 font-semibold text-lg">Complete Business Management</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in-up">
-            Intelligent Features for Modern Businesses
+            Everything You Need to Run Your Business
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
-            Discover how BizPilot&apos;s AI-powered feature set transforms your business operations with intelligent automation, predictive insights, and smart decision-making tools that keep you in complete control.
+            Comprehensive POS, inventory management, reporting, and customer management system with smart features that enhance your operations and help you make better decisions.
           </p>
           
-          {/* AI Value Proposition Callout */}
+          {/* Balanced Value Proposition */}
           <div className="animate-fade-in-up animation-delay-300">
             <AIContentCallout 
-              componentId="hero-ai-tagline" 
+              componentId="balanced-hero-tagline" 
               variant="highlighted"
               className="max-w-2xl mx-auto mb-8"
             />
@@ -574,14 +617,51 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* AI Value Propositions Section */}
+      {/* Balanced Value Propositions Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900/50">
         <div className="max-w-7xl mx-auto">
-          <AIValuePropositions 
-            context="features"
-            title="AI-Powered Features That Work For You"
-            className="animate-fade-in-up"
-          />
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Complete Business Management Platform
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Everything you need to run your business efficiently, with smart features that enhance your operations
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+                <Receipt className="h-8 w-8 text-blue-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Complete POS System</h3>
+              <p className="text-gray-300 text-sm">Fast transaction processing, payment handling, and customer management</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-600/20 to-blue-600/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-green-500/30">
+                <Warehouse className="h-8 w-8 text-green-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Smart Inventory</h3>
+              <p className="text-gray-300 text-sm">Real-time tracking with intelligent alerts and automated reordering</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-purple-500/30">
+                <BarChart3 className="h-8 w-8 text-purple-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Advanced Analytics</h3>
+              <p className="text-gray-300 text-sm">Comprehensive reporting with predictive insights and trend analysis</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-600/20 to-red-600/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-orange-500/30">
+                <Users className="h-8 w-8 text-orange-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Customer Management</h3>
+              <p className="text-gray-300 text-sm">Complete CRM with loyalty programs and personalized experiences</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -602,10 +682,10 @@ export default function FeaturesPage() {
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{category.title}</h2>
                   <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">{category.description}</p>
                   
-                  {/* AI Capabilities Highlight */}
-                  {category.aiPowered && (
+                  {/* Smart Features Highlight - Only show if category has smart features */}
+                  {category.smartFeatures && category.smartFeatures.length > 0 && (
                     <div className="flex flex-wrap justify-center gap-3 mb-8">
-                      {category.aiCapabilities.map((capability, idx) => (
+                      {category.smartFeatures.map((capability, idx) => (
                         <span 
                           key={idx}
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full border border-blue-500/30 text-blue-300 text-sm"
@@ -637,18 +717,35 @@ export default function FeaturesPage() {
                       </div>
                       <p className="text-gray-300 mb-4">{feature.description}</p>
                       
-                      {/* AI Features Highlight */}
-                      {feature.aiEnhanced && feature.aiFeatures && (
+                      {/* Traditional Features List */}
+                      {feature.traditionalFeatures && feature.traditionalFeatures.length > 0 && (
+                        <div className="border-t border-slate-600 pt-3 mb-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-medium text-gray-400">Core Features</span>
+                          </div>
+                          <ul className="space-y-1">
+                            {feature.traditionalFeatures.map((traditionalFeature, tradIdx) => (
+                              <li key={tradIdx} className="text-xs text-gray-400 flex items-center gap-2">
+                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                {traditionalFeature}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* Smart Features Highlight */}
+                      {feature.aiEnhanced && feature.smartFeatures && feature.smartFeatures.length > 0 && (
                         <div className="border-t border-slate-600 pt-3">
                           <div className="flex items-center gap-2 mb-2">
                             <Zap className="h-4 w-4 text-blue-400" />
-                            <span className="text-sm font-medium text-blue-400">AI-Enhanced</span>
+                            <span className="text-sm font-medium text-blue-400">Smart Enhancements</span>
                           </div>
                           <ul className="space-y-1">
-                            {feature.aiFeatures.map((aiFeature, aiIdx) => (
-                              <li key={aiIdx} className="text-xs text-gray-400 flex items-center gap-2">
+                            {feature.smartFeatures.map((smartFeature, smartIdx) => (
+                              <li key={smartIdx} className="text-xs text-blue-300 flex items-center gap-2">
                                 <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                                {aiFeature}
+                                {smartFeature}
                               </li>
                             ))}
                           </ul>
@@ -663,9 +760,18 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* AI Privacy & Control Section */}
+      {/* Smart Features & Control Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
         <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Smart Features That Work For You
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              BizPilot includes intelligent automation and insights that enhance your business operations while keeping you in complete control
+            </p>
+          </div>
+          
           <AIPrivacyControl 
             showBoth={true}
             className="animate-fade-in-up"
@@ -673,11 +779,20 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* AI Automation Benefits */}
+      {/* Business Automation Benefits */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              How Smart Automation Enhances Your Business
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Reduce manual work and get intelligent insights while maintaining full control over your operations
+            </p>
+          </div>
+          
           <AIAutomationBenefits 
-            title="How AI Automation Transforms Your Business"
+            title=""
             showMetrics={true}
             className="animate-fade-in-up"
           />
@@ -692,11 +807,11 @@ export default function FeaturesPage() {
             <span className="text-green-400 font-semibold text-lg">You&apos;re in Control</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-fade-in-up">
-            AI That Respects Your Business Style
+            Business Management That Adapts to Your Style
           </h2>
           <p className="text-xl text-gray-300 mb-8 animate-fade-in-up animation-delay-100">
-            Our AI provides intelligent recommendations and insights - you make the final decisions. 
-            Customize AI behavior, override suggestions, or disable features entirely. Your business, your rules.
+            BizPilot provides comprehensive business management tools with smart features that enhance your operations. 
+            You control the automation levels, override any suggestions, and customize the system to work your way.
           </p>
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -705,7 +820,7 @@ export default function FeaturesPage() {
                 <span className="text-2xl">🎛️</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Customizable Settings</h3>
-              <p className="text-gray-300 text-sm">Adjust AI sensitivity, set custom thresholds, and configure automation levels to match your preferences.</p>
+              <p className="text-gray-300 text-sm">Adjust smart feature sensitivity, set custom thresholds, and configure automation levels to match your preferences.</p>
             </div>
             
             <div className="p-6 bg-slate-800/50 rounded-xl border border-slate-700">
@@ -713,7 +828,7 @@ export default function FeaturesPage() {
                 <span className="text-2xl">✋</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Manual Override</h3>
-              <p className="text-gray-300 text-sm">Override any AI recommendation with your business knowledge and experience at any time.</p>
+              <p className="text-gray-300 text-sm">Override any smart recommendation with your business knowledge and experience at any time.</p>
             </div>
             
             <div className="p-6 bg-slate-800/50 rounded-xl border border-slate-700">
@@ -721,7 +836,7 @@ export default function FeaturesPage() {
                 <span className="text-2xl">🔍</span>
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Transparent Decisions</h3>
-              <p className="text-gray-300 text-sm">Understand exactly how AI makes recommendations with clear explanations and confidence scores.</p>
+              <p className="text-gray-300 text-sm">Understand exactly how smart features make recommendations with clear explanations and confidence scores.</p>
             </div>
           </div>
 
@@ -737,14 +852,14 @@ export default function FeaturesPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <Brain className="h-8 w-8 text-purple-400" />
-            <span className="text-purple-400 font-semibold text-lg">Ready to Get Started?</span>
+            <Building2 className="h-8 w-8 text-blue-400" />
+            <span className="text-blue-400 font-semibold text-lg">Ready to Get Started?</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-fade-in-up">
-            Experience AI-Powered Business Management
+            Experience Complete Business Management
           </h2>
           <p className="text-xl text-gray-400 mb-8 animate-fade-in-up animation-delay-100">
-            Join thousands of businesses already using BizPilot&apos;s intelligent automation to streamline operations, increase profits, and make smarter decisions.
+            Join thousands of businesses already using BizPilot&apos;s comprehensive platform to streamline operations, increase profits, and make smarter decisions with intelligent automation.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
@@ -763,7 +878,7 @@ export default function FeaturesPage() {
                 href="/pricing" 
                 className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg border border-slate-600 text-white hover:border-purple-500 transition-all hover:shadow-lg hover:shadow-purple-500/20 hover:scale-105"
               >
-                View AI Features & Pricing
+                View Features & Pricing
               </Link>
             </div>
           </div>

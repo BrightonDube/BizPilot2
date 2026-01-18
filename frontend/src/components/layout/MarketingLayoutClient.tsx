@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/common/Logo'
 import { MarketingFooter } from '@/components/common/MarketingFooter'
-import ShaderBackground from '@/components/ui/shader-background'
 
 interface MarketingLayoutClientProps {
   children: React.ReactNode
@@ -18,8 +17,7 @@ export function MarketingLayoutClient({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen">
-      <ShaderBackground />
+    <div className="min-h-screen bg-slate-950">
       
       {/* Navigation */}
       <header>

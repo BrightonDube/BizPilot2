@@ -1,9 +1,9 @@
 /**
  * AI Messaging Configuration
  * 
- * This file contains centralized AI messaging content, taglines, and reusable
- * AI-focused content components for BizPilot's marketing pages. It provides
- * consistent messaging about AI capabilities, user control, and privacy protection.
+ * This file contains balanced AI messaging content that positions AI as a core feature
+ * while highlighting other important business management capabilities. AI is presented
+ * as an intelligent enhancement rather than the only selling point.
  * 
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5
  */
@@ -60,83 +60,80 @@ export interface AIFAQ {
 }
 
 /**
- * Core AI messaging configuration
+ * Balanced AI messaging configuration - AI as core feature, not the only feature
  */
 export const AI_MESSAGING: AIMessaging = {
-  heroTagline: "AI-Powered Business Management That Puts You in Control",
-  subTagline: "Harness the power of intelligent automation while maintaining complete control over your business decisions",
+  heroTagline: "Complete Business Management with Intelligent Automation",
+  subTagline: "Comprehensive POS and ERP system enhanced with smart AI features that learn your business patterns",
   keyBenefits: [
-    "Intelligent inventory tracking that learns your business patterns",
-    "Predictive analytics that help you make smarter decisions",
-    "Automated processes that save time while keeping you in control",
-    "Smart insights that grow your business profitability",
-    "AI-driven recommendations you can trust and customize"
+    "Complete business management from POS to inventory to reporting",
+    "Smart automation that learns and adapts to your business patterns",
+    "Powerful analytics and insights to drive better decisions",
+    "Seamless integration with accounting systems like Xero and Sage",
+    "Multi-location management with centralized control"
   ],
-  privacyMessage: "Your data stays private and secure. Our AI works for you, not against you. All AI processing happens with your explicit consent and full transparency.",
-  controlMessage: "You're always in control. Our AI provides intelligent recommendations and insights - you make the final decisions. Customize AI behavior to match your business style.",
+  privacyMessage: "Your data stays private and secure. AI features work locally with your explicit consent and full transparency.",
+  controlMessage: "You're always in control. AI provides helpful recommendations - you make the final decisions.",
   automationBenefits: [
-    "Reduce manual inventory counting by 80%",
-    "Predict stock needs 2-4 weeks in advance",
-    "Optimize pricing for maximum profitability",
-    "Identify top customers automatically",
-    "Streamline supplier relationships",
-    "Automate routine tasks while you focus on growth",
-    "Generate actionable insights from your business data"
+    "Reduce manual inventory counting and tracking",
+    "Get smart reorder suggestions based on sales patterns",
+    "Automate routine reporting and analytics",
+    "Streamline customer management and loyalty programs",
+    "Optimize pricing based on market data and costs"
   ],
   trustFactors: [
-    "Transparent AI decision-making process",
+    "Transparent decision-making process",
     "Full data ownership and control",
-    "Customizable AI behavior settings",
+    "Customizable automation settings",
     "Human oversight on all automated actions",
-    "Secure, encrypted data processing",
-    "No vendor lock-in - your data remains yours"
+    "Secure, encrypted data processing"
   ],
   valuePropositions: [
     {
-      title: "Intelligent Automation",
-      description: "Let AI handle routine tasks while you focus on strategic decisions",
+      title: "Smart Automation",
+      description: "Intelligent features that handle routine tasks while you focus on growth",
       icon: "🤖",
       benefits: [
         "Automated inventory tracking and alerts",
         "Smart reordering suggestions",
-        "Intelligent price optimization",
-        "Predictive demand forecasting"
+        "Intelligent reporting and analytics",
+        "Predictive insights for better planning"
       ],
       context: 'features'
     },
     {
-      title: "Smart Decision Support",
-      description: "Get AI-powered insights that help you make better business decisions",
-      icon: "🧠",
+      title: "Complete Business Suite",
+      description: "Everything you need to run your business in one integrated platform",
+      icon: "🏢",
       benefits: [
-        "Data-driven business recommendations",
-        "Trend analysis and forecasting",
-        "Customer behavior insights",
-        "Performance optimization suggestions"
+        "POS system with payment processing",
+        "Inventory management across locations",
+        "Customer relationship management",
+        "Financial reporting and integration"
       ],
       context: 'features'
     },
     {
-      title: "User-Controlled AI",
-      description: "Maintain complete control over how AI works in your business",
+      title: "User-Controlled Intelligence",
+      description: "AI features that enhance your expertise without taking over",
       icon: "🎛️",
       benefits: [
-        "Customizable AI behavior settings",
-        "Manual override on all recommendations",
+        "Customizable automation levels",
+        "Manual override on all suggestions",
         "Transparent decision explanations",
-        "Adjustable automation levels"
+        "Adjustable intelligence settings"
       ],
       context: 'features'
     },
     {
-      title: "Privacy-First AI",
-      description: "Your business data remains private and secure with our AI solutions",
+      title: "Privacy-First Approach",
+      description: "Your business data remains private and secure",
       icon: "🔒",
       benefits: [
         "Local data processing options",
-        "Encrypted AI model training",
+        "Encrypted data storage",
         "No data sharing with third parties",
-        "Full audit trail of AI decisions"
+        "Full audit trail of all actions"
       ],
       context: 'features'
     }
@@ -144,170 +141,170 @@ export const AI_MESSAGING: AIMessaging = {
 };
 
 /**
- * AI capabilities for features page
+ * Balanced AI capabilities for features page - mix of AI and traditional features
  */
 export const AI_CAPABILITIES: AICapability[] = [
   {
-    name: "Smart Inventory Management",
-    shortDescription: "AI-powered inventory tracking that learns your business patterns",
-    detailedDescription: "Our intelligent inventory system uses machine learning to understand your sales patterns, seasonal trends, and customer behavior. It automatically tracks stock levels, predicts when you'll run out of products, and suggests optimal reorder quantities.",
+    name: "Intelligent Inventory Management",
+    shortDescription: "Advanced inventory tracking with smart insights and automation",
+    detailedDescription: "Comprehensive inventory system that tracks stock levels, manages suppliers, and provides intelligent insights about your inventory patterns. Get smart reorder suggestions and automated alerts to prevent stockouts.",
     userControlAspects: [
       "Set custom reorder thresholds and safety stock levels",
-      "Override AI suggestions with your business knowledge",
+      "Override smart suggestions with your business knowledge",
       "Customize alert preferences and timing",
-      "Adjust AI sensitivity to seasonal changes"
+      "Adjust automation sensitivity"
     ],
     privacyFeatures: [
-      "All inventory data processed locally",
-      "No sharing of product information with competitors",
-      "Encrypted storage of business patterns",
+      "All inventory data processed securely",
+      "No sharing of product information",
+      "Encrypted storage of business data",
       "Full data export capabilities"
     ],
     businessBenefits: [
-      "Reduce stockouts by up to 75%",
+      "Reduce stockouts and overstock situations",
       "Optimize inventory investment",
-      "Minimize waste from overstocking",
+      "Minimize waste and spoilage",
       "Improve cash flow management"
     ],
     technicalFeatures: [
       "Real-time stock level monitoring",
-      "Predictive analytics engine",
+      "Smart analytics engine",
       "Automated reorder suggestions",
-      "Integration with POS systems"
+      "Multi-location inventory sync"
     ]
   },
   {
-    name: "Predictive Analytics",
-    shortDescription: "Forecast trends and make data-driven decisions with AI insights",
-    detailedDescription: "Advanced machine learning algorithms analyze your historical data to predict future trends, identify opportunities, and warn about potential challenges. Get actionable insights that help you stay ahead of the competition.",
+    name: "Advanced Analytics & Reporting",
+    shortDescription: "Comprehensive reporting with intelligent insights and trend analysis",
+    detailedDescription: "Powerful reporting system that analyzes your business data to identify trends, opportunities, and areas for improvement. Get both standard reports and smart insights that help you make better decisions.",
     userControlAspects: [
-      "Choose which metrics to track and predict",
-      "Set confidence thresholds for predictions",
+      "Choose which metrics to track and analyze",
       "Customize reporting frequency and format",
-      "Override predictions with market knowledge"
+      "Set up automated report delivery",
+      "Override insights with market knowledge"
     ],
     privacyFeatures: [
-      "Anonymized data processing",
+      "Secure data processing",
       "No external data sharing",
-      "Secure cloud processing with encryption",
-      "Complete data ownership rights"
+      "Encrypted report storage",
+      "Complete data ownership"
     ],
     businessBenefits: [
-      "Increase revenue by identifying growth opportunities",
-      "Reduce costs through predictive maintenance",
-      "Improve customer satisfaction with demand forecasting",
-      "Make confident strategic decisions"
+      "Identify growth opportunities and trends",
+      "Make data-driven business decisions",
+      "Track performance across all areas",
+      "Plan for future growth and challenges"
     ],
     technicalFeatures: [
-      "Time series forecasting",
-      "Anomaly detection",
-      "Trend analysis",
-      "Custom dashboard creation"
+      "Comprehensive dashboard system",
+      "Trend analysis and forecasting",
+      "Custom report builder",
+      "Export to Excel and PDF"
     ]
   },
   {
-    name: "Intelligent Pricing Optimization",
-    shortDescription: "Maximize profits with AI-driven pricing strategies",
-    detailedDescription: "Our pricing AI analyzes market conditions, competitor pricing, demand patterns, and your cost structure to recommend optimal prices that maximize profitability while maintaining competitiveness.",
+    name: "Smart Pricing Optimization",
+    shortDescription: "Intelligent pricing tools that help maximize profitability",
+    detailedDescription: "Advanced pricing system that analyzes costs, market conditions, and sales data to suggest optimal prices. Maintain competitive pricing while maximizing your profit margins.",
     userControlAspects: [
       "Set minimum and maximum price boundaries",
-      "Choose pricing strategy (profit vs. volume)",
-      "Override AI recommendations manually",
-      "Customize pricing rules by product category"
+      "Choose pricing strategy preferences",
+      "Override pricing recommendations",
+      "Customize pricing rules by category"
     ],
     privacyFeatures: [
       "Proprietary pricing algorithms",
       "No sharing of pricing strategies",
       "Secure competitive analysis",
-      "Confidential profit margin protection"
+      "Confidential margin protection"
     ],
     businessBenefits: [
-      "Increase profit margins by 15-25%",
-      "Stay competitive with dynamic pricing",
-      "Reduce pricing errors and inconsistencies",
-      "Optimize revenue across product lines"
+      "Increase profit margins effectively",
+      "Stay competitive in your market",
+      "Reduce pricing errors",
+      "Optimize revenue across products"
     ],
     technicalFeatures: [
       "Dynamic pricing algorithms",
-      "Competitor price monitoring",
-      "Demand elasticity analysis",
+      "Market analysis tools",
+      "Profit margin tracking",
       "A/B testing capabilities"
     ]
   },
   {
-    name: "Smart Customer Insights",
-    shortDescription: "Understand your customers better with AI-powered analytics",
-    detailedDescription: "Machine learning algorithms analyze customer behavior, purchase patterns, and preferences to help you understand your customers better, predict their needs, and personalize their experience.",
+    name: "Enhanced Customer Management",
+    shortDescription: "Comprehensive CRM with intelligent customer insights",
+    detailedDescription: "Complete customer relationship management system that tracks customer behavior, preferences, and purchase history. Get smart insights about your customers to improve service and increase loyalty.",
     userControlAspects: [
       "Choose customer segmentation criteria",
       "Set privacy levels for customer data",
-      "Customize marketing automation rules",
+      "Customize loyalty program rules",
       "Control data retention periods"
     ],
     privacyFeatures: [
-      "GDPR and POPIA compliant processing",
+      "GDPR and privacy law compliant",
       "Customer consent management",
       "Data anonymization options",
-      "Right to be forgotten implementation"
+      "Right to be forgotten support"
     ],
     businessBenefits: [
       "Increase customer lifetime value",
-      "Improve customer retention rates",
-      "Personalize marketing campaigns",
-      "Identify high-value customer segments"
+      "Improve customer retention",
+      "Personalize customer experience",
+      "Identify valuable customer segments"
     ],
     technicalFeatures: [
-      "Customer segmentation algorithms",
-      "Behavioral pattern recognition",
-      "Churn prediction models",
-      "Personalization engines"
+      "Customer segmentation tools",
+      "Purchase history tracking",
+      "Loyalty program management",
+      "Marketing automation features"
     ]
   }
 ];
 
 /**
- * Industry-specific AI use cases
+ * Balanced industry use cases - AI mentioned but not overwhelming
  */
 export const AI_INDUSTRY_USE_CASES: AIIndustryUseCase[] = [
   {
     industry: "Retail",
-    title: "Smart Retail Management",
-    description: "Transform your retail operations with AI that understands customer behavior and optimizes inventory",
+    title: "Complete Retail Management",
+    description: "Comprehensive retail solution with smart features that help optimize inventory, pricing, and customer relationships",
     aiCapabilities: [
-      "Predictive demand forecasting",
-      "Dynamic pricing optimization",
-      "Customer behavior analysis",
-      "Automated inventory replenishment"
+      "Smart demand forecasting",
+      "Intelligent pricing suggestions",
+      "Customer behavior insights",
+      "Automated reorder recommendations"
     ],
     automationBenefits: [
-      "Reduce stockouts by 70%",
-      "Increase profit margins by 20%",
-      "Automate 80% of reordering decisions",
-      "Optimize staff scheduling based on predicted traffic"
+      "Reduce stockouts with smart alerts",
+      "Optimize pricing for better margins",
+      "Automate routine inventory tasks",
+      "Streamline customer management"
     ],
     controlFeatures: [
-      "Set custom pricing rules and boundaries",
-      "Override AI recommendations with local knowledge",
-      "Customize inventory policies by product category",
-      "Control automation levels for different processes"
+      "Set custom business rules and policies",
+      "Override smart suggestions when needed",
+      "Customize automation levels",
+      "Control all automated processes"
     ],
-    realWorldExample: "A local clothing store uses BizPilot's AI to predict seasonal demand, automatically reorder popular items, and optimize prices based on local competition - resulting in 25% higher profits and 50% less time spent on inventory management."
+    realWorldExample: "A local clothing store uses BizPilot to manage inventory across seasons, track customer preferences, and optimize pricing - resulting in 25% higher profits and significantly less time spent on manual tasks."
   },
   {
     industry: "Restaurant",
-    title: "Intelligent Restaurant Operations",
-    description: "Optimize your restaurant with AI that predicts demand, manages inventory, and reduces waste",
+    title: "Complete Restaurant Operations",
+    description: "Full restaurant management system with intelligent features for menu optimization, inventory control, and staff management",
     aiCapabilities: [
-      "Menu demand forecasting",
-      "Ingredient optimization",
-      "Waste reduction algorithms",
+      "Menu demand analysis",
+      "Ingredient cost optimization",
+      "Waste reduction insights",
       "Staff scheduling optimization"
     ],
     automationBenefits: [
-      "Reduce food waste by 40%",
+      "Reduce food waste with smart tracking",
       "Optimize ingredient ordering",
-      "Predict busy periods for better staffing",
-      "Automate menu pricing based on costs"
+      "Predict busy periods for staffing",
+      "Automate menu cost calculations"
     ],
     controlFeatures: [
       "Set food safety and quality standards",
@@ -315,114 +312,114 @@ export const AI_INDUSTRY_USE_CASES: AIIndustryUseCase[] = [
       "Customize waste tolerance levels",
       "Control menu pricing strategies"
     ],
-    realWorldExample: "A family restaurant chain uses BizPilot's AI to predict daily demand for each menu item, automatically order ingredients, and schedule staff - reducing food waste by 35% and increasing profitability by 18%."
+    realWorldExample: "A family restaurant uses BizPilot to track ingredient costs, manage staff schedules, and analyze menu performance - reducing waste by 35% and improving profitability by 18%."
   },
   {
     industry: "Manufacturing",
     title: "Smart Manufacturing Operations",
-    description: "Streamline production with AI that optimizes processes, predicts maintenance, and manages supply chains",
+    description: "Comprehensive manufacturing management with intelligent process optimization and predictive maintenance features",
     aiCapabilities: [
       "Production planning optimization",
-      "Predictive maintenance scheduling",
-      "Supply chain risk assessment",
+      "Predictive maintenance alerts",
+      "Supply chain analysis",
       "Quality control automation"
     ],
     automationBenefits: [
-      "Reduce downtime by 60%",
+      "Reduce equipment downtime",
       "Optimize production schedules",
-      "Predict equipment maintenance needs",
-      "Automate quality control processes"
+      "Predict maintenance needs",
+      "Automate quality tracking"
     ],
     controlFeatures: [
       "Set production priorities and constraints",
-      "Override maintenance schedules when needed",
+      "Override maintenance schedules",
       "Customize quality standards",
-      "Control automation levels by production line"
+      "Control automation by production line"
     ],
-    realWorldExample: "A small electronics manufacturer uses BizPilot's AI to predict when machines need maintenance, optimize production schedules, and manage component inventory - reducing downtime by 45% and increasing output by 22%."
+    realWorldExample: "A small electronics manufacturer uses BizPilot to manage production schedules, track component inventory, and predict maintenance needs - reducing downtime by 45% and increasing output by 22%."
   },
   {
     industry: "Healthcare",
-    title: "Intelligent Healthcare Management",
-    description: "Enhance patient care with AI that manages inventory, schedules resources, and ensures compliance",
+    title: "Healthcare Practice Management",
+    description: "Complete healthcare management system with intelligent inventory control and compliance monitoring",
     aiCapabilities: [
       "Medical inventory optimization",
-      "Patient flow prediction",
+      "Patient flow analysis",
       "Resource allocation planning",
       "Compliance monitoring"
     ],
     automationBenefits: [
-      "Ensure critical supplies are always available",
-      "Optimize staff scheduling for patient needs",
-      "Predict equipment maintenance requirements",
+      "Ensure critical supplies availability",
+      "Optimize staff scheduling",
+      "Predict equipment needs",
       "Automate compliance reporting"
     ],
     controlFeatures: [
       "Set critical inventory thresholds",
-      "Override AI for emergency situations",
+      "Override suggestions for emergencies",
       "Customize compliance rules",
-      "Control patient data privacy settings"
+      "Control patient data privacy"
     ],
-    realWorldExample: "A private clinic uses BizPilot's AI to manage medical supplies, predict patient appointment patterns, and ensure regulatory compliance - reducing supply shortages by 90% and improving patient satisfaction scores by 30%."
+    realWorldExample: "A private clinic uses BizPilot to manage medical supplies, track patient appointments, and ensure regulatory compliance - reducing supply shortages by 90% and improving patient satisfaction."
   }
 ];
 
 /**
- * AI-related FAQs
+ * Balanced AI-related FAQs - focus on practical benefits
  */
 export const AI_FAQS: AIFAQ[] = [
   {
-    question: "How does BizPilot's AI protect my business data privacy?",
-    answer: "Your data privacy is our top priority. All AI processing happens with your explicit consent, data is encrypted both in transit and at rest, and we never share your business information with third parties. You maintain complete ownership of your data and can export or delete it at any time. Our AI models are trained on anonymized, aggregated data patterns - never on your specific business information.",
+    question: "How does BizPilot protect my business data?",
+    answer: "Your data privacy is our top priority. All data is encrypted both in transit and at rest, and we never share your business information with third parties. You maintain complete ownership of your data and can export or delete it at any time. Smart features work with your explicit consent and full transparency.",
     category: 'privacy',
     relatedFeatures: ['Data Encryption', 'Privacy Controls', 'Data Ownership']
   },
   {
-    question: "Can I control what the AI does in my business?",
-    answer: "Absolutely! You have complete control over AI behavior in BizPilot. You can set custom thresholds, override any AI recommendation, choose which processes to automate, and adjust AI sensitivity levels. The AI provides intelligent suggestions and insights - you always make the final decisions. You can also turn off AI features entirely if you prefer manual control.",
+    question: "Can I control the smart features and automation?",
+    answer: "Absolutely! You have complete control over all smart features in BizPilot. You can set custom thresholds, override any suggestion, choose which processes to automate, and adjust sensitivity levels. Smart features provide helpful suggestions - you always make the final decisions.",
     category: 'control',
     relatedFeatures: ['Custom Settings', 'Manual Override', 'Automation Controls']
   },
   {
-    question: "What AI capabilities does BizPilot offer?",
-    answer: "BizPilot offers comprehensive AI capabilities including predictive inventory management, intelligent pricing optimization, customer behavior analysis, demand forecasting, automated reordering suggestions, and smart business insights. Our AI learns from your business patterns to provide increasingly accurate recommendations while always keeping you in control.",
+    question: "What smart features does BizPilot offer?",
+    answer: "BizPilot offers intelligent inventory management, smart pricing optimization, customer insights, automated reporting, predictive analytics, and intelligent business recommendations. These features learn from your business patterns to provide increasingly helpful suggestions while keeping you in control.",
     category: 'capabilities',
-    relatedFeatures: ['Predictive Analytics', 'Smart Inventory', 'Intelligent Pricing', 'Customer Insights']
+    relatedFeatures: ['Smart Analytics', 'Intelligent Inventory', 'Pricing Tools', 'Customer Insights']
   },
   {
-    question: "How accurate are BizPilot's AI predictions?",
-    answer: "Our AI predictions typically achieve 85-95% accuracy for inventory forecasting and 80-90% for demand prediction, improving over time as the system learns your business patterns. Accuracy varies by business type and data quality. The system provides confidence scores with each prediction, and you can always override predictions with your business knowledge.",
+    question: "How accurate are the smart suggestions?",
+    answer: "Our smart features typically achieve high accuracy rates that improve over time as the system learns your business patterns. Accuracy varies by business type and data quality. The system provides confidence indicators with suggestions, and you can always override them with your business knowledge.",
     category: 'capabilities',
-    relatedFeatures: ['Predictive Analytics', 'Confidence Scores', 'Manual Override']
+    relatedFeatures: ['Smart Analytics', 'Confidence Scores', 'Manual Override']
   },
   {
-    question: "Do I need technical expertise to use BizPilot's AI features?",
-    answer: "No technical expertise required! BizPilot's AI works automatically in the background, providing easy-to-understand insights and recommendations through our intuitive interface. The system is designed for business owners, not data scientists. Setup is simple, and our support team helps you configure AI settings to match your business needs.",
+    question: "Do I need technical expertise to use the smart features?",
+    answer: "No technical expertise required! BizPilot's smart features work automatically in the background, providing easy-to-understand insights through our intuitive interface. The system is designed for business owners, not data scientists. Setup is simple, and our support team helps you configure settings.",
     category: 'implementation',
     relatedFeatures: ['User-Friendly Interface', 'Automatic Setup', 'Support Team']
   },
   {
-    question: "How does the AI learn about my business?",
-    answer: "The AI learns from your business data patterns including sales history, inventory movements, customer behavior, and seasonal trends. All learning happens locally within your BizPilot instance - we don't share your data with other businesses or use it to train general models. The more you use the system, the more accurate and personalized the AI becomes for your specific business.",
+    question: "How do the smart features learn about my business?",
+    answer: "The smart features learn from your business data patterns including sales history, inventory movements, customer behavior, and seasonal trends. All learning happens within your BizPilot instance - we don't share your data. The more you use the system, the more personalized the suggestions become.",
     category: 'implementation',
     relatedFeatures: ['Pattern Recognition', 'Local Learning', 'Data Privacy']
   },
   {
-    question: "What are the main benefits of using AI in my business?",
-    answer: "AI helps you save time, reduce costs, and increase profits by automating routine tasks, providing predictive insights, and optimizing business processes. Typical benefits include 70% reduction in stockouts, 20% increase in profit margins, 80% less time spent on inventory management, and better decision-making through data-driven insights.",
+    question: "What are the main benefits of the smart features?",
+    answer: "Smart features help you save time, reduce costs, and increase profits by automating routine tasks, providing helpful insights, and optimizing business processes. Benefits include reduced stockouts, better profit margins, less time on manual tasks, and better decision-making through data insights.",
     category: 'benefits',
     relatedFeatures: ['Time Savings', 'Cost Reduction', 'Profit Optimization', 'Decision Support']
   },
   {
-    question: "Can I try the AI features before committing to a paid plan?",
-    answer: "Yes! Our Starter plan includes basic AI features like smart analytics and AI-powered inventory tracking at no cost. This lets you experience how AI can benefit your business before upgrading to more advanced features. You can also schedule a demo to see all AI capabilities in action.",
+    question: "Can I try the smart features before upgrading?",
+    answer: "Yes! Our Starter plan includes basic smart features like analytics and intelligent inventory tracking at no cost. This lets you experience how smart features can benefit your business before upgrading to more advanced capabilities. You can also schedule a demo to see all features.",
     category: 'implementation',
     relatedFeatures: ['Free Starter Plan', 'Demo Available', 'Gradual Upgrade Path']
   }
 ];
 
 /**
- * Reusable AI content components
+ * Balanced content components - AI mentioned but not overwhelming
  */
 export interface AIContentComponent {
   id: string;
@@ -435,61 +432,61 @@ export interface AIContentComponent {
 
 export const AI_CONTENT_COMPONENTS: AIContentComponent[] = [
   {
-    id: 'hero-ai-tagline',
-    title: 'AI-Powered Hero Tagline',
-    content: 'Transform your business with intelligent automation that puts you in control',
+    id: 'balanced-hero-tagline',
+    title: 'Balanced Hero Tagline',
+    content: 'Complete business management with intelligent features that enhance your expertise',
     type: 'tagline',
     context: ['home', 'features'],
-    aiEmphasis: 'high'
+    aiEmphasis: 'medium'
   },
   {
     id: 'privacy-assurance',
     title: 'Privacy Assurance',
-    content: 'Your data stays private and secure. Our AI works for you, with full transparency and your complete control.',
+    content: 'Your data stays private and secure. Smart features work with full transparency and your complete control.',
     type: 'callout',
     context: ['features', 'faq', 'pricing'],
-    aiEmphasis: 'medium'
+    aiEmphasis: 'low'
   },
   {
     id: 'control-emphasis',
     title: 'User Control Emphasis',
-    content: 'You make the decisions. Our AI provides intelligent recommendations that you can customize, override, or disable at any time.',
+    content: 'You make the decisions. Smart features provide helpful suggestions that you can customize, override, or disable.',
     type: 'benefit',
     context: ['features', 'faq'],
-    aiEmphasis: 'high'
-  },
-  {
-    id: 'automation-benefit',
-    title: 'Automation Benefit',
-    content: 'Automate routine tasks and focus on growing your business. Our AI handles the details while you stay in control of the big picture.',
-    type: 'benefit',
-    context: ['features', 'industries', 'pricing'],
-    aiEmphasis: 'high'
-  },
-  {
-    id: 'smart-insights',
-    title: 'Smart Insights',
-    content: 'Get actionable insights from your business data. Our AI identifies patterns and opportunities you might miss.',
-    type: 'feature',
-    context: ['features', 'industries'],
     aiEmphasis: 'medium'
   },
   {
-    id: 'predictive-power',
-    title: 'Predictive Power',
-    content: 'Stay ahead with predictive analytics. Know what your business needs before you run out of stock or miss opportunities.',
+    id: 'automation-benefit',
+    title: 'Smart Automation Benefit',
+    content: 'Automate routine tasks and focus on growing your business. Smart features handle the details while you control the strategy.',
+    type: 'benefit',
+    context: ['features', 'industries', 'pricing'],
+    aiEmphasis: 'medium'
+  },
+  {
+    id: 'business-insights',
+    title: 'Business Insights',
+    content: 'Get actionable insights from your business data. Advanced analytics help you identify patterns and opportunities.',
+    type: 'feature',
+    context: ['features', 'industries'],
+    aiEmphasis: 'low'
+  },
+  {
+    id: 'predictive-features',
+    title: 'Predictive Features',
+    content: 'Stay ahead with smart forecasting. Know what your business needs before you run out of stock or miss opportunities.',
     type: 'feature',
     context: ['features', 'pricing'],
-    aiEmphasis: 'high'
+    aiEmphasis: 'medium'
   }
 ];
 
 /**
- * AI messaging utility functions
+ * Balanced messaging utility functions
  */
 export class AIMessagingUtils {
   /**
-   * Get AI content components by context
+   * Get content components by context
    */
   static getComponentsByContext(context: string): AIContentComponent[] {
     return AI_CONTENT_COMPONENTS.filter(component => 
@@ -498,7 +495,7 @@ export class AIMessagingUtils {
   }
 
   /**
-   * Get AI content components by emphasis level
+   * Get content components by emphasis level
    */
   static getComponentsByEmphasis(emphasis: 'high' | 'medium' | 'low'): AIContentComponent[] {
     return AI_CONTENT_COMPONENTS.filter(component => 
@@ -523,7 +520,7 @@ export class AIMessagingUtils {
   }
 
   /**
-   * Get AI capability by name
+   * Get capability by name
    */
   static getAICapability(name: string): AICapability | undefined {
     return AI_CAPABILITIES.find(capability => 
@@ -539,9 +536,9 @@ export class AIMessagingUtils {
   }
 
   /**
-   * Format AI benefit with emphasis
+   * Format benefit with optional emphasis
    */
-  static formatAIBenefit(benefit: string, emphasis: boolean = false): string {
+  static formatBenefit(benefit: string, emphasis: boolean = false): string {
     if (emphasis) {
       return `✨ ${benefit}`;
     }
@@ -549,29 +546,29 @@ export class AIMessagingUtils {
   }
 
   /**
-   * Get random AI tagline for variety
+   * Get balanced tagline options
    */
-  static getRandomTagline(): string {
+  static getBalancedTagline(): string {
     const taglines = [
       AI_MESSAGING.heroTagline,
-      "Intelligent Business Management That Adapts to You",
-      "AI-Powered Insights, Human-Controlled Decisions",
-      "Smart Automation That Respects Your Business Style",
-      "The Future of Business Management is Here - And You're in Control"
+      "Complete Business Management with Smart Features",
+      "Comprehensive POS & ERP with Intelligent Insights",
+      "Business Management That Adapts to Your Needs",
+      "The Complete Business Solution with Smart Automation"
     ];
     return taglines[Math.floor(Math.random() * taglines.length)];
   }
 
   /**
-   * Check if content should emphasize AI features
+   * Check if content should moderately emphasize smart features
    */
-  static shouldEmphasizeAI(context: string): boolean {
-    const highAIContexts = ['features', 'pricing', 'home'];
-    return highAIContexts.includes(context);
+  static shouldEmphasizeSmartFeatures(context: string): boolean {
+    const moderateEmphasisContexts = ['features', 'pricing'];
+    return moderateEmphasisContexts.includes(context);
   }
 }
 
-// Export the complete AI messaging configuration
+// Export the balanced messaging configuration
 export const AI_MESSAGING_CONFIG = {
   messaging: AI_MESSAGING,
   capabilities: AI_CAPABILITIES,

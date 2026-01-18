@@ -54,17 +54,17 @@ export function useAIMessaging() {
 
     // Format benefits with AI emphasis
     formatBenefit: (benefit: string, emphasize: boolean = false): string => {
-      return utils.formatAIBenefit(benefit, emphasize);
+      return utils.formatBenefit(benefit, emphasize);
     },
 
     // Get random tagline for variety
     getRandomTagline: (): string => {
-      return utils.getRandomTagline();
+      return utils.getBalancedTagline();
     },
 
     // Check if context should emphasize AI
     shouldEmphasizeAI: (context: string): boolean => {
-      return utils.shouldEmphasizeAI(context);
+      return utils.shouldEmphasizeSmartFeatures(context);
     }
   }), [utils, faqs]);
 

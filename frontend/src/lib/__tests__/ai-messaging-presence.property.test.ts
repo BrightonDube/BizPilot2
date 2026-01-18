@@ -1,11 +1,12 @@
 /**
- * Property-Based Tests for AI Messaging Presence
+ * Property-Based Tests for Balanced Smart Feature Messaging Presence
  * 
- * These tests validate that AI-powered messaging is consistently present
- * across all marketing pages, ensuring proper emphasis on AI capabilities,
- * user control, privacy protection, and intelligent automation.
+ * These tests validate that smart features are present but balanced with
+ * traditional business features across all marketing pages. Smart features
+ * should be positioned as enhancements to comprehensive business management,
+ * not as the primary or only selling point.
  * 
- * **Feature: marketing-pages-redesign, Property 7: AI-Powered Messaging Presence**
+ * **Feature: marketing-pages-redesign, Property 7: Balanced Smart Feature Messaging Presence**
  * **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 7.3**
  */
 
@@ -21,15 +22,15 @@ import {
 } from '../ai-messaging-config';
 
 /**
- * Property 7: AI-Powered Messaging Presence
+ * Property 7: Balanced Smart Feature Messaging Presence
  * 
- * For any marketing page content, it should prominently feature AI-powered 
- * capabilities, intelligent automation messaging, user control aspects, 
- * and privacy protection information.
+ * For any marketing page content, smart features should be present but balanced
+ * with traditional business features. Comprehensive business management should
+ * be the primary focus, with smart features positioned as valuable enhancements.
  * 
  * **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 7.3**
  */
-describe('Property 7: AI-Powered Messaging Presence', () => {
+describe('Property 7: Balanced Smart Feature Messaging Presence', () => {
 
   // Generate test cases for all marketing contexts
   const generateMarketingContexts = (): string[] => {
@@ -49,7 +50,7 @@ describe('Property 7: AI-Powered Messaging Presence', () => {
   };
 
   // Property test with multiple iterations (minimum 100 as per design)
-  test('should prominently feature AI-powered capabilities across all marketing contexts', () => {
+  test('should feature smart capabilities balanced with traditional business features', () => {
     const contexts = generateMarketingContexts();
     const testData = generateAIMessagingTestCases();
     
@@ -57,80 +58,122 @@ describe('Property 7: AI-Powered Messaging Presence', () => {
     for (let iteration = 0; iteration < Math.max(100, contexts.length * 20); iteration++) {
       const context = contexts[iteration % contexts.length];
       
-      // Property: Every marketing context should have AI-powered messaging
+      // Property: Every marketing context should have balanced messaging
       const contextComponents = AIMessagingUtils.getComponentsByContext(context);
       expect(contextComponents.length).toBeGreaterThan(0);
       
-      // Property: AI emphasis should be appropriate for context
-      const shouldEmphasizeAI = AIMessagingUtils.shouldEmphasizeAI(context);
-      if (shouldEmphasizeAI) {
-        const highEmphasisComponents = contextComponents.filter(c => c.aiEmphasis === 'high');
-        expect(highEmphasisComponents.length).toBeGreaterThan(0);
+      // Property: Smart features should be present but not overwhelming
+      const smartFeatureComponents = contextComponents.filter(c => 
+        c.content.toLowerCase().includes('smart') || 
+        c.content.toLowerCase().includes('intelligent') ||
+        c.content.toLowerCase().includes('ai')
+      );
+      const traditionalComponents = contextComponents.filter(c => 
+        c.content.toLowerCase().includes('business') ||
+        c.content.toLowerCase().includes('management') ||
+        c.content.toLowerCase().includes('complete') ||
+        c.content.toLowerCase().includes('comprehensive')
+      );
+      
+      // Property: Traditional business features should be equally or more prominent
+      expect(traditionalComponents.length).toBeGreaterThanOrEqual(smartFeatureComponents.length);
+      
+      // Property: Smart features should use moderate emphasis, not high
+      const highEmphasisSmartComponents = contextComponents.filter(c => 
+        c.aiEmphasis === 'high' && (
+          c.content.toLowerCase().includes('smart') || 
+          c.content.toLowerCase().includes('intelligent') ||
+          c.content.toLowerCase().includes('ai')
+        )
+      );
+      
+      // Should have more medium/low emphasis than high emphasis for smart features
+      const moderateEmphasisSmartComponents = contextComponents.filter(c => 
+        (c.aiEmphasis === 'medium' || c.aiEmphasis === 'low') && (
+          c.content.toLowerCase().includes('smart') || 
+          c.content.toLowerCase().includes('intelligent') ||
+          c.content.toLowerCase().includes('ai')
+        )
+      );
+      
+      if (smartFeatureComponents.length > 0) {
+        expect(moderateEmphasisSmartComponents.length).toBeGreaterThanOrEqual(highEmphasisSmartComponents.length);
       }
       
-      // Property: Each context component should contain AI-related keywords
+      // Property: Each context component should balance smart and traditional features
       contextComponents.forEach(component => {
-        const aiKeywords = [
-          'ai', 'artificial intelligence', 'intelligent', 'smart', 'automated', 
-          'automation', 'predictive', 'machine learning', 'ai-powered', 
-          'ai-driven', 'ai-enhanced'
-        ];
-        
-        const contentLower = component.content.toLowerCase();
-        const hasAIKeywords = aiKeywords.some(keyword => contentLower.includes(keyword));
-        expect(hasAIKeywords).toBe(true);
-        
-        // Property: Component should have valid AI emphasis level
+        // Property: Component should have valid emphasis level (balanced approach)
         expect(['high', 'medium', 'low']).toContain(component.aiEmphasis);
         
         // Property: Component should have valid type
         expect(['tagline', 'benefit', 'feature', 'testimonial', 'callout']).toContain(component.type);
         
-        // Property: Component should have non-empty content
+        // Property: Component should have meaningful content
         expect(component.content.length).toBeGreaterThan(0);
         expect(component.title.length).toBeGreaterThan(0);
         expect(component.id.length).toBeGreaterThan(0);
+        
+        // Property: If component mentions smart features, it should also mention business value
+        const contentLower = component.content.toLowerCase();
+        const hasSmartTerms = /smart|intelligent|ai|automated|predictive/.test(contentLower);
+        if (hasSmartTerms) {
+          const hasBusinessTerms = /business|management|complete|comprehensive|solution|platform/.test(contentLower);
+          expect(hasBusinessTerms).toBe(true);
+        }
       });
     }
   });
 
-  test('should emphasize intelligent automation messaging consistently', () => {
+  test('should emphasize comprehensive business management with smart enhancements', () => {
     const testData = generateAIMessagingTestCases();
     
-    // Run property test for automation messaging
+    // Run property test for balanced messaging approach
     for (let iteration = 0; iteration < 100; iteration++) {
       const { messaging } = testData;
       
-      // Property: Core messaging should highlight AI automation (Requirement 4.1)
-      expect(messaging.heroTagline.toLowerCase()).toMatch(/ai|intelligent|smart|automated/);
-      expect(messaging.subTagline.toLowerCase()).toMatch(/intelligent|automation|ai|smart/);
+      // Property: Core messaging should emphasize comprehensive business management (Requirement 4.1)
+      expect(messaging.heroTagline.toLowerCase()).toMatch(/complete|comprehensive|business|management/);
+      expect(messaging.subTagline.toLowerCase()).toMatch(/comprehensive|business|management|system/);
       
-      // Property: Key benefits should emphasize AI capabilities
-      messaging.keyBenefits.forEach(benefit => {
-        const benefitLower = benefit.toLowerCase();
-        const hasAITerms = /ai|intelligent|smart|predictive|automated|learns|analytics/.test(benefitLower);
-        expect(hasAITerms).toBe(true);
-      });
+      // Property: Key benefits should balance smart features with traditional capabilities
+      const smartBenefits = messaging.keyBenefits.filter(benefit => 
+        /smart|intelligent|ai|automated|predictive/.test(benefit.toLowerCase())
+      );
+      const businessBenefits = messaging.keyBenefits.filter(benefit => 
+        /business|management|complete|comprehensive|pos|inventory|reporting|integration/.test(benefit.toLowerCase())
+      );
       
-      // Property: Automation benefits should be quantifiable and AI-focused
+      // Traditional business benefits should be equal or more prominent
+      expect(businessBenefits.length).toBeGreaterThanOrEqual(smartBenefits.length);
+      
+      // Property: Automation benefits should emphasize business value, not just AI
       expect(messaging.automationBenefits.length).toBeGreaterThanOrEqual(5);
       messaging.automationBenefits.forEach(benefit => {
         expect(typeof benefit).toBe('string');
         expect(benefit.length).toBeGreaterThan(0);
         
-        // Should contain either AI terms or quantifiable benefits
+        // Should contain business value terms alongside smart features
         const benefitLower = benefit.toLowerCase();
-        const hasAIOrMetrics = /ai|intelligent|smart|automat|predict|\d+%|reduce|increase|optimize|save|generate|identify|streamline|focus|growth|insight|actionable/.test(benefitLower);
-        expect(hasAIOrMetrics).toBe(true);
+        const hasBusinessValue = /reduce|optimize|streamline|improve|save|increase|better|efficient|cost|time|profit|growth/.test(benefitLower);
+        expect(hasBusinessValue).toBe(true);
       });
       
-      // Property: Value propositions should cover AI automation aspects
-      const automationVP = messaging.valuePropositions.find(vp => 
-        vp.title.toLowerCase().includes('automation') || 
-        vp.description.toLowerCase().includes('automation')
+      // Property: Value propositions should balance smart and traditional features
+      const smartVPs = messaging.valuePropositions.filter(vp => 
+        vp.title.toLowerCase().includes('smart') || 
+        vp.title.toLowerCase().includes('intelligent') ||
+        vp.description.toLowerCase().includes('smart') ||
+        vp.description.toLowerCase().includes('intelligent')
       );
-      expect(automationVP).toBeDefined();
-      expect(automationVP!.benefits.length).toBeGreaterThan(0);
+      const businessVPs = messaging.valuePropositions.filter(vp => 
+        vp.title.toLowerCase().includes('business') || 
+        vp.title.toLowerCase().includes('complete') ||
+        vp.description.toLowerCase().includes('business') ||
+        vp.description.toLowerCase().includes('complete')
+      );
+      
+      // Should have balanced representation
+      expect(businessVPs.length).toBeGreaterThanOrEqual(smartVPs.length);
     }
   });
 

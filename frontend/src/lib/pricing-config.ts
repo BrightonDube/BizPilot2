@@ -64,19 +64,19 @@ export const PRICING_PLANS: PricingPlan[] = [
     id: 'starter',
     name: 'starter',
     displayName: 'Starter',
-    description: 'Perfect for small businesses starting their AI-powered journey with intelligent automation',
+    description: 'Complete business management system with smart features for small businesses getting started',
     monthlyPrice: 0,
     yearlyPrice: 0,
     currency: 'ZAR',
     sortOrder: 1,
     features: [
-      'AI-powered inventory tracking',
-      'Smart sales analytics with insights',
-      'Intelligent customer management',
-      'Mobile POS with AI recommendations',
+      'Complete POS system with payment processing',
+      'Inventory management with smart tracking',
+      'Customer management and loyalty programs',
+      'Mobile POS application',
       'Real-time stock monitoring',
-      'Predictive stock alerts (basic)',
-      'AI-driven reporting dashboard',
+      'Smart analytics and reporting dashboard',
+      'Automated alerts and notifications',
       'Email support'
     ],
     limitations: [
@@ -103,7 +103,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     id: 'professional',
     name: 'professional',
     displayName: 'Professional',
-    description: 'Advanced AI capabilities for growing businesses that need intelligent automation and predictive insights',
+    description: 'Advanced business management with intelligent automation and multi-location capabilities for growing businesses',
     monthlyPrice: 49900, // R499 in cents
     yearlyPrice: 479000, // R4,790 in cents (20% discount)
     currency: 'ZAR',
@@ -111,16 +111,16 @@ export const PRICING_PLANS: PricingPlan[] = [
     recommended: true,
     features: [
       'Everything in Starter',
-      'Advanced AI-powered analytics',
-      'Predictive inventory insights',
-      'Automated reordering suggestions',
-      'Intelligent pricing optimization',
-      'Smart customer segmentation',
-      'AI-driven sales forecasting',
       'Multi-location management',
-      'Advanced reporting suite',
-      'Priority support',
-      'API access'
+      'Advanced analytics and reporting suite',
+      'Automated reordering and smart suggestions',
+      'Intelligent pricing optimization tools',
+      'Customer segmentation and insights',
+      'Sales forecasting and trend analysis',
+      'Accounting system integrations (Xero, Sage)',
+      'Advanced inventory management',
+      'Priority support and training',
+      'API access for custom integrations'
     ],
     limitations: [
       'Up to 10,000 products',
@@ -144,26 +144,26 @@ export const PRICING_PLANS: PricingPlan[] = [
     id: 'enterprise',
     name: 'enterprise',
     displayName: 'Enterprise',
-    description: 'Complete AI-powered business management with custom AI models and advanced predictive analytics for large organizations',
+    description: 'Complete enterprise business management with custom features and advanced automation for large organizations',
     monthlyPrice: 149900, // R1,499 in cents
     yearlyPrice: 1439000, // R14,390 in cents (20% discount)
     currency: 'ZAR',
     sortOrder: 3,
     features: [
       'Everything in Professional',
-      'Custom AI model training',
-      'Advanced predictive analytics',
-      'Automated workflow optimization',
-      'AI-powered business intelligence',
-      'Enterprise-grade security',
-      'Unlimited locations',
-      'Unlimited products',
-      'Custom AI integrations',
+      'Unlimited locations and products',
+      'Custom business process automation',
+      'Advanced predictive analytics and BI',
+      'Enterprise-grade security and compliance',
+      'Custom integrations and API access',
+      'White-label and branding options',
       'Dedicated account manager',
-      'White-label options',
-      'Advanced API access',
-      'Custom AI reporting',
-      '24/7 priority support'
+      'Custom training and onboarding',
+      'Advanced workflow automation',
+      'Custom reporting and dashboards',
+      '24/7 priority support',
+      'Data migration assistance',
+      'Custom feature development'
     ],
     limitations: [
       'Custom pricing for 50+ locations'
@@ -195,22 +195,22 @@ export interface AIMessaging {
 }
 
 export const AI_MESSAGING: AIMessaging = {
-  heroTagline: "AI-Powered Business Management That Puts You in Control",
+  heroTagline: "Complete Business Management with Smart Features That Enhance Your Operations",
   keyBenefits: [
-    "Intelligent inventory tracking that learns your business patterns",
-    "Predictive analytics that help you make smarter decisions",
+    "Comprehensive POS and ERP system for complete business control",
+    "Smart inventory tracking that learns your business patterns",
+    "Advanced analytics and reporting for better decision making",
     "Automated processes that save time while keeping you in control",
-    "Smart insights that grow your business profitability",
-    "AI-driven recommendations you can trust and customize"
+    "Intelligent insights that help grow your business profitability"
   ],
-  privacyMessage: "Your data stays private and secure. Our AI works for you, not against you.",
-  controlMessage: "You're always in control. Our AI provides recommendations - you make the decisions.",
+  privacyMessage: "Your business data stays private and secure. Smart features work with full transparency and your consent.",
+  controlMessage: "You're always in control. Smart features provide helpful suggestions - you make the final decisions.",
   automationBenefits: [
-    "Reduce manual inventory counting by 80%",
-    "Predict stock needs 2-4 weeks in advance",
-    "Optimize pricing for maximum profitability",
-    "Identify top customers automatically",
-    "Streamline supplier relationships"
+    "Streamline inventory management and reduce manual counting",
+    "Get smart suggestions for reordering and pricing",
+    "Automate routine reporting and administrative tasks",
+    "Optimize business processes with intelligent insights",
+    "Enhance customer management with smart segmentation"
   ]
 };
 
@@ -287,25 +287,25 @@ export class PricingUtils {
   static convertFeaturesToBenefits(plan: PricingPlan): FeatureBenefit[] {
     const benefits: FeatureBenefit[] = [];
     
-    // Add included features with AI emphasis
+    // Add included features with smart feature emphasis
     plan.features.forEach(feature => {
-      const isAIPowered = this.isAIPoweredFeature(feature);
+      const isSmartFeature = this.isAIPoweredFeature(feature);
       benefits.push({
-        text: isAIPowered ? `🤖 ${feature}` : feature,
+        text: isSmartFeature ? `✨ ${feature}` : feature,
         checked: true,
-        aiPowered: isAIPowered,
-        description: isAIPowered ? 'AI-powered feature' : undefined
+        aiPowered: isSmartFeature,
+        description: isSmartFeature ? 'Smart feature' : undefined
       });
     });
     
-    // Add AI-specific benefits based on plan capabilities
-    const aiFeatureCount = this.getAIFeaturesCount(plan);
-    if (aiFeatureCount > 0) {
+    // Add smart feature count for plans with automation
+    const smartFeatureCount = this.getAIFeaturesCount(plan);
+    if (smartFeatureCount > 3) {
       benefits.push({
-        text: `✨ ${aiFeatureCount} AI-powered capabilities included`,
+        text: `🤖 ${smartFeatureCount} smart automation features included`,
         checked: true,
         aiPowered: true,
-        description: 'Intelligent automation features'
+        description: 'Intelligent automation capabilities'
       });
     }
     
@@ -324,7 +324,7 @@ export class PricingUtils {
    * Check if a feature is AI-powered based on keywords
    */
   private static isAIPoweredFeature(feature: string): boolean {
-    const aiKeywords = ['ai', 'smart', 'intelligent', 'predictive', 'automated', 'analytics'];
+    const aiKeywords = ['smart', 'intelligent', 'automated', 'analytics', 'optimization', 'forecasting', 'segmentation'];
     return aiKeywords.some(keyword => 
       feature.toLowerCase().includes(keyword)
     );
@@ -373,59 +373,69 @@ export interface FeatureComparison {
 
 export const FEATURE_COMPARISON: FeatureComparison[] = [
   {
-    category: "AI-Powered Analytics",
+    category: "Core Business Management",
     features: [
       {
-        name: "Smart Sales Analytics",
+        name: "POS System & Payment Processing",
         starter: true,
         professional: true,
-        enterprise: true,
-        aiPowered: true
+        enterprise: true
       },
       {
-        name: "Predictive Insights",
-        starter: false,
-        professional: true,
-        enterprise: true,
-        aiPowered: true
-      },
-      {
-        name: "Custom AI Models",
-        starter: false,
-        professional: false,
-        enterprise: true,
-        aiPowered: true
-      }
-    ]
-  },
-  {
-    category: "Inventory Management",
-    features: [
-      {
-        name: "AI-Powered Tracking",
-        starter: true,
-        professional: true,
-        enterprise: true,
-        aiPowered: true
-      },
-      {
-        name: "Automated Reordering",
-        starter: false,
-        professional: true,
-        enterprise: true,
-        aiPowered: true
-      },
-      {
-        name: "Predictive Stock Alerts",
+        name: "Inventory Management",
         starter: "Basic",
         professional: "Advanced",
-        enterprise: "Custom",
+        enterprise: "Enterprise"
+      },
+      {
+        name: "Customer Management & CRM",
+        starter: true,
+        professional: true,
+        enterprise: true
+      },
+      {
+        name: "Reporting & Analytics",
+        starter: "Basic",
+        professional: "Advanced",
+        enterprise: "Custom"
+      }
+    ]
+  },
+  {
+    category: "Smart Features & Automation",
+    features: [
+      {
+        name: "Smart Analytics & Insights",
+        starter: true,
+        professional: true,
+        enterprise: true,
+        aiPowered: true
+      },
+      {
+        name: "Automated Reordering Suggestions",
+        starter: false,
+        professional: true,
+        enterprise: true,
+        aiPowered: true
+      },
+      {
+        name: "Intelligent Pricing Tools",
+        starter: false,
+        professional: true,
+        enterprise: true,
+        aiPowered: true
+      },
+      {
+        name: "Predictive Analytics",
+        starter: false,
+        professional: "Standard",
+        enterprise: "Advanced",
         aiPowered: true
       }
     ]
   },
   {
-    category: "Business Scale",
+    category: "Business Scale & Integration",
     features: [
       {
         name: "Products",
@@ -440,15 +450,21 @@ export const FEATURE_COMPARISON: FeatureComparison[] = [
         enterprise: "Unlimited"
       },
       {
-        name: "Users",
-        starter: "Up to 3",
-        professional: "Up to 25",
-        enterprise: "Unlimited"
+        name: "Accounting Integrations",
+        starter: false,
+        professional: "Xero, Sage",
+        enterprise: "Custom"
+      },
+      {
+        name: "API Access",
+        starter: false,
+        professional: "Standard",
+        enterprise: "Advanced"
       }
     ]
   },
   {
-    category: "Support & Integration",
+    category: "Support & Services",
     features: [
       {
         name: "Support Level",
@@ -457,13 +473,13 @@ export const FEATURE_COMPARISON: FeatureComparison[] = [
         enterprise: "24/7 Dedicated"
       },
       {
-        name: "API Access",
-        starter: false,
-        professional: "Standard",
-        enterprise: "Advanced"
+        name: "Training & Onboarding",
+        starter: "Self-service",
+        professional: "Guided",
+        enterprise: "Custom"
       },
       {
-        name: "Custom Integrations",
+        name: "Custom Development",
         starter: false,
         professional: false,
         enterprise: true

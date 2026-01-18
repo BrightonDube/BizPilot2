@@ -20,264 +20,264 @@ const industries = [
   {
     icon: Utensils,
     title: 'Restaurants & Cafes',
-    description: 'AI-powered restaurant management that predicts demand, optimizes menus, and reduces waste while keeping you in control',
+    description: 'Complete restaurant management system with table management, menu engineering, inventory control, and smart insights to optimize operations',
     image: '/api/placeholder/600/400',
     aiUseCase: {
-      title: 'Intelligent Menu & Inventory Management',
-      description: 'Our AI analyzes customer preferences, seasonal trends, and ingredient costs to optimize your menu pricing and predict daily demand for each dish.',
-      example: 'Predict that Friday will need 30% more pasta dishes based on weather and local events, automatically suggest ingredient orders, and recommend menu pricing adjustments.'
+      title: 'Smart Menu & Inventory Optimization',
+      description: 'Advanced analytics help you understand customer preferences, track ingredient costs, and optimize menu pricing. Get intelligent insights about demand patterns while maintaining full control over your operations.',
+      example: 'Track that pasta dishes sell 30% more on Fridays, get suggested ingredient reorder quantities, and receive menu pricing recommendations based on cost analysis and sales data.'
     },
     features: [
-      'AI-Powered Table Management & Floor Plans',
-      'Smart Menu Engineering & Recipe Costing',
-      'Predictive Kitchen Display System',
-      'Intelligent Order Management (Dine-in, Takeaway, Delivery)',
-      'AI-Optimized Staff Scheduling & Performance',
-      'Smart Ingredient Inventory Tracking'
+      'Complete Table Management & Floor Plans',
+      'Menu Engineering & Recipe Costing',
+      'Kitchen Display System with Order Tracking',
+      'Multi-Channel Order Management (Dine-in, Takeaway, Delivery)',
+      'Staff Scheduling & Performance Management',
+      'Comprehensive Ingredient Inventory Tracking'
     ],
     benefits: [
-      'AI reduces food waste by 40% through demand prediction',
-      'Smart scheduling increases table turnover by 35%',
-      'Intelligent pricing optimization boosts profit margins by 25%',
-      'Automated inventory management saves 6 hours per week'
+      'Reduce food waste by up to 40% with better demand tracking',
+      'Increase table turnover by 35% with efficient management',
+      'Boost profit margins by 25% through optimized pricing',
+      'Save 6+ hours per week on inventory management tasks'
     ],
     automationBenefits: [
-      'Predict daily demand for each menu item',
-      'Automatically reorder ingredients before stockouts',
-      'Optimize staff schedules based on predicted busy periods',
-      'Adjust menu pricing based on ingredient costs and demand'
+      'Get smart suggestions for daily prep quantities',
+      'Receive reorder alerts before ingredients run out',
+      'Optimize staff schedules based on historical busy periods',
+      'Get pricing recommendations based on cost and demand analysis'
     ],
     controlFeatures: [
-      'Override AI predictions for special events or holidays',
+      'Override suggestions for special events or holidays',
       'Set custom food safety and quality standards',
       'Customize waste tolerance levels by ingredient type',
-      'Control automation levels for different restaurant processes'
+      'Control which processes use automation features'
     ],
     testimonial: {
       name: 'Marco Rossi',
       role: 'Owner',
       company: 'Bella Vista Restaurant',
-      content: 'BizPilot\'s AI helped us predict customer demand and optimize our menu pricing. Food waste dropped by 35% and our profit margins improved by 22% in just 4 months. I love that I can override the AI when I know something special is happening.',
+      content: 'BizPilot gave us complete control over our restaurant operations. The demand tracking and menu costing features helped us reduce waste by 35% and improve profit margins by 22%. The smart suggestions are helpful, but I can always adjust them based on my experience.',
       rating: 5
     }
   },
   {
     icon: ShoppingCart,
     title: 'Retail Stores',
-    description: 'Smart retail management with AI that predicts trends, optimizes inventory, and personalizes customer experiences',
+    description: 'Comprehensive retail management with inventory control, customer management, e-commerce integration, and intelligent insights to grow your business',
     image: '/api/placeholder/600/400',
     aiUseCase: {
-      title: 'Predictive Inventory & Customer Intelligence',
-      description: 'AI analyzes sales patterns, seasonal trends, and customer behavior to predict what products you\'ll need and when, while identifying your most valuable customers.',
-      example: 'Predict that winter jackets will sell out in 2 weeks, automatically suggest reorders, identify customers likely to buy accessories, and optimize pricing for maximum profit.'
+      title: 'Advanced Inventory & Customer Analytics',
+      description: 'Powerful analytics help you understand sales patterns, seasonal trends, and customer behavior. Get intelligent insights about inventory needs and customer preferences while maintaining complete control over your business decisions.',
+      example: 'Analyze that winter jackets typically sell out in 2 weeks, get suggested reorder quantities, identify customers who frequently buy accessories, and receive pricing optimization recommendations.'
     },
     features: [
-      'AI-Driven Multi-location Inventory Management',
-      'Smart Barcode Scanning & SKU Management',
-      'Intelligent Layby & Payment Plans',
-      'AI-Enhanced E-commerce Integration',
-      'Predictive Customer Loyalty Programs',
-      'Smart Supplier Management'
+      'Multi-location Inventory Management',
+      'Barcode Scanning & SKU Management',
+      'Layby & Payment Plans Management',
+      'E-commerce Integration & Sync',
+      'Customer Loyalty Programs & CRM',
+      'Supplier Management & Purchase Orders'
     ],
     benefits: [
-      'AI eliminates 90% of stockouts through predictive ordering',
-      'Smart customer insights increase retention by 45%',
-      'Automated reordering saves 8 hours per week',
-      'Intelligent pricing boosts profit margins by 20%'
+      'Eliminate 90% of stockouts with better inventory tracking',
+      'Increase customer retention by 45% with comprehensive CRM',
+      'Save 8+ hours per week on inventory management',
+      'Boost profit margins by 20% through better pricing strategies'
     ],
     automationBenefits: [
-      'Predict product demand 2-4 weeks in advance',
-      'Automatically identify slow-moving inventory',
-      'Optimize pricing based on demand and competition',
-      'Personalize customer recommendations and promotions'
+      'Get smart predictions for product demand 2-4 weeks ahead',
+      'Receive alerts for slow-moving inventory',
+      'Get pricing optimization suggestions based on market data',
+      'Receive personalized customer marketing recommendations'
     ],
     controlFeatures: [
       'Set custom reorder thresholds for different product categories',
-      'Override AI pricing recommendations with your market knowledge',
+      'Override pricing recommendations with your market knowledge',
       'Customize customer segmentation and marketing rules',
-      'Control automation levels for inventory and pricing decisions'
+      'Control which processes use intelligent features'
     ],
     testimonial: {
       name: 'Sarah Johnson',
       role: 'Store Manager',
       company: 'Fashion Forward',
-      content: 'Managing inventory across our 5 stores was a nightmare until BizPilot\'s AI started predicting what we\'d need. Our stock accuracy improved to 99.5% and we haven\'t had a major stockout in 6 months. The AI suggestions are spot-on, but I can always adjust them when needed.',
+      content: 'Managing inventory across our 5 stores became so much easier with BizPilot. The comprehensive tracking and analytics helped us achieve 99.5% stock accuracy and we haven\'t had a major stockout in 6 months. The intelligent suggestions are helpful, but I can always adjust them when needed.',
       rating: 5
     }
   },
   {
     icon: Building2,
     title: 'Multi-Location Chains',
-    description: 'Centralized AI-powered management for franchise and chain operations with intelligent performance optimization',
+    description: 'Centralized management platform for franchise and chain operations with performance analytics, consolidated reporting, and intelligent optimization tools',
     image: '/api/placeholder/600/400',
     aiUseCase: {
-      title: 'Intelligent Multi-Location Performance Optimization',
-      description: 'AI analyzes performance across all locations to identify best practices, predict problems, and optimize operations while maintaining brand consistency.',
-      example: 'Identify that Location A\'s inventory management practices could improve Location B\'s performance by 15%, predict which locations need additional support, and optimize inter-location transfers.'
+      title: 'Advanced Multi-Location Performance Analytics',
+      description: 'Comprehensive analytics help you understand performance across all locations, identify best practices, and optimize operations. Get intelligent insights about location performance while maintaining brand consistency and local flexibility.',
+      example: 'Analyze that Location A\'s inventory practices could improve Location B\'s performance by 15%, identify locations needing support, and get recommendations for optimizing inter-location transfers.'
     },
     features: [
-      'AI-Enhanced Centralized Dashboard & Reporting',
-      'Intelligent Location Performance Comparison',
-      'Smart Consolidated Financial Reporting',
-      'Predictive Inter-location Stock Transfers',
-      'AI-Powered Franchise Management Tools',
-      'Intelligent Brand Consistency Controls'
+      'Centralized Dashboard & Multi-Location Reporting',
+      'Location Performance Comparison & Analytics',
+      'Consolidated Financial Reporting & Accounting',
+      'Inter-location Stock Transfer Management',
+      'Franchise Management Tools & Compliance',
+      'Brand Consistency Controls & Standards'
     ],
     benefits: [
-      'AI identifies operational improvements reducing costs by 25%',
-      'Smart performance analytics improve location visibility by 90%',
-      'Automated best practice sharing standardizes operations',
-      'Predictive analytics accelerate expansion planning by 40%'
+      'Reduce operational costs by 25% through better visibility',
+      'Improve location performance tracking by 90%',
+      'Standardize operations with automated best practice sharing',
+      'Accelerate expansion planning by 40% with better analytics'
     ],
     automationBenefits: [
-      'Automatically identify underperforming locations and suggest improvements',
-      'Predict optimal inventory distribution across locations',
-      'Optimize staff allocation based on predicted demand',
-      'Automate compliance monitoring and reporting'
+      'Get insights about underperforming locations with improvement suggestions',
+      'Receive recommendations for optimal inventory distribution',
+      'Get staff allocation suggestions based on demand patterns',
+      'Automate compliance monitoring and reporting processes'
     ],
     controlFeatures: [
       'Set performance benchmarks and improvement targets',
-      'Override AI recommendations for local market conditions',
+      'Override recommendations for local market conditions',
       'Customize reporting and analytics for different stakeholders',
-      'Control automation levels for different operational processes'
+      'Control which processes use intelligent features'
     ],
     testimonial: {
       name: 'David Chen',
       role: 'Operations Director',
       company: 'Coffee Culture Chain',
-      content: 'With 15 locations, BizPilot\'s AI gave us the visibility and control we needed. The system identifies which locations are struggling and suggests specific improvements. We can now make data-driven decisions across all stores while maintaining local flexibility.',
+      content: 'With 15 locations, BizPilot gave us the comprehensive visibility and control we needed. The centralized reporting and performance analytics help us identify which locations need support and make data-driven decisions across all stores while maintaining local flexibility.',
       rating: 5
     }
   },
   {
     icon: Coffee,
     title: 'Coffee Shops & Bakeries',
-    description: 'Specialized AI features for coffee shops and bakeries that optimize recipes, predict demand, and minimize waste',
+    description: 'Specialized management system for coffee shops and bakeries with recipe costing, fresh product tracking, loyalty programs, and smart optimization features',
     image: '/api/placeholder/600/400',
     aiUseCase: {
-      title: 'Smart Recipe Optimization & Waste Reduction',
-      description: 'AI analyzes customer preferences, weather patterns, and ingredient costs to optimize recipes, predict daily demand for fresh products, and minimize waste.',
-      example: 'Predict that rainy Tuesday will need 20% fewer cold drinks but 40% more pastries, suggest optimal baking quantities, and recommend ingredient substitutions to reduce costs.'
+      title: 'Smart Recipe Management & Waste Reduction',
+      description: 'Advanced analytics help you understand customer preferences, weather patterns, and ingredient costs to optimize recipes and predict demand for fresh products. Get intelligent insights to minimize waste while maintaining quality.',
+      example: 'Track that rainy Tuesdays typically need 20% fewer cold drinks but 40% more pastries, get suggested baking quantities, and receive ingredient cost optimization recommendations.'
     },
     features: [
-      'AI-Optimized Recipe Management & Costing',
-      'Smart Fresh Product Tracking',
-      'Intelligent Loyalty Card Integration',
-      'Predictive Mobile Ordering & Pickup',
-      'AI-Powered Waste Tracking & Reporting',
-      'Smart Supplier Integration'
+      'Recipe Management & Ingredient Costing',
+      'Fresh Product Tracking & Expiry Management',
+      'Loyalty Card Integration & Customer Programs',
+      'Mobile Ordering & Pickup Management',
+      'Waste Tracking & Cost Analysis',
+      'Supplier Integration & Ordering'
     ],
     benefits: [
-      'AI optimizes ingredient usage reducing costs by 18%',
-      'Smart demand prediction reduces daily waste by 45%',
-      'Intelligent loyalty programs increase customer retention by 35%',
-      'Automated morning prep saves 2 hours daily'
+      'Reduce ingredient costs by 18% through better recipe optimization',
+      'Cut daily waste by 45% with improved demand tracking',
+      'Increase customer retention by 35% with loyalty programs',
+      'Save 2+ hours daily on morning prep with better planning'
     ],
     automationBenefits: [
-      'Predict daily demand for fresh baked goods',
-      'Optimize recipe costs based on ingredient prices',
-      'Automatically adjust loyalty rewards based on customer behavior',
-      'Schedule equipment maintenance to prevent downtime'
+      'Get smart suggestions for daily fresh product quantities',
+      'Receive recipe cost optimization recommendations',
+      'Get loyalty reward suggestions based on customer behavior',
+      'Receive equipment maintenance scheduling recommendations'
     ],
     controlFeatures: [
       'Set quality standards and freshness requirements',
-      'Override AI predictions for special events or promotions',
+      'Override suggestions for special events or promotions',
       'Customize recipe modifications and ingredient substitutions',
-      'Control automation levels for different product categories'
+      'Control which processes use intelligent features'
     ],
     testimonial: {
       name: 'Emma Thompson',
       role: 'Owner',
       company: 'The Daily Grind',
-      content: 'The AI recipe costing and demand prediction features transformed our business. We reduced waste by 40% and increased our profit margin by 28% while maintaining quality. The system learns our customers\' preferences and helps us prepare exactly what we need.',
+      content: 'The recipe costing and demand tracking features transformed our business operations. We reduced waste by 40% and increased our profit margin by 28% while maintaining quality. The system helps us understand our customers\' preferences and prepare exactly what we need.',
       rating: 5
     }
   },
   {
     icon: Hotel,
     title: 'Hotels & Hospitality',
-    description: 'Integrated AI-powered POS and property management that enhances guest experience and optimizes operations',
+    description: 'Integrated POS and property management system that enhances guest experience with comprehensive service management and intelligent optimization tools',
     image: '/api/placeholder/600/400',
     aiUseCase: {
-      title: 'Intelligent Guest Experience Optimization',
-      description: 'AI analyzes guest preferences, booking patterns, and service history to personalize experiences, predict needs, and optimize resource allocation.',
-      example: 'Predict that business travelers prefer quick breakfast service, automatically adjust F&B inventory for conference bookings, and personalize room service recommendations based on guest history.'
+      title: 'Advanced Guest Experience Management',
+      description: 'Comprehensive analytics help you understand guest preferences, booking patterns, and service history to personalize experiences and optimize resource allocation. Get intelligent insights to enhance guest satisfaction while maintaining operational efficiency.',
+      example: 'Track that business travelers prefer quick breakfast service, optimize F&B inventory for conference bookings, and get personalized room service recommendations based on guest history.'
     },
     features: [
-      'AI-Enhanced PMS Integration',
-      'Smart Room Service Management',
-      'Intelligent Guest Profile Management',
-      'Predictive Event & Banquet Management',
-      'AI-Powered Multi-outlet Reporting',
-      'Smart Guest Billing Integration'
+      'PMS Integration & Guest Management',
+      'Room Service Management & Ordering',
+      'Guest Profile Management & History',
+      'Event & Banquet Management',
+      'Multi-outlet Reporting & Analytics',
+      'Guest Billing Integration & Processing'
     ],
     benefits: [
-      'AI personalizes guest experience increasing satisfaction by 30%',
-      'Smart F&B integration with room charges boosts revenue by 20%',
-      'Automated service optimization improves efficiency by 40%',
-      'Predictive maintenance reduces equipment downtime by 60%'
+      'Increase guest satisfaction by 30% with personalized service',
+      'Boost F&B revenue by 20% with integrated room charges',
+      'Improve operational efficiency by 40% with streamlined service',
+      'Reduce equipment downtime by 60% with better maintenance tracking'
     ],
     automationBenefits: [
-      'Predict guest preferences and personalize service offerings',
-      'Optimize staff scheduling based on occupancy forecasts',
-      'Automatically adjust inventory for events and conferences',
-      'Streamline billing and payment processing'
+      'Get guest preference insights for personalized service offerings',
+      'Receive staff scheduling suggestions based on occupancy forecasts',
+      'Get inventory optimization recommendations for events',
+      'Streamline billing and payment processing workflows'
     ],
     controlFeatures: [
       'Set service standards and guest experience preferences',
-      'Override AI recommendations for VIP guests or special events',
+      'Override recommendations for VIP guests or special events',
       'Customize pricing strategies for different guest segments',
-      'Control automation levels for different hotel operations'
+      'Control which processes use intelligent features'
     ],
     testimonial: {
       name: 'James Wilson',
       role: 'General Manager',
       company: 'Grand Plaza Hotel',
-      content: 'BizPilot\'s AI seamlessly integrated with our PMS and transformed our guest experience. The system predicts what our guests need and helps us deliver personalized service. Our F&B revenue increased by 18% and guest satisfaction scores improved significantly.',
+      content: 'BizPilot seamlessly integrated with our PMS and transformed our guest experience management. The comprehensive system helps us understand what our guests need and deliver personalized service. Our F&B revenue increased by 18% and guest satisfaction scores improved significantly.',
       rating: 5
     }
   },
   {
     icon: Store,
     title: 'Specialty Retail',
-    description: 'Tailored AI solutions for specialty retail that manage complex catalogs, optimize seasonal buying, and track custom orders',
+    description: 'Tailored management solutions for specialty retail with complex catalog management, seasonal buying optimization, custom orders, and intelligent insights',
     image: '/api/placeholder/600/400',
     aiUseCase: {
-      title: 'Intelligent Specialty Product Management',
-      description: 'AI understands the unique challenges of specialty retail, managing complex product variants, predicting seasonal demand, and optimizing custom order fulfillment.',
-      example: 'Predict seasonal demand for art supplies based on school calendars and local events, optimize consignment artist payments, and suggest complementary products for custom orders.'
+      title: 'Advanced Specialty Product Management',
+      description: 'Comprehensive analytics help you manage complex product variants, understand seasonal demand patterns, and optimize custom order fulfillment. Get intelligent insights about specialty retail challenges while maintaining complete control over your unique business processes.',
+      example: 'Track seasonal demand for art supplies based on school calendars and local events, optimize consignment artist payments and inventory, and get suggestions for complementary products in custom orders.'
     },
     features: [
-      'AI-Enhanced Product Variant Management',
-      'Smart Seasonal Inventory Planning',
-      'Intelligent Customer Special Orders',
-      'AI-Powered Consignment Management',
-      'Predictive Repair & Service Tracking',
-      'Smart Vendor Management'
+      'Complex Product Variant Management',
+      'Seasonal Inventory Planning & Buying',
+      'Customer Special Orders & Tracking',
+      'Consignment Management & Artist Payments',
+      'Repair & Service Tracking',
+      'Vendor Management & Relationships'
     ],
     benefits: [
-      'AI manages complex product catalogs with 95% accuracy',
-      'Smart seasonal buying optimization reduces overstock by 50%',
-      'Automated special order tracking improves customer satisfaction by 40%',
-      'Intelligent vendor management strengthens supplier relationships'
+      'Manage complex product catalogs with 95% accuracy',
+      'Reduce seasonal overstock by 50% with better buying optimization',
+      'Improve customer satisfaction by 40% with special order tracking',
+      'Strengthen supplier relationships with comprehensive vendor management'
     ],
     automationBenefits: [
-      'Predict seasonal demand for specialty products',
-      'Optimize consignment artist inventory and payments',
-      'Automate special order status updates and customer communication',
-      'Track repair services and predict completion times'
+      'Get insights about seasonal demand for specialty products',
+      'Receive consignment inventory and payment optimization suggestions',
+      'Get automated special order status updates and customer communication',
+      'Receive repair service tracking and completion time estimates'
     ],
     controlFeatures: [
       'Set custom rules for different product categories and vendors',
-      'Override AI predictions for unique market conditions',
+      'Override suggestions for unique market conditions',
       'Customize consignment terms and payment schedules',
-      'Control automation levels for different business processes'
+      'Control which processes use intelligent features'
     ],
     testimonial: {
       name: 'Lisa Rodriguez',
       role: 'Owner',
       company: 'Artisan Crafts',
-      content: 'The AI consignment management and seasonal planning features were exactly what we needed. The system tracks artist inventory automatically and predicts which products will sell during different seasons. We can now focus on curating great products instead of managing spreadsheets.',
+      content: 'The consignment management and seasonal planning features were exactly what we needed for our specialty business. The system tracks artist inventory comprehensively and helps us understand which products sell during different seasons. We can now focus on curating great products instead of managing spreadsheets.',
       rating: 5
     }
   }
@@ -290,21 +290,21 @@ export default function IndustriesPage() {
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in-up">
-            AI-Powered Solutions Built for Your Industry
+            Complete Business Solutions Built for Your Industry
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
-            BizPilot&apos;s intelligent automation adapts to your specific industry needs with AI that learns your business patterns while keeping you in complete control.
+            BizPilot provides comprehensive business management with intelligent features that adapt to your specific industry needs while keeping you in complete control.
           </p>
           
-          {/* AI Benefits Highlight */}
+          {/* Business Benefits Highlight */}
           <div className="grid md:grid-cols-3 gap-6 mt-12 animate-fade-in-up animation-delay-400">
             <div className="flex items-center justify-center space-x-3 text-purple-300">
               <Brain className="h-6 w-6" />
-              <span className="text-sm font-medium">Smart Decision Making</span>
+              <span className="text-sm font-medium">Smart Insights</span>
             </div>
             <div className="flex items-center justify-center space-x-3 text-blue-300">
               <Zap className="h-6 w-6" />
-              <span className="text-sm font-medium">Intelligent Automation</span>
+              <span className="text-sm font-medium">Intelligent Features</span>
             </div>
             <div className="flex items-center justify-center space-x-3 text-green-300">
               <Shield className="h-6 w-6" />
@@ -332,11 +332,11 @@ export default function IndustriesPage() {
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{industry.title}</h2>
                   <p className="text-lg text-gray-300 mb-8">{industry.description}</p>
 
-                  {/* AI Use Case Section */}
+                  {/* Smart Features Section */}
                   <div className="mb-8 p-6 bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-xl border border-blue-500/30">
                     <div className="flex items-center mb-3">
                       <Brain className="h-5 w-5 text-blue-400 mr-2" />
-                      <h3 className="text-lg font-semibold text-blue-300">AI-Powered Intelligence</h3>
+                      <h3 className="text-lg font-semibold text-blue-300">Smart Business Intelligence</h3>
                     </div>
                     <h4 className="text-white font-medium mb-2">{industry.aiUseCase.title}</h4>
                     <p className="text-gray-300 text-sm mb-3">{industry.aiUseCase.description}</p>
@@ -348,7 +348,7 @@ export default function IndustriesPage() {
                   </div>
 
                   <div className="mb-8">
-                    <h3 className="text-xl font-semibold text-white mb-4">AI-Enhanced Features</h3>
+                    <h3 className="text-xl font-semibold text-white mb-4">Complete Feature Set</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {industry.features.map((feature, featureIndex) => (
                         <div 
@@ -379,11 +379,11 @@ export default function IndustriesPage() {
                     </div>
                   </div>
 
-                  {/* Automation Benefits */}
+                  {/* Intelligent Features */}
                   <div className="mb-8">
                     <div className="flex items-center mb-3">
                       <Zap className="h-5 w-5 text-yellow-400 mr-2" />
-                      <h3 className="text-lg font-semibold text-yellow-300">Smart Automation</h3>
+                      <h3 className="text-lg font-semibold text-yellow-300">Intelligent Features</h3>
                     </div>
                     <div className="space-y-2">
                       {industry.automationBenefits.map((benefit, benefitIndex) => (
@@ -466,21 +466,21 @@ export default function IndustriesPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 animate-fade-in-up">
-            Ready to Transform Your Industry with AI?
+            Ready to Transform Your Industry Operations?
           </h2>
           <p className="text-xl text-gray-400 mb-8 animate-fade-in-up animation-delay-100">
-            Join businesses in your industry who are already using BizPilot&apos;s intelligent automation to increase efficiency and profitability while staying in complete control.
+            Join businesses in your industry who are already using BizPilot&apos;s comprehensive management platform with intelligent features to increase efficiency and profitability while staying in complete control.
           </p>
           
-          {/* Key AI Benefits */}
+          {/* Key Business Benefits */}
           <div className="grid md:grid-cols-3 gap-6 mb-8 animate-fade-in-up animation-delay-200">
             <div className="text-center">
               <Brain className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-300">Smart Predictions</p>
+              <p className="text-sm text-gray-300">Smart Insights</p>
             </div>
             <div className="text-center">
               <Zap className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-300">Intelligent Automation</p>
+              <p className="text-sm text-gray-300">Intelligent Features</p>
             </div>
             <div className="text-center">
               <Shield className="h-8 w-8 text-green-400 mx-auto mb-2" />
@@ -493,7 +493,7 @@ export default function IndustriesPage() {
               href="/auth/register" 
               className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 group hover:scale-105 hover:-translate-y-0.5"
             >
-              Start Your AI-Powered Free Trial
+              Start Your Free Trial Today
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
             <p className="text-sm text-gray-500 mt-4">
