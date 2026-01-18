@@ -13,7 +13,6 @@ import {
   Package, 
   Warehouse, 
   MessageSquare, 
-  QrCode, 
   ArrowRight,
   CheckCircle,
   TrendingUp,
@@ -23,7 +22,6 @@ import {
   DollarSign,
   Users,
   ShoppingCart,
-  Smartphone,
   Globe,
   Star,
   Building2,
@@ -35,62 +33,62 @@ import {
 const features = [
   {
     icon: Receipt,
-    title: 'Complete POS System',
-    description: 'Lightning-fast transaction processing with mobile POS, table management, kitchen display integration, and multi-payment support including cards, mobile payments, and cash.'
+    title: 'AI-Enhanced POS System',
+    description: 'Lightning-fast transaction processing with intelligent sales insights, predictive customer preferences, automated upselling suggestions, and smart payment processing across mobile POS, table management, and kitchen display systems.'
   },
   {
     icon: Warehouse,
-    title: 'Smart Inventory Control',
-    description: 'Real-time stock tracking across multiple locations, automated reordering with supplier integration, barcode scanning, waste tracking, and intelligent stock transfers.'
+    title: 'Smart Inventory Intelligence',
+    description: 'AI-powered inventory management that predicts demand, automates reordering, prevents stockouts, and optimizes stock levels across multiple locations. Get intelligent alerts and recommendations based on your business patterns.'
   },
   {
     icon: BarChart3,
-    title: 'Advanced Reporting & Analytics',
-    description: 'Comprehensive sales analytics, staff performance tracking, inventory reports, custom dashboards, profit analysis, and real-time business intelligence with export capabilities.'
+    title: 'Predictive Analytics & AI Insights',
+    description: 'Advanced AI-driven reporting that identifies trends, predicts future performance, and provides actionable business intelligence. Get smart recommendations for pricing, staffing, and inventory optimization.'
   },
   {
     icon: DollarSign,
-    title: 'Integrated Financial Management',
-    description: 'Seamless Xero and Sage integration, automated invoicing, tax management, multi-currency support, and complete general ledger with financial reporting.'
+    title: 'Intelligent Financial Management',
+    description: 'AI-enhanced financial tracking with automated categorization, smart expense detection, predictive cash flow analysis, and seamless integration with Xero and Sage for intelligent bookkeeping.'
   },
   {
     icon: Package,
-    title: 'Menu & Recipe Engineering',
-    description: 'Advanced recipe costing, menu engineering with profit optimization, modifier management, ingredient tracking, nutritional information, and yield management.'
+    title: 'Smart Recipe & Menu Engineering',
+    description: 'AI-powered recipe costing and menu optimization that analyzes profitability, suggests pricing improvements, tracks ingredient costs, and recommends menu changes based on sales data and market trends.'
   },
   {
     icon: MessageSquare,
-    title: 'Customer Relationship Management',
-    description: 'Complete CRM with customer profiles, loyalty programs with tier management, customer accounts, targeted marketing campaigns, and customer analytics.'
+    title: 'AI-Driven Customer Intelligence',
+    description: 'Intelligent CRM that automatically segments customers, predicts buying behavior, personalizes marketing campaigns, and identifies high-value customers with AI-powered loyalty program optimization.'
   },
   {
     icon: Users,
-    title: 'Staff Management & Scheduling',
-    description: 'Time and attendance tracking, staff scheduling, role-based permissions, performance monitoring, commission management, and training progress tracking.'
+    title: 'Smart Staff Management',
+    description: 'AI-optimized scheduling based on predicted demand, intelligent performance tracking, automated time management, and smart workforce planning that adapts to your business patterns and peak times.'
   },
   {
     icon: Globe,
-    title: 'E-commerce & Online Ordering',
-    description: 'WooCommerce integration, online ordering platform, delivery management, digital signage, and seamless omnichannel experience.'
+    title: 'Intelligent E-commerce Integration',
+    description: 'AI-powered online ordering with smart product recommendations, dynamic pricing optimization, predictive inventory sync, and intelligent customer journey optimization across all channels.'
   },
   {
     icon: Building2,
-    title: 'Multi-Location Management',
-    description: 'Centralized dashboard for multiple locations, consolidated reporting, inter-location transfers, franchise management, and brand consistency controls.'
+    title: 'AI-Powered Multi-Location Management',
+    description: 'Centralized intelligence across all locations with predictive performance analysis, automated inter-location transfers, smart franchise management, and AI-driven operational optimization.'
   }
 ]
 
 const benefits = [
-  'Complete POS system with mobile and desktop support',
-  'Real-time inventory across multiple locations with automated reordering',
-  'Integrated accounting with Xero, Sage, and general ledger management',
-  'Advanced reporting with custom dashboards and business intelligence',
-  'Customer loyalty programs and comprehensive CRM management',
-  'Staff management with scheduling, performance tracking, and time attendance',
-  'E-commerce integration with WooCommerce and online ordering platform',
-  'Multi-location management with centralized control and reporting',
-  'Recipe management with costing and menu engineering optimization',
-  'Digital signage and property management system integration'
+  'AI-enhanced POS system with intelligent sales insights and predictive analytics',
+  'Smart inventory management with automated reordering and demand forecasting',
+  'Intelligent financial integration with Xero, Sage, and automated categorization',
+  'AI-powered reporting with predictive insights and optimization recommendations',
+  'Smart customer loyalty programs with AI-driven personalization and segmentation',
+  'Intelligent staff management with AI-optimized scheduling and performance tracking',
+  'AI-enhanced e-commerce integration with smart recommendations and dynamic pricing',
+  'Predictive multi-location management with automated optimization and insights',
+  'Smart recipe management with AI-powered costing and menu optimization',
+  'Intelligent automation that learns your business patterns while you stay in control'
 ]
 
 const industries = [
@@ -276,10 +274,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Complete POS & ERP System for Modern Businesses
+              AI-Powered POS & ERP System for Intelligent Business Management
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              From point-of-sale to inventory management, accounting integration to customer loyalty - everything you need to run and scale your business efficiently.
+              From intelligent point-of-sale to predictive inventory management, AI-enhanced accounting to smart customer insights - everything you need to run and scale your business with artificial intelligence that puts you in control.
             </p>
           </div>
           
@@ -418,10 +416,10 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                Complete Business Management in One Platform
+                AI-Powered Business Management in One Intelligent Platform
               </h2>
               <p className="text-lg text-gray-300 mb-8">
-                From your first sale to multi-location expansion, BizPilot grows with your business. Manage everything from POS transactions to financial reporting in one integrated system.
+                From your first sale to multi-location expansion, BizPilot&apos;s AI grows with your business. Harness intelligent automation for POS transactions, predictive analytics, and smart decision-making—all while maintaining complete control over your business operations.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -475,7 +473,7 @@ export default function HomePage() {
             >
               <div className="bg-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-600">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Profit Analysis</h3>
+                  <h3 className="text-lg font-semibold text-white">AI Profit Analysis</h3>
                   <motion.div
                     animate={{ 
                       rotate: [0, 10, -10, 0],
@@ -543,7 +541,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            Ready to Transform Your Business Operations?
+            Ready to Transform Your Business with AI?
           </motion.h2>
           <motion.p 
             className="text-xl text-gray-400 mb-8"
@@ -552,8 +550,8 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Join thousands of businesses using BizPilot to streamline operations, increase profits, and scale efficiently. 
-            Start your free trial today and see the difference in 24 hours.
+            Join thousands of businesses using BizPilot&apos;s AI-powered platform to automate operations, predict trends, and increase profits intelligently. 
+            Start your free trial today and experience the power of AI-driven business management in 24 hours.
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
@@ -570,7 +568,7 @@ export default function HomePage() {
                 href="/auth/register" 
                 className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 group"
               >
-                Start Your Free Trial
+                Start Your AI-Powered Trial
                 <motion.div
                   className="ml-2"
                   whileHover={{ x: 5 }}
@@ -588,7 +586,7 @@ export default function HomePage() {
                 href="/features" 
                 className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg border border-slate-600 text-white hover:border-purple-500/50 hover:bg-slate-800/50 transition-all"
               >
-                View All Features
+                Explore AI Features
               </Link>
             </motion.div>
           </motion.div>

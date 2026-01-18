@@ -480,7 +480,7 @@ export default function SettingsPage() {
     if (activeTab === 'business' || activeTab === 'departments') {
       loadBusinessData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab]);
 
   const handleSaveBusiness = async () => {
