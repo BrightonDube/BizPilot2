@@ -9,13 +9,10 @@ import { useGuestOnly } from '@/hooks/useAuth'
 import { 
   Building2,
   ShoppingCart,
-  Users,
   Coffee,
   Utensils,
   Store,
   Hotel,
-  Shirt,
-  Car,
   ArrowRight,
   CheckCircle,
   Menu,

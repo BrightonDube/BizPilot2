@@ -8,7 +8,6 @@ import { MarketingFooter } from '@/components/common/MarketingFooter'
 import { useGuestOnly } from '@/hooks/useAuth'
 import { 
   ChevronDown,
-  ChevronUp,
   Menu,
   X,
   ArrowRight

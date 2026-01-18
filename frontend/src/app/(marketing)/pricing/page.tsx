@@ -163,8 +163,9 @@ export default function PricingPage() {
       if (url) {
         window.location.href = url
       }
-    } catch (e) {
+    } catch (error) {
       // stay on page; errors are handled elsewhere in settings for now
+      console.error('Error selecting tier:', error)
     } finally {
       setIsPurchasing(null)
     }
