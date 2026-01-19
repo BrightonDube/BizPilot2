@@ -53,6 +53,9 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
         // Explicitly request JSON to avoid RSC payload issues
         'Accept': 'application/json',
         'Content-Type': 'application/json',
+        // Prevent caching of auth checks
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
       },
       // Never cache auth checks at the edge
       cache: 'no-store',
@@ -67,7 +70,11 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isMarketingRoute = pathname === '/' || pathname === '/pricing';
+  const isMarketingRoute = pathname === '/' || 
+                        pathname === '/pricing' ||
+                        pathname === '/features' ||
+                        pathname === '/industries' ||
+                        pathname === '/faq';
   const isAuthRoute = pathname === '/auth' || pathname.startsWith('/auth/');
 
   // Never interfere with Next internals or static files
@@ -81,6 +88,16 @@ export async function middleware(request: NextRequest) {
                        request.headers.get('Next-Router-Prefetch') === '1' ||
                        request.nextUrl.searchParams.has('_rsc');
 
+  // Debug logging for troubleshooting multi-tab issues
+  if (process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true') {
+    console.log(`[Middleware] ${request.method} ${pathname}`, {
+      isRSCRequest,
+      hasAccessToken: !!request.cookies.get('access_token')?.value,
+      hasRefreshToken: !!request.cookies.get('refresh_token')?.value,
+      userAgent: request.headers.get('user-agent')?.substring(0, 50),
+    });
+  }
+
   const authed = await hasValidSession(request);
 
   // Authenticated users should not see public/auth pages.
@@ -88,11 +105,8 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     url.search = '';
-    // For RSC requests, return a proper redirect response
-    if (isRSCRequest) {
-      return NextResponse.redirect(url, { status: 303 });
-    }
-    return NextResponse.redirect(url);
+    // Use 302 redirect for RSC requests to prevent caching issues
+    return NextResponse.redirect(url, { status: 302 });
   }
 
   // All remaining routes are protected.
@@ -102,20 +116,11 @@ export async function middleware(request: NextRequest) {
     // Prevent leaking Next.js internal params (e.g. ?_rsc=...) into the login URL.
     url.search = '';
     url.searchParams.set('next', pathname);
-    // For RSC requests, return a proper redirect response
-    if (isRSCRequest) {
-      return NextResponse.redirect(url, { status: 303 });
-    }
-    return NextResponse.redirect(url);
+    // Use 302 redirect for RSC requests to prevent caching issues
+    return NextResponse.redirect(url, { status: 302 });
   }
 
-  // For RSC requests on allowed routes, ensure proper headers
-  if (isRSCRequest) {
-    const response = NextResponse.next();
-    response.headers.set('Content-Type', 'text/x-component');
-    return response;
-  }
-
+  // Let Next.js handle RSC requests naturally - don't override Content-Type
   return NextResponse.next();
 }
 

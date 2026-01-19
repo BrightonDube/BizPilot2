@@ -481,6 +481,7 @@ async def test_get_current_business_id_returns_id(monkeypatch):
     monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
 
     import app.api.deps as deps
+    from unittest.mock import MagicMock
 
     db = MagicMock()
     q = MagicMock()
@@ -488,7 +489,15 @@ async def test_get_current_business_id_returns_id(monkeypatch):
     q.filter.return_value = q
     q.first.return_value = SimpleNamespace(business_id="b1")
 
-    biz_id = await deps.get_current_business_id(current_user=SimpleNamespace(id="u1", is_superadmin=False), db=db)
+    # Mock request object
+    request = MagicMock()
+    request.headers.get.return_value = None
+
+    biz_id = await deps.get_current_business_id(
+        request=request,
+        current_user=SimpleNamespace(id="u1", is_superadmin=False), 
+        db=db
+    )
     assert biz_id == "b1"
 
 

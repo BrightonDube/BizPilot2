@@ -3,16 +3,17 @@
 # Docs: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
 
 name: bizpilot
+region: blr
 
-# Use path-based routing to keep frontend and backend on same domain
-# This fixes cookie auth issues (no cross-subdomain problems)
+features:
+  - buildpack-stack=ubuntu-22
 
 services:
   # FastAPI Backend API
   - name: api
     github:
       repo: BrightonDube/BizPilot2
-      branch: main
+      branch: dev
       deploy_on_push: true
     source_dir: .
     dockerfile_path: backend/Dockerfile
@@ -20,11 +21,7 @@ services:
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb  # Starter tier (~$5/mo, covered by credits)
     
-    # Route /api/* to this service
-    routes:
-      - path: /api
-        preserve_path_prefix: true
-    
+    # Health check configuration
     health_check:
       http_path: /api/health
       initial_delay_seconds: 30
@@ -37,8 +34,6 @@ services:
       - key: SECRET_KEY
         scope: RUN_TIME
         type: SECRET
-        value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
-        # IMPORTANT: Override this value in DO Dashboard with a secure key
       - key: ENVIRONMENT
         scope: RUN_TIME
         value: production
@@ -51,67 +46,75 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         scope: RUN_TIME
         value: "30"
-      # Cookie settings - same domain so these are simpler
       - key: COOKIE_DOMAIN
         scope: RUN_TIME
-        value: ""  # Empty = current domain only (safe default)
+        value: ""  # Empty for same-origin (recommended for security)
       - key: COOKIE_SECURE
         scope: RUN_TIME
         value: "true"
       - key: COOKIE_SAMESITE
         scope: RUN_TIME
-        value: "lax"  # Lax is fine for same-domain
-      # DATABASE_URL from managed PostgreSQL
+        value: "lax"  # Allows cookies in navigation but blocks CSRF
+      - key: CORS_ORIGINS
+        scope: RUN_TIME
+        value: '["https://bizpilot-ajp9i.ondigitalocean.app","https://bizpilotpro.app"]'
       - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
-        value: ${db.DATABASE_URL}
-      # CORS_ORIGINS set manually in dashboard
-      # Email - set these in DO Dashboard for production email sending
+      - key: GOOGLE_CLIENT_ID
+        scope: RUN_TIME
+        value: "239369796650-a89435qfs452tf7pggfj5df8vtgtved0.apps.googleusercontent.com"
+      - key: GOOGLE_CLIENT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: GROQ_API_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: "https://bizpilotpro.app"
       - key: EMAILS_ENABLED
-        scope: RUN_TIME
-        value: "false"  # Set to "true" in dashboard after configuring SMTP
+        scope: RUN_AND_BUILD_TIME
+        value: "True"
       - key: SMTP_HOST
-        scope: RUN_TIME
-        value: ""  # Configure in dashboard
+        scope: RUN_AND_BUILD_TIME
+        value: "smtp-relay.brevo.com"
       - key: SMTP_PORT
-        scope: RUN_TIME
+        scope: RUN_AND_BUILD_TIME
         value: "587"
-      - key: SMTP_STARTTLS
-        scope: RUN_TIME
-        value: "true"
       - key: SMTP_USER
-        scope: RUN_TIME
+        scope: RUN_AND_BUILD_TIME
         type: SECRET
-        value: ""  # Configure in dashboard
       - key: SMTP_PASSWORD
-        scope: RUN_TIME
+        scope: RUN_AND_BUILD_TIME
         type: SECRET
-        value: ""  # Configure in dashboard
+      - key: SMTP_TIMEOUT
+        scope: RUN_AND_BUILD_TIME
+        value: "10"
+      - key: SMTP_STARTTLS
+        scope: RUN_AND_BUILD_TIME
+        value: "True"
       - key: EMAILS_FROM_EMAIL
         scope: RUN_TIME
         value: "noreply@bizpilotpro.app"
       - key: EMAILS_FROM_NAME
         scope: RUN_TIME
         value: "BizPilot"
-      # Paystack - required for subscription payments
       - key: PAYSTACK_SECRET_KEY
-        scope: RUN_TIME
+        scope: RUN_AND_BUILD_TIME
         type: SECRET
-        value: ""  # Configure in dashboard
       - key: PAYSTACK_PUBLIC_KEY
-        scope: RUN_TIME
-        value: ""  # Configure in dashboard
-      # Frontend URL for payment callbacks
-      - key: FRONTEND_URL
-        scope: RUN_TIME
-        value: ""  # Set to your app URL in dashboard, e.g., https://bizpilotpro.app
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+      - key: BIZPILOT_SUPERADMIN_PASSWORD
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
 
   # Next.js Frontend
   - name: web
     github:
       repo: BrightonDube/BizPilot2
-      branch: main
+      branch: dev
       deploy_on_push: true
     source_dir: .
     dockerfile_path: frontend/Dockerfile
@@ -119,20 +122,25 @@ services:
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb  # Starter tier (~$5/mo, covered by credits)
     
-    # Route everything else to frontend
-    routes:
-      - path: /
-    
     envs:
       - key: NODE_ENV
         scope: RUN_TIME
         value: production
-      # NEXT_PUBLIC_API_URL set manually after app URL is known
-      # INTERNAL_API_URL for server-to-server communication (middleware auth checks)
-      # This uses the internal service URL to avoid routing through the public ingress
+      - key: NEXT_PUBLIC_API_URL
+        scope: BUILD_TIME
+        value: "/api/v1"
+      - key: NEXT_PUBLIC_API_URL
+        scope: RUN_TIME
+        value: "/api/v1"
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        scope: BUILD_TIME
+        value: "239369796650-a89435qfs452tf7pggfj5df8vtgtved0.apps.googleusercontent.com"
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        scope: RUN_TIME
+        value: "239369796650-a89435qfs452tf7pggfj5df8vtgtved0.apps.googleusercontent.com"
       - key: INTERNAL_API_URL
         scope: RUN_TIME
-        value: ${api.PRIVATE_URL}/api/v1
+        value: "http://api:8000/api/v1"
 
 jobs:
   # Run Alembic migrations before deploying services.
@@ -141,7 +149,7 @@ jobs:
     kind: PRE_DEPLOY
     github:
       repo: BrightonDube/BizPilot2
-      branch: main
+      branch: dev
       deploy_on_push: true
     source_dir: .
     dockerfile_path: backend/Dockerfile
@@ -155,44 +163,27 @@ jobs:
       - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
-        value: ${db.DATABASE_URL}
+        # This will use the value set in the DigitalOcean dashboard
       - key: SECRET_KEY
         scope: RUN_TIME
         type: SECRET
-        value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
-        # IMPORTANT: Override this value in DO Dashboard with a secure key
+        # This will use the value set in the DigitalOcean dashboard
 
-  # Optional: post-deploy seeding. Use with care (can be destructive depending on script).
-  # Uncomment and set the command you want if you need automated seeding.
-  # - name: release-seed
-  #   kind: POST_DEPLOY
-  #   github:
-  #     repo: BrightonDube/BizPilot2
-  #     branch: main
-  #     deploy_on_push: false
-  #   source_dir: backend
-  #   dockerfile_path: Dockerfile
-  #   run_command: python -m scripts.seed_production
-  #   instance_count: 1
-  #   instance_size_slug: apps-s-1vcpu-0.5gb
-  #   envs:
-  #     - key: ENVIRONMENT
-  #       scope: RUN_TIME
-  #       value: production
+ingress:
+  rules:
+    - match:
+        path:
+          prefix: /api
+      component:
+        name: api
+        preserve_path_prefix: true
+    - match:
+        path:
+          prefix: /
+      component:
+        name: web
 
-# NOTE: After deployment, manually set in DO Dashboard:
-# 1. CORS_ORIGINS - ["https://your-app.ondigitalocean.app"]
-# 2. NEXT_PUBLIC_API_URL - https://your-app.ondigitalocean.app/api/v1
-#
-# DATABASE: This spec references an existing DigitalOcean Managed Database.
-# You must create the database separately and bind it to this app via the DO dashboard
-# or provide the connection string as DATABASE_URL environment variable.
-
-databases:
-  # Reference an existing DigitalOcean Managed PostgreSQL database
-  # Create database first: doctl databases create bizpilot-postgres --engine pg --size db-s-1vcpu-1gb --region nyc1
-  - name: db
-    engine: PG
-    production: true
-    cluster_name: bizpilot-postgres
-    # The cluster must be created separately via DO dashboard or doctl
+domains:
+  - domain: bizpilotpro.app
+    type: PRIMARY
+    zone: bizpilotpro.app

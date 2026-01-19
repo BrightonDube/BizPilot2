@@ -3,22 +3,12 @@
  */
 
 import { apiClient } from './api';
+import type { SubscriptionTier } from '@/shared/pricing-config';
+
+// Re-export shared types
+export type { SubscriptionTier };
 
 // Types
-export interface SubscriptionTier {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string | null;
-  price_monthly_cents: number;
-  price_yearly_cents: number;
-  currency: string;
-  sort_order: number;
-  is_default: boolean;
-  is_active: boolean;
-  features: Record<string, number>;
-  feature_flags: Record<string, boolean>;
-}
 
 export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
 export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'expired' | 'trial' | 'none';

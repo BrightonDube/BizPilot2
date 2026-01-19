@@ -4,6 +4,12 @@
  * This module contains shared TypeScript types used by both frontend and backend.
  */
 
+// Export pricing configuration
+export * from './pricing-config';
+
+// Export marketing AI context
+export * from './marketing-ai-context';
+
 // User types
 export interface User {
   id: string;

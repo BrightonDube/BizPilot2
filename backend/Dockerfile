@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY backend/ .
 
+# Copy shared directory for pricing config
+COPY shared/ ./shared/
+
 # Alembic config (migrations run at startup with a DB lock and/or via DO pre-deploy job)
 COPY backend/alembic.ini .
 COPY backend/alembic ./alembic

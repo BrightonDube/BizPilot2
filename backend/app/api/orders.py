@@ -337,7 +337,7 @@ async def create_order(
         business_address = "\n".join(business_address_parts) if business_address_parts else None
         
         # Build supplier address
-        supplier_address = supplier.address if supplier else None
+        supplier_address = supplier.full_address if supplier else None
 
         items_for_pdf = service.get_order_items(str(order.id))
         
@@ -363,7 +363,7 @@ async def create_order(
             business_vat=business.vat_number if business else None,
             # Supplier details
             supplier_name=supplier.name if supplier else "",
-            supplier_contact=supplier.contact_person if supplier else None,
+            supplier_contact=supplier.contact_name if supplier else None,
             supplier_address=supplier_address,
             supplier_phone=supplier.phone if supplier else None,
             supplier_email=supplier.email if supplier else None,

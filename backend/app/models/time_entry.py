@@ -1,8 +1,8 @@
 """Time Entry model for user time tracking and payroll."""
 
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
-from sqlalchemy import Column, String, Text, Numeric, ForeignKey, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, String, Text, Numeric, ForeignKey, DateTime, Enum as SQLEnum, Boolean, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import enum
@@ -51,6 +51,17 @@ class TimeEntry(BaseModel):
     # Calculated hours
     hours_worked = Column(Numeric(6, 2), default=0)  # Total hours for this entry
     break_duration = Column(Numeric(6, 2), default=0)  # Break time in hours
+    net_hours = Column(Numeric(6, 2), default=0)  # Net working hours (hours_worked - break_duration)
+    
+    # Auto clock-out fields
+    is_auto_clocked_out = Column(Boolean, default=False)
+    auto_clock_out_reason = Column(Text, nullable=True)
+    
+    # Payroll fields
+    payroll_period_start = Column(Date, nullable=True)
+    payroll_period_end = Column(Date, nullable=True)
+    is_overtime = Column(Boolean, default=False)
+    overtime_hours = Column(Numeric(6, 2), default=0)
     
     # Status
     status = Column(

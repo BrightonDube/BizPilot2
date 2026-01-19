@@ -389,7 +389,11 @@ export function OrderForm({ onCreated, mode = 'inbound' }: OrderFormProps) {
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <div className="flex justify-end">
-            <Button onClick={handleSubmit} disabled={submitting}>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={submitting}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

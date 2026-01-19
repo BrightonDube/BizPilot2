@@ -51,7 +51,8 @@ import { apiClient } from '@/lib/api';
 import { CurrencySelector } from '@/components/common/CurrencySelector';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { useTheme } from '@/components/common/ThemeProvider';
-import { subscriptionApi, SubscriptionTier, UserSubscription } from '@/lib/subscription-api';
+import { subscriptionApi, UserSubscription } from '@/lib/subscription-api';
+import { PricingUtils, type SubscriptionTier } from '@/shared/pricing-config';
 import { DepartmentManagement } from '@/components/departments';
 
 type SettingsTab = 'profile' | 'business' | 'departments' | 'ai' | 'notifications' | 'security' | 'billing' | 'appearance';
@@ -287,12 +288,14 @@ export default function SettingsPage() {
   const loadBillingData = async () => {
     setLoadingBilling(true);
     try {
-      const [subData, tiersData] = await Promise.all([
+      const [subData] = await Promise.all([
         subscriptionApi.getMySubscription(),
-        subscriptionApi.getTiers(),
       ]);
       setSubscription(subData);
-      setTiers(tiersData);
+      
+      // Use shared pricing configuration instead of API call
+      const activeTiers = PricingUtils.getActiveTiers();
+      setTiers(activeTiers);
       
       // Try to load billing history
       try {
@@ -384,12 +387,18 @@ export default function SettingsPage() {
 
   // Handle tier upgrade
   const handleUpgrade = async (tier: SubscriptionTier) => {
+    // Handle Enterprise tier with custom pricing
+    if (PricingUtils.hasCustomPricing(tier)) {
+      // Redirect to contact sales for Enterprise tier
+      window.open('mailto:sales@bizpilot.co.za?subject=Enterprise%20Plan%20Inquiry', '_blank');
+      return;
+    }
+    
     router.push(`/pricing?tier=${encodeURIComponent(tier.id)}&cycle=${encodeURIComponent(selectedBillingCycle)}`);
   };
 
   const formatPrice = (cents: number) => {
-    if (cents === 0) return 'Free';
-    return `R${(cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`;
+    return PricingUtils.formatPrice(cents, 'ZAR');
   };
 
   const formatDate = (dateString: string) => {
@@ -480,7 +489,7 @@ export default function SettingsPage() {
     if (activeTab === 'business' || activeTab === 'departments') {
       loadBusinessData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab]);
 
   const handleSaveBusiness = async () => {
@@ -1204,17 +1213,16 @@ export default function SettingsPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                         {tiers.map((tier) => {
-                          const price = selectedBillingCycle === 'monthly' 
-                            ? tier.price_monthly_cents 
-                            : tier.price_yearly_cents;
-                          const monthlyEquivalent = selectedBillingCycle === 'yearly' 
+                          const price = PricingUtils.getPriceForCycle(tier, selectedBillingCycle);
+                          const monthlyEquivalent = selectedBillingCycle === 'yearly' && price > 0
                             ? Math.round(tier.price_yearly_cents / 12) 
                             : tier.price_monthly_cents;
                           const isCurrentTier = subscription?.tier?.id === tier.id;
-                          const isProfessional = tier.name === 'professional';
-                          const isPaid = price > 0;
+                          const isEnterprise = tier.name === 'enterprise';
+                          const isPilotPro = tier.name === 'pilot_pro';
+                          const hasCustomPricing = PricingUtils.hasCustomPricing(tier);
                           const paidUpgradeDisabled = false;
                           
                           return (
@@ -1223,12 +1231,21 @@ export default function SettingsPage() {
                               className={`relative p-4 rounded-lg border transition-all ${
                                 isCurrentTier
                                   ? 'border-green-500 bg-green-900/10'
-                                  : isProfessional
+                                  : isEnterprise
+                                  ? 'border-yellow-500/50 bg-yellow-900/10 hover:border-yellow-400'
+                                  : isPilotPro
                                   ? 'border-purple-500/50 bg-purple-900/10 hover:border-purple-400'
                                   : 'border-border bg-muted hover:opacity-90'
                               }`}
                             >
-                              {isProfessional && (
+                              {isEnterprise && (
+                                <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+                                  <span className="bg-gradient-to-r from-yellow-600 to-orange-600 px-2 py-0.5 text-xs font-medium text-white rounded-full">
+                                    Enterprise
+                                  </span>
+                                </div>
+                              )}
+                              {isPilotPro && !isEnterprise && (
                                 <div className="absolute -top-2 left-1/2 -translate-x-1/2">
                                   <span className="bg-gradient-to-r from-purple-600 to-blue-600 px-2 py-0.5 text-xs font-medium text-white rounded-full">
                                     Popular
@@ -1244,9 +1261,9 @@ export default function SettingsPage() {
                               <h4 className="font-medium text-foreground mb-1">{tier.display_name}</h4>
                               <div className="mb-2">
                                 <span className="text-2xl font-bold text-foreground">
-                                  {formatPrice(monthlyEquivalent)}
+                                  {hasCustomPricing ? 'Contact Sales' : formatPrice(monthlyEquivalent)}
                                 </span>
-                                {monthlyEquivalent > 0 && (
+                                {!hasCustomPricing && monthlyEquivalent > 0 && (
                                   <span className="text-muted-foreground text-sm">/mo</span>
                                 )}
                               </div>
@@ -1257,7 +1274,9 @@ export default function SettingsPage() {
                                 className={`w-full ${
                                   isCurrentTier
                                     ? 'bg-green-600/20 text-green-400 border border-green-500/30 cursor-default'
-                                    : isProfessional
+                                    : isEnterprise
+                                    ? 'bg-gradient-to-r from-yellow-600 to-orange-600'
+                                    : isPilotPro
                                     ? 'bg-gradient-to-r from-purple-600 to-blue-600'
                                     : 'bg-muted hover:opacity-90'
                                 }`}
@@ -1266,6 +1285,8 @@ export default function SettingsPage() {
                               >
                                 {isCurrentTier
                                   ? 'Current Plan'
+                                  : hasCustomPricing
+                                  ? 'Contact Sales'
                                   : price === 0
                                   ? 'Select'
                                   : 'Upgrade'}

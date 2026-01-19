@@ -28,9 +28,25 @@ class TestAIAPI:
         from app.api.deps import get_current_active_user
         from app.main import app
         from app.core import config as config_mod
+        from app.core.subscription import require_feature
 
         # Override auth so we can reach the handler
-        app.dependency_overrides[get_current_active_user] = lambda: SimpleNamespace(id="u1")
+        app.dependency_overrides[get_current_active_user] = lambda: SimpleNamespace(
+            id="u1", 
+            current_tier_id=None, 
+            feature_overrides={"ai_insights": True}, 
+            subscription_status=None,
+            is_superadmin=False
+        )
+        
+        # Override feature check to allow access to ai_insights
+        app.dependency_overrides[require_feature("ai_insights")] = lambda: SimpleNamespace(
+            id="u1", 
+            current_tier_id=None, 
+            feature_overrides={"ai_insights": True}, 
+            subscription_status=None,
+            is_superadmin=False
+        )
 
         # Force unconfigured state
         monkeypatch.setattr(config_mod.settings, "GROQ_API_KEY", None, raising=False)
@@ -44,6 +60,7 @@ class TestAIAPI:
             assert "GROQ_API_KEY" in body["detail"]
         finally:
             app.dependency_overrides.pop(get_current_active_user, None)
+            app.dependency_overrides.pop(require_feature("ai_insights"), None)
 
 
 class TestUserSettingsAPI:

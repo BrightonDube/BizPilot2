@@ -136,20 +136,20 @@ def clear_all_data(db: Session):
 
 
 def create_subscription_tiers(db: Session) -> dict:
-    """Create subscription tiers."""
+    """Create subscription tiers using shared pricing configuration."""
     print("Creating subscription tiers...")
     
     tiers = {}
-    for tier_key, tier_data in DEFAULT_TIERS.items():
+    for tier_name, tier_data in DEFAULT_TIERS.items():
         tier = SubscriptionTier(**tier_data)
         db.add(tier)
-        tiers[tier_key] = tier
+        tiers[tier_name] = tier
     
     db.commit()
     for tier in tiers.values():
         db.refresh(tier)
     
-    print(f"  ✓ Subscription tiers: {len(tiers)}")
+    print(f"  ✓ Subscription tiers: {len(tiers)} (using shared pricing config)")
     return tiers
 
 
@@ -157,7 +157,7 @@ def create_user(db: Session, tiers: dict) -> User:
     """Create demo user."""
     print("Creating demo user...")
 
-    email = "demo@bizpilot.co.za"
+    email = "demo@bizpilotpro.app"
     user = db.query(User).filter(User.email == email).first()
     if not user:
         user = User(email=email)
@@ -190,7 +190,7 @@ def create_superadmin(db: Session, tiers: dict) -> tuple[User, str]:
     if not password:
         password = secrets.token_urlsafe(24)
 
-    email = "admin@bizpilot.co.za"
+    email = "brightondube520@gmail.com"
 
     # Ensure only this account can be superadmin
     db.query(User).filter(User.is_superadmin.is_(True), User.email != email).update(
@@ -203,13 +203,13 @@ def create_superadmin(db: Session, tiers: dict) -> tuple[User, str]:
         user = User(email=email)
         db.add(user)
 
-    user.hashed_password = get_password_hash(password)
-    user.first_name = "BizPilot"
-    user.last_name = "Admin"
+    user.hashed_password = get_password_hash("Admin@2026")
+    user.first_name = "Brighton"
+    user.last_name = "Dube"
     user.phone = None
     user.is_email_verified = True
     user.status = UserStatus.ACTIVE
-    user.is_admin = False
+    user.is_admin = True
     user.is_superadmin = True
     user.subscription_status = SubscriptionStatus.NONE
     user.current_tier_id = None

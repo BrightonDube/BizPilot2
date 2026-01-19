@@ -66,6 +66,11 @@ class Product(BaseModel):
         primaryjoin="and_(Product.id==ProductIngredient.product_id, ProductIngredient.deleted_at.is_(None))",
         order_by="ProductIngredient.sort_order.asc()",
     )
+    stock_reservations = relationship(
+        "StockReservation",
+        back_populates="product",
+        lazy="selectin",
+    )
 
     def __repr__(self) -> str:
         return f"<Product {self.name}>"
