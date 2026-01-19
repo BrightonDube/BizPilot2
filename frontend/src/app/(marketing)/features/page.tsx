@@ -16,7 +16,6 @@ import {
   Zap
 } from 'lucide-react'
 import { 
-  AIValuePropositions,
   AIPrivacyControl,
   AIAutomationBenefits,
   AIContentCallout
