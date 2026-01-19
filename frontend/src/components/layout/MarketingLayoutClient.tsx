@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/common/Logo'
 import { MarketingFooter } from '@/components/common/MarketingFooter'
+import { GlobalAIChat } from '@/components/ai/GlobalAIChat'
 
 interface MarketingLayoutClientProps {
   children: React.ReactNode
@@ -131,6 +132,9 @@ export function MarketingLayoutClient({
 
       {/* Footer */}
       <MarketingFooter />
+      
+      {/* AI Chat Widget for Marketing Pages */}
+      <GlobalAIChat />
     </div>
   )
 }

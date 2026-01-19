@@ -6,6 +6,8 @@ import { GripVertical, MessageSquare, Send, X } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button, Input } from '@/components/ui';
+import { MarketingAIContextManager } from '../../../shared/marketing-ai-context';
+import { useGuestAISession } from '@/hooks/useGuestAISession';
 
 type ChatMessage = {
   id: string;
@@ -15,12 +17,21 @@ type ChatMessage = {
 
 type Position = { x: number; y: number };
 
+type AIContext = 'marketing' | 'business';
+
 const MOBILE_NAV_HEIGHT = 64;
 const MOBILE_NAV_CLEARANCE = MOBILE_NAV_HEIGHT + 5;
 
 export function GlobalAIChat() {
   const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
   const pathname = usePathname();
+
+  // Determine AI context based on authentication status
+  const aiContext: AIContext = isAuthenticated ? 'business' : 'marketing';
+  const marketingAI = useMemo(() => new MarketingAIContextManager(), []);
+  
+  // Guest session management for marketing context
+  const guestSession = useGuestAISession();
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -40,7 +51,11 @@ export function GlobalAIChat() {
 
   const endRef = useRef<HTMLDivElement>(null);
 
-  const canUseChat = isInitialized && isAuthenticated;
+  // For marketing context, we don't require authentication but check rate limits
+  // For business context, require authentication
+  const canUseChat = aiContext === 'marketing' 
+    ? guestSession.canSendMessage 
+    : (isInitialized && isAuthenticated);
 
   // Drag handlers (only for the floating widget, not the modal)
   const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -106,12 +121,27 @@ export function GlobalAIChat() {
   }, [open, messages.length]);
 
   const placeholder = useMemo(() => {
+    if (aiContext === 'marketing') {
+      return 'Ask about BizPilot features, pricing, or how it can help your business...';
+    }
     return 'Ask about sales, inventory, pricing, or customers...';
-  }, []);
+  }, [aiContext]);
 
   const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed || isSending) return;
+
+    // Check rate limits for marketing context
+    if (aiContext === 'marketing' && !guestSession.canSendMessage) {
+      const rateLimitMessage = guestSession.rateLimitMessage;
+      const assistantMessage: ChatMessage = {
+        id: `${Date.now()}-assistant-rate-limit`,
+        role: 'assistant',
+        content: rateLimitMessage || 'You have reached the message limit. Please try again later or sign up for unlimited access.',
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      return;
+    }
 
     if (!canUseChat) {
       return;
@@ -127,11 +157,31 @@ export function GlobalAIChat() {
     setInput('');
     setIsSending(true);
 
-    try {
-      const response = await apiClient.post('/ai/chat', {
-        message: trimmed,
-        conversation_id: conversationId,
+    // Track analytics for guest sessions
+    if (aiContext === 'marketing') {
+      guestSession.trackAnalytics('message_sent', {
+        messageLength: trimmed.length,
+        conversationLength: messages.length + 1
       });
+    }
+
+    try {
+      let response;
+      
+      if (aiContext === 'marketing') {
+        // For marketing context, use guest AI endpoint with session ID
+        response = await apiClient.post('/ai/guest-chat', {
+          message: trimmed,
+          conversation_id: conversationId,
+          session_id: guestSession.session?.id,
+        });
+      } else {
+        // For business context, use authenticated AI endpoint
+        response = await apiClient.post('/ai/chat', {
+          message: trimmed,
+          conversation_id: conversationId,
+        });
+      }
 
       const returnedConversationId = response.data?.conversation_id;
       if (typeof returnedConversationId === 'string' && returnedConversationId.length > 0) {
@@ -145,11 +195,30 @@ export function GlobalAIChat() {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch {
+      
+      // Update session activity for marketing context
+      if (aiContext === 'marketing') {
+        guestSession.updateSessionActivity();
+        guestSession.trackAnalytics('message_received', {
+          responseLength: assistantMessage.content.length,
+          conversationLength: messages.length + 2
+        });
+      }
+    } catch (error) {
+      let errorMessage = 'Unable to process that right now. Please try again.';
+      
+      // Provide context-specific error messages
+      if (aiContext === 'marketing') {
+        errorMessage = 'Sorry, I\'m having trouble right now. For immediate help, please contact our sales team at sales@bizpilot.co.za or try our free Pilot Solo tier.';
+        guestSession.trackAnalytics('message_error', {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+      
       const assistantMessage: ChatMessage = {
         id: `${Date.now()}-assistant-error`,
         role: 'assistant',
-        content: 'Unable to process that right now. Please try again.',
+        content: errorMessage,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -194,7 +263,9 @@ export function GlobalAIChat() {
     return null;
   }
 
-  if (!canUseChat) {
+  // For marketing context, show on marketing pages even without authentication
+  // For business context, require authentication
+  if (aiContext === 'business' && !canUseChat) {
     return null;
   }
 
@@ -243,7 +314,14 @@ export function GlobalAIChat() {
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800 px-4 py-3 bg-slate-950">
               <div className="flex items-center gap-2 select-none">
                 <GripVertical className="h-4 w-4 text-slate-500" />
-                <span className="text-sm font-semibold text-white">AI Assistant</span>
+                <span className="text-sm font-semibold text-white">
+                  {aiContext === 'marketing' ? 'BizPilot Assistant' : 'AI Assistant'}
+                </span>
+                {aiContext === 'marketing' && (
+                  <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">
+                    Guest
+                  </span>
+                )}
               </div>
               <button
                 type="button"
@@ -259,7 +337,10 @@ export function GlobalAIChat() {
               <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3">
                 {messages.length === 0 ? (
                   <div className="text-sm text-slate-400">
-                    Ask me anything about your business.
+                    {aiContext === 'marketing' 
+                      ? 'Hi! I can help you learn about BizPilot features, pricing, and how it can benefit your business. What would you like to know?'
+                      : 'Ask me anything about your business.'
+                    }
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3 pb-2">
@@ -291,6 +372,18 @@ export function GlobalAIChat() {
               </div>
 
               <div className="border-t border-slate-800 px-3 py-3 bg-slate-950">
+                {/* Rate limit indicator for marketing context */}
+                {aiContext === 'marketing' && guestSession.session && (
+                  <div className="mb-2 text-xs text-slate-400">
+                    Messages remaining: {guestSession.messagesRemaining} / {20}
+                    {guestSession.messagesRemaining <= 5 && (
+                      <span className="text-yellow-400 ml-2">
+                        Sign up for unlimited messages!
+                      </span>
+                    )}
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-2">
                   <Input
                     value={input}
@@ -303,12 +396,12 @@ export function GlobalAIChat() {
                         sendMessage();
                       }
                     }}
-                    disabled={isSending}
+                    disabled={isSending || !canUseChat}
                   />
                   <Button
                     type="button"
                     onClick={sendMessage}
-                    disabled={isSending || input.trim().length === 0}
+                    disabled={isSending || input.trim().length === 0 || !canUseChat}
                     className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                   >
                     <Send className="h-4 w-4" />

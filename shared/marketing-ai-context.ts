@@ -1,5 +1,5 @@
 /**
- * Marketing AI Context Configuration
+ * Marketing AI Context Configuration for TypeScript Frontend
  * 
  * This module defines the AI context, capabilities, and restrictions for the guest AI widget.
  * It provides structured information for AI responses and ensures marketing-only content.
@@ -7,16 +7,51 @@
  * Requirements: 4.1, 4.2, 4.3, 4.4, 2.3, 4.5, 4.6
  */
 
-import { MARKETING_KNOWLEDGE_BASE } from './marketing-knowledge-base';
-
-// AI Context Types
+// Type definitions
 export type AIContextType = 'marketing' | 'business';
 export type AICapability = 'features' | 'pricing' | 'use_cases' | 'support' | 'comparison';
 export type AIRestriction = 'no_business_data' | 'no_user_info' | 'no_operations' | 'marketing_only';
 
+export interface ContactInfo {
+  email?: string;
+  phone?: string;
+  signup_url?: string;
+  demo_url?: string;
+  message: string;
+}
+
+export interface ResponseTemplate {
+  pattern: string[];
+  response: string;
+}
+
+export interface ContactRouting {
+  triggers: string[];
+  contact: ContactInfo;
+}
+
+export interface AIResponseConfig {
+  max_response_length: number;
+  tone: string;
+  style: string;
+  include_next_steps: boolean;
+  include_contact_info: boolean;
+  personalization_level: string;
+}
+
+export interface MarketingAIContext {
+  type: AIContextType;
+  knowledge_base: string[];
+  capabilities: string[];
+  restrictions: string[];
+  fallback_responses: Record<string, string[]>;
+  response_templates: Record<string, ResponseTemplate>;
+  contact_routing: Record<string, ContactRouting>;
+}
+
 // Marketing AI Context Configuration
-export const MARKETING_AI_CONTEXT = {
-  type: 'marketing' as AIContextType,
+export const MARKETING_AI_CONTEXT: MarketingAIContext = {
+  type: "marketing",
   
   // Core knowledge base for AI responses
   knowledge_base: [
@@ -182,78 +217,190 @@ export const MARKETING_AI_CONTEXT = {
       }
     }
   }
-} as const;
+};
 
 // AI Response Configuration
-export const AI_RESPONSE_CONFIG = {
+export const AI_RESPONSE_CONFIG: AIResponseConfig = {
   max_response_length: 500,
-  tone: 'helpful and professional',
-  style: 'conversational but informative',
+  tone: "helpful and professional",
+  style: "conversational but informative",
   include_next_steps: true,
   include_contact_info: true,
-  personalization_level: 'general' // No personal data access
-} as const;
-
-// Validation functions for AI responses
-export const validateMarketingResponse = (response: string): boolean => {
-  const restrictedTerms = [
-    'your business data',
-    'your account',
-    'your orders',
-    'your customers',
-    'your inventory',
-    'your sales',
-    'login to see',
-    'in your dashboard'
-  ];
-  
-  return !restrictedTerms.some(term => 
-    response.toLowerCase().includes(term.toLowerCase())
-  );
+  personalization_level: "general"  // No personal data access
 };
 
-export const isMarketingQuestion = (question: string): boolean => {
-  const marketingKeywords = [
-    'features', 'pricing', 'cost', 'price', 'tier', 'plan',
-    'what is', 'how does', 'can bizpilot', 'does bizpilot',
-    'restaurant', 'retail', 'coffee', 'business',
-    'demo', 'trial', 'signup', 'start', 'begin',
-    'compare', 'difference', 'better', 'vs',
-    'enterprise', 'custom', 'support', 'help'
-  ];
-  
-  return marketingKeywords.some(keyword => 
-    question.toLowerCase().includes(keyword.toLowerCase())
-  );
-};
-
-export const getResponseTemplate = (question: string): string | null => {
-  const templates = MARKETING_AI_CONTEXT.response_templates;
-  
-  for (const [templateKey, template] of Object.entries(templates)) {
-    if (template.pattern.some(pattern => 
-      question.toLowerCase().includes(pattern.toLowerCase())
-    )) {
-      return template.response;
-    }
+// Marketing AI Validator Class
+export class MarketingAIValidator {
+  /**
+   * Validate that response contains only marketing content
+   */
+  static validateMarketingResponse(response: string): boolean {
+    const restrictedTerms = [
+      'your business data',
+      'your account',
+      'your orders',
+      'your customers',
+      'your inventory',
+      'your sales',
+      'login to see',
+      'in your dashboard'
+    ];
+    
+    const responseLower = response.toLowerCase();
+    return !restrictedTerms.some(term => responseLower.includes(term.toLowerCase()));
   }
   
-  return null;
-};
-
-export const getContactInfo = (question: string): any => {
-  const routing = MARKETING_AI_CONTEXT.contact_routing;
-  
-  for (const [routeKey, route] of Object.entries(routing)) {
-    if (route.triggers.some(trigger => 
-      question.toLowerCase().includes(trigger.toLowerCase())
-    )) {
-      return route.contact;
+  /**
+   * Check if question is appropriate for marketing AI
+   */
+  static isMarketingQuestion(question: string): boolean {
+    // First check for business-specific terms that should be rejected
+    const businessSpecificTerms = [
+      'my business', 'my account', 'my data', 'my sales', 'my customers',
+      'my inventory', 'my orders', 'my dashboard', 'my reports',
+      'show me', 'access my', 'login', 'logged in', 'dashboard',
+      'business data', 'user data', 'customer data', 'sales data',
+      'what data', 'access data', 'see my', 'view my'
+    ];
+    
+    const questionLower = question.toLowerCase();
+    
+    // Reject if contains business-specific terms
+    if (businessSpecificTerms.some(term => questionLower.includes(term.toLowerCase()))) {
+      return false;
     }
+    
+    // Accept if contains marketing keywords
+    const marketingKeywords = [
+      'features', 'pricing', 'cost', 'price', 'tier', 'plan',
+      'what is', 'how does', 'can bizpilot', 'does bizpilot',
+      'restaurant', 'retail', 'coffee', 'business type', 'industry',
+      'demo', 'trial', 'signup', 'start', 'begin', 'getting started',
+      'compare', 'difference', 'better', 'vs', 'versus',
+      'enterprise', 'custom', 'support', 'help', 'contact',
+      'about bizpilot', 'tell me about', 'information about'
+    ];
+    
+    return marketingKeywords.some(keyword => questionLower.includes(keyword.toLowerCase()));
   }
   
-  return routing.general_inquiries.contact;
-};
+  /**
+   * Get appropriate response template for question
+   */
+  static getResponseTemplate(question: string): string | null {
+    const templates = MARKETING_AI_CONTEXT.response_templates;
+    const questionLower = question.toLowerCase();
+    
+    for (const [templateKey, template] of Object.entries(templates)) {
+      if (template.pattern.some(pattern => questionLower.includes(pattern.toLowerCase()))) {
+        return template.response;
+      }
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Get appropriate contact information based on question
+   */
+  static getContactInfo(question: string): ContactInfo {
+    const routing = MARKETING_AI_CONTEXT.contact_routing;
+    const questionLower = question.toLowerCase();
+    
+    for (const [routeKey, route] of Object.entries(routing)) {
+      if (route.triggers.some(trigger => questionLower.includes(trigger.toLowerCase()))) {
+        return route.contact;
+      }
+    }
+    
+    return routing.general_inquiries.contact;
+  }
+  
+  /**
+   * Get appropriate fallback response
+   */
+  static getFallbackResponse(questionType: string): string {
+    const fallbacks = MARKETING_AI_CONTEXT.fallback_responses;
+    
+    if (questionType in fallbacks) {
+      const responses = fallbacks[questionType];
+      // Return first response for simplicity, could be randomized
+      return responses.length > 0 ? responses[0] : "I can help with general BizPilot questions. For specific assistance, please contact our support team.";
+    }
+    
+    return "I can help with general BizPilot questions. For specific assistance, please contact our support team.";
+  }
+}
 
-// Export the complete marketing AI context
-export default MARKETING_AI_CONTEXT;
+// Marketing AI Context Manager Class
+export class MarketingAIContextManager {
+  private context: MarketingAIContext;
+  private config: AIResponseConfig;
+  private validator: typeof MarketingAIValidator;
+  
+  constructor() {
+    this.context = MARKETING_AI_CONTEXT;
+    this.config = AI_RESPONSE_CONFIG;
+    this.validator = MarketingAIValidator;
+  }
+  
+  /**
+   * Get the complete knowledge base
+   */
+  getKnowledgeBase(): string[] {
+    return this.context.knowledge_base;
+  }
+  
+  /**
+   * Get AI capabilities
+   */
+  getCapabilities(): string[] {
+    return this.context.capabilities;
+  }
+  
+  /**
+   * Get AI restrictions
+   */
+  getRestrictions(): string[] {
+    return this.context.restrictions;
+  }
+  
+  /**
+   * Process a question and return appropriate response data
+   */
+  processQuestion(question: string): {
+    is_valid: boolean;
+    response?: string;
+    template_response?: string | null;
+    contact_info: ContactInfo;
+    knowledge_base?: string[];
+  } {
+    if (!this.validator.isMarketingQuestion(question)) {
+      return {
+        is_valid: false,
+        response: this.validator.getFallbackResponse("business_specific"),
+        contact_info: this.validator.getContactInfo(question)
+      };
+    }
+    
+    const templateResponse = this.validator.getResponseTemplate(question);
+    const contactInfo = this.validator.getContactInfo(question);
+    
+    return {
+      is_valid: true,
+      template_response: templateResponse,
+      contact_info: contactInfo,
+      knowledge_base: this.getKnowledgeBase()
+    };
+  }
+  
+  /**
+   * Validate AI response for marketing compliance
+   */
+  validateResponse(response: string): boolean {
+    return this.validator.validateMarketingResponse(response);
+  }
+}
+
+// Export default instance
+export const marketingAIContextManager = new MarketingAIContextManager();
