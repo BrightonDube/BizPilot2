@@ -9,7 +9,16 @@ from app.models.base import BaseModel
 # Import shared pricing configuration
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'shared'))
+# Add shared directory to path - works in both local dev and Docker container
+shared_paths = [
+    os.path.join(os.path.dirname(__file__), '..', '..', '..', 'shared'),  # Local dev
+    os.path.join(os.path.dirname(__file__), '..', '..', 'shared'),  # Docker container
+    '/app/shared',  # Docker absolute path fallback
+]
+for path in shared_paths:
+    if os.path.exists(path) and path not in sys.path:
+        sys.path.insert(0, path)
+        break
 from pricing_config import DEFAULT_TIERS
 
 
