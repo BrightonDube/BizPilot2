@@ -62,25 +62,34 @@ def upgrade() -> None:
                existing_nullable=True)
     
     # Add indexes for stock_reservations table (if they don't exist)
-    try:
-        op.create_index(op.f('ix_stock_reservations_layby_id'), 'stock_reservations', ['layby_id'], unique=False)
-    except Exception as e:
-        print(f"Index ix_stock_reservations_layby_id already exists or error: {e}")
+    # Check and create indexes using raw SQL with IF NOT EXISTS
+    indexes_to_create = [
+        ('ix_stock_reservations_layby_id', 'stock_reservations', 'layby_id'),
+        ('ix_stock_reservations_location_id', 'stock_reservations', 'location_id'),
+        ('ix_stock_reservations_product_id', 'stock_reservations', 'product_id'),
+        ('ix_stock_reservations_status', 'stock_reservations', 'status'),
+    ]
     
-    try:
-        op.create_index(op.f('ix_stock_reservations_location_id'), 'stock_reservations', ['location_id'], unique=False)
-    except Exception as e:
-        print(f"Index ix_stock_reservations_location_id already exists or error: {e}")
-    
-    try:
-        op.create_index(op.f('ix_stock_reservations_product_id'), 'stock_reservations', ['product_id'], unique=False)
-    except Exception as e:
-        print(f"Index ix_stock_reservations_product_id already exists or error: {e}")
-    
-    try:
-        op.create_index(op.f('ix_stock_reservations_status'), 'stock_reservations', ['status'], unique=False)
-    except Exception as e:
-        print(f"Index ix_stock_reservations_status already exists or error: {e}")
+    for index_name, table_name, column_name in indexes_to_create:
+        # Check if index exists
+        index_exists = connection.execute(sa.text(
+            f"""
+            SELECT EXISTS (
+                SELECT 1 FROM pg_indexes 
+                WHERE schemaname = 'public' 
+                AND tablename = '{table_name}' 
+                AND indexname = '{index_name}'
+            )
+            """
+        )).scalar()
+        
+        if not index_exists:
+            print(f"Creating index {index_name}")
+            connection.execute(sa.text(
+                f"CREATE INDEX {index_name} ON {table_name} ({column_name})"
+            ))
+        else:
+            print(f"Index {index_name} already exists, skipping")
     
     # ### end Alembic commands ###
 
