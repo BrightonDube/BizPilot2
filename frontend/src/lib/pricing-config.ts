@@ -87,15 +87,15 @@ function convertTierToPlan(tier: SubscriptionTier): PricingPlan {
   // Add core features based on tier capabilities
   if (tier.id === 'pilot_solo') {
     features.push(
-      'Basic POS system',
       'Simple inventory tracking',
-      'Customer management',
-      'Email support'
+      'Up to 1 user',
+      'Up to 5 orders per month'
     );
     limitations.push(
-      'Up to 1 user',
-      'Up to 50 orders per month',
-      'Single terminal',
+      'No POS system',
+      'No email support',
+      'No customer management',
+      'No terminals',
       'No advanced reports'
     );
   } else if (tier.id === 'pilot_lite') {
@@ -103,13 +103,18 @@ function convertTierToPlan(tier: SubscriptionTier): PricingPlan {
       'Complete POS system',
       'Cash/card tracking',
       'Basic sales reports',
-      'Team collaboration (up to 3 users)',
-      'Email support'
+      'Customer management',
+      'Team collaboration',
+      'Email support',
+      'Up to 3 users',
+      'Up to 1 terminal'
     );
     limitations.push(
-      'Up to 3 users',
-      'Single terminal',
-      'Basic reports only'
+      'No inventory tracking',
+      'No cost calculations',
+      'No export reports',
+      'No AI insights',
+      'No multi-location'
     );
   } else if (tier.id === 'pilot_core') {
     features.push(
@@ -119,12 +124,14 @@ function convertTierToPlan(tier: SubscriptionTier): PricingPlan {
       'Cost calculations',
       'Export reports',
       'Custom categories',
-      'Multi-user access',
+      'Unlimited users',
       'Up to 2 terminals'
     );
     limitations.push(
-      'Up to 2 terminals',
-      'Single location'
+      'No AI insights',
+      'No priority support',
+      'No multi-location',
+      'No API access'
     );
   } else if (tier.id === 'pilot_pro') {
     features.push(
@@ -134,6 +141,7 @@ function convertTierToPlan(tier: SubscriptionTier): PricingPlan {
       'API access',
       'Priority support',
       'Unlimited terminals',
+      'Unlimited users',
       'Advanced analytics'
     );
     limitations.push(
@@ -151,9 +159,7 @@ function convertTierToPlan(tier: SubscriptionTier): PricingPlan {
       'Custom workflows',
       'Unlimited everything'
     );
-    limitations.push(
-      'Contact sales for pricing'
-    );
+    // No limitations for enterprise
   }
 
   return {
@@ -271,38 +277,82 @@ export class PricingUtils {
    * Convert plan features to benefit format for UI with AI emphasis
    */
   static convertFeaturesToBenefits(plan: PricingPlan): FeatureBenefit[] {
+    // Define ALL possible features across all tiers
+    const allFeatures = [
+      { key: 'pos_system', label: 'POS System', tier: 'pilot_lite' },
+      { key: 'inventory_tracking', label: 'Inventory Tracking', tier: 'pilot_solo' },
+      { key: 'customer_management', label: 'Customer Management', tier: 'pilot_lite' },
+      { key: 'basic_reports', label: 'Basic Reports', tier: 'pilot_lite' },
+      { key: 'email_support', label: 'Email Support', tier: 'pilot_lite' },
+      { key: 'team_collaboration', label: 'Team Collaboration', tier: 'pilot_lite' },
+      { key: 'cost_calculations', label: 'Cost Calculations', tier: 'pilot_core' },
+      { key: 'export_reports', label: 'Export Reports', tier: 'pilot_core' },
+      { key: 'custom_categories', label: 'Custom Categories', tier: 'pilot_core' },
+      { key: 'ai_insights', label: 'AI Insights & Automation', tier: 'pilot_pro' },
+      { key: 'priority_support', label: 'Priority Support', tier: 'pilot_pro' },
+      { key: 'multi_location', label: 'Multi-Location Support', tier: 'pilot_pro' },
+      { key: 'api_access', label: 'API Access', tier: 'pilot_pro' },
+      { key: 'white_labeling', label: 'White-Label Options', tier: 'enterprise' },
+      { key: 'custom_development', label: 'Custom Development', tier: 'enterprise' },
+      { key: 'dedicated_account_manager', label: 'Dedicated Account Manager', tier: 'enterprise' },
+      { key: 'sla_guarantee', label: 'SLA Guarantees', tier: 'enterprise' },
+      { key: 'advanced_security', label: 'Advanced Security', tier: 'enterprise' },
+      { key: 'custom_workflows', label: 'Custom Workflows', tier: 'enterprise' }
+    ];
+
+    // Add user/terminal limits
     const benefits: FeatureBenefit[] = [];
     
-    // Add included features with smart feature emphasis
-    plan.features.forEach(feature => {
-      const isSmartFeature = this.isAIPoweredFeature(feature);
-      benefits.push({
-        text: isSmartFeature ? `✨ ${feature}` : feature,
-        checked: true,
-        aiPowered: isSmartFeature,
-        description: isSmartFeature ? 'Smart feature' : undefined
-      });
-    });
-    
-    // Add smart feature count for plans with automation
-    const smartFeatureCount = this.getAIFeaturesCount(plan);
-    if (smartFeatureCount > 3) {
-      benefits.push({
-        text: `🤖 ${smartFeatureCount} smart automation features included`,
-        checked: true,
-        aiPowered: true,
-        description: 'Intelligent automation capabilities'
-      });
+    // Add user limit
+    const maxUsers = plan.id === 'pilot_solo' ? '1 user' : 
+                     plan.id === 'pilot_lite' ? 'Up to 3 users' : 
+                     'Unlimited users';
+    benefits.push({ text: maxUsers, checked: true });
+
+    // Add order limit for free tier
+    if (plan.id === 'pilot_solo') {
+      benefits.push({ text: 'Up to 5 orders per month', checked: true });
+    } else {
+      benefits.push({ text: 'Unlimited orders', checked: true });
     }
-    
-    // Add limitations as unchecked benefits
-    plan.limitations.forEach(limitation => {
-      benefits.push({
-        text: limitation,
-        checked: false
-      });
+
+    // Add terminal limit
+    const maxTerminals = plan.id === 'pilot_solo' ? 'No terminals' :
+                        plan.id === 'pilot_lite' ? '1 terminal' :
+                        plan.id === 'pilot_core' ? 'Up to 2 terminals' :
+                        'Unlimited terminals';
+    benefits.push({ 
+      text: maxTerminals, 
+      checked: plan.id !== 'pilot_solo' 
     });
-    
+
+    // Add all features with checkmarks for included, X for excluded
+    allFeatures.forEach(feature => {
+      const tierOrder = ['pilot_solo', 'pilot_lite', 'pilot_core', 'pilot_pro', 'enterprise'];
+      const featureTierIndex = tierOrder.indexOf(feature.tier);
+      const currentTierIndex = tierOrder.indexOf(plan.id);
+      
+      // Feature is included if current tier is >= feature tier
+      const isIncluded = currentTierIndex >= featureTierIndex;
+      
+      // Special handling for inventory tracking (pilot_solo has simple version)
+      if (feature.key === 'inventory_tracking') {
+        if (plan.id === 'pilot_solo') {
+          benefits.push({ text: 'Simple inventory tracking', checked: true });
+        } else if (plan.id === 'pilot_lite') {
+          benefits.push({ text: feature.label, checked: false });
+        } else {
+          benefits.push({ text: 'Advanced ' + feature.label.toLowerCase(), checked: true });
+        }
+      } else {
+        benefits.push({
+          text: feature.label,
+          checked: isIncluded,
+          aiPowered: feature.key === 'ai_insights'
+        });
+      }
+    });
+
     return benefits;
   }
 

@@ -50,21 +50,23 @@ SUBSCRIPTION_TIERS: List[SubscriptionTier] = [
         is_custom_pricing=False,
         features={
             "max_users": 1,
-            "max_orders_per_month": 50,
-            "max_terminals": 1
+            "max_orders_per_month": 5,
+            "max_terminals": 0
         },
         feature_flags={
             "basic_reports": False,
-            "inventory_tracking": False,
+            "inventory_tracking": True,  # Simple inventory only
             "cost_calculations": False,
-            "email_support": True,
+            "email_support": False,
             "export_reports": False,
             "ai_insights": False,
             "custom_categories": False,
             "priority_support": False,
             "multi_location": False,
             "api_access": False,
-            "team_collaboration": False
+            "team_collaboration": False,
+            "pos_system": False,
+            "customer_management": False
         }
     ),
     SubscriptionTier(
@@ -95,7 +97,9 @@ SUBSCRIPTION_TIERS: List[SubscriptionTier] = [
             "priority_support": False,
             "multi_location": False,
             "api_access": False,
-            "team_collaboration": True
+            "team_collaboration": True,
+            "pos_system": True,
+            "customer_management": True
         }
     ),
     SubscriptionTier(
@@ -126,7 +130,9 @@ SUBSCRIPTION_TIERS: List[SubscriptionTier] = [
             "priority_support": False,
             "multi_location": False,
             "api_access": False,
-            "team_collaboration": True
+            "team_collaboration": True,
+            "pos_system": True,
+            "customer_management": True
         }
     ),
     SubscriptionTier(
@@ -157,7 +163,9 @@ SUBSCRIPTION_TIERS: List[SubscriptionTier] = [
             "priority_support": True,
             "multi_location": True,
             "api_access": True,
-            "team_collaboration": True
+            "team_collaboration": True,
+            "pos_system": True,
+            "customer_management": True
         }
     ),
     SubscriptionTier(
@@ -197,7 +205,9 @@ SUBSCRIPTION_TIERS: List[SubscriptionTier] = [
             "dedicated_account_manager": True,
             "sla_guarantee": True,
             "advanced_security": True,
-            "custom_workflows": True
+            "custom_workflows": True,
+            "pos_system": True,
+            "customer_management": True
         }
     )
 ]
