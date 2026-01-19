@@ -7,7 +7,7 @@
  * Requirements: 2.2, 2.4
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 interface GuestSession {
   id: string;
@@ -40,11 +40,11 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   
   const [session, setSession] = useState<GuestSession | null>(null);
-  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo>({
+  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo>(() => ({
     remaining: finalConfig.maxMessagesPerHour,
     resetTime: Date.now() + 60 * 60 * 1000, // 1 hour from now
     isLimited: false
-  });
+  }));
 
   // Generate a unique session ID
   const generateSessionId = useCallback((): string => {
@@ -225,6 +225,12 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     return () => clearInterval(interval);
   }, [loadSession]);
 
+  // Calculate session time remaining using useMemo to avoid calling Date.now() during render
+  const sessionTimeRemaining = useMemo(() => {
+    if (!session) return 0;
+    return Math.max(0, finalConfig.sessionTimeoutMs - (Date.now() - session.lastActivity));
+  }, [session, finalConfig.sessionTimeoutMs]);
+
   return {
     session,
     rateLimitInfo,
@@ -235,6 +241,6 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     trackAnalytics,
     isSessionActive: session !== null,
     messagesRemaining: session ? finalConfig.maxMessagesPerSession - session.messageCount : 0,
-    sessionTimeRemaining: session ? Math.max(0, finalConfig.sessionTimeoutMs - (Date.now() - session.lastActivity)) : 0
+    sessionTimeRemaining
   };
 }
