@@ -427,8 +427,9 @@ async def guest_chat(
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        # Log error but don't expose internal details
-        logger.error(f"Guest AI error - Session: {request.session_id}, IP: {client_ip}, Error: {str(e)}")
+        # Log error with full traceback for debugging
+        import traceback
+        logger.error(f"Guest AI error - Session: {request.session_id}, IP: {client_ip}, Error: {str(e)}, Traceback: {traceback.format_exc()}")
         
         # Return safe error response
         error_response = "I'm having trouble right now. For immediate help, please contact our sales team at sales@bizpilot.co.za or try our free Pilot Solo tier."
