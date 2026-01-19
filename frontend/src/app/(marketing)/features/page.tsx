@@ -21,6 +21,7 @@ import {
   AIContentCallout
 } from '@/components/marketing/AIMessagingComponents'
 import HeroStarsBackground from '@/components/home/HeroStarsBackground'
+import { CarouselNavigation } from '@/components/marketing/CarouselNavigation'
 
 export const metadata: Metadata = {
   title: 'Complete Business Management Features - BizPilot',
@@ -706,19 +707,10 @@ export default function FeaturesPage() {
                 {/* Horizontal Scroll Carousel */}
                 <div className="relative">
                   {/* Previous Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const container = document.getElementById(`carousel-${categoryIndex}`)
-                      if (container) {
-                        container.scrollBy({ left: -320, behavior: 'smooth' })
-                      }
-                    }}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
-                    aria-label="Previous feature"
-                  >
-                    <ArrowRight className="h-6 w-6 rotate-180" />
-                  </button>
+                  <CarouselNavigation 
+                    carouselId={`carousel-${categoryIndex}`}
+                    direction="prev"
+                  />
 
                   {/* Scrollable Container */}
                   <div 
@@ -782,19 +774,10 @@ export default function FeaturesPage() {
                   </div>
 
                   {/* Next Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const container = document.getElementById(`carousel-${categoryIndex}`)
-                      if (container) {
-                        container.scrollBy({ left: 320, behavior: 'smooth' })
-                      }
-                    }}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
-                    aria-label="Next feature"
-                  >
-                    <ArrowRight className="h-6 w-6" />
-                  </button>
+                  <CarouselNavigation 
+                    carouselId={`carousel-${categoryIndex}`}
+                    direction="next"
+                  />
 
                   {/* Gradient Overlay */}
                   <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />

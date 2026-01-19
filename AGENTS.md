@@ -1,188 +1,153 @@
-# AI Agent Guidelines for BizPilot2
+# 🤖 AI Agent Guidelines for BizPilot2
 
-This document provides guidelines for AI coding agents working on the BizPilot2 project. It includes a session-ending protocol to ensure proper issue tracking hygiene and database synchronization.
-
-## 🎯 Project Management Philosophy
-
-**THE ONLY BUILDING GUIDE IS BEADS ISSUES**
-- All work must be tracked in Beads issues (`.beads/issues.jsonl`)
-- Use `bd` commands to check, create, and manage issues
-- Do not start work without a corresponding Beads issue
-- The project is built by working through Beads issues systematically
-
-## 📦 Package Manager
-
-**This project uses pnpm, NOT npm**
-- Always use `pnpm` commands (e.g., `pnpm install`, `pnpm run dev`)
-- Never use `npm` or `yarn` commands
-- Scripts are defined in `package.json` and run with `pnpm run <script>`
-
-## ⚠️ FIRST: Read the Workflow Script
-
-**Before starting any work, read the workflow script:**
-- Location: `.github/WORKFLOW_SCRIPT.md`
-- This script defines the exact steps to follow for every feature
-- Follow it exactly - do not deviate
-
-## Issue Tracking with Beads
-
-This project uses [Beads](https://github.com/steveyegge/beads) for AI-native issue tracking. Issues are stored in `.beads/issues.jsonl` and synced via git.
-
-### Essential Commands
-
-**Always use `bd` commands to interact with Beads:**
-
-```bash
-# List all issues
-bd list
-
-# Create a new issue
-bd create "Issue title"
-
-# View issue details
-bd show <issue-id>
-
-# Update issue status
-bd update <issue-id> --status in_progress
-bd update <issue-id> --status done
-
-# Find ready work (issues with no blockers)
-bd ready
-
-# List by priority
-bd list --sort priority
-
-# Sync with git remote (using pnpm)
-pnpm beads:sync
-```
-
-## Session-Ending Protocol
-
-**IMPORTANT:** Before ending your session, complete the following steps to maintain database hygiene and prevent lost work.
-
-### 1. File/Update Issues for Remaining Work
-
-- Proactively create issues for any discovered bugs, TODOs, or follow-up tasks
-- Close completed issues and update status for in-progress work
-- Use clear, descriptive titles and include relevant context in descriptions
-
-```bash
-# Create issues for discovered work
-bd create "Bug: Description of bug found" --priority 0
-bd create "TODO: Feature or improvement needed" --priority 2
-
-# Update issue status
-bd update <issue-id> --status done
-bd update <issue-id> --status in_progress
-```
-
-### 2. Run Quality Gates (If Applicable)
-
-Only if code changes were made:
-- Run linters
-- Run tests
-- Run builds
-- File P0 issues if builds are broken
-
-```bash
-# Frontend quality gates (use pnpm)
-cd frontend
-pnpm run lint
-pnpm run build
-pnpm run test  # if tests exist
-
-# Backend quality gates
-cd backend
-pytest
-flake8
-
-# Always use pnpm for Node.js commands, never npm
-```
-
-### 3. Sync the Issue Tracker Carefully
-
-Work methodically to ensure local and remote issues merge safely on the `dev` branch:
-- Handle git conflicts thoughtfully (sometimes accepting remote and re-importing)
-- Goal: clean reconciliation where no issues are lost
-
-```bash
-# Sync issues with git remote
-git checkout dev
-pnpm beads:sync
-
-# If conflicts occur, you may need to:
-# 1. Pull latest changes
-# 2. Resolve conflicts
-# 3. Re-import and sync again
-bd import -i .beads/issues.jsonl
-pnpm beads:sync
-```
-
-### 4. Verify Clean State
-
-Ensure all changes are committed and pushed:
-- All code changes committed and pushed
-- No untracked files remain
-- Issue database is in sync
-
-```bash
-# Check git status
-git status
-
-# Verify beads state
-bd list
-```
-
-### 5. Choose Next Work
-
-Provide context for the next session:
-- Summarize completed work
-- Identify the next highest-priority issue
-- Include relevant context or blockers
-
-```bash
-# Find ready work (issues with no blockers)
-bd ready
-
-# List by priority
-bd list --sort priority
-```
-
-## The Magic: Distributed Database via Git
-
-Beads acts like a centralized database, but it's actually distributed via git:
-
-✅ Full query capabilities (dependencies, ready work, etc.)
-✅ Fast local operations (<100ms via SQLite)
-✅ Shared state across all machines (via git)
-✅ No server, no daemon required, no configuration
-✅ AI-assisted merge conflict resolution
-
-**How it works:** Each machine has a local SQLite cache (`.beads/*.db`, gitignored). The source of truth is `.beads/issues.jsonl` which is committed to git.
-
-## Best Practices for AI Agents
-
-1. **Start each session** by syncing: `pnpm beads:sync`
-2. **Check Beads issues** using `bd` commands before starting work
-3. **Track your work** by updating issue status as you go
-4. **Create issues** for anything you discover that needs follow-up
-5. **End each session** by following the Session-Ending Protocol above
-6. **Be descriptive** in issue titles and descriptions for context
-7. **Use priorities** (P0 = critical, P1 = high, P2 = medium, P3 = low)
-8. **Always use pnpm** for Node.js package management, never npm or yarn
-9. **Refer to AGENTS.md** before ending any agent session
-
-## Before Ending Any Agent Session
-
-**MANDATORY CHECKLIST:**
-1. ✅ Review AGENTS.md Session-Ending Protocol
-2. ✅ Run quality gates (lint, test, build)
-3. ✅ Create/update Beads issues for any remaining work
-4. ✅ Sync Beads database: `pnpm beads:sync`
-5. ✅ Verify clean git state: `git status`
-6. ✅ Commit and push all changes
-7. ✅ Use `bd` commands to verify issue state
+**Role:** You are a Senior Full-Stack AI Engineer specializing in **Spec-Driven Development**.
+**Mission:** Transform BizPilot2 into a full-featured POS/ERP system.
+**Core Principle:** "Production is never broken. If it doesn't build, it doesn't exist."
 
 ---
 
-*This protocol ensures database hygiene and prevents the common problem of agents creating issues during work but forgetting to sync them at session end.*
+## 🏗 Tech Stack & Strict Constraints
+
+| Domain | Technology | Strict Rules (DO NOT VIOLATE) |
+| :--- | :--- | :--- |
+| **Repo Type** | Monorepo | All commands must be run from root or specific workspace packages. |
+| **Package Manager** | **pnpm** | **NEVER** use `npm` or `yarn`. Use `pnpm run <script>`. |
+| **Frontend** | Next.js 16+ (App Router) | Use Server Components by default. Client Components (`'use client'`) only for interactivity. |
+| **Styling** | Tailwind CSS | Mobile-first. No arbitrary values (e.g., `w-[17px]`) unless unavoidable. |
+| **Backend** | FastAPI (Python 3.10+) | **Async/Await** everywhere. Strict Type hints. Pydantic V2. |
+| **Database** | PostgreSQL | Use SQLAlchemy (Async) or Prisma. No raw SQL strings without validation. |
+| **Tracking** | **Beads** + **Specs** | Work is defined by Specs, but tracked/synced via Beads. |
+
+---
+
+## 📋 The Unified Workflow: Specs + Beads
+
+We use a hybrid approach: **Kiro Specs define "How" we build, Beads defines "What" and "When".**
+
+### Phase 1: Session Start & Context
+1.  **Sync Beads:** Always start by ensuring your issue DB is up to date.
+    ```bash
+    pnpm beads:sync
+    ```
+2.  **Check Roadmap & Specs:**
+    *   Check `bd list --sort priority` for blockers (P0).
+    *   Read the relevant spec in `.kiro/specs/{feature}/` to understand the architecture.
+3.  **Plan:** Outline your implementation steps. If using Windsurf, state your plan in chat first.
+
+### Phase 2: Implementation Standards
+*   **Security First:** Sanitize inputs. Never hardcode secrets (`.env` only). Use Dependency Injection in FastAPI.
+*   **DRY & SOLID:** Create shared utilities in `@/lib` (Frontend) or `app/core` (Backend).
+*   **Modern Patterns:**
+    *   *Next.js:* Use **Server Actions** for mutations. Use `zod` for validation.
+    *   *FastAPI:* Use `APIRouter`. Implement proper `HTTPException` handling.
+
+### Phase 3: The Quality Gates (MANDATORY)
+**You may not commit code that does not pass these gates.**
+
+1.  **Linting:** `pnpm lint` (Frontend) / `flake8` or `ruff` (Backend)
+2.  **Type Checking:** `pnpm tsc --noEmit` (Frontend) / `mypy` (Backend)
+3.  **Building:** `pnpm build` (Frontend) - *Catches 90% of Next.js RSC errors.*
+4.  **Testing:** Run unit tests for the modified module.
+
+---
+
+## 🛑 Session-Ending Protocol (CRITICAL)
+
+**Before ending your turn, you must perform these steps in order to maintain database hygiene:**
+
+### 1. Verify "Production Ready" State
+*   Run the build command one last time.
+*   **Rule:** If the build fails, **revert or fix**. Do not leave broken code.
+
+### 2. File/Update Beads Issues
+*   **Proactive Creation:** Create issues for bugs found (`Bug: ...`) or remaining work (`TODO: ...`).
+*   **Update Status:** Mark completed items as done.
+    ```bash
+    bd update <id> --status done
+    bd create "Bug: Validation failing on login" --priority 0
+    ```
+
+### 3. Sync The Distributed Database
+*   **Why?** Beads uses a local SQLite cache. You must sync to share state with other agents.
+    ```bash
+    git checkout dev
+    pnpm beads:sync
+    
+    # If conflicts occur:
+    # 1. Pull changes -> 2. Resolve -> 3. Re-import
+    # bd import -i .beads/issues.jsonl
+    # pnpm beads:sync
+    ```
+
+### 4. Git Commit & Push
+*   Format: `type(scope): description` (e.g., `feat(auth): implement jwt middleware`)
+*   Ensure `.beads/issues.jsonl` is included in the commit.
+
+---
+
+## 🗺 BizPilot Feature Roadmap
+
+**Current Focus:** Phase 0 & Phase 1 (Foundation)
+
+### Phase 0: Marketing Pages Redesign (IMMEDIATE)
+*   **Spec:** `marketing-pages-redesign`
+*   **Tasks:** Fix guest access routes, centralize pricing, add AI messaging, fix RSC errors.
+
+### Phase 1: Core POS Foundation (Q1 2026)
+*   **1.1 Mobile POS:** React Native/Expo, WatermelonDB (Offline-first).
+*   **1.2 POS Core:** Transaction processing, Cart, Receipts.
+*   **1.3 Sync Engine:** Background sync, conflict resolution.
+
+### Phase 2: Payment & Transaction Management
+*   **2.1 Integrated Payments:** Yoco, SnapScan, Apple Pay.
+*   **2.2 Shift Management:** PIN auth, Cash drawer, Reconciliation.
+
+### Phase 3: Inventory Management
+*   **3.1 Stock Control:** Real-time tracking, Barcode scanning.
+*   **3.2 Multi-Location:** Central warehouse, Transfers.
+*   **3.3 Automated Reordering:** Purchase orders, Suppliers.
+
+### Phase 4: Hospitality Features
+*   **4.1 Menu Engineering:** Modifiers, Recipe costing.
+*   **4.2 Recipe Management:** Ingredient tracking, Yields.
+
+### Phase 5: Customer Management
+*   **5.1 CRM Core:** Profiles, Purchase history.
+*   **5.2 Loyalty:** Points, Rewards, Tiers.
+
+### Phase 6: Staff Management
+*   **6.1 Profiles:** Role-based permissions, Activity logs.
+*   **6.2 Time & Attendance:** Clock in/out, Timesheets.
+
+### Phase 7: Reporting & Analytics
+*   **7.1 Sales/Inventory/Staff Reports:** Detailed breakdowns.
+*   **7.2 Custom Dashboards:** Widget-based KPI tracking.
+
+### Phase 8: Accounting Integrations
+*   **8.1 Xero & Sage:** Invoice/Payment sync, GL mapping.
+
+### Phase 9: E-Commerce & Online Ordering
+*   **9.1 WooCommerce:** Product/Inventory sync.
+*   **9.2 Online Ordering (ToGo):** Customer app, Delivery tracking.
+
+### Phase 10 - 12: Enterprise, Retail & Advanced
+*   Multi-location HQ, Digital Signage, Laybys, Petty Cash.
+
+---
+
+## ⚡️ Quick Reference Commands
+
+```bash
+# Frontend Check
+cd frontend
+pnpm install && pnpm lint && pnpm build
+
+# Backend Check
+cd backend
+source venv/bin/activate
+pip install -r requirements.txt && pytest && mypy .
+
+# Beads Management
+bd list --sort priority   # Check work
+bd ready                  # Find unblocked work
+bd sync           # Sync DB (Start/End of session)

@@ -7,7 +7,7 @@
  * Requirements: 2.2, 2.4
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 interface GuestSession {
   id: string;
@@ -22,22 +22,40 @@ interface RateLimitInfo {
   isLimited: boolean;
 }
 
+interface AnalyticsAdapter {
+  track: (event: string, data: Record<string, unknown>) => void;
+}
+
 interface GuestAISessionConfig {
   maxMessagesPerSession: number;
   maxMessagesPerHour: number;
   sessionTimeoutMs: number;
   storageKey: string;
+  analyticsAdapter?: AnalyticsAdapter;
 }
+
+const TIME_CONSTANTS = {
+  ONE_HOUR_MS: 60 * 60 * 1000,
+  ONE_MINUTE_MS: 60 * 1000,
+  THIRTY_MINUTES_MS: 30 * 60 * 1000,
+} as const;
 
 const DEFAULT_CONFIG: GuestAISessionConfig = {
   maxMessagesPerSession: 20,
   maxMessagesPerHour: 50,
-  sessionTimeoutMs: 30 * 60 * 1000, // 30 minutes
+  sessionTimeoutMs: TIME_CONSTANTS.THIRTY_MINUTES_MS,
   storageKey: 'bizpilot_guest_ai_session'
 };
 
 export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
-  const finalConfig = { ...DEFAULT_CONFIG, ...config };
+  // Validate and merge config with defaults
+  const finalConfig: GuestAISessionConfig = {
+    maxMessagesPerSession: Math.max(1, config.maxMessagesPerSession ?? DEFAULT_CONFIG.maxMessagesPerSession),
+    maxMessagesPerHour: Math.max(1, config.maxMessagesPerHour ?? DEFAULT_CONFIG.maxMessagesPerHour),
+    sessionTimeoutMs: Math.max(1000, config.sessionTimeoutMs ?? DEFAULT_CONFIG.sessionTimeoutMs),
+    storageKey: config.storageKey || DEFAULT_CONFIG.storageKey,
+    analyticsAdapter: config.analyticsAdapter
+  };
   
   // Helper to load session from storage
   const loadSessionFromStorage = useCallback((): GuestSession | null => {
@@ -74,9 +92,9 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     const existing = loadSessionFromStorage();
     if (existing) return existing;
     
-    // Create new session
+    // Create new session using the generateSessionId function
     const newSession: GuestSession = {
-      id: `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateSessionId(),
       createdAt: Date.now(),
       messageCount: 0,
       lastActivity: Date.now()
@@ -96,18 +114,29 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
   
   const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo>(() => ({
     remaining: finalConfig.maxMessagesPerHour,
-    resetTime: Date.now() + 60 * 60 * 1000, // 1 hour from now
+    resetTime: Date.now() + TIME_CONSTANTS.ONE_HOUR_MS,
     isLimited: false
   }));
 
-  // Save session to localStorage
+  // Save session to localStorage with enhanced error handling
   const saveSession = useCallback((sessionData: GuestSession) => {
     if (typeof window === 'undefined') return;
     
     try {
       localStorage.setItem(finalConfig.storageKey, JSON.stringify(sessionData));
     } catch (error) {
-      console.warn('Failed to save guest AI session:', error);
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('localStorage quota exceeded. Clearing old session data.');
+        // Clear old data and retry
+        localStorage.removeItem(finalConfig.storageKey);
+        try {
+          localStorage.setItem(finalConfig.storageKey, JSON.stringify(sessionData));
+        } catch (retryError) {
+          console.error('Failed to save session after clearing:', retryError);
+        }
+      } else {
+        console.warn('Failed to save guest AI session:', error);
+      }
     }
   }, [finalConfig.storageKey]);
 
@@ -132,8 +161,8 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     }));
   }, [session, saveSession]);
 
-  // Check rate limits
-  const checkRateLimit = useCallback((): boolean => {
+  // Check rate limits (memoized for performance)
+  const canSendMessage = useMemo((): boolean => {
     if (!session) return true;
     
     const now = Date.now();
@@ -148,20 +177,11 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
       return false;
     }
     
-    // Reset hourly limit if time has passed
-    if (now >= rateLimitInfo.resetTime) {
-      setRateLimitInfo({
-        remaining: finalConfig.maxMessagesPerHour,
-        resetTime: now + 60 * 60 * 1000,
-        isLimited: false
-      });
-    }
-    
     return true;
-  }, [session, rateLimitInfo, finalConfig.maxMessagesPerSession, finalConfig.maxMessagesPerHour]);
+  }, [session, rateLimitInfo, finalConfig.maxMessagesPerSession]);
 
-  // Get rate limit status message
-  const getRateLimitMessage = useCallback((): string => {
+  // Get rate limit status message (memoized for performance)
+  const rateLimitMessage = useMemo((): string => {
     if (!session) return '';
     
     const now = Date.now();
@@ -171,7 +191,7 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     }
     
     if (rateLimitInfo.isLimited && now < rateLimitInfo.resetTime) {
-      const minutesLeft = Math.ceil((rateLimitInfo.resetTime - now) / (60 * 1000));
+      const minutesLeft = Math.ceil((rateLimitInfo.resetTime - now) / TIME_CONSTANTS.ONE_MINUTE_MS);
       return `You've reached the hourly message limit. Please try again in ${minutesLeft} minutes or sign up for unlimited access.`;
     }
     
@@ -186,16 +206,15 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     setSession(null);
     setRateLimitInfo({
       remaining: finalConfig.maxMessagesPerHour,
-      resetTime: Date.now() + 60 * 60 * 1000,
+      resetTime: Date.now() + TIME_CONSTANTS.ONE_HOUR_MS,
       isLimited: false
     });
   }, [finalConfig.storageKey, finalConfig.maxMessagesPerHour]);
 
-  // Track analytics event
+  // Track analytics event with optional adapter
   const trackAnalytics = useCallback((event: string, data?: Record<string, unknown>) => {
     if (!session) return;
     
-    // Basic analytics tracking - can be enhanced with actual analytics service
     const analyticsData = {
       sessionId: session.id,
       event,
@@ -205,12 +224,51 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
       ...data
     };
     
-    // Log to console for now - replace with actual analytics service
-    console.log('Guest AI Analytics:', analyticsData);
+    // Use adapter if provided, otherwise log to console
+    if (finalConfig.analyticsAdapter) {
+      finalConfig.analyticsAdapter.track(`guest_ai_${event}`, analyticsData);
+    } else {
+      console.log('Guest AI Analytics:', analyticsData);
+    }
+  }, [session, finalConfig.analyticsAdapter]);
+
+  // Effect to reset hourly rate limit when time expires
+  useEffect(() => {
+    if (!rateLimitInfo.isLimited) return;
     
-    // Could send to analytics service here
-    // analytics.track('guest_ai_' + event, analyticsData);
-  }, [session]);
+    const now = Date.now();
+    const timeUntilReset = rateLimitInfo.resetTime - now;
+    
+    if (timeUntilReset <= 0) {
+      // Reset immediately if already expired
+      setRateLimitInfo({
+        remaining: finalConfig.maxMessagesPerHour,
+        resetTime: now + TIME_CONSTANTS.ONE_HOUR_MS,
+        isLimited: false
+      });
+      return;
+    }
+    
+    // Set timeout to reset when time expires
+    const timeoutId = setTimeout(() => {
+      setRateLimitInfo({
+        remaining: finalConfig.maxMessagesPerHour,
+        resetTime: Date.now() + TIME_CONSTANTS.ONE_HOUR_MS,
+        isLimited: false
+      });
+    }, timeUntilReset);
+    
+    return () => clearTimeout(timeoutId);
+  }, [rateLimitInfo.isLimited, rateLimitInfo.resetTime, finalConfig.maxMessagesPerHour]);
+
+  // Cleanup effect: save session on unmount
+  useEffect(() => {
+    return () => {
+      if (session) {
+        saveSession(session);
+      }
+    };
+  }, [session, saveSession]);
 
   // Session time remaining should be calculated by the consumer when needed
   // to avoid calling Date.now() during render (violates React purity rules)
@@ -222,8 +280,8 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
   return {
     session,
     rateLimitInfo,
-    canSendMessage: checkRateLimit(),
-    rateLimitMessage: getRateLimitMessage(),
+    canSendMessage,
+    rateLimitMessage,
     updateSessionActivity,
     clearSession,
     trackAnalytics,
