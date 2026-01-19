@@ -3,6 +3,7 @@ import { Metadata } from 'next'
 import { ArrowRight } from 'lucide-react'
 import { FAQAccordion } from '@/components/marketing/FAQAccordion'
 import { AIPrivacyControl, AIContentCallout } from '@/components/marketing/AIMessagingComponents'
+import HeroStarsBackground from '@/components/home/HeroStarsBackground'
 
 export const metadata: Metadata = {
   title: 'FAQ - Business Management Questions & Answers',
@@ -192,8 +193,9 @@ export default function FAQPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-slate-950 min-h-[60vh] flex items-center">
+        <HeroStarsBackground />
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
             Frequently Asked Questions
           </h1>
@@ -204,7 +206,7 @@ export default function FAQPage() {
       </section>
 
       {/* Privacy & Control Assurance */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 to-slate-900">
         <div className="max-w-4xl mx-auto">
           <AIPrivacyControl 
             showBoth={true} 

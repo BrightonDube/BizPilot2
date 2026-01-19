@@ -305,33 +305,7 @@ async def guest_chat(
     # Get client IP for rate limiting
     client_ip = get_client_ip(http_request)
     
-    # Check rate limits
-    allowed, remaining, reset_time = check_guest_rate_limit(client_ip, request.session_id)
-    if not allowed:
-        logger.warning(f"Rate limit exceeded for IP {client_ip}, session {request.session_id}")
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Rate limit exceeded. Please try again later or sign up for unlimited access.",
-            headers={
-                "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(reset_time)
-            }
-        )
-    
-    # Check cache for common responses
-    cache_key = get_cache_key(sanitized_message, request.session_id)
-    cached_response = get_cached_response(cache_key)
-    
-    if cached_response:
-        logger.info(f"Cache hit for session {request.session_id}")
-        return GuestChatResponse(
-            response=cached_response,
-            conversation_id=request.conversation_id,
-            rate_limit_remaining=remaining,
-            rate_limit_reset=reset_time
-        )
-    
-    # Enhanced input validation and sanitization
+    # Enhanced input validation and sanitization FIRST
     if not request.message or len(request.message.strip()) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -359,6 +333,32 @@ async def guest_chat(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Message content not allowed. Please ask legitimate questions about BizPilot."
+        )
+    
+    # Check rate limits AFTER sanitization
+    allowed, remaining, reset_time = check_guest_rate_limit(client_ip, request.session_id)
+    if not allowed:
+        logger.warning(f"Rate limit exceeded for IP {client_ip}, session {request.session_id}")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded. Please try again later or sign up for unlimited access.",
+            headers={
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(reset_time)
+            }
+        )
+    
+    # Check cache for common responses
+    cache_key = get_cache_key(sanitized_message, request.session_id)
+    cached_response = get_cached_response(cache_key)
+    
+    if cached_response:
+        logger.info(f"Cache hit for session {request.session_id}")
+        return GuestChatResponse(
+            response=cached_response,
+            conversation_id=request.conversation_id,
+            rate_limit_remaining=remaining,
+            rate_limit_reset=reset_time
         )
     
     # Initialize marketing AI context manager

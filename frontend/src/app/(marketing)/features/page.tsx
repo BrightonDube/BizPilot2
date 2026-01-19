@@ -704,61 +704,101 @@ export default function FeaturesPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {category.features.map((feature, featureIndex) => (
-                    <div 
-                      key={featureIndex}
-                      className="p-6 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-1 animate-fade-in-up"
-                      style={{ animationDelay: `${(categoryIndex * 100) + (featureIndex * 50)}ms` }}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-white flex-1">{feature.name}</h3>
-                        {feature.aiEnhanced && (
-                          <div className="flex-shrink-0 ml-2">
-                            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                              <Brain className="h-3 w-3 text-white" />
+                {/* Horizontal Scroll Carousel */}
+                <div className="relative">
+                  {/* Previous Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const container = document.getElementById(`carousel-${categoryIndex}`)
+                      if (container) {
+                        container.scrollBy({ left: -320, behavior: 'smooth' })
+                      }
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
+                    aria-label="Previous feature"
+                  >
+                    <ArrowRight className="h-6 w-6 rotate-180" />
+                  </button>
+
+                  {/* Scrollable Container */}
+                  <div 
+                    id={`carousel-${categoryIndex}`}
+                    className="flex overflow-x-auto gap-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-12"
+                  >
+                    {category.features.map((feature, featureIndex) => (
+                      <div 
+                        key={featureIndex}
+                        className="flex-shrink-0 w-[320px] snap-center p-6 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-1 animate-fade-in-up"
+                        style={{ animationDelay: `${(categoryIndex * 100) + (featureIndex * 50)}ms` }}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <h3 className="text-lg font-semibold text-white flex-1">{feature.name}</h3>
+                          {feature.aiEnhanced && (
+                            <div className="flex-shrink-0 ml-2">
+                              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                <Brain className="h-3 w-3 text-white" />
+                              </div>
                             </div>
+                          )}
+                        </div>
+                        <p className="text-gray-300 mb-4">{feature.description}</p>
+                        
+                        {/* Traditional Features List */}
+                        {feature.traditionalFeatures && feature.traditionalFeatures.length > 0 && (
+                          <div className="border-t border-slate-600 pt-3 mb-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-medium text-gray-400">Core Features</span>
+                            </div>
+                            <ul className="space-y-1">
+                              {feature.traditionalFeatures.map((traditionalFeature, tradIdx) => (
+                                <li key={tradIdx} className="text-xs text-gray-400 flex items-center gap-2">
+                                  <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                  {traditionalFeature}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {/* Smart Features Highlight */}
+                        {feature.aiEnhanced && feature.smartFeatures && feature.smartFeatures.length > 0 && (
+                          <div className="border-t border-slate-600 pt-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Zap className="h-4 w-4 text-blue-400" />
+                              <span className="text-sm font-medium text-blue-400">Smart Enhancements</span>
+                            </div>
+                            <ul className="space-y-1">
+                              {feature.smartFeatures.map((smartFeature, smartIdx) => (
+                                <li key={smartIdx} className="text-xs text-blue-300 flex items-center gap-2">
+                                  <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
+                                  {smartFeature}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         )}
                       </div>
-                      <p className="text-gray-300 mb-4">{feature.description}</p>
-                      
-                      {/* Traditional Features List */}
-                      {feature.traditionalFeatures && feature.traditionalFeatures.length > 0 && (
-                        <div className="border-t border-slate-600 pt-3 mb-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-medium text-gray-400">Core Features</span>
-                          </div>
-                          <ul className="space-y-1">
-                            {feature.traditionalFeatures.map((traditionalFeature, tradIdx) => (
-                              <li key={tradIdx} className="text-xs text-gray-400 flex items-center gap-2">
-                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                {traditionalFeature}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {/* Smart Features Highlight */}
-                      {feature.aiEnhanced && feature.smartFeatures && feature.smartFeatures.length > 0 && (
-                        <div className="border-t border-slate-600 pt-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Zap className="h-4 w-4 text-blue-400" />
-                            <span className="text-sm font-medium text-blue-400">Smart Enhancements</span>
-                          </div>
-                          <ul className="space-y-1">
-                            {feature.smartFeatures.map((smartFeature, smartIdx) => (
-                              <li key={smartIdx} className="text-xs text-blue-300 flex items-center gap-2">
-                                <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                                {smartFeature}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const container = document.getElementById(`carousel-${categoryIndex}`)
+                      if (container) {
+                        container.scrollBy({ left: 320, behavior: 'smooth' })
+                      }
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
+                    aria-label="Next feature"
+                  >
+                    <ArrowRight className="h-6 w-6" />
+                  </button>
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
                 </div>
               </div>
             ))}

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { AI_MESSAGING_CONFIG } from '@/lib/ai-messaging-config'
 import { AIPrivacyControl, AIContentCallout } from '@/components/marketing/AIMessagingComponents'
+import HeroStarsBackground from '@/components/home/HeroStarsBackground'
 
 const industries = [
   {
@@ -287,8 +288,9 @@ export default function IndustriesPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-slate-950 min-h-[60vh] flex items-center">
+        <HeroStarsBackground />
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in-up">
             Complete Business Solutions Built for Your Industry
           </h1>
@@ -321,7 +323,11 @@ export default function IndustriesPage() {
             {industries.map((industry, index) => (
               <div 
                 key={index}
-                className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center animate-fade-in-up ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}
+                className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center animate-fade-in-up py-16 px-8 rounded-2xl ${
+                  index % 2 === 0 
+                    ? 'bg-slate-950' 
+                    : 'bg-gradient-to-br from-slate-900 to-slate-800'
+                } ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
