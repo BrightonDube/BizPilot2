@@ -34,8 +34,6 @@ services:
       - key: SECRET_KEY
         scope: RUN_TIME
         type: SECRET
-        value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
-        # IMPORTANT: Override this value in DO Dashboard with a secure key
       - key: ENVIRONMENT
         scope: RUN_TIME
         value: production
@@ -63,17 +61,15 @@ services:
       - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
-        value: ""  # Set in dashboard with actual database URL
       - key: GOOGLE_CLIENT_ID
         scope: RUN_TIME
         value: "239369796650-a89435qfs452tf7pggfj5df8vtgtved0.apps.googleusercontent.com"
       - key: GOOGLE_CLIENT_SECRET
         scope: RUN_TIME
         type: SECRET
-        value: ""  # Set in dashboard
       - key: GROQ_API_KEY
         scope: RUN_AND_BUILD_TIME
-        value: ""  # Set in dashboard
+        type: SECRET
       - key: FRONTEND_URL
         scope: RUN_TIME
         value: "https://bizpilotpro.app"
@@ -88,10 +84,10 @@ services:
         value: "587"
       - key: SMTP_USER
         scope: RUN_AND_BUILD_TIME
-        value: ""  # Set in dashboard
+        type: SECRET
       - key: SMTP_PASSWORD
         scope: RUN_AND_BUILD_TIME
-        value: ""  # Set in dashboard
+        type: SECRET
       - key: SMTP_TIMEOUT
         scope: RUN_AND_BUILD_TIME
         value: "10"
@@ -106,13 +102,13 @@ services:
         value: "BizPilot"
       - key: PAYSTACK_SECRET_KEY
         scope: RUN_AND_BUILD_TIME
-        value: ""  # Set in dashboard
+        type: SECRET
       - key: PAYSTACK_PUBLIC_KEY
         scope: RUN_AND_BUILD_TIME
-        value: ""  # Set in dashboard
+        type: SECRET
       - key: BIZPILOT_SUPERADMIN_PASSWORD
         scope: RUN_AND_BUILD_TIME
-        value: ""  # Set in dashboard
+        type: SECRET
 
   # Next.js Frontend
   - name: web
@@ -167,12 +163,11 @@ jobs:
       - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
-        value: ""  # Set in dashboard with actual database URL
+        # This will use the value set in the DigitalOcean dashboard
       - key: SECRET_KEY
         scope: RUN_TIME
         type: SECRET
-        value: CHANGE_ME_GENERATE_WITH_openssl_rand_hex_32
-        # IMPORTANT: Override this value in DO Dashboard with a secure key
+        # This will use the value set in the DigitalOcean dashboard
 
 ingress:
   rules:
