@@ -1,6 +1,4 @@
-import Link from 'next/link'
 import { Metadata } from 'next'
-import { Check, X } from 'lucide-react'
 import { PRICING_PLANS, PricingUtils, type BillingCycle } from '@/lib/pricing-config'
 import { PricingClientWrapper } from '@/components/pricing/PricingClientWrapper'
 
@@ -46,7 +44,7 @@ export default function PricingPage() {
         cta: plan.isCustomPricing ? 'Contact Sales' : (plan.monthlyPrice === 0 ? 'Get Started Free' : 'Get Started'),
         featured: isFeatured,
         benefits: benefits,
-        ctaHref: plan.isCustomPricing ? '#' : '/auth/register', // Don't redirect for Enterprise
+        ctaHref: plan.isCustomPricing ? '/contact?topic=sales&tier=enterprise' : '/auth/register',
         planId: plan.id
       }
     })

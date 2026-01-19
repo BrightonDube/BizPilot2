@@ -9,6 +9,13 @@ import { subscriptionApi } from '@/lib/subscription-api'
 import { apiClient } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 
+type TierTheme = {
+  cardClassName: string
+  iconCheckedClassName: string
+  iconUncheckedClassName: string
+  buttonClassName: string
+}
+
 interface Benefit {
   text: string
   checked: boolean
@@ -39,9 +46,11 @@ function PricingCard({
   benefits, 
   featured = false, 
   ctaHref, 
-  planId,
-  onCtaClick 
-}: PricingCardData & { onCtaClick?: () => void }) {
+  planId: _planId,
+  onCtaClick,
+  isCurrentPlan = false,
+  theme,
+}: PricingCardData & { onCtaClick?: () => void; isCurrentPlan?: boolean; theme: TierTheme }) {
   return (
     <motion.div
       initial={{ filter: "blur(2px)", opacity: 0, y: 20 }}
@@ -51,13 +60,7 @@ function PricingCard({
       whileHover={{ y: -4, scale: 1.02 }}
       className="h-full"
     >
-      <div
-        className={`relative h-full w-full overflow-hidden rounded-xl border p-6 ${
-          featured 
-            ? "border-purple-500/50 bg-gradient-to-br from-purple-900/20 to-blue-900/20 shadow-xl shadow-purple-500/20" 
-            : "border-slate-700/50 bg-slate-900"
-        }`}
-      >
+      <div className={`relative h-full w-full overflow-hidden rounded-xl border p-6 ${theme.cardClassName}`}>
         {featured && (
           <div className="absolute -top-px left-1/2 -translate-x-1/2">
             <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-3 py-1 text-xs font-medium text-white rounded-b-md">
@@ -80,11 +83,11 @@ function PricingCard({
           {benefits.map((benefit, index) => (
             <div key={index} className="flex items-center gap-3">
               {benefit.checked ? (
-                <span className="grid size-5 place-content-center rounded-full bg-purple-600 text-sm text-white">
+                <span className={`grid size-5 place-content-center rounded-full text-sm text-white ${theme.iconCheckedClassName}`}>
                   <Check className="size-3" />
                 </span>
               ) : (
-                <span className="grid size-5 place-content-center rounded-full bg-slate-800 text-sm text-gray-500">
+                <span className={`grid size-5 place-content-center rounded-full text-sm text-gray-500 ${theme.iconUncheckedClassName}`}>
                   <X className="size-3" />
                 </span>
               )}
@@ -92,27 +95,16 @@ function PricingCard({
             </div>
           ))}
         </div>
-        {onCtaClick ? (
-          <button
-            type="button"
-            onClick={onCtaClick}
-            className={`block w-full py-3 px-4 rounded-lg font-medium text-center transition-all ${
-              featured
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
-                : 'bg-slate-700 text-white hover:bg-slate-600'
-            }`}
-          >
+        {isCurrentPlan ? (
+          <div className="block w-full py-3 px-4 rounded-lg font-medium text-center bg-slate-800/60 text-gray-200 border border-slate-600 cursor-default">
+            Current Plan
+          </div>
+        ) : onCtaClick ? (
+          <button type="button" onClick={onCtaClick} className={theme.buttonClassName}>
             {cta}
           </button>
         ) : (
-          <Link
-            href={ctaHref}
-            className={`block w-full py-3 px-4 rounded-lg font-medium text-center transition-all ${
-              featured
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30'
-                : 'bg-slate-700 text-white hover:bg-slate-600'
-            }`}
-          >
+          <Link href={ctaHref} className={theme.buttonClassName}>
             {cta}
           </Link>
         )}
@@ -126,6 +118,33 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
   const { user } = useAuth()
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
+  const [tierIdBySlug, setTierIdBySlug] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadTiers = async () => {
+      try {
+        const tiers = await subscriptionApi.getTiers()
+        if (cancelled) return
+
+        const map: Record<string, string> = {}
+        for (const t of tiers) {
+          if (t?.name && t?.id) {
+            map[String(t.name).toLowerCase()] = String(t.id)
+          }
+        }
+        setTierIdBySlug(map)
+      } catch (e) {
+        console.error('Failed to load subscription tiers:', e)
+      }
+    }
+
+    loadTiers()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const cycle = new URLSearchParams(window.location.search).get('cycle')
@@ -135,9 +154,8 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
   const handleSelectTier = async (planId: string) => {
     // Handle Enterprise tier differently - redirect to contact sales
     if (planId === 'enterprise') {
-      // For Enterprise tier, redirect to contact sales
-      window.location.href = 'mailto:sales@bizpilot.co.za?subject=Enterprise%20Plan%20Inquiry&body=Hi,%0A%0AI%27m%20interested%20in%20learning%20more%20about%20the%20Enterprise%20plan.%20Please%20contact%20me%20to%20discuss%20custom%20pricing%20and%20features.%0A%0AThank%20you!';
-      return;
+      router.push('/contact?topic=sales&tier=enterprise')
+      return
     }
 
     if (!user) {
@@ -147,7 +165,30 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
 
     setIsPurchasing(planId)
     try {
-      const resp = await subscriptionApi.selectTier(planId, billingCycle)
+      const slug = String(planId).toLowerCase()
+      let tierUuid = tierIdBySlug[slug]
+      if (!tierUuid) {
+        try {
+          const tiers = await subscriptionApi.getTiers()
+          const map: Record<string, string> = {}
+          for (const t of tiers) {
+            if (t?.name && t?.id) {
+              map[String(t.name).toLowerCase()] = String(t.id)
+            }
+          }
+          setTierIdBySlug(map)
+          tierUuid = map[slug]
+        } catch (e) {
+          console.error('Failed to refresh tiers for checkout:', e)
+        }
+      }
+
+      if (!tierUuid) {
+        console.error('Unknown tier id for plan:', planId)
+        return
+      }
+
+      const resp = await subscriptionApi.selectTier(tierUuid, billingCycle)
 
       if (!resp.requires_payment) {
         router.push('/settings?tab=billing')
@@ -155,7 +196,7 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
       }
 
       const checkoutResp = await apiClient.post('/payments/checkout/initiate', {
-        tier_id: planId,
+        tier_id: tierUuid,
         billing_cycle: billingCycle,
       })
 
@@ -171,6 +212,70 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
   }
 
   const currentCards = billingCycle === 'monthly' ? monthlyCards : yearlyCards
+
+  const currentTierName = String(user?.current_tier_name || '').toLowerCase()
+
+  const getTheme = (planId: string, featured: boolean): TierTheme => {
+    const id = String(planId).toLowerCase()
+
+    const baseButton =
+      'block w-full py-3 px-4 rounded-lg font-medium text-center transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950'
+
+    if (featured) {
+      return {
+        cardClassName:
+          'border-purple-500/50 bg-gradient-to-br from-purple-900/20 to-blue-900/20 shadow-xl shadow-purple-500/20',
+        iconCheckedClassName: 'bg-purple-600',
+        iconUncheckedClassName: 'bg-slate-800',
+        buttonClassName:
+          `${baseButton} bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30 focus:ring-purple-500/60`,
+      }
+    }
+
+    if (id === 'pilot_solo') {
+      return {
+        cardClassName: 'border-slate-700/50 bg-slate-900 hover:border-slate-600/70',
+        iconCheckedClassName: 'bg-slate-600',
+        iconUncheckedClassName: 'bg-slate-800',
+        buttonClassName: `${baseButton} bg-slate-700 text-white hover:bg-slate-600 focus:ring-slate-500/60`,
+      }
+    }
+
+    if (id === 'pilot_lite') {
+      return {
+        cardClassName: 'border-blue-500/30 bg-slate-900 hover:border-blue-400/50',
+        iconCheckedClassName: 'bg-blue-600',
+        iconUncheckedClassName: 'bg-slate-800',
+        buttonClassName: `${baseButton} bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 focus:ring-blue-500/60`,
+      }
+    }
+
+    if (id === 'pilot_core') {
+      return {
+        cardClassName: 'border-violet-500/30 bg-slate-900 hover:border-violet-400/50',
+        iconCheckedClassName: 'bg-violet-600',
+        iconUncheckedClassName: 'bg-slate-800',
+        buttonClassName: `${baseButton} bg-violet-600 text-white hover:bg-violet-700 shadow-lg shadow-violet-500/20 focus:ring-violet-500/60`,
+      }
+    }
+
+    if (id === 'pilot_pro') {
+      return {
+        cardClassName: 'border-rose-500/30 bg-slate-900 hover:border-rose-400/50',
+        iconCheckedClassName: 'bg-rose-600',
+        iconUncheckedClassName: 'bg-slate-800',
+        buttonClassName: `${baseButton} bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-500/20 focus:ring-rose-500/60`,
+      }
+    }
+
+    // enterprise
+    return {
+      cardClassName: 'border-amber-500/30 bg-slate-900 hover:border-amber-400/50',
+      iconCheckedClassName: 'bg-amber-600',
+      iconUncheckedClassName: 'bg-slate-800',
+      buttonClassName: `${baseButton} bg-amber-600 text-white hover:bg-amber-700 shadow-lg shadow-amber-500/20 focus:ring-amber-500/60`,
+    }
+  }
 
   return (
     <>
@@ -211,7 +316,7 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
       </motion.div>
 
       <motion.div 
-        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+        className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
@@ -219,9 +324,12 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
         {currentCards.map((card) => {
           const isProcessing = isPurchasing === card.planId
           const isEnterprise = card.planId === 'enterprise'
+          const isCurrentPlan = !!currentTierName && currentTierName === String(card.planId).toLowerCase()
           const ctaText = user
             ? (isProcessing ? 'Processing...' : card.cta)
             : card.cta
+
+          const theme = getTheme(card.planId, card.featured)
 
           return (
             <PricingCard
@@ -234,7 +342,9 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
               benefits={card.benefits}
               ctaHref={card.ctaHref}
               planId={card.planId}
-              onCtaClick={isEnterprise || user ? () => handleSelectTier(card.planId) : undefined}
+              isCurrentPlan={isCurrentPlan}
+              theme={theme}
+              onCtaClick={isCurrentPlan ? undefined : (isEnterprise || user ? () => handleSelectTier(card.planId) : undefined)}
             />
           )
         })}

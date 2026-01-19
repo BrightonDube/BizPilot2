@@ -284,12 +284,12 @@ export default function FAQPage() {
               Start Free Trial
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
-            <a 
-              href="mailto:support@bizpilot.com" 
+            <Link
+              href="/contact?topic=support"
               className="inline-flex items-center gap-2 text-lg px-8 py-4 rounded-lg border border-slate-600 text-white hover:border-purple-500/50 hover:bg-slate-800/50 transition-all hover:scale-105"
             >
               Contact Support
-            </a>
+            </Link>
           </div>
         </div>
       </section>
