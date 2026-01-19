@@ -84,8 +84,9 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-200">Name</label>
+              <label htmlFor="contact-name" className="mb-2 block text-sm font-medium text-gray-200">Name</label>
               <input
+                id="contact-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -94,8 +95,9 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-200">Email</label>
+              <label htmlFor="contact-email" className="mb-2 block text-sm font-medium text-gray-200">Email</label>
               <input
+                id="contact-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -107,8 +109,9 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-200">Subject</label>
+            <label htmlFor="contact-subject" className="mb-2 block text-sm font-medium text-gray-200">Subject</label>
             <input
+              id="contact-subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               required
@@ -118,8 +121,9 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-200">Message</label>
+            <label htmlFor="contact-message" className="mb-2 block text-sm font-medium text-gray-200">Message</label>
             <textarea
+              id="contact-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required
