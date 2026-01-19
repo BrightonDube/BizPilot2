@@ -368,6 +368,7 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
             return (
               <div key={card.key} className="flex-shrink-0 w-[300px] snap-center">
                 <PricingCard
+                  key={card.key}
                   tier={card.tier}
                   price={card.price}
                   bestFor={card.bestFor}

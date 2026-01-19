@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     // Repo-specific extras:
     'dist/**',
     'node_modules/**',
+    // Test scripts with CommonJS require()
+    'test-*.js',
+    'quick-*.js',
+    '*-test.js',
   ]),
 ])
 
