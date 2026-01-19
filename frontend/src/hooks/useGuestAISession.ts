@@ -7,7 +7,7 @@
  * Requirements: 2.2, 2.4
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface GuestSession {
   id: string;
@@ -39,27 +39,15 @@ const DEFAULT_CONFIG: GuestAISessionConfig = {
 export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   
-  const [session, setSession] = useState<GuestSession | null>(null);
-  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo>(() => ({
-    remaining: finalConfig.maxMessagesPerHour,
-    resetTime: Date.now() + 60 * 60 * 1000, // 1 hour from now
-    isLimited: false
-  }));
-
-  // Generate a unique session ID
-  const generateSessionId = useCallback((): string => {
-    return `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }, []);
-
-  // Load session from localStorage
-  const loadSession = useCallback((): GuestSession | null => {
+  // Helper to load session from storage
+  const loadSessionFromStorage = useCallback((): GuestSession | null => {
     if (typeof window === 'undefined') return null;
     
     try {
       const stored = localStorage.getItem(finalConfig.storageKey);
       if (!stored) return null;
       
-      const parsed: GuestSession = JSON.parse(stored);
+      const parsed = JSON.parse(stored) as GuestSession;
       
       // Check if session has expired
       const now = Date.now();
@@ -76,6 +64,42 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     }
   }, [finalConfig.storageKey, finalConfig.sessionTimeoutMs]);
 
+  // Generate a unique session ID
+  const generateSessionId = useCallback((): string => {
+    return `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }, []);
+
+  // Initialize session state with lazy initialization
+  const [session, setSession] = useState<GuestSession | null>(() => {
+    const existing = loadSessionFromStorage();
+    if (existing) return existing;
+    
+    // Create new session
+    const newSession: GuestSession = {
+      id: `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: Date.now(),
+      messageCount: 0,
+      lastActivity: Date.now()
+    };
+    
+    // Save to storage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(finalConfig.storageKey, JSON.stringify(newSession));
+      } catch (error) {
+        console.warn('Failed to save guest AI session:', error);
+      }
+    }
+    
+    return newSession;
+  });
+  
+  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo>(() => ({
+    remaining: finalConfig.maxMessagesPerHour,
+    resetTime: Date.now() + 60 * 60 * 1000, // 1 hour from now
+    isLimited: false
+  }));
+
   // Save session to localStorage
   const saveSession = useCallback((sessionData: GuestSession) => {
     if (typeof window === 'undefined') return;
@@ -86,24 +110,6 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
       console.warn('Failed to save guest AI session:', error);
     }
   }, [finalConfig.storageKey]);
-
-  // Initialize or create session
-  const initializeSession = useCallback(() => {
-    let currentSession = loadSession();
-    
-    if (!currentSession) {
-      currentSession = {
-        id: generateSessionId(),
-        createdAt: Date.now(),
-        messageCount: 0,
-        lastActivity: Date.now()
-      };
-      saveSession(currentSession);
-    }
-    
-    setSession(currentSession);
-    return currentSession;
-  }, [loadSession, generateSessionId, saveSession]);
 
   // Update session activity
   const updateSessionActivity = useCallback(() => {
@@ -186,7 +192,7 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
   }, [finalConfig.storageKey, finalConfig.maxMessagesPerHour]);
 
   // Track analytics event
-  const trackAnalytics = useCallback((event: string, data?: Record<string, any>) => {
+  const trackAnalytics = useCallback((event: string, data?: Record<string, unknown>) => {
     if (!session) return;
     
     // Basic analytics tracking - can be enhanced with actual analytics service
@@ -206,27 +212,9 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     // analytics.track('guest_ai_' + event, analyticsData);
   }, [session]);
 
-  // Initialize session on mount
-  useEffect(() => {
-    initializeSession();
-  }, [initializeSession]);
-
-  // Cleanup expired sessions periodically
-  useEffect(() => {
-    const cleanup = () => {
-      const stored = loadSession();
-      if (!stored) {
-        // Session was expired and cleaned up
-        setSession(null);
-      }
-    };
-    
-    const interval = setInterval(cleanup, 5 * 60 * 1000); // Check every 5 minutes
-    return () => clearInterval(interval);
-  }, [loadSession]);
-
-  // Calculate session time remaining using useMemo to avoid calling Date.now() during render
-  const sessionTimeRemaining = useMemo(() => {
+  // Session time remaining should be calculated by the consumer when needed
+  // to avoid calling Date.now() during render (violates React purity rules)
+  const getSessionTimeRemaining = useCallback(() => {
     if (!session) return 0;
     return Math.max(0, finalConfig.sessionTimeoutMs - (Date.now() - session.lastActivity));
   }, [session, finalConfig.sessionTimeoutMs]);
@@ -241,6 +229,6 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     trackAnalytics,
     isSessionActive: session !== null,
     messagesRemaining: session ? finalConfig.maxMessagesPerSession - session.messageCount : 0,
-    sessionTimeRemaining
+    getSessionTimeRemaining
   };
 }

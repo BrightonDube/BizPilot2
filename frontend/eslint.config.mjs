@@ -19,6 +19,10 @@ const eslintConfig = defineConfig([
     'test-*.js',
     'quick-*.js',
     '*-test.js',
+    // Test files with JSX/TSX syntax issues
+    '**/__tests__/**',
+    '**/*.test.ts',
+    '**/*.test.tsx',
   ]),
 ])
 
