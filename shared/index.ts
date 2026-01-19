@@ -7,6 +7,9 @@
 // Export pricing configuration
 export * from './pricing-config';
 
+// Export marketing AI context
+export * from './marketing-ai-context';
+
 // User types
 export interface User {
   id: string;

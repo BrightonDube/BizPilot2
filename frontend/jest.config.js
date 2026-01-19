@@ -1,7 +1,7 @@
 /** @type {import('jest').Config} */
 const config = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   roots: ['<rootDir>/src'],
   testMatch: [
     '**/__tests__/**/*.test.ts',
@@ -10,7 +10,11 @@ const config = {
     '**/*.test.tsx'
   ],
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: {
+        jsx: 'react-jsx'
+      }
+    }],
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -18,6 +22,10 @@ const config = {
     '!src/**/__tests__/**',
   ],
   modulePathIgnorePatterns: ['<rootDir>/node_modules/'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/shared/(.*)$': '<rootDir>/../shared/$1',
+  },
   setupFilesAfterEnv: [],
   testTimeout: 30000,
 };

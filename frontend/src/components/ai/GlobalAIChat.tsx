@@ -6,7 +6,7 @@ import { GripVertical, MessageSquare, Send, X } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button, Input } from '@/components/ui';
-import { MarketingAIContextManager } from '../../../shared/marketing-ai-context';
+import { MarketingAIContextManager } from '@bizpilot/shared';
 import { useGuestAISession } from '@/hooks/useGuestAISession';
 
 type ChatMessage = {
