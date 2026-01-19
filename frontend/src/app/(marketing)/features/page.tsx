@@ -21,6 +21,7 @@ import {
   AIAutomationBenefits,
   AIContentCallout
 } from '@/components/marketing/AIMessagingComponents'
+import HeroStarsBackground from '@/components/home/HeroStarsBackground'
 
 export const metadata: Metadata = {
   title: 'Complete Business Management Features - BizPilot',
@@ -593,8 +594,9 @@ export default function FeaturesPage() {
       {/* Navigation is handled by the marketing layout */}
 
       {/* Balanced Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-slate-950 min-h-[60vh]">
+        <HeroStarsBackground />
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
             <Building2 className="h-8 w-8 text-blue-400" />
             <span className="text-blue-400 font-semibold text-lg">Complete Business Management</span>
