@@ -206,7 +206,7 @@ def upgrade() -> None:
     # Invoices
     if index_exists('invoices', 'ix_invoices_paystack_reference'):
         op.drop_index(op.f('ix_invoices_paystack_reference'), table_name='invoices')
-    if not index_exists('invoices', 'ix_invoices_payment_reference'):
+    if column_exists('invoices', 'payment_reference') and not index_exists('invoices', 'ix_invoices_payment_reference'):
         op.create_index(op.f('ix_invoices_payment_reference'), 'invoices', ['payment_reference'], unique=False)
     if column_exists('invoices', 'paystack_access_code'):
         op.drop_column('invoices', 'paystack_access_code')
