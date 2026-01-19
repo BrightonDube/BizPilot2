@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Check, X } from 'lucide-react'
+import { Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { subscriptionApi } from '@/lib/subscription-api'
 import { apiClient } from '@/lib/api'
@@ -119,6 +119,25 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
   const [tierIdBySlug, setTierIdBySlug] = useState<Record<string, string>>({})
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const scrollPrevious = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: -300,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  const scrollNext = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: 300,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -316,38 +335,68 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
       </motion.div>
 
       <motion.div 
-        className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]"
+        className="relative"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
       >
-        {currentCards.map((card) => {
-          const isProcessing = isPurchasing === card.planId
-          const isEnterprise = card.planId === 'enterprise'
-          const isCurrentPlan = !!currentTierName && currentTierName === String(card.planId).toLowerCase()
-          const ctaText = user
-            ? (isProcessing ? 'Processing...' : card.cta)
-            : card.cta
+        {/* Previous Button */}
+        <button
+          type="button"
+          onClick={scrollPrevious}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
+          aria-label="Previous pricing tier"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
 
-          const theme = getTheme(card.planId, card.featured)
+        {/* Scrollable Container */}
+        <div 
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto gap-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-12"
+        >
+          {currentCards.map((card) => {
+            const isProcessing = isPurchasing === card.planId
+            const isEnterprise = card.planId === 'enterprise'
+            const isCurrentPlan = !!currentTierName && currentTierName === String(card.planId).toLowerCase()
+            const ctaText = user
+              ? (isProcessing ? 'Processing...' : card.cta)
+              : card.cta
 
-          return (
-            <PricingCard
-              key={card.key}
-              tier={card.tier}
-              price={card.price}
-              bestFor={card.bestFor}
-              cta={ctaText}
-              featured={card.featured}
-              benefits={card.benefits}
-              ctaHref={card.ctaHref}
-              planId={card.planId}
-              isCurrentPlan={isCurrentPlan}
-              theme={theme}
-              onCtaClick={isCurrentPlan ? undefined : (isEnterprise || user ? () => handleSelectTier(card.planId) : undefined)}
-            />
-          )
-        })}
+            const theme = getTheme(card.planId, card.featured)
+
+            return (
+              <div key={card.key} className="flex-shrink-0 w-[300px] snap-center">
+                <PricingCard
+                  tier={card.tier}
+                  price={card.price}
+                  bestFor={card.bestFor}
+                  cta={ctaText}
+                  featured={card.featured}
+                  benefits={card.benefits}
+                  ctaHref={card.ctaHref}
+                  planId={card.planId}
+                  isCurrentPlan={isCurrentPlan}
+                  theme={theme}
+                  onCtaClick={isCurrentPlan ? undefined : (isEnterprise || user ? () => handleSelectTier(card.planId) : undefined)}
+                />
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Next Button */}
+        <button
+          type="button"
+          onClick={scrollNext}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
+          aria-label="Next pricing tier"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+
+        {/* Gradient Overlay */}
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
       </motion.div>
     </>
   )
