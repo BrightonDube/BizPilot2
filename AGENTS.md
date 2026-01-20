@@ -17,6 +17,7 @@
 | **Backend** | FastAPI (Python 3.10+) | **Async/Await** everywhere. Strict Type hints. Pydantic V2. |
 | **Database** | PostgreSQL | Use SQLAlchemy (Async) or Prisma. No raw SQL strings without validation. |
 | **Tracking** | **Beads** + **Specs** | Work is defined by Specs, but tracked/synced via Beads. |
+| **Deployment** | **DigitalOcean App Platform** | **ALWAYS deploy from `main` branch. NEVER change DO settings to deploy from `dev`.** |
 
 ---
 
