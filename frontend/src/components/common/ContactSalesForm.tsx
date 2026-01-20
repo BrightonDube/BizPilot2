@@ -1,6 +1,7 @@
 'use client'
 
-import { type FormEvent, useMemo, useState } from 'react'
+import { type FormEvent, useMemo, useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 
 type ContactTopic = 'sales' | 'support' | 'general'
@@ -11,7 +12,15 @@ type ContactSalesFormProps = {
 }
 
 export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSalesFormProps) {
-  const topic = ((topicProp || 'general') as ContactTopic)
+  // Normalize topic to valid ContactTopic values
+  const topic: ContactTopic = useMemo(() => {
+    const normalized = (topicProp || 'general').toLowerCase()
+    if (normalized === 'sales' || normalized === 'support') {
+      return normalized as ContactTopic
+    }
+    return 'general'
+  }, [topicProp])
+  
   const tier = tierProp || ''
 
   const defaultSubject = useMemo(() => {
@@ -27,6 +36,11 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Sync subject with defaultSubject when it changes
+  useEffect(() => {
+    setSubject(defaultSubject)
+  }, [defaultSubject])
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -65,7 +79,7 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
             {topic === 'sales' ? 'Contact Sales' : topic === 'support' ? 'Contact Support' : 'Contact Us'}
           </h1>
           <p className="mt-2 text-sm text-gray-400">
-            Tell us what you need and we’ll respond via email.
+            Tell us what you need and we'll respond via email.
           </p>
         </div>
 
@@ -136,9 +150,18 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 font-medium text-white transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-busy={submitting}
+            aria-disabled={submitting}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 font-medium text-white transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {submitting ? 'Sending…' : 'Send message'}
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span>Sending…</span>
+              </>
+            ) : (
+              'Send message'
+            )}
           </button>
 
           {tier ? (
