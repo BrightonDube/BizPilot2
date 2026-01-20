@@ -34,7 +34,8 @@ from app.models.layby_config import LaybyConfig
 from app.models.layby import Layby, LaybyStatus, PaymentFrequency
 from app.models.layby_item import LaybyItem
 from app.models.layby_schedule import LaybySchedule, ScheduleStatus
-from app.models.layby_payment import LaybyPayment, PaymentType, PaymentStatus
+from app.models.layby_payment import LaybyPayment, PaymentType
+from app.models.layby_payment import PaymentStatus as LaybyPaymentStatus
 from app.models.layby_audit import LaybyAudit
 from app.models.layby_notification import LaybyNotification, NotificationChannel, NotificationStatus as LaybyNotificationStatus
 from app.models.stock_reservation import StockReservation
@@ -121,7 +122,7 @@ __all__ = [
     "ScheduleStatus",
     "LaybyPayment",
     "PaymentType",
-    "PaymentStatus",
+    "LaybyPaymentStatus",
     "LaybyAudit",
     "LaybyNotification",
     "NotificationChannel",

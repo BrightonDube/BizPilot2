@@ -1,9 +1,8 @@
 """Notification service for managing in-app notifications."""
 
-import math
 from typing import Optional, List, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
+from sqlalchemy import or_, func
 from uuid import UUID
 
 from app.models.notification import Notification, NotificationType, NotificationPriority
@@ -55,7 +54,7 @@ class NotificationService:
         """Get notifications with filtering and pagination."""
         query = self.db.query(Notification).filter(
             Notification.business_id == UUID(business_id),
-            Notification.is_archived == False,
+            ~Notification.is_archived,
         )
         
         # Filter by user (include broadcast notifications)
@@ -63,12 +62,12 @@ class NotificationService:
             query = query.filter(
                 or_(
                     Notification.user_id == UUID(user_id),
-                    Notification.user_id == None,
+                    Notification.user_id.is_(None),
                 )
             )
         
         if unread_only:
-            query = query.filter(Notification.is_read == False)
+            query = query.filter(~Notification.is_read)
         
         if notification_type:
             query = query.filter(Notification.notification_type == notification_type)
@@ -126,14 +125,14 @@ class NotificationService:
         """Mark all notifications as read."""
         query = self.db.query(Notification).filter(
             Notification.business_id == UUID(business_id),
-            Notification.is_read == False,
+            ~Notification.is_read,
         )
         
         if user_id:
             query = query.filter(
                 or_(
                     Notification.user_id == UUID(user_id),
-                    Notification.user_id == None,
+                    Notification.user_id.is_(None),
                 )
             )
         
@@ -158,15 +157,15 @@ class NotificationService:
         """Get count of unread notifications."""
         query = self.db.query(func.count(Notification.id)).filter(
             Notification.business_id == UUID(business_id),
-            Notification.is_read == False,
-            Notification.is_archived == False,
+            ~Notification.is_read,
+            ~Notification.is_archived,
         )
         
         if user_id:
             query = query.filter(
                 or_(
                     Notification.user_id == UUID(user_id),
-                    Notification.user_id == None,
+                    Notification.user_id.is_(None),
                 )
             )
         
@@ -180,14 +179,14 @@ class NotificationService:
         """Get notification statistics."""
         query = self.db.query(Notification).filter(
             Notification.business_id == UUID(business_id),
-            Notification.is_archived == False,
+            ~Notification.is_archived,
         )
         
         if user_id:
             query = query.filter(
                 or_(
                     Notification.user_id == UUID(user_id),
-                    Notification.user_id == None,
+                    Notification.user_id.is_(None),
                 )
             )
         
@@ -257,7 +256,7 @@ class NotificationService:
                     Notification.business_id == UUID(business_id),
                     Notification.notification_type == NotificationType.LOW_STOCK,
                     Notification.reference_id == item.product_id,
-                    Notification.is_read == False,
+                    ~Notification.is_read,
                 )
                 .first()
             )
@@ -292,7 +291,7 @@ class NotificationService:
                     Notification.business_id == UUID(business_id),
                     Notification.notification_type == NotificationType.OUT_OF_STOCK,
                     Notification.reference_id == item.product_id,
-                    Notification.is_read == False,
+                    ~Notification.is_read,
                 )
                 .first()
             )

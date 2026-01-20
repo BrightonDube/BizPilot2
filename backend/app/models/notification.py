@@ -1,6 +1,6 @@
 """Notification models for in-app notifications."""
 
-from sqlalchemy import Column, String, Text, Boolean, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, String, Text, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 import enum
 

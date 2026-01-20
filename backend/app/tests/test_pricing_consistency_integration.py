@@ -14,7 +14,7 @@ Task 7.1: Test pricing consistency across platform
 import pytest
 import sys
 import os
-from typing import Dict, List
+from typing import Dict
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

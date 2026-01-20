@@ -6,7 +6,6 @@ from the shared package for the backend.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add shared directory to Python path

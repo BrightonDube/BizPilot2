@@ -6,13 +6,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import time
 import hashlib
-from datetime import datetime, timedelta
 import logging
 import re
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.api.deps import get_current_active_user
 from app.core.subscription import require_feature
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
@@ -404,13 +402,6 @@ async def guest_chat(
     try:
         # Process the question through marketing AI context
         context_result = marketing_ai.process_question(sanitized_message)
-        
-        # Add logging and monitoring for guest AI usage
-        import logging
-        from datetime import datetime
-        
-        # Set up logging for guest AI interactions
-        logger = logging.getLogger("guest_ai")
         
         # Log the interaction for monitoring
         logger.info(f"Guest AI interaction - IP: {client_ip}, Session: {request.session_id}, Message length: {len(sanitized_message)}, Valid: {context_result['is_valid']}")

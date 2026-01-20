@@ -1,6 +1,5 @@
 """Tests for business users API endpoints with department support."""
 
-import pytest
 from uuid import uuid4
 
 

@@ -16,7 +16,6 @@ import os
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from unittest.mock import patch, MagicMock
-from decimal import Decimal
 
 # Add shared module to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'shared'))

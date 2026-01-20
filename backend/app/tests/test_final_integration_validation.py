@@ -11,18 +11,13 @@ Requirements: 1.1, 1.2, 2.1, 2.6
 """
 
 import pytest
-import asyncio
 import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
 from app.main import app
 from app.core.database import get_db
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
-from app.models.ai_conversation import AIConversation
-from app.models.ai_message import AIMessage
-from app.services.ai_service import AIService
 from app.core.security import create_access_token
 
 

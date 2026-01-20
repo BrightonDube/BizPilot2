@@ -49,7 +49,6 @@ class TestBusinessSetup:
         """Test that setting up a business creates a default 'General' department."""
         from app.api.business import setup_business, BusinessCreate
         from app.models.business import Business
-        from app.models.organization import Organization
         from app.models.role import Role
         from app.models.business_user import BusinessUser
         from app.models.department import Department

@@ -1,7 +1,6 @@
 """Unit tests for scheduler configuration."""
 
 import os
-import pytest
 from unittest.mock import patch
 
 from app.scheduler.config import SchedulerConfig
