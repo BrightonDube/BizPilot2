@@ -430,7 +430,6 @@ async def guest_chat(
         raise
     except Exception as e:
         # Log error with full traceback for debugging
-        import traceback
         logger.error(f"Guest AI error - Session: {request.session_id}, IP: {client_ip}, Error: {str(e)}, Traceback: {traceback.format_exc()}")
         
         # Return safe error response
