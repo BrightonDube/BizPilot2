@@ -45,21 +45,23 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     is_custom_pricing: false,
     features: {
       max_users: 1,
-      max_orders_per_month: 50,
-      max_terminals: 1
+      max_orders_per_month: 5,
+      max_terminals: 0
     },
     feature_flags: {
       basic_reports: false,
-      inventory_tracking: false,
+      inventory_tracking: true, // Simple inventory only
       cost_calculations: false,
-      email_support: true,
+      email_support: false,
       export_reports: false,
       ai_insights: false,
       custom_categories: false,
       priority_support: false,
       multi_location: false,
       api_access: false,
-      team_collaboration: false
+      team_collaboration: false,
+      pos_system: false,
+      customer_management: false
     }
   },
   {
@@ -90,7 +92,9 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
       priority_support: false,
       multi_location: false,
       api_access: false,
-      team_collaboration: true
+      team_collaboration: true,
+      pos_system: true,
+      customer_management: true
     }
   },
   {
@@ -121,7 +125,9 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
       priority_support: false,
       multi_location: false,
       api_access: false,
-      team_collaboration: true
+      team_collaboration: true,
+      pos_system: true,
+      customer_management: true
     }
   },
   {
@@ -152,7 +158,9 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
       priority_support: true,
       multi_location: true,
       api_access: true,
-      team_collaboration: true
+      team_collaboration: true,
+      pos_system: true,
+      customer_management: true
     }
   },
   {
@@ -192,7 +200,9 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
       dedicated_account_manager: true,
       sla_guarantee: true,
       advanced_security: true,
-      custom_workflows: true
+      custom_workflows: true,
+      pos_system: true,
+      customer_management: true
     }
   }
 ];

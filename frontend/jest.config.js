@@ -26,7 +26,7 @@ const config = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@/shared/(.*)$': '<rootDir>/../shared/$1',
   },
-  setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['<rootDir>/src/lib/__tests__/setup.ts'],
   testTimeout: 30000,
 };
 

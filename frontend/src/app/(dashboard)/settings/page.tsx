@@ -390,7 +390,7 @@ export default function SettingsPage() {
     // Handle Enterprise tier with custom pricing
     if (PricingUtils.hasCustomPricing(tier)) {
       // Redirect to contact sales for Enterprise tier
-      window.open('mailto:sales@bizpilot.co.za?subject=Enterprise%20Plan%20Inquiry', '_blank');
+      router.push('/contact?topic=sales&tier=enterprise');
       return;
     }
     

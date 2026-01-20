@@ -510,6 +510,33 @@ class AIService:
                 raise RuntimeError("No response content from Groq")
             return str(content)
 
+    def _build_grounded_system_prompt(
+        self, app_ctx: dict[str, Any] | None, biz_ctx: dict[str, Any] | None
+    ) -> str:
+        """Build a grounded system prompt based on available context."""
+        base_prompt = """You are BizPilot AI, a helpful business assistant for the BizPilot platform.
+You help users with:
+- Understanding their business metrics and performance
+- Navigating the BizPilot application
+- Inventory management and stock insights
+- Customer relationship management
+- Invoice and payment tracking
+- Order management and fulfillment
+- General business advice and best practices
+
+Be concise, helpful, and professional. Use the context provided to give accurate, data-driven responses.
+If you don't have specific data to answer a question, acknowledge this and provide general guidance instead."""
+
+        context_parts = [base_prompt]
+
+        if app_ctx:
+            context_parts.append(f"\n\nAPP CONTEXT:\n{app_ctx}")
+
+        if biz_ctx:
+            context_parts.append(f"\n\nBUSINESS CONTEXT:\n{biz_ctx}")
+
+        return "\n".join(context_parts)
+
     async def generate_conversation_title(self, first_message: str) -> str:
         if not settings.GROQ_API_KEY:
             return "New Conversation"

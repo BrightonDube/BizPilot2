@@ -74,6 +74,17 @@ bd sync
 
 For AI agents: See [AGENTS.md](./AGENTS.md) for guidelines and session-ending protocol.
 
+## 📚 Documentation
+
+### Feature Implementation Guides
+
+- **[Pricing Consistency & Marketing](./docs/pricing-consistency-marketing-implementation.md)** - Comprehensive guide covering:
+  - Centralized pricing configuration
+  - Horizontal scroll carousel for pricing tiers
+  - Aurora background component usage
+  - Feature comparison matrix
+  - Usage examples and troubleshooting
+
 ## ⚙️ Configuration
 
 ### Overdue Invoice Scheduler
