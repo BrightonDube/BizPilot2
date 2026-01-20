@@ -9,6 +9,8 @@ import hashlib
 from datetime import datetime, timedelta
 import logging
 import re
+import httpx
+import traceback
 
 from app.core.database import get_db
 from app.core.config import settings
@@ -648,8 +650,6 @@ TEMPLATE RESPONSE (if provided): {template_response or 'None provided'}
 If asked about specific business operations, politely redirect to signing up for a free account where they can access the full AI assistant with their business data."""
 
     try:
-        import httpx
-        
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": message}
