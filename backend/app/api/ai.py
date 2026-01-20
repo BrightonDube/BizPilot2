@@ -9,7 +9,6 @@ import hashlib
 from datetime import datetime, timedelta
 import logging
 import re
-import traceback
 
 from app.core.database import get_db
 from app.core.config import settings
@@ -429,6 +428,7 @@ async def guest_chat(
         raise
     except Exception as e:
         # Log error with full traceback for debugging
+        import traceback
         logger.error(f"Guest AI error - Session: {request.session_id}, IP: {client_ip}, Error: {str(e)}, Traceback: {traceback.format_exc()}")
         
         # Return safe error response
