@@ -7,7 +7,6 @@ Create Date: 2026-01-20
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '030_add_tier_features'

@@ -643,6 +643,9 @@ async def generate_marketing_ai_response(message: str, knowledge_base: list, tem
     if not settings.GROQ_API_KEY:
         return get_marketing_fallback_response(message)
     
+    # Import model routing (no hardcoded models!)
+    from app.core.ai_models import execute_fast_task
+    
     # Build comprehensive marketing-focused system prompt
     system_prompt = f"""You are a helpful AI assistant for BizPilot, a comprehensive business management platform based in South Africa. 
 You can ONLY provide information about BizPilot's features, pricing, capabilities, and general business management guidance.
@@ -676,46 +679,29 @@ TEMPLATE RESPONSE (if provided): {template_response or 'None provided'}
 If asked about specific business operations, politely redirect to signing up for a free account where they can access the full AI assistant with their business data."""
 
     try:
-        import httpx
-        
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": message}
         ]
         
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "llama3-8b-8192",
-                    "messages": messages,
-                    "max_tokens": 400,
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                },
-                timeout=30.0,
-            )
+        # Use fast task routing (marketing doesn't need reasoning models)
+        response = await execute_fast_task(
+            messages=messages,
+            max_tokens=400,
+            temperature=0.7,
+        )
             
-            if response.status_code == 200:
-                result = response.json()
-                ai_response = result["choices"][0]["message"]["content"].strip()
-                
-                # Validate response doesn't contain restricted content
-                if validate_marketing_response_content(ai_response):
-                    return ai_response
-                else:
-                    print(f"AI response failed validation: {ai_response[:100]}...")
-                    return template_response or get_marketing_fallback_response(message)
-            else:
-                print(f"Groq API error: {response.status_code} - {response.text}")
-                return template_response or get_marketing_fallback_response(message)
+        ai_response = response.content.strip()
+        
+        # Validate response doesn't contain restricted content
+        if validate_marketing_response_content(ai_response):
+            return ai_response
+        else:
+            logger.warning(f"AI response failed validation: {ai_response[:100]}...")
+            return template_response or get_marketing_fallback_response(message)
                 
     except Exception as e:
-        print(f"Marketing AI generation error: {str(e)}")
+        logger.error(f"Marketing AI generation error: {str(e)}")
         return template_response or get_marketing_fallback_response(message)
 
 

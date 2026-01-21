@@ -79,7 +79,7 @@ export function ContactSalesForm({ topic: topicProp, tier: tierProp }: ContactSa
             {topic === 'sales' ? 'Contact Sales' : topic === 'support' ? 'Contact Support' : 'Contact Us'}
           </h1>
           <p className="mt-2 text-sm text-gray-400">
-            Tell us what you need and we'll respond via email.
+            Tell us what you need and we&apos;ll respond via email.
           </p>
         </div>
 

@@ -31,21 +31,18 @@ class TestDepartmentAPIEndpoints:
     def test_department_router_has_create_route(self):
         """Test that POST /departments route is defined."""
         from app.api.departments import router
-        routes = [r.path for r in router.routes]
         methods = [m for r in router.routes for m in r.methods]
         assert "POST" in methods
 
     def test_department_router_has_update_route(self):
         """Test that PUT /departments/{id} route is defined."""
         from app.api.departments import router
-        routes = [r.path for r in router.routes]
         methods = [m for r in router.routes for m in r.methods]
         assert "PUT" in methods
 
     def test_department_router_has_delete_route(self):
         """Test that DELETE /departments/{id} route is defined."""
         from app.api.departments import router
-        routes = [r.path for r in router.routes]
         methods = [m for r in router.routes for m in r.methods]
         assert "DELETE" in methods
 

@@ -2,18 +2,25 @@
 
 ## Overview
 
-This roadmap outlines the comprehensive feature development plan for BizPilot, transforming it into a full-featured POS/ERP system comparable to TallOrder. The features are organized into phases based on dependencies and business value.
+This roadmap outlines the comprehensive feature development plan for BizPilot, a full-featured POS/ERP system. The features are organized into phases based on dependencies and business value. This document reflects the current state of the application as of January 2026.
 
 **Architecture:**
-- **Backend:** FastAPI (Python 3.10+) - Shared API for all clients
-- **Web Application:** Next.js 16+ (App Router) - Heavy compute, comprehensive management
-- **Mobile/POS Application:** React Native/Expo (To be built) - POS transactions, simple inventory
+- **Backend:** FastAPI (Python 3.10+) - Shared REST API for all clients
+- **Web Application:** Next.js 16+ (App Router) - Comprehensive management dashboard
+- **Mobile/POS Application:** React Native/Expo (Planned) - POS transactions, simple inventory
+
+**Deployment:**
+- **Platform:** DigitalOcean App Platform
+- **Database:** PostgreSQL (managed)
+- **Branch Strategy:** `main` for production, `dev` for staging
 
 **Status Legend:**
-- ✅ **COMPLETED** - Feature is fully implemented and deployed
+- ✅ **COMPLETED** - Feature is fully implemented, tested, and deployed
 - 🚧 **IN PROGRESS** - Feature is partially implemented
 - 📋 **PLANNED** - Feature is planned but not started
-- 🔄 **NEEDS SPEC** - Feature exists but needs documentation
+- 🔄 **NEEDS SPEC** - Feature exists but needs formal documentation
+
+**Last Updated:** January 20, 2026
 
 ---
 

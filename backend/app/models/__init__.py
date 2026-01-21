@@ -19,7 +19,7 @@ from app.models.production import ProductionOrder, ProductionOrderItem, Producti
 from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
 from app.models.user_settings import UserSettings, AIDataSharingLevel
-from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
+from app.models.subscription_tier import SubscriptionTier
 from app.models.subscription_transaction import (
     SubscriptionTransaction,
     TransactionStatus as SubscriptionTransactionStatus,
@@ -91,7 +91,6 @@ __all__ = [
     "AIDataSharingLevel",
     # Subscription
     "SubscriptionTier",
-    "DEFAULT_TIERS",
     "SubscriptionTransaction",
     "SubscriptionTransactionStatus",
     "SubscriptionTransactionType",

@@ -7,7 +7,7 @@ import os
 import sys
 import logging
 import contextlib
-from typing import Optional, List, Tuple
+from typing import Optional
 
 try:
     import psycopg2

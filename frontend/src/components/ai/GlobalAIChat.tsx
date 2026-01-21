@@ -131,7 +131,7 @@ export function GlobalAIChat() {
 
     // Check rate limits for marketing context
     if (aiContext === 'marketing' && !guestSession.canSendMessage) {
-      const rateLimitMessage = guestSession.rateLimitMessage;
+      const rateLimitMessage = guestSession.rateLimitMessage();
       const assistantMessage: ChatMessage = {
         id: `${Date.now()}-assistant-rate-limit`,
         role: 'assistant',

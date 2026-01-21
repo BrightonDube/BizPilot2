@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-import httpx
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -487,28 +486,25 @@ class AIService:
         return "mixed"
 
     async def _call_groq(self, messages: list[dict[str, Any]]) -> str:
+        """
+        Call Groq with automatic model routing and fallback.
+        
+        Uses reasoning task type for business insights (complex analysis).
+        """
         if not settings.GROQ_API_KEY:
             raise RuntimeError("Groq API key not configured")
 
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {"Authorization": f"Bearer {settings.GROQ_API_KEY}"}
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": messages,
-            "temperature": 0.7,
-            "max_tokens": 2048,
-            "top_p": 1,
-            "stream": False,
-        }
-
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(url, headers=headers, json=payload)
-            resp.raise_for_status()
-            data = resp.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content")
-            if not content:
-                raise RuntimeError("No response content from Groq")
-            return str(content)
+        # Import model routing (no hardcoded models!)
+        from app.core.ai_models import execute_reasoning_task
+        
+        # Use reasoning task routing for business insights
+        response = await execute_reasoning_task(
+            messages=messages,
+            temperature=0.7,
+            max_tokens=2048,
+        )
+        
+        return response.content
 
     def _build_grounded_system_prompt(
         self, app_ctx: dict[str, Any] | None, biz_ctx: dict[str, Any] | None

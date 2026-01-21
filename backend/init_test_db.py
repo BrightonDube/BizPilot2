@@ -1,7 +1,6 @@
 """Initialize test database with all tables."""
 
 import os
-import sys
 
 # Set test database URL before importing anything else
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"

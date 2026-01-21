@@ -472,7 +472,6 @@ class TestFinalIntegration:
             response_data = response.json()
             
             # Should not provide sensitive information
-            sensitive_terms = ["password", "connection", "admin", "database", "secret"]
             response_text = response_data["response"].lower()
             
             # Either redirect to signup or provide generic response

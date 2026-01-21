@@ -5,8 +5,6 @@ Revises: 020_add_department_id, 298dd1eda420
 Create Date: 2026-01-16
 
 """
-from alembic import op
-import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '021_merge_heads'
