@@ -1,8 +1,6 @@
 """Unit tests for scheduler manager."""
 
 import pytest
-from unittest.mock import Mock, patch
-import time
 
 from app.scheduler.manager import SchedulerManager
 from app.scheduler.config import SchedulerConfig

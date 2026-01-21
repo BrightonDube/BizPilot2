@@ -1,7 +1,6 @@
 """Property-based tests for scheduler configuration."""
 
 import os
-import pytest
 from hypothesis import given, strategies as st, settings
 from unittest.mock import patch
 

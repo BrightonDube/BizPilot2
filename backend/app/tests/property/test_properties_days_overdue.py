@@ -1,6 +1,5 @@
 """Property-based tests for days overdue calculation."""
 
-import pytest
 from hypothesis import given, strategies as st, settings
 from datetime import date, timedelta
 from uuid import uuid4

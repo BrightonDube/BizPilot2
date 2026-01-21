@@ -1,14 +1,11 @@
 """Property-based tests for error handling and resource cleanup using mocks."""
 
-import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
 from datetime import date, timedelta, datetime
 from decimal import Decimal
 from uuid import uuid4
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, MagicMock
 
-from app.scheduler.jobs.overdue_invoice_job import check_overdue_invoices_job
-from app.scheduler.services.invoice_query import InvoiceQueryService
 from app.scheduler.services.notification_creation import NotificationCreationService
 from app.models.invoice import Invoice, InvoiceStatus
 from app.models.job_execution_log import JobExecutionLog, JobStatus
@@ -139,7 +136,7 @@ def test_error_isolation(invoices, error_indices):
         try:
             days_overdue = (date.today() - invoice.due_date).days
             notification_creation_service.create_overdue_notification(invoice, days_overdue)
-        except Exception as e:
+        except Exception:
             # Error should be caught and logged, processing continues
             pass
     

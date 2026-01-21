@@ -4,6 +4,7 @@ import io
 import math
 from typing import Optional, Dict, List
 from datetime import datetime, date, timedelta
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session

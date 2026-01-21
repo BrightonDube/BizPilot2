@@ -1,7 +1,6 @@
 """Unit tests for edge cases in overdue invoice scheduler."""
 
-import pytest
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 from decimal import Decimal
 from uuid import uuid4
 from unittest.mock import patch, MagicMock, Mock
@@ -9,7 +8,6 @@ from unittest.mock import patch, MagicMock, Mock
 from app.scheduler.jobs.overdue_invoice_job import check_overdue_invoices_job
 from app.scheduler.services.invoice_query import InvoiceQueryService
 from app.models.invoice import Invoice, InvoiceStatus
-from app.models.job_execution_log import JobExecutionLog, JobStatus
 
 
 def create_mock_invoice(
@@ -56,8 +54,8 @@ class TestEmptyInvoiceList:
         mock_session = MagicMock()
         mock_session_local.return_value = mock_session
         
-        # Setup: Mock job execution log
-        mock_job_log = MagicMock(spec=JobExecutionLog)
+        # Setup: Mock job execution log (not directly used but validates session setup)
+        # mock_job_log = MagicMock(spec=JobExecutionLog)
         mock_session.add.return_value = None
         mock_session.commit.return_value = None
         

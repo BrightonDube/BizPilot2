@@ -162,7 +162,7 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
   }, [session, saveSession]);
 
   // Check rate limits (memoized for performance)
-  const canSendMessage = useMemo((): boolean => {
+  const canSendMessage = useCallback((): boolean => {
     if (!session) return true;
     
     const now = Date.now();
@@ -181,7 +181,7 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
   }, [session, rateLimitInfo, finalConfig.maxMessagesPerSession]);
 
   // Get rate limit status message (memoized for performance)
-  const rateLimitMessage = useMemo((): string => {
+  const rateLimitMessage = useCallback((): string => {
     if (!session) return '';
     
     const now = Date.now();
@@ -239,24 +239,16 @@ export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
     const now = Date.now();
     const timeUntilReset = rateLimitInfo.resetTime - now;
     
-    if (timeUntilReset <= 0) {
-      // Reset immediately if already expired
-      setRateLimitInfo({
-        remaining: finalConfig.maxMessagesPerHour,
-        resetTime: now + TIME_CONSTANTS.ONE_HOUR_MS,
-        isLimited: false
-      });
-      return;
-    }
+    // Always use setTimeout, even for immediate resets, to avoid synchronous setState
+    const delay = Math.max(0, timeUntilReset);
     
-    // Set timeout to reset when time expires
     const timeoutId = setTimeout(() => {
       setRateLimitInfo({
         remaining: finalConfig.maxMessagesPerHour,
         resetTime: Date.now() + TIME_CONSTANTS.ONE_HOUR_MS,
         isLimited: false
       });
-    }, timeUntilReset);
+    }, delay);
     
     return () => clearTimeout(timeoutId);
   }, [rateLimitInfo.isLimited, rateLimitInfo.resetTime, finalConfig.maxMessagesPerHour]);

@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 from app.models.session import Session
-from app.models.user import User
 from app.api.sessions import (
     SessionResponse,
     SessionListResponse,

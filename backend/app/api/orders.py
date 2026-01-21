@@ -30,7 +30,7 @@ from app.schemas.order import (
 from app.services.order_service import OrderService
 from app.services.inventory_service import InventoryService
 from app.services.email_service import EmailService, EmailAttachment
-from app.core.pdf import build_simple_pdf, build_invoice_pdf, build_purchase_order_pdf
+from app.core.pdf import build_invoice_pdf, build_purchase_order_pdf
 from app.models.product import Product
 from app.models.base import utc_now
 

@@ -10,7 +10,6 @@ These tests validate security logic for the guest AI functionality:
 **Validates: Requirement 2.4**
 """
 
-import pytest
 import time
 import re
 from app.api.ai import (

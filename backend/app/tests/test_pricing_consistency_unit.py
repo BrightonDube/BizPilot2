@@ -10,10 +10,8 @@ This test suite verifies that:
 Requirements: 1.2, 1.3
 """
 
-import pytest
 import sys
 import os
-from decimal import Decimal
 
 # Add shared module to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'shared'))

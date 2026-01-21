@@ -106,7 +106,7 @@ class InvoiceQueryService:
             and_(
                 Notification.reference_id.in_(invoice_ids),
                 Notification.notification_type == NotificationType.PAYMENT_OVERDUE,
-                Notification.is_read == False
+                ~Notification.is_read
             )
         ).all()
         

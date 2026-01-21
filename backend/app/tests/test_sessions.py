@@ -2,17 +2,15 @@
 
 import pytest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from sqlalchemy.orm import Session as DBSession
 
 from app.models.session import Session
-from app.models.user import User
 from app.services.session_service import (
     SessionService,
     hash_token,
     parse_device_info,
 )
-from app.core.config import settings
 
 
 class TestHashToken:

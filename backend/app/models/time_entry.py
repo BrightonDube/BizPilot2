@@ -1,6 +1,6 @@
 """Time Entry model for user time tracking and payroll."""
 
-from datetime import datetime, date
+from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import Column, String, Text, Numeric, ForeignKey, DateTime, Enum as SQLEnum, Boolean, Date
 from sqlalchemy.orm import relationship

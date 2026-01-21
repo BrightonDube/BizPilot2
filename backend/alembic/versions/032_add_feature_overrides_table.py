@@ -58,7 +58,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['created_by'], ['users.id'], ondelete='RESTRICT'),
         sa.UniqueConstraint('business_id', 'feature_name', name='uq_feature_overrides_business_feature'),
         sa.CheckConstraint(
-            "feature_name IN ('max_devices', 'max_users', 'has_payroll', 'has_ai', 'has_api_access', 'has_advanced_reporting')",
+            "feature_name IN ('max_devices', 'max_users', 'max_orders_per_month', 'max_terminals', 'has_payroll', 'has_ai', 'has_api_access', 'has_advanced_reporting', 'has_multi_location', 'has_loyalty_programs', 'has_recipe_management', 'has_accounting_integration')",
             name='ck_feature_overrides_feature_name'
         )
     )

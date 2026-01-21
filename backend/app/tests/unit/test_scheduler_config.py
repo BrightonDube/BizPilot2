@@ -1,7 +1,6 @@
 """Unit tests for scheduler configuration."""
 
 import os
-import pytest
 from unittest.mock import patch
 
 from app.scheduler.config import SchedulerConfig
@@ -155,13 +154,13 @@ class TestDefaultConfiguration:
     
     def test_no_env_vars_uses_defaults(self):
         """When no environment variables are set, should use defaults."""
-        # Clear relevant env vars
-        env_vars = {
-            "OVERDUE_INVOICE_SCHEDULE_TYPE": None,
-            "OVERDUE_INVOICE_SCHEDULE_VALUE": None,
-            "OVERDUE_INVOICE_BATCH_SIZE": None,
-            "OVERDUE_INVOICE_TIMEZONE": None,
-        }
+        # Clear relevant env vars (not directly used but documents what we're testing)
+        # env_vars = {
+        #     "OVERDUE_INVOICE_SCHEDULE_TYPE": None,
+        #     "OVERDUE_INVOICE_SCHEDULE_VALUE": None,
+        #     "OVERDUE_INVOICE_BATCH_SIZE": None,
+        #     "OVERDUE_INVOICE_TIMEZONE": None,
+        # }
         
         with patch.dict(os.environ, {}, clear=True):
             config = SchedulerConfig.from_env()

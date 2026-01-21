@@ -12,7 +12,7 @@ def reset_database():
         print("ERROR: DATABASE_URL environment variable not set")
         sys.exit(1)
     
-    print(f"Connecting to database...")
+    print("Connecting to database...")
     engine = create_engine(database_url, isolation_level="AUTOCOMMIT")
     
     with engine.connect() as conn:

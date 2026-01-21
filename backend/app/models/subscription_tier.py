@@ -19,7 +19,8 @@ for path in shared_paths:
     if os.path.exists(path) and path not in sys.path:
         sys.path.insert(0, path)
         break
-from pricing_config import DEFAULT_TIERS
+
+# Import the shared configuration
 
 
 class SubscriptionTier(BaseModel):

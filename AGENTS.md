@@ -39,8 +39,8 @@ We use a hybrid approach: **Kiro Specs define "How" we build, Beads defines "Wha
 *   **Security First:** Sanitize inputs. Never hardcode secrets (`.env` only). Use Dependency Injection in FastAPI.
 *   **DRY & SOLID:** Create shared utilities in `@/lib` (Frontend) or `app/core` (Backend).
 *   **Modern Patterns:**
-    *   *Next.js:* Use **Server Actions** for mutations. Use `zod` for validation.
-    *   *FastAPI:* Use `APIRouter`. Implement proper `HTTPException` handling.
+  *   *Next.js:* Use **Server Actions** for mutations. Use `zod` for validation.
+  *   *FastAPI:* Use `APIRouter`. Implement proper `HTTPException` handling.
 
 ### Phase 3: The Quality Gates (MANDATORY)
 **You may not commit code that does not pass these gates.**

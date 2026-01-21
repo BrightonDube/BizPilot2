@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
+from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.services.email_service import EmailService
@@ -19,11 +20,25 @@ class ContactRequest(BaseModel):
     tier: str | None = None
 
 
-@router.post("")
+class ContactResponse(BaseModel):
+    success: bool
+    message: str | None = None
+
+
+@router.post("", response_model=ContactResponse)
 async def submit_contact_form(payload: ContactRequest):
+    """
+    Submit a contact form message.
+    
+    Sends an email to the configured contact email address with the user's message.
+    Returns success status and optional message.
+    """
     if not settings.EMAILS_ENABLED:
         raise HTTPException(status_code=400, detail="Emails are disabled")
 
+    # Get contact email from settings (should be configured per environment)
+    contact_email = getattr(settings, 'CONTACT_EMAIL', 'brightondube520@gmail.com')
+    
     email_service = EmailService()
 
     topic = (payload.topic or "general").strip()
@@ -39,11 +54,13 @@ async def submit_contact_form(payload: ContactRequest):
         body_lines.append(f"Tier: {tier}")
     body_lines.extend(["", payload.message])
 
-    email_service.send_email(
-        to_email="brightondube520@gmail.com",
+    # Run email sending in threadpool to avoid blocking the event loop
+    await run_in_threadpool(
+        email_service.send_email,
+        to_email=contact_email,
         subject=subject,
         body_text="\n".join(body_lines),
         reply_to=str(payload.email),
     )
 
-    return {"success": True}
+    return ContactResponse(success=True, message="Message sent successfully")

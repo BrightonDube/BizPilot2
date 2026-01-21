@@ -49,7 +49,6 @@ class TestBusinessSetup:
         """Test that setting up a business creates a default 'General' department."""
         from app.api.business import setup_business, BusinessCreate
         from app.models.business import Business
-        from app.models.organization import Organization
         from app.models.role import Role
         from app.models.business_user import BusinessUser
         from app.models.department import Department
@@ -93,7 +92,7 @@ class TestBusinessSetup:
         )
         
         # Execute
-        result = await setup_business(
+        await setup_business(
             business_data=business_data,
             current_user=mock_user,
             db=mock_db
@@ -172,7 +171,7 @@ class TestBusinessSetup:
         
         # Execute
         try:
-            result = await setup_business(
+            await setup_business(
                 business_data=business_data,
                 current_user=mock_user,
                 db=mock_db

@@ -1,13 +1,11 @@
 """Property-based tests for notification creation using mocks."""
 
-import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
 from datetime import date, timedelta
 from decimal import Decimal
 from uuid import uuid4
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock
 
-from app.scheduler.services.invoice_query import InvoiceQueryService
 from app.scheduler.services.notification_creation import NotificationCreationService
 from app.models.invoice import Invoice, InvoiceStatus
 from app.models.notification import Notification, NotificationType

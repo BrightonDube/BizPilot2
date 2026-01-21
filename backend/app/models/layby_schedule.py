@@ -16,7 +16,6 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Numeric,
-    String,
     UniqueConstraint,
     Enum as SQLEnum,
 )

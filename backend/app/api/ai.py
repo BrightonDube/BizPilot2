@@ -6,13 +6,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import time
 import hashlib
-from datetime import datetime, timedelta
 import logging
 import re
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.api.deps import get_current_active_user
 from app.core.subscription import require_feature
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
@@ -145,51 +143,88 @@ def get_client_ip(request: Request) -> str:
 
 def check_guest_rate_limit(client_ip: str, session_id: str = None) -> tuple[bool, int, int]:
     """
-    Check rate limits for guest users.
+    Check rate limits for guest users using composite key to prevent bypass.
     Returns (allowed, remaining, reset_time)
+    
+    Uses both IP and session_id to prevent users from bypassing limits by rotating session IDs.
+    Enforces limits on both per-IP and per-session basis.
     """
     now = int(time.time())
-    key = f"guest_{session_id or client_ip}"
     
-    # Clean up old entries
-    guest_rate_limits.clear() if len(guest_rate_limits) > 10000 else None
+    # Create composite key combining IP and session
+    composite_key = f"guest_{client_ip}:{session_id or 'no_session'}"
+    ip_key = f"guest_ip_{client_ip}"
     
-    if key not in guest_rate_limits:
-        guest_rate_limits[key] = {
+    # Clean up old entries periodically
+    if len(guest_rate_limits) > 10000:
+        # Remove entries older than 2 hours
+        cutoff = now - 7200
+        keys_to_remove = [k for k, v in guest_rate_limits.items() if v.get('reset_time', 0) < cutoff]
+        for k in keys_to_remove:
+            del guest_rate_limits[k]
+    
+    # Initialize composite key tracking
+    if composite_key not in guest_rate_limits:
+        guest_rate_limits[composite_key] = {
             'count': 0,
             'reset_time': now + 3600,  # 1 hour window
             'session_count': 0,
             'session_reset': now + 1800  # 30 minute session
         }
     
-    rate_data = guest_rate_limits[key]
+    # Initialize IP-level tracking (prevents session rotation bypass)
+    if ip_key not in guest_rate_limits:
+        guest_rate_limits[ip_key] = {
+            'count': 0,
+            'reset_time': now + 3600,
+            'session_count': 0,
+            'session_reset': now + 1800
+        }
+    
+    composite_data = guest_rate_limits[composite_key]
+    ip_data = guest_rate_limits[ip_key]
     
     # Reset counters if time window has passed
-    if now >= rate_data['reset_time']:
-        rate_data['count'] = 0
-        rate_data['reset_time'] = now + 3600
+    if now >= composite_data['reset_time']:
+        composite_data['count'] = 0
+        composite_data['reset_time'] = now + 3600
     
-    if now >= rate_data['session_reset']:
-        rate_data['session_count'] = 0
-        rate_data['session_reset'] = now + 1800
+    if now >= composite_data['session_reset']:
+        composite_data['session_count'] = 0
+        composite_data['session_reset'] = now + 1800
     
-    # Check limits (50 per hour, 20 per session)
+    if now >= ip_data['reset_time']:
+        ip_data['count'] = 0
+        ip_data['reset_time'] = now + 3600
+    
+    if now >= ip_data['session_reset']:
+        ip_data['session_count'] = 0
+        ip_data['session_reset'] = now + 1800
+    
+    # Check limits (50 per hour per composite key, 20 per session, 100 per hour per IP)
     hourly_limit = 50
     session_limit = 20
+    ip_hourly_limit = 100
     
-    if rate_data['count'] >= hourly_limit or rate_data['session_count'] >= session_limit:
-        return False, 0, rate_data['reset_time']
+    # Check both composite and IP limits
+    if (composite_data['count'] >= hourly_limit or 
+        composite_data['session_count'] >= session_limit or
+        ip_data['count'] >= ip_hourly_limit):
+        return False, 0, max(composite_data['reset_time'], ip_data['reset_time'])
     
-    # Increment counters
-    rate_data['count'] += 1
-    rate_data['session_count'] += 1
+    # Increment counters for both composite and IP
+    composite_data['count'] += 1
+    composite_data['session_count'] += 1
+    ip_data['count'] += 1
+    ip_data['session_count'] += 1
     
     remaining = min(
-        hourly_limit - rate_data['count'],
-        session_limit - rate_data['session_count']
+        hourly_limit - composite_data['count'],
+        session_limit - composite_data['session_count'],
+        ip_hourly_limit - ip_data['count']
     )
     
-    return True, remaining, rate_data['reset_time']
+    return True, remaining, composite_data['reset_time']
 
 
 class ChatRequest(BaseModel):
@@ -367,13 +402,6 @@ async def guest_chat(
     try:
         # Process the question through marketing AI context
         context_result = marketing_ai.process_question(sanitized_message)
-        
-        # Add logging and monitoring for guest AI usage
-        import logging
-        from datetime import datetime
-        
-        # Set up logging for guest AI interactions
-        logger = logging.getLogger("guest_ai")
         
         # Log the interaction for monitoring
         logger.info(f"Guest AI interaction - IP: {client_ip}, Session: {request.session_id}, Message length: {len(sanitized_message)}, Valid: {context_result['is_valid']}")
@@ -615,6 +643,9 @@ async def generate_marketing_ai_response(message: str, knowledge_base: list, tem
     if not settings.GROQ_API_KEY:
         return get_marketing_fallback_response(message)
     
+    # Import model routing (no hardcoded models!)
+    from app.core.ai_models import execute_fast_task
+    
     # Build comprehensive marketing-focused system prompt
     system_prompt = f"""You are a helpful AI assistant for BizPilot, a comprehensive business management platform based in South Africa. 
 You can ONLY provide information about BizPilot's features, pricing, capabilities, and general business management guidance.
@@ -648,46 +679,29 @@ TEMPLATE RESPONSE (if provided): {template_response or 'None provided'}
 If asked about specific business operations, politely redirect to signing up for a free account where they can access the full AI assistant with their business data."""
 
     try:
-        import httpx
-        
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": message}
         ]
         
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "llama3-8b-8192",
-                    "messages": messages,
-                    "max_tokens": 400,
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                },
-                timeout=30.0,
-            )
+        # Use fast task routing (marketing doesn't need reasoning models)
+        response = await execute_fast_task(
+            messages=messages,
+            max_tokens=400,
+            temperature=0.7,
+        )
             
-            if response.status_code == 200:
-                result = response.json()
-                ai_response = result["choices"][0]["message"]["content"].strip()
-                
-                # Validate response doesn't contain restricted content
-                if validate_marketing_response_content(ai_response):
-                    return ai_response
-                else:
-                    print(f"AI response failed validation: {ai_response[:100]}...")
-                    return template_response or get_marketing_fallback_response(message)
-            else:
-                print(f"Groq API error: {response.status_code} - {response.text}")
-                return template_response or get_marketing_fallback_response(message)
+        ai_response = response.content.strip()
+        
+        # Validate response doesn't contain restricted content
+        if validate_marketing_response_content(ai_response):
+            return ai_response
+        else:
+            logger.warning(f"AI response failed validation: {ai_response[:100]}...")
+            return template_response or get_marketing_fallback_response(message)
                 
     except Exception as e:
-        print(f"Marketing AI generation error: {str(e)}")
+        logger.error(f"Marketing AI generation error: {str(e)}")
         return template_response or get_marketing_fallback_response(message)
 
 

@@ -1,6 +1,6 @@
 """Dashboard API endpoints for overview statistics."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from pydantic import BaseModel

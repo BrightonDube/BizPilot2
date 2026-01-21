@@ -36,7 +36,6 @@ def parse_device_info(user_agent_string: Optional[str]) -> Tuple[str, str]:
         
         # Build device name
         browser = ua.browser.family
-        browser_version = ua.browser.version_string
         os = ua.os.family
         os_version = ua.os.version_string
         
@@ -92,7 +91,7 @@ class SessionService:
         self.db.query(Session).filter(
             and_(
                 Session.user_id == user_id,
-                Session.is_current == True
+                Session.is_current
             )
         ).update({"is_current": False})
         
@@ -116,7 +115,7 @@ class SessionService:
         if not include_inactive:
             query = query.filter(
                 and_(
-                    Session.is_active == True,
+                    Session.is_active,
                     Session.revoked_at.is_(None),
                     Session.expires_at > datetime.now(timezone.utc)
                 )
@@ -154,7 +153,7 @@ class SessionService:
         query = self.db.query(Session).filter(
             and_(
                 Session.user_id == user_id,
-                Session.is_active == True
+                Session.is_active
             )
         )
         

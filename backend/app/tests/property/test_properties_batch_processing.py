@@ -1,13 +1,11 @@
 """Property-based tests for batch processing using mocks."""
 
-import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
 from datetime import date, timedelta
 from decimal import Decimal
 from uuid import uuid4
 from unittest.mock import Mock, MagicMock
 
-from app.scheduler.services.invoice_query import InvoiceQueryService
 from app.models.invoice import Invoice, InvoiceStatus
 
 
@@ -92,7 +90,6 @@ def test_complete_batch_processing(invoices, batch_size):
         return mock_invoices[offset:offset + limit]
     
     # Execute: Process invoices in batches
-    invoice_query_service = InvoiceQueryService(mock_session)
     total_count = len(mock_invoices)
     
     # Process in batches and track all processed invoices

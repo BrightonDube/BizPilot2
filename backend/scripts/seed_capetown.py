@@ -42,20 +42,18 @@ from app.models.business import Business
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.role import Role, DEFAULT_ROLES
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
-from app.models.subscription_transaction import SubscriptionTransaction, TransactionStatus, TransactionType
 from app.models.product import Product, ProductCategory, ProductStatus
-from app.models.product_ingredient import ProductIngredient
 from app.models.product_supplier import ProductSupplier
 from app.models.customer import Customer, CustomerType
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus as OrderPaymentStatus
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus
-from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType as InvTransactionType
+from app.models.inventory import InventoryItem
 from app.models.supplier import Supplier
 from app.models.department import Department
 from app.models.time_entry import TimeEntry, TimeEntryStatus
 # POS sessions not implemented yet
 # from app.models.session import Session as POSSession, SessionStatus
-from app.models.notification import Notification, NotificationType, NotificationPriority
+from app.models.notification import Notification
 from app.models.favorite_product import FavoriteProduct
 from app.models.production import ProductionOrder, ProductionStatus
 from app.models.layby import Layby, LaybyStatus, PaymentFrequency
@@ -63,8 +61,6 @@ from app.models.layby_item import LaybyItem
 from app.models.layby_payment import LaybyPayment, PaymentStatus as LaybyPaymentStatus, PaymentType
 from app.models.layby_schedule import LaybySchedule, ScheduleStatus
 from app.models.layby_config import LaybyConfig
-from app.models.layby_audit import LaybyAudit  # Import for SQLAlchemy
-from app.models.layby_notification import LaybyNotification  # Import for SQLAlchemy
 from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
 
@@ -1078,7 +1074,6 @@ def main():
         
         # Advanced features
         production_orders = create_production_orders(db, business, products)
-        layby_config = create_layby_config(db, business)
         laybys = create_laybys(db, business, customers, products, user)
         
         # Metrics
