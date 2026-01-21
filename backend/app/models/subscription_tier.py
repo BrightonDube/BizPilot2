@@ -21,6 +21,17 @@ for path in shared_paths:
         break
 
 # Import the shared configuration
+try:
+    from pricing_config import DEFAULT_TIERS, SUBSCRIPTION_TIERS, PricingUtils
+except ImportError as e:
+    # Fallback if shared module not available
+    print(f"Warning: Could not import from pricing_config: {e}")
+    DEFAULT_TIERS = {}
+    SUBSCRIPTION_TIERS = []
+    PricingUtils = None
+
+# Explicitly export for other modules
+__all__ = ['SubscriptionTier', 'DEFAULT_TIERS', 'SUBSCRIPTION_TIERS', 'PricingUtils']
 
 
 class SubscriptionTier(BaseModel):
