@@ -2,7 +2,6 @@
 """
 Check if business_time_settings table exists and has data.
 """
-import os
 import psycopg2
 from urllib.parse import urlparse
 

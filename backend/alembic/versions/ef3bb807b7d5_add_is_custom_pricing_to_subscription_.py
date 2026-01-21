@@ -9,8 +9,6 @@ already exists in the subscription_tiers table.
 """
 from typing import Sequence, Union
 
-from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.

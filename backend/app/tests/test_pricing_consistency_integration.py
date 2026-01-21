@@ -210,7 +210,7 @@ class TestPricingConsistencyIntegration:
         # Get user subscription info (used by billing settings)
         response = client.get("/api/v1/subscriptions/me", headers=auth_headers)
         assert response.status_code == 200
-        user_subscription = response.json()
+        # user_subscription = response.json()  # Not currently used but validates endpoint works
         
         # Verify billing settings use the same pricing data as marketing page
         for tier in billing_tiers:
@@ -262,7 +262,7 @@ class TestPricingConsistencyIntegration:
             
             if monthly_price > 0 and yearly_price > 0:
                 # Calculate yearly savings using shared utility
-                shared_tier = next(t for t in SUBSCRIPTION_TIERS if t.name == tier["name"])
+                # shared_tier = next(t for t in SUBSCRIPTION_TIERS if t.name == tier["name"])  # Not currently used
                 savings_percentage = PricingUtils.calculate_yearly_savings(monthly_price, yearly_price)
                 
                 # Verify 20% discount for paid tiers

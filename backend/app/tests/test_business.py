@@ -92,7 +92,7 @@ class TestBusinessSetup:
         )
         
         # Execute
-        result = await setup_business(
+        await setup_business(
             business_data=business_data,
             current_user=mock_user,
             db=mock_db
@@ -171,7 +171,7 @@ class TestBusinessSetup:
         
         # Execute
         try:
-            result = await setup_business(
+            await setup_business(
                 business_data=business_data,
                 current_user=mock_user,
                 db=mock_db

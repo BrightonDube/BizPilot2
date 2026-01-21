@@ -14,7 +14,8 @@ if str(shared_dir) not in sys.path:
     sys.path.insert(0, str(shared_dir))
 
 # Import shared pricing configuration
-from pricing_config import (
+# noqa: E402 - Import must come after sys.path modification
+from pricing_config import (  # noqa: E402
     SUBSCRIPTION_TIERS,
     PricingUtils,
     DEFAULT_TIERS,

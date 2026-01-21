@@ -20,6 +20,8 @@ for path in shared_paths:
         sys.path.insert(0, path)
         break
 
+# Import the shared configuration
+
 
 class SubscriptionTier(BaseModel):
     """Subscription tier model defining pricing and features."""

@@ -22,7 +22,6 @@ Security Note:
 import os
 import sys
 import psycopg2
-from urllib.parse import urlparse
 import logging
 
 # Configure logging
