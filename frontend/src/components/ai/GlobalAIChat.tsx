@@ -6,7 +6,6 @@ import { GripVertical, MessageSquare, Send, X } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button, Input } from '@/components/ui';
-import { MarketingAIContextManager } from '@bizpilot/shared';
 import { useGuestAISession } from '@/hooks/useGuestAISession';
 
 type ChatMessage = {
@@ -28,7 +27,6 @@ export function GlobalAIChat() {
 
   // Determine AI context based on authentication status
   const aiContext: AIContext = isAuthenticated ? 'business' : 'marketing';
-  const marketingAI = useMemo(() => new MarketingAIContextManager(), []);
   
   // Guest session management for marketing context
   const guestSession = useGuestAISession();

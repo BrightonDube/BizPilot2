@@ -1,14 +1,13 @@
 """Time tracking service for managing employee time entries and payroll."""
 
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date
 from decimal import Decimal
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func, extract
+from sqlalchemy import and_, func
 
 from app.models.time_entry import TimeEntry, TimeEntryStatus
 from app.models.business_time_settings import BusinessTimeSettings
-from app.models.user import User
 from app.models.business_user import BusinessUser
 
 

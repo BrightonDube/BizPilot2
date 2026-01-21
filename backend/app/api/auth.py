@@ -18,12 +18,6 @@ from app.core.security import (
     decode_token,
     verify_password,
 )
-from app.core.rate_limit import (
-    limiter,
-    AUTH_RATE_LIMIT,
-    REGISTER_RATE_LIMIT,
-    PASSWORD_RESET_RATE_LIMIT,
-)
 from app.schemas.auth import (
     UserCreate,
     UserLogin,

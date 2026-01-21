@@ -2,7 +2,6 @@
 
 import os
 import logging
-from typing import Optional
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 """Favorite products API endpoints."""
 
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -322,7 +322,7 @@ async def get_reorder_suggestions(
     query = select(FavoriteProduct).where(
         and_(
             FavoriteProduct.business_id == business_id,
-            FavoriteProduct.auto_reorder == True,
+            FavoriteProduct.auto_reorder,
             FavoriteProduct.deleted_at.is_(None),
         )
     ).options(joinedload(FavoriteProduct.product))

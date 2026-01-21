@@ -15,7 +15,7 @@ ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 RUN npm install -g pnpm
 
 # Copy workspace manifests + package manifests needed for dependency resolution
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY frontend/package.json ./frontend/package.json
 COPY shared/package.json ./shared/package.json
 
@@ -40,7 +40,7 @@ ENV NODE_ENV=production
 RUN npm install -g pnpm
 
 # Copy workspace manifests + package manifests needed for dependency resolution
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
 COPY frontend/package.json ./frontend/package.json
 COPY shared/package.json ./shared/package.json
 

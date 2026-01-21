@@ -1,8 +1,7 @@
-import Link from 'next/link'
 import { Metadata } from 'next'
-import { Check, X } from 'lucide-react'
 import { PRICING_PLANS, PricingUtils, type BillingCycle } from '@/lib/pricing-config'
 import { PricingClientWrapper } from '@/components/pricing/PricingClientWrapper'
+import HeroStarsBackground from '@/components/home/HeroStarsBackground'
 
 export const metadata: Metadata = {
   title: 'Business Management Pricing Plans - Complete POS & ERP Solutions',
@@ -46,7 +45,7 @@ export default function PricingPage() {
         cta: plan.isCustomPricing ? 'Contact Sales' : (plan.monthlyPrice === 0 ? 'Get Started Free' : 'Get Started'),
         featured: isFeatured,
         benefits: benefits,
-        ctaHref: plan.isCustomPricing ? '#' : '/auth/register', // Don't redirect for Enterprise
+        ctaHref: plan.isCustomPricing ? '/contact?topic=sales&tier=enterprise' : '/auth/register',
         planId: plan.id
       }
     })
@@ -54,6 +53,7 @@ export default function PricingPage() {
 
   return (
     <section className="min-h-screen relative overflow-hidden bg-slate-950 text-gray-100">
+      <HeroStarsBackground />
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 md:px-8">
         <div className="mb-12 space-y-3">
           <h2 className="text-center text-3xl font-semibold leading-tight sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight text-gray-100">

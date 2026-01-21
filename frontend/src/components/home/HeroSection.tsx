@@ -2,14 +2,39 @@
 
 import Link from 'next/link'
 import { ArrowRight, Sparkles, Building2, BarChart3 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, animate, useMotionTemplate, useMotionValue } from 'framer-motion'
 import { AI_MESSAGING } from '@/lib/ai-messaging-config'
+import { useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+const HeroStarsBackground = dynamic(() => import('./HeroStarsBackground'), { ssr: false })
+
+const COLORS_TOP = ['#13FFAA', '#1E67C6', '#CE84CF', '#DD335C']
 
 export function HeroSection() {
 
+  const color = useMotionValue(COLORS_TOP[0])
+
+  useEffect(() => {
+    const controls = animate(color, COLORS_TOP, {
+      ease: 'easeInOut',
+      duration: 10,
+      repeat: Infinity,
+      repeatType: 'mirror',
+    })
+    return () => {
+      controls.stop()
+    }
+  }, [color])
+
+  const backgroundImage = useMotionTemplate`radial-gradient(125% 125% at 50% 0%, #020617 50%, ${color})`
+  const border = useMotionTemplate`1px solid ${color}`
+  const boxShadow = useMotionTemplate`0px 4px 24px ${color}`
+
   return (
     <motion.section
-      className="relative grid min-h-screen place-content-center overflow-hidden px-4 py-24 text-gray-200 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800"
+      style={{ backgroundImage }}
+      className="relative grid min-h-screen place-content-center overflow-hidden bg-gray-950 px-4 py-24 text-gray-200"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -85,13 +110,20 @@ export function HeroSection() {
             <ArrowRight className="h-5 w-5 transition-transform group-hover:-rotate-45 group-active:-rotate-12" />
           </Link>
           
-          <Link 
-            href="/features" 
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-600 px-8 py-4 font-medium text-gray-200 transition-all hover:border-blue-500/50 hover:bg-slate-800/50"
+          <motion.div
+            style={{ border, boxShadow }}
+            whileHover={{ scale: 1.015 }}
+            whileTap={{ scale: 0.985 }}
+            className="rounded-lg"
           >
-            <BarChart3 className="h-4 w-4" />
-            Explore All Features
-          </Link>
+            <Link 
+              href="/features" 
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-950/10 px-8 py-4 font-medium text-gray-200 transition-all hover:bg-gray-950/50"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Explore All Features
+            </Link>
+          </motion.div>
         </motion.div>
 
         {/* Balanced Trust Indicator - Business focus with smart features */}
@@ -104,6 +136,8 @@ export function HeroSection() {
           🏢 Complete business solution • 🤖 Smart automation included • 🔒 Your data stays private • ⚡ Setup in minutes
         </motion.p>
       </div>
+
+      <HeroStarsBackground />
     </motion.section>
   )
 }

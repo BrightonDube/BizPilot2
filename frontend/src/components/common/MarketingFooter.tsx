@@ -68,14 +68,14 @@ export function MarketingFooter() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:support@bizpilot.com" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/contact?topic=support" className="text-gray-400 hover:text-white transition-colors">
                   Support
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="mailto:contact@bizpilot.com" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/contact?topic=general" className="text-gray-400 hover:text-white transition-colors">
                   Contact
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

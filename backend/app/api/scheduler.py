@@ -1,6 +1,6 @@
 """Scheduler monitoring API endpoints."""
 
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session

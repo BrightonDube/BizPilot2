@@ -6,13 +6,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import time
 import hashlib
-from datetime import datetime, timedelta
 import logging
 import re
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.api.deps import get_current_active_user
 from app.core.subscription import require_feature
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
@@ -145,51 +143,88 @@ def get_client_ip(request: Request) -> str:
 
 def check_guest_rate_limit(client_ip: str, session_id: str = None) -> tuple[bool, int, int]:
     """
-    Check rate limits for guest users.
+    Check rate limits for guest users using composite key to prevent bypass.
     Returns (allowed, remaining, reset_time)
+    
+    Uses both IP and session_id to prevent users from bypassing limits by rotating session IDs.
+    Enforces limits on both per-IP and per-session basis.
     """
     now = int(time.time())
-    key = f"guest_{session_id or client_ip}"
     
-    # Clean up old entries
-    guest_rate_limits.clear() if len(guest_rate_limits) > 10000 else None
+    # Create composite key combining IP and session
+    composite_key = f"guest_{client_ip}:{session_id or 'no_session'}"
+    ip_key = f"guest_ip_{client_ip}"
     
-    if key not in guest_rate_limits:
-        guest_rate_limits[key] = {
+    # Clean up old entries periodically
+    if len(guest_rate_limits) > 10000:
+        # Remove entries older than 2 hours
+        cutoff = now - 7200
+        keys_to_remove = [k for k, v in guest_rate_limits.items() if v.get('reset_time', 0) < cutoff]
+        for k in keys_to_remove:
+            del guest_rate_limits[k]
+    
+    # Initialize composite key tracking
+    if composite_key not in guest_rate_limits:
+        guest_rate_limits[composite_key] = {
             'count': 0,
             'reset_time': now + 3600,  # 1 hour window
             'session_count': 0,
             'session_reset': now + 1800  # 30 minute session
         }
     
-    rate_data = guest_rate_limits[key]
+    # Initialize IP-level tracking (prevents session rotation bypass)
+    if ip_key not in guest_rate_limits:
+        guest_rate_limits[ip_key] = {
+            'count': 0,
+            'reset_time': now + 3600,
+            'session_count': 0,
+            'session_reset': now + 1800
+        }
+    
+    composite_data = guest_rate_limits[composite_key]
+    ip_data = guest_rate_limits[ip_key]
     
     # Reset counters if time window has passed
-    if now >= rate_data['reset_time']:
-        rate_data['count'] = 0
-        rate_data['reset_time'] = now + 3600
+    if now >= composite_data['reset_time']:
+        composite_data['count'] = 0
+        composite_data['reset_time'] = now + 3600
     
-    if now >= rate_data['session_reset']:
-        rate_data['session_count'] = 0
-        rate_data['session_reset'] = now + 1800
+    if now >= composite_data['session_reset']:
+        composite_data['session_count'] = 0
+        composite_data['session_reset'] = now + 1800
     
-    # Check limits (50 per hour, 20 per session)
+    if now >= ip_data['reset_time']:
+        ip_data['count'] = 0
+        ip_data['reset_time'] = now + 3600
+    
+    if now >= ip_data['session_reset']:
+        ip_data['session_count'] = 0
+        ip_data['session_reset'] = now + 1800
+    
+    # Check limits (50 per hour per composite key, 20 per session, 100 per hour per IP)
     hourly_limit = 50
     session_limit = 20
+    ip_hourly_limit = 100
     
-    if rate_data['count'] >= hourly_limit or rate_data['session_count'] >= session_limit:
-        return False, 0, rate_data['reset_time']
+    # Check both composite and IP limits
+    if (composite_data['count'] >= hourly_limit or 
+        composite_data['session_count'] >= session_limit or
+        ip_data['count'] >= ip_hourly_limit):
+        return False, 0, max(composite_data['reset_time'], ip_data['reset_time'])
     
-    # Increment counters
-    rate_data['count'] += 1
-    rate_data['session_count'] += 1
+    # Increment counters for both composite and IP
+    composite_data['count'] += 1
+    composite_data['session_count'] += 1
+    ip_data['count'] += 1
+    ip_data['session_count'] += 1
     
     remaining = min(
-        hourly_limit - rate_data['count'],
-        session_limit - rate_data['session_count']
+        hourly_limit - composite_data['count'],
+        session_limit - composite_data['session_count'],
+        ip_hourly_limit - ip_data['count']
     )
     
-    return True, remaining, rate_data['reset_time']
+    return True, remaining, composite_data['reset_time']
 
 
 class ChatRequest(BaseModel):
@@ -305,33 +340,7 @@ async def guest_chat(
     # Get client IP for rate limiting
     client_ip = get_client_ip(http_request)
     
-    # Check rate limits
-    allowed, remaining, reset_time = check_guest_rate_limit(client_ip, request.session_id)
-    if not allowed:
-        logger.warning(f"Rate limit exceeded for IP {client_ip}, session {request.session_id}")
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Rate limit exceeded. Please try again later or sign up for unlimited access.",
-            headers={
-                "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(reset_time)
-            }
-        )
-    
-    # Check cache for common responses
-    cache_key = get_cache_key(sanitized_message, request.session_id)
-    cached_response = get_cached_response(cache_key)
-    
-    if cached_response:
-        logger.info(f"Cache hit for session {request.session_id}")
-        return GuestChatResponse(
-            response=cached_response,
-            conversation_id=request.conversation_id,
-            rate_limit_remaining=remaining,
-            rate_limit_reset=reset_time
-        )
-    
-    # Enhanced input validation and sanitization
+    # Enhanced input validation and sanitization FIRST
     if not request.message or len(request.message.strip()) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -361,19 +370,38 @@ async def guest_chat(
             detail="Message content not allowed. Please ask legitimate questions about BizPilot."
         )
     
+    # Check rate limits AFTER sanitization
+    allowed, remaining, reset_time = check_guest_rate_limit(client_ip, request.session_id)
+    if not allowed:
+        logger.warning(f"Rate limit exceeded for IP {client_ip}, session {request.session_id}")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded. Please try again later or sign up for unlimited access.",
+            headers={
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(reset_time)
+            }
+        )
+    
+    # Check cache for common responses
+    cache_key = get_cache_key(sanitized_message, request.session_id)
+    cached_response = get_cached_response(cache_key)
+    
+    if cached_response:
+        logger.info(f"Cache hit for session {request.session_id}")
+        return GuestChatResponse(
+            response=cached_response,
+            conversation_id=request.conversation_id,
+            rate_limit_remaining=remaining,
+            rate_limit_reset=reset_time
+        )
+    
     # Initialize marketing AI context manager
     marketing_ai = MarketingAIContextManager()
     
     try:
         # Process the question through marketing AI context
         context_result = marketing_ai.process_question(sanitized_message)
-        
-        # Add logging and monitoring for guest AI usage
-        import logging
-        from datetime import datetime
-        
-        # Set up logging for guest AI interactions
-        logger = logging.getLogger("guest_ai")
         
         # Log the interaction for monitoring
         logger.info(f"Guest AI interaction - IP: {client_ip}, Session: {request.session_id}, Message length: {len(sanitized_message)}, Valid: {context_result['is_valid']}")
@@ -427,8 +455,9 @@ async def guest_chat(
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        # Log error but don't expose internal details
-        logger.error(f"Guest AI error - Session: {request.session_id}, IP: {client_ip}, Error: {str(e)}")
+        # Log error with full traceback for debugging
+        import traceback
+        logger.error(f"Guest AI error - Session: {request.session_id}, IP: {client_ip}, Error: {str(e)}, Traceback: {traceback.format_exc()}")
         
         # Return safe error response
         error_response = "I'm having trouble right now. For immediate help, please contact our sales team at sales@bizpilot.co.za or try our free Pilot Solo tier."

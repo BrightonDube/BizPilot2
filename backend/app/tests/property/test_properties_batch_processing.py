@@ -1,6 +1,5 @@
 """Property-based tests for batch processing using mocks."""
 
-import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
 from datetime import date, timedelta
 from decimal import Decimal

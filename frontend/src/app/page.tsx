@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { HeroSection } from '@/components/home/HeroSection'
 import { MarketingLayoutClient } from '@/components/layout/MarketingLayoutClient'
-import ShaderBackground from '@/components/ui/shader-background'
 import { 
   BarChart3, 
   Package, 
@@ -152,7 +151,6 @@ const testimonials = [
 export default function HomePage() {
   return (
     <MarketingLayoutClient>
-      <ShaderBackground />
       {/* Hero Section */}
       <HeroSection />
 

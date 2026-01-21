@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 from app.core.database import SessionLocal
 from app.models.job_execution_log import JobExecutionLog, JobStatus
-from app.models.invoice import Invoice
 from app.scheduler.services.invoice_query import InvoiceQueryService
 from app.scheduler.services.notification_creation import NotificationCreationService
 from app.services.notification_service import NotificationService

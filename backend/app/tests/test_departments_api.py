@@ -1,9 +1,8 @@
 """Unit tests for department API endpoints."""
 
 import pytest
-import asyncio
 from uuid import uuid4
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
+from unittest.mock import Mock, patch
 from fastapi import HTTPException, status
 
 from app.schemas.department import DepartmentCreate, DepartmentUpdate

@@ -1,6 +1,5 @@
 """Unit tests for JobExecutionLog model."""
 
-import pytest
 from datetime import datetime, timedelta
 from app.models.job_execution_log import JobExecutionLog, JobStatus
 

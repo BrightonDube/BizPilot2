@@ -11,12 +11,13 @@ from app.core.database import get_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
+from app.models.business_user import BusinessUser
 from app.models.order import Order, OrderDirection
 from app.models.customer import Customer
 from app.models.product import Product
 from app.models.order import OrderItem
 from app.models.inventory import InventoryItem
-from app.models.session import Session
+from app.models.session import Session as SessionModel
 from app.models.time_entry import TimeEntry
 from app.core.pdf import build_simple_pdf
 from app.schemas.report import (
@@ -289,19 +290,15 @@ async def get_revenue_trend(
     if range == "7d":
         # Group by day
         date_trunc = func.date(Order.created_at)
-        date_format = "%Y-%m-%d"
     elif range == "30d":
         # Group by day
         date_trunc = func.date(Order.created_at)
-        date_format = "%Y-%m-%d"
     elif range == "90d":
         # Group by week
         date_trunc = func.date(Order.created_at)
-        date_format = "%Y-%m-%d"
     else:  # 1y
         # Group by month
         date_trunc = func.date(Order.created_at)
-        date_format = "%Y-%m-%d"
     
     query = (
         db.query(
@@ -346,7 +343,7 @@ async def get_revenue_trend(
                     label = dt.strftime("%d %b")  # 01 Jan
                 else:
                     label = dt.strftime("%b %Y")  # Jan 2024
-            except:
+            except Exception:
                 label = period_str
         else:
             label = period_str
@@ -422,7 +419,7 @@ async def get_orders_trend(
                     label = dt.strftime("%d %b")  # 01 Jan
                 else:
                     label = dt.strftime("%b %Y")  # Jan 2024
-            except:
+            except Exception:
                 label = period_str
         else:
             label = period_str
@@ -840,23 +837,23 @@ async def get_login_history_report(
     # Build query for sessions
     # Need to join through business_user to filter by business
     query = (
-        db.query(Session, User)
-        .join(User, User.id == Session.user_id)
+        db.query(SessionModel, User)
+        .join(User, User.id == SessionModel.user_id)
         .join(BusinessUser, BusinessUser.user_id == User.id)
         .filter(
             BusinessUser.business_id == business_id,
-            Session.created_at >= start_date,
-            Session.created_at <= end_date,
+            SessionModel.created_at >= start_date,
+            SessionModel.created_at <= end_date,
         )
     )
     
     if user_id:
-        query = query.filter(Session.user_id == user_id)
+        query = query.filter(SessionModel.user_id == user_id)
     
     if not include_active:
-        query = query.filter(Session.is_active == False)
+        query = query.filter(~SessionModel.is_active)
     
-    rows = query.order_by(Session.created_at.desc()).all()
+    rows = query.order_by(SessionModel.created_at.desc()).all()
     
     items = []
     active_count = 0
