@@ -15,7 +15,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user, get_current_business_id
+from app.api.deps import get_current_active_user, get_current_business_id, check_feature
 from app.core.rbac import has_permission
 from app.models.user import User
 from app.models.time_entry import TimeEntry, TimeEntryStatus
@@ -451,7 +451,7 @@ async def get_user_time_summary(
     )
 
 
-@router.get("/payroll-report", response_model=PayrollReport)
+@router.get("/payroll-report", response_model=PayrollReport, dependencies=[Depends(check_feature("has_payroll"))])
 async def get_payroll_report(
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
@@ -459,7 +459,7 @@ async def get_payroll_report(
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
-    """Get payroll report for all users (requires reports:view permission)."""
+    """Get payroll report for all users (requires reports:view permission and payroll feature)."""
     service = TimeTrackingService(db)
     
     # Default to current pay period (2 weeks)
@@ -487,7 +487,7 @@ async def get_payroll_report(
     )
 
 
-@router.get("/payroll-report/export")
+@router.get("/payroll-report/export", dependencies=[Depends(check_feature("has_payroll"))])
 async def export_payroll_report(
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
@@ -495,7 +495,7 @@ async def export_payroll_report(
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
-    """Export payroll report to Excel (requires reports:view permission)."""
+    """Export payroll report to Excel (requires reports:view permission and payroll feature)."""
     # openpyxl imported at module level for efficiency
     
     service = TimeTrackingService(db)
@@ -743,13 +743,13 @@ async def run_day_end_process(
     return DayEndProcessResult(**result)
 
 
-@router.get("/business-settings", response_model=BusinessTimeSettingsResponse)
+@router.get("/business-settings", response_model=BusinessTimeSettingsResponse, dependencies=[Depends(check_feature("has_payroll"))])
 async def get_business_time_settings(
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
-    """Get business time tracking settings."""
+    """Get business time tracking settings (requires users:manage permission and payroll feature)."""
     service = TimeTrackingService(db)
     settings = service.get_or_create_business_settings(business_id)
     
@@ -765,14 +765,14 @@ async def get_business_time_settings(
     )
 
 
-@router.patch("/business-settings", response_model=BusinessTimeSettingsResponse)
+@router.patch("/business-settings", response_model=BusinessTimeSettingsResponse, dependencies=[Depends(check_feature("has_payroll"))])
 async def update_business_time_settings(
     data: BusinessTimeSettingsUpdate,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
-    """Update business time tracking settings."""
+    """Update business time tracking settings (requires users:manage permission and payroll feature)."""
     from datetime import time as dt_time
     
     service = TimeTrackingService(db)

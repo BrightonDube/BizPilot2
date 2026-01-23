@@ -6,8 +6,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
-  Settings as SettingsIcon,
   User,
   Users,
   Building2,
@@ -16,7 +16,6 @@ import {
   CreditCard,
   Palette,
   Sparkles,
-  Globe,
   Save,
   Camera,
   Check,
@@ -26,7 +25,6 @@ import {
   EyeOff,
   Crown,
   Zap,
-  ExternalLink,
   Receipt,
   Monitor,
   Smartphone,
@@ -41,10 +39,8 @@ import {
   Select,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
@@ -111,7 +107,6 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const billingProvider: 'payfast' | 'paystack' = 'paystack';
   const tabParam = searchParams.get('tab') as SettingsTab | null;
   const [activeTab, setActiveTab] = useState<SettingsTab>(tabParam || 'profile');
   const [isSaving, setIsSaving] = useState(false);
@@ -578,10 +573,9 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden relative">
                     {user?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                      <Image src={user.avatar_url} alt="Avatar" fill sizes="80px" className="object-cover" />
                     ) : (
                       <User className="w-8 h-8 text-muted-foreground" />
                     )}

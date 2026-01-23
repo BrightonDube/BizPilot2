@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { ArrowLeft, Play, CheckCircle, XCircle, Factory } from 'lucide-react'
 
 import { apiClient } from '@/lib/api'
@@ -59,7 +59,6 @@ const statusLabels: Record<string, string> = {
 
 export default function ProductionDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const orderId = params.id as string
 
   const [order, setOrder] = useState<ProductionOrder | null>(null)
@@ -67,7 +66,7 @@ export default function ProductionDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
 
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await apiClient.get<ProductionOrder>(`/production/${orderId}`)
@@ -78,11 +77,11 @@ export default function ProductionDetailPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [orderId])
 
   useEffect(() => {
     fetchOrder()
-  }, [orderId])
+  }, [fetchOrder])
 
   const handleStart = async () => {
     if (!order) return

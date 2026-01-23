@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user, get_current_business_id
-from app.core.rbac import has_permission
+from app.api.deps import get_current_active_user, get_current_business_id, check_feature
 from app.models.user import User
 from app.models.business_user import BusinessUser
 from app.models.order import Order, OrderDirection
@@ -437,7 +436,7 @@ async def get_orders_trend(
 
 @router.get("/inventory", response_model=InventoryReport)
 async def get_inventory_report(
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(check_feature("advanced_reporting")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -507,7 +506,7 @@ async def get_inventory_report(
 @router.get("/cogs", response_model=COGSReport)
 async def get_cogs_report(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(check_feature("advanced_reporting")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -589,7 +588,7 @@ async def get_cogs_report(
 
 @router.get("/profit-margins", response_model=ProfitMarginReport)
 async def get_profit_margins_report(
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(check_feature("advanced_reporting")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -650,7 +649,7 @@ async def get_profit_margins_report(
 async def export_reports_pdf(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     direction: Optional[OrderDirection] = Query(None),
-    current_user: User = Depends(has_permission("reports:export")),
+    current_user: User = Depends(check_feature("advanced_reporting")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -715,7 +714,7 @@ async def export_reports_pdf(
 async def get_user_activity_report(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     user_id: Optional[str] = Query(None),
-    current_user: User = Depends(has_permission("reports:view_user_activity")),
+    current_user: User = Depends(check_feature("advanced_reporting")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -817,7 +816,7 @@ async def get_login_history_report(
     range: str = Query("30d", pattern="^(7d|30d|90d|1y)$"),
     user_id: Optional[str] = Query(None),
     include_active: bool = Query(True),
-    current_user: User = Depends(has_permission("reports:view_login_history")),
+    current_user: User = Depends(check_feature("advanced_reporting")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):

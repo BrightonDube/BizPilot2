@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Image as ImageIcon, X, ZoomIn } from 'lucide-react'
 
@@ -78,10 +79,12 @@ export function ImageDisplay({
               <ImageIcon className="h-4 w-4 text-gray-500" />
             </div>
           ) : (
-            <img
+            <Image
               src={src}
               alt={alt}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
               onLoad={handleImageLoad}
               onError={handleImageError}
             />
@@ -111,13 +114,21 @@ export function ImageDisplay({
             onClick={() => setIsZoomed(false)}
           >
             <motion.div
-              className="relative max-w-4xl max-h-full"
+              className="relative max-w-4xl max-h-full w-full h-full"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <img src={src} alt={alt} className="max-w-full max-h-full object-contain rounded-lg" />
+              <div className="relative w-full h-full">
+                <Image 
+                  src={src} 
+                  alt={alt} 
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 1024px"
+                  className="object-contain rounded-lg" 
+                />
+              </div>
               <motion.button
                 type="button"
                 onClick={() => setIsZoomed(false)}

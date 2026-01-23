@@ -5,7 +5,7 @@ Pricing is stored in cents to avoid floating-point precision issues.
 """
 
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from sqlalchemy import Column, String, Boolean, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship

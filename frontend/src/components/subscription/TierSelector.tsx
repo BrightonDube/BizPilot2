@@ -35,10 +35,6 @@ export function TierSelector({ selectedTierId, onSelect, showBillingToggle = tru
     return `R${(cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`
   }
 
-  const getPrice = (tier: SubscriptionTier) => {
-    return billingCycle === 'monthly' ? tier.price_monthly_cents : tier.price_yearly_cents
-  }
-
   const getMonthlyEquivalent = (tier: SubscriptionTier) => {
     if (billingCycle === 'monthly') return tier.price_monthly_cents
     return Math.round(tier.price_yearly_cents / 12)

@@ -44,7 +44,7 @@ function SubscriptionCallbackContent() {
             router.push('/dashboard')
           }, 3000)
         }
-      } catch (error) {
+      } catch {
         setStatus('failed')
         setMessage('Failed to verify payment. Please contact support.')
       }

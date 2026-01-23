@@ -11,7 +11,6 @@ import {
   Building2, 
   User,
   Users,
-  Tag,
   DollarSign,
   ShoppingCart,
   Loader2,
@@ -23,7 +22,7 @@ import {
   LayoutGrid,
   List
 } from 'lucide-react'
-import { Button, Input, Select, Card, CardContent, Badge } from '@/components/ui'
+import { Button, Input, Select, Card, CardContent } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 import { formatCurrency, toNumber } from '@/lib/utils'
 

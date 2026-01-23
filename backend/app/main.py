@@ -14,6 +14,7 @@ import traceback
 from app.api import router as api_router
 from app.core.config import settings
 from app.core.rate_limit import limiter
+from app.core.redis import startup_redis, shutdown_redis
 from app.scheduler.config import SchedulerConfig
 from app.scheduler.manager import SchedulerManager
 from app.scheduler.jobs.overdue_invoice_job import check_overdue_invoices_job
@@ -142,9 +143,19 @@ app.include_router(api_router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize scheduler on application startup."""
+    """Initialize Redis and scheduler on application startup."""
     global scheduler_manager
     
+    # Initialize Redis connection
+    try:
+        logger.info("Initializing Redis connection...")
+        await startup_redis()
+        logger.info("Redis initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Redis: {e}", exc_info=True)
+        # Don't fail application startup if Redis fails (fallback mode)
+    
+    # Initialize scheduler
     try:
         logger.info("Initializing scheduler...")
         
@@ -186,9 +197,18 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Shutdown scheduler on application shutdown."""
+    """Shutdown Redis and scheduler on application shutdown."""
     global scheduler_manager
     
+    # Shutdown Redis connection
+    try:
+        logger.info("Shutting down Redis connection...")
+        await shutdown_redis()
+        logger.info("Redis shutdown successfully")
+    except Exception as e:
+        logger.error(f"Error shutting down Redis: {e}", exc_info=True)
+    
+    # Shutdown scheduler
     if scheduler_manager:
         try:
             logger.info("Shutting down scheduler...")

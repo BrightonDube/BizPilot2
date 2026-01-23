@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, User, Building2 } from 'lucide-react';
 import { Input } from '@/components/ui';
 import { apiClient } from '@/lib/api';

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Edit,
@@ -16,7 +15,6 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  FileText,
   Download,
   PackageCheck,
   Send,

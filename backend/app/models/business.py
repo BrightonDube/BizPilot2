@@ -50,6 +50,11 @@ class Business(BaseModel):
     business_users = relationship("BusinessUser", back_populates="business", cascade="all, delete-orphan")
     departments = relationship("Department", back_populates="business", cascade="all, delete-orphan")
     layby_configs = relationship("LaybyConfig", back_populates="business", cascade="all, delete-orphan")
+    
+    # Subscription system relationships
+    subscription = relationship("BusinessSubscription", back_populates="business", uselist=False, cascade="all, delete-orphan")
+    feature_overrides = relationship("FeatureOverride", back_populates="business", cascade="all, delete-orphan")
+    devices = relationship("DeviceRegistry", back_populates="business", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Business {self.name}>"

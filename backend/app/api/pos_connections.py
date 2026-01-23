@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
 from app.core.database import get_db
-from app.api.deps import get_current_business_id
-from app.core.rbac import has_permission
+from app.api.deps import get_current_business_id, check_feature
 from app.models.user import User
 from app.models.pos_connection import (
     POSConnection,
@@ -257,7 +256,7 @@ async def get_pos_providers():
 
 @router.get("", response_model=POSConnectionListResponse)
 async def list_pos_connections(
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -276,7 +275,7 @@ async def list_pos_connections(
 @router.get("/{connection_id}", response_model=POSConnectionResponse)
 async def get_pos_connection(
     connection_id: str,
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -296,7 +295,7 @@ async def get_pos_connection(
 @router.post("", response_model=POSConnectionResponse, status_code=status.HTTP_201_CREATED)
 async def create_pos_connection(
     data: POSConnectionCreate,
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -338,7 +337,7 @@ async def create_pos_connection(
 async def update_pos_connection(
     connection_id: str,
     data: POSConnectionUpdate,
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -366,7 +365,7 @@ async def update_pos_connection(
 @router.delete("/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_pos_connection(
     connection_id: str,
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -387,7 +386,7 @@ async def delete_pos_connection(
 @router.post("/{connection_id}/test", response_model=SyncResponse)
 async def test_pos_connection(
     connection_id: str,
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -417,7 +416,7 @@ async def test_pos_connection(
 async def trigger_sync(
     connection_id: str,
     data: SyncRequest,
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):
@@ -472,7 +471,7 @@ async def trigger_sync(
 async def get_sync_logs(
     connection_id: str,
     limit: int = Query(20, ge=1, le=100),
-    current_user: User = Depends(has_permission("settings:edit")),
+    current_user: User = Depends(check_feature("api_integrations")),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_db),
 ):

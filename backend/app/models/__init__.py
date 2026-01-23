@@ -40,6 +40,13 @@ from app.models.layby_audit import LaybyAudit
 from app.models.layby_notification import LaybyNotification, NotificationChannel, NotificationStatus as LaybyNotificationStatus
 from app.models.stock_reservation import StockReservation
 from app.models.job_execution_log import JobExecutionLog, JobStatus
+from app.models.subscription import (
+    TierFeature,
+    BusinessSubscription,
+    FeatureOverride,
+    DeviceRegistry,
+    AuditLog,
+)
 
 __all__ = [
     "BaseModel",
@@ -131,4 +138,10 @@ __all__ = [
     # Job Execution
     "JobExecutionLog",
     "JobStatus",
+    # Subscription System
+    "TierFeature",
+    "BusinessSubscription",
+    "FeatureOverride",
+    "DeviceRegistry",
+    "AuditLog",
 ]

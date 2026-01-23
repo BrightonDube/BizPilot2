@@ -54,3 +54,4 @@ openpyxl==3.1.5
 user-agents==2.2.0
 hypothesis==6.122.3
 apscheduler==3.10.4
+redis==5.2.1

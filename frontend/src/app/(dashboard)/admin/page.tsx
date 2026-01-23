@@ -9,7 +9,6 @@ import {
   Clock,
   Shield,
   UserCheck,
-  UserX,
   DollarSign
 } from 'lucide-react'
 import Link from 'next/link'

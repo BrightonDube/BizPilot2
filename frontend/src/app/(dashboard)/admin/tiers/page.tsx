@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   TrendingUp, 
-  Plus, 
-  Edit2, 
   Trash2, 
   ArrowLeft,
   Check,

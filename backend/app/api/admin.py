@@ -15,6 +15,14 @@ from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.business_user import BusinessUser
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
 from app.models.subscription_transaction import SubscriptionTransaction
+from app.schemas.subscription import (
+    TierUpdateRequest as NewTierUpdateRequest,
+    FeatureOverridesRequest,
+)
+from app.services.permission_service import PermissionService
+from app.services.subscription_service import SubscriptionService
+from app.services.device_service import DeviceService
+from app.api.deps import require_superadmin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -725,4 +733,300 @@ async def list_transactions(
         "total": total,
         "page": page,
         "per_page": per_page,
+    }
+
+
+
+# ==================== Subscription Management Endpoints (New) ====================
+
+
+@router.get("/subscriptions", response_model=List[dict])
+async def list_business_subscriptions(
+    current_user: User = Depends(require_superadmin),
+    db: Session = Depends(get_db)
+):
+    """
+    List all business subscriptions with current tier and status.
+    
+    Returns list of all businesses with subscription details including:
+    - business_id, business_name, tier, status, device_count, valid_until
+    """
+    from app.models.business import Business
+    
+    # Query all businesses
+    businesses = db.query(Business).filter(Business.deleted_at.is_(None)).all()
+    
+    perm_service = PermissionService(db)
+    device_service = DeviceService(db)
+    
+    result = []
+    for business in businesses:
+        try:
+            # Get permissions for each business
+            permissions = perm_service.get_business_permissions(business.id)
+            
+            # Get device count
+            devices = device_service.get_business_devices(business.id)
+            
+            result.append({
+                'business_id': business.id,
+                'business_name': business.name,
+                'tier_name': permissions.tier_name,
+                'status': permissions.status,
+                'device_count': len(devices),
+                'max_devices': permissions.max_devices,
+                'valid_until': permissions.valid_until,
+                'is_demo_expired': permissions.is_demo_expired
+            })
+        except Exception as e:
+            # Log error but continue with other businesses
+            print(f"Error getting subscription for business {business.id}: {e}")
+            continue
+    
+    return result
+
+
+@router.get("/subscriptions/{business_id}", response_model=dict)
+async def get_subscription_detail(
+    business_id: int,
+    current_user: User = Depends(require_superadmin),
+    db: Session = Depends(get_db)
+):
+    """
+    Get detailed subscription info for a business.
+    
+    Returns detailed subscription info including:
+    - Current tier and features
+    - Active overrides
+    - Device list with last sync times
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    perm_service = PermissionService(db)
+    device_service = DeviceService(db)
+    
+    # Get permissions
+    permissions = perm_service.get_business_permissions(business_id)
+    
+    # Get devices
+    devices = device_service.get_business_devices(business_id)
+    
+    # TODO: Get overrides from FeatureOverrides table once populated
+    overrides = {}
+    
+    return {
+        'business_id': business.id,
+        'business_name': business.name,
+        'tier_name': permissions.tier_name,
+        'status': permissions.status,
+        'device_count': len(devices),
+        'max_devices': permissions.max_devices,
+        'valid_until': permissions.valid_until,
+        'permissions': permissions.model_dump(),
+        'overrides': overrides,
+        'devices': [d.model_dump() if hasattr(d, 'model_dump') else d for d in devices]
+    }
+
+
+@router.put("/subscriptions/{business_id}/tier")
+async def update_subscription_tier(
+    business_id: int,
+    tier_update: NewTierUpdateRequest,
+    current_user: User = Depends(require_superadmin),
+    db: Session = Depends(get_db)
+):
+    """
+    Update a business's subscription tier.
+    
+    Invalidates permission cache after update.
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    sub_service = SubscriptionService(db)
+    
+    try:
+        result = sub_service.update_tier(
+            business_id=business_id,
+            tier_name=tier_update.tier_name,
+            valid_until=tier_update.valid_until,
+            admin_user_id=current_user.id
+        )
+        
+        return {
+            'success': True,
+            'message': f'Tier updated to {tier_update.tier_name}',
+            'subscription': result
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/subscriptions/{business_id}/overrides")
+async def set_feature_overrides(
+    business_id: int,
+    overrides: FeatureOverridesRequest,
+    current_user: User = Depends(require_superadmin),
+    db: Session = Depends(get_db)
+):
+    """
+    Set or update feature overrides for a business.
+    
+    Accepts: max_devices, max_users, has_payroll, has_ai, has_api_access, has_advanced_reporting
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    sub_service = SubscriptionService(db)
+    
+    # Set each override that was provided
+    override_data = overrides.model_dump(exclude_unset=True)
+    results = []
+    
+    for feature_name, feature_value in override_data.items():
+        if feature_value is not None:
+            try:
+                result = sub_service.set_feature_override(
+                    business_id=business_id,
+                    feature_name=feature_name,
+                    feature_value=feature_value,
+                    admin_user_id=current_user.id
+                )
+                results.append(result)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+    
+    return {
+        'success': True,
+        'message': f'Set {len(results)} feature overrides',
+        'overrides': results
+    }
+
+
+@router.delete("/subscriptions/{business_id}/overrides/{feature_name}")
+async def remove_business_feature_override(
+    business_id: int,
+    feature_name: str,
+    current_user: User = Depends(require_superadmin),
+    db: Session = Depends(get_db)
+):
+    """
+    Remove a feature override, reverting to tier default.
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    sub_service = SubscriptionService(db)
+    
+    removed = sub_service.remove_feature_override(
+        business_id=business_id,
+        feature_name=feature_name,
+        admin_user_id=current_user.id
+    )
+    
+    if not removed:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No override found for feature '{feature_name}'"
+        )
+    
+    return {
+        'success': True,
+        'message': f'Removed override for {feature_name}'
+    }
+
+
+# ==================== Device Management Endpoints ====================
+
+@router.get("/devices/{business_id}", response_model=List[dict])
+async def list_business_devices(
+    business_id: int,
+    current_user: User = Depends(require_superadmin),
+    db: Session = Depends(get_db)
+):
+    """
+    List all devices for a business.
+    
+    Returns list of all devices including:
+    - device_id, device_name, user_name, last_sync_time, is_active
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    device_service = DeviceService(db)
+    devices = device_service.get_business_devices(business_id)
+    
+    return [d.model_dump() if hasattr(d, 'model_dump') else d for d in devices]
+
+
+@router.delete("/devices/{business_id}/{device_id}")
+async def unlink_device(
+    business_id: int,
+    device_id: str,
+    current_user: User = Depends(require_superadmin),
+    db: Session = Depends(get_db)
+):
+    """
+    Unlink a device from a business.
+    
+    Sets is_active = FALSE for the device.
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    device_service = DeviceService(db)
+    device_service.unlink_device(business_id, device_id)
+    
+    return {
+        'success': True,
+        'message': f'Device {device_id} unlinked from business {business_id}'
     }

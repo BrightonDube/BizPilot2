@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   AreaChart,
@@ -105,18 +105,7 @@ export function DashboardCharts({ data: propData }: DashboardChartsProps) {
     totalCost: productsForCharts.reduce((sum, p) => sum + (Number.isFinite(p.total_cost) ? p.total_cost : 0), 0),
   }
 
-  useEffect(() => {
-    // If data is passed as prop, use it directly (avoid duplicate API call)
-    if (propData) {
-      transformData(propData)
-      fetchAdditionalChartData()
-      return
-    }
-    // Only fetch if no data provided
-    fetchChartData()
-  }, [propData])
-
-  const transformData = (data: NonNullable<DashboardChartsProps['data']>) => {
+  const transformData = useCallback((data: NonNullable<DashboardChartsProps['data']>) => {
     // Transform revenue data
     if (data.revenue_by_month && data.revenue_by_month.length > 0) {
       setRevenueData(data.revenue_by_month.map((item) => ({
@@ -145,25 +134,9 @@ export function DashboardCharts({ data: propData }: DashboardChartsProps) {
       })))
     }
     setIsLoading(false)
-  }
+  }, [])
 
-  const fetchChartData = async () => {
-    try {
-      setIsLoading(true)
-      const [dashboardResponse] = await Promise.all([
-        apiClient.get('/dashboard'),
-        fetchAdditionalChartData(),
-      ])
-      transformData(dashboardResponse.data)
-    } catch (error) {
-      console.error('Failed to fetch chart data:', error)
-      setHasData(false)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchAdditionalChartData = async () => {
+  const fetchAdditionalChartData = useCallback(async () => {
     try {
       const [productsResponse, inventoryResponse] = await Promise.all([
         apiClient.get<ProductsListResponse>('/products', {
@@ -211,7 +184,34 @@ export function DashboardCharts({ data: propData }: DashboardChartsProps) {
       setProductsForCharts([])
       setInventoryForCharts([])
     }
-  }
+  }, [])
+
+  const fetchChartData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const [dashboardResponse] = await Promise.all([
+        apiClient.get('/dashboard'),
+        fetchAdditionalChartData(),
+      ])
+      transformData(dashboardResponse.data)
+    } catch (error) {
+      console.error('Failed to fetch chart data:', error)
+      setHasData(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [fetchAdditionalChartData, transformData])
+
+  useEffect(() => {
+    // If data is passed as prop, use it directly (avoid duplicate API call)
+    if (propData) {
+      transformData(propData)
+      fetchAdditionalChartData()
+      return
+    }
+    // Only fetch if no data provided
+    fetchChartData()
+  }, [propData, fetchAdditionalChartData, fetchChartData, transformData])
 
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) => {
     if (active && payload && payload.length) {
