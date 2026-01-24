@@ -27,6 +27,14 @@ coverage.xml
 *.cover
 .hypothesis/
 
+# Python linting and type checking caches
+.ruff_cache/
+.mypy_cache/
+.pytype/
+.pyre/
+.dmypy.json
+dmypy.json
+
 # IDE
 .idea/
 .vscode/
@@ -45,6 +53,12 @@ coverage.xml
 .next/
 out/
 *.tsbuildinfo
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+.tsbuildinfo
 
 # Logs
 *.log
@@ -105,3 +119,16 @@ test_password.py
 test_login.py
 test_rate_limit_issue.py
 test_simple_password.py
+reset_user_password.py
+
+# Documentation and reports (temporary/generated)
+*-test-report.md
+*-test-report.json
+*-summary.md
+*-report.json
+*-verification-report.md
+*IMPLEMENTATION*.md
+*SUMMARY*.md
+*CHECKLIST*.md
+*COMPLETION*.md
+*TROUBLESHOOTING*.md
