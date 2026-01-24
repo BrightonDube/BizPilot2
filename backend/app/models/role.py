@@ -2,11 +2,11 @@
 
 from sqlalchemy import Column, String, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 import enum
 from typing import List
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, JSONType
 from app.core.database import Base
 
 
@@ -101,7 +101,7 @@ class Role(BaseModel):
     is_system = Column(Boolean, default=False)  # System roles can't be deleted
 
     # Store permissions as JSONB array for better performance and querying
-    permissions = Column(JSONB, nullable=True, default=[])
+    permissions = Column(JSONType, nullable=True, default=[])
 
     # Relationships
     business_users = relationship("BusinessUser", back_populates="role")

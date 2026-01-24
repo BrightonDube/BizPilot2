@@ -26,11 +26,11 @@ from sqlalchemy import (
     UniqueConstraint,
     Index,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, JSONType
 
 
 class TierFeature(BaseModel):
@@ -279,7 +279,7 @@ class AuditLog(BaseModel):
     action = Column(String(100), nullable=False)
     
     # Changes as JSONB (before/after values)
-    changes = Column(JSONB, nullable=False)
+    changes = Column(JSONType, nullable=False)
     
     # Timestamp
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

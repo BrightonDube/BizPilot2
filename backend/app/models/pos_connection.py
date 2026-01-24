@@ -3,10 +3,10 @@
 from datetime import datetime
 from sqlalchemy import Column, String, Text, Boolean, Integer, ForeignKey, DateTime, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 import enum
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, JSONType
 
 
 class POSProvider(str, enum.Enum):
@@ -60,7 +60,7 @@ class POSConnection(BaseModel):
     webhook_secret = Column(String(255), nullable=True)
     
     # Additional settings stored as JSON
-    settings = Column(JSONB, default=dict)  # Store provider-specific settings
+    settings = Column(JSONType, default=dict)  # Store provider-specific settings
     
     # Status
     status = Column(
@@ -119,7 +119,7 @@ class POSSyncLog(BaseModel):
     # Status
     status = Column(String(20), nullable=False)  # success, partial, failed
     error_message = Column(Text, nullable=True)
-    details = Column(JSONB, default=dict)  # Detailed sync information
+    details = Column(JSONType, default=dict)  # Detailed sync information
     
     # Timing
     started_at = Column(DateTime, nullable=True)

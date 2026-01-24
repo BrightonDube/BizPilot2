@@ -14,11 +14,13 @@ Requirements: 5.5, 6.1, 6.2, 6.3, 6.4, 6.5, 12.5, 17.3
 """
 
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TYPE_CHECKING
 from uuid import UUID
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from redis.asyncio import Redis
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
 
 from app.models.subscription import (
     BusinessSubscription,

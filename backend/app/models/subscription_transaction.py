@@ -1,11 +1,11 @@
 """SubscriptionTransaction model for tracking payment history."""
 
 from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, Text
-from sqlalchemy.dialects.postgresql import UUID, JSONB, ENUM
+from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy.orm import relationship
 import enum
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, JSONType
 
 
 class TransactionStatus(str, enum.Enum):
@@ -71,7 +71,7 @@ class SubscriptionTransaction(BaseModel):
     period_end = Column(DateTime, nullable=True)
     
     # Raw webhook/API response for debugging
-    raw_response = Column(JSONB, nullable=True)
+    raw_response = Column(JSONType, nullable=True)
     
     # Notes
     notes = Column(Text, nullable=True)
