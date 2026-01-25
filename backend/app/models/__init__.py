@@ -47,6 +47,18 @@ from app.models.subscription import (
     DeviceRegistry,
     AuditLog,
 )
+from app.models.customer_account import (
+    CustomerAccount,
+    AccountStatus,
+    AccountTransaction,
+    TransactionType as AccountTransactionType,
+    AccountPayment,
+    PaymentAllocation,
+    AccountStatement,
+    CollectionActivity,
+    ActivityType,
+    AccountWriteOff,
+)
 
 __all__ = [
     "BaseModel",
@@ -144,4 +156,15 @@ __all__ = [
     "FeatureOverride",
     "DeviceRegistry",
     "AuditLog",
+    # Customer Accounts
+    "CustomerAccount",
+    "AccountStatus",
+    "AccountTransaction",
+    "AccountTransactionType",
+    "AccountPayment",
+    "PaymentAllocation",
+    "AccountStatement",
+    "CollectionActivity",
+    "ActivityType",
+    "AccountWriteOff",
 ]

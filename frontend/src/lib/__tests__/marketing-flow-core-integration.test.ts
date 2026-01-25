@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { middleware } from '../../../middleware';
+import { middleware } from '@/root/middleware';
 import { PRICING_PLANS, PricingUtils, AI_MESSAGING } from '../pricing-config';
 import { AI_MESSAGING_CONFIG, AIMessagingUtils } from '../ai-messaging-config';
 

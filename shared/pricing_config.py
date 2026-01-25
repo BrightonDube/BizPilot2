@@ -7,7 +7,7 @@ but in a Python-compatible format for backend use.
 Requirements: 1.4, 3.1, 3.2
 """
 
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, List, Optional, Literal
 from dataclasses import dataclass
 
 # Type definitions

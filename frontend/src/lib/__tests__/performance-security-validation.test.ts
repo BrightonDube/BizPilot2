@@ -11,7 +11,7 @@
  */
 
 import { apiClient } from '@/lib/api';
-import { SUBSCRIPTION_TIERS, PricingUtils } from '../../../../shared/pricing-config';
+import { SUBSCRIPTION_TIERS, PricingUtils } from '@/shared/pricing-config';
 
 // Mock API client
 jest.mock('@/lib/api');

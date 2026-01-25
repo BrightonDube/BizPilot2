@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", ".env.local"),  # Load both .env and .env.local (local overrides)
         case_sensitive=True,
         extra="ignore",  # Ignore extra environment variables
     )

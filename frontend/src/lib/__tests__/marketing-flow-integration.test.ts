@@ -10,7 +10,7 @@
 
 import puppeteer, { Browser, Page } from 'puppeteer';
 import { NextRequest } from 'next/server';
-import { middleware } from '../../../middleware';
+import { middleware } from '@/root/middleware';
 import { PRICING_PLANS, PricingUtils } from '../pricing-config';
 import { AI_MESSAGING_CONFIG } from '../ai-messaging-config';
 

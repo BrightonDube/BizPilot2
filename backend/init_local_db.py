@@ -17,17 +17,17 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 load_dotenv(Path(__file__).parent / ".env.local", override=True)
 
-from passlib.context import CryptContext
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from passlib.context import CryptContext  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
 
 # Import models to ensure they're registered
-from app.models.base import Base
-from app.models.user import User, UserStatus, SubscriptionStatus
-from app.models.organization import Organization
-from app.models.business import Business
-from app.models.role import Role
-from app.models.business_user import BusinessUser, BusinessUserStatus
+from app.models.base import Base  # noqa: E402
+from app.models.user import User, UserStatus, SubscriptionStatus  # noqa: E402
+from app.models.organization import Organization  # noqa: E402
+from app.models.business import Business  # noqa: E402
+from app.models.role import Role  # noqa: E402
+from app.models.business_user import BusinessUser, BusinessUserStatus  # noqa: E402
 
 # Configuration
 DB_PATH = Path(__file__).parent / "test.db"
