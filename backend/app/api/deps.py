@@ -1,10 +1,9 @@
 """Authentication dependencies for FastAPI."""
 
-from typing import Optional, Literal
+import inspect
+from typing import Optional, Literal, Union
 from fastapi import Depends, HTTPException, status, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
 
 from app.core.database import get_db
@@ -43,7 +42,7 @@ def extract_token_from_request(
 async def get_current_user(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ) -> User:
     """
     Get the current authenticated user from JWT token.
@@ -76,7 +75,7 @@ async def get_current_user(
         raise credentials_exception
     
     auth_service = AuthService(db)
-    user = auth_service.get_user_by_id(user_id)
+    user = await auth_service.get_user_by_id(user_id)
     
     if user is None:
         raise credentials_exception
@@ -124,10 +123,10 @@ async def get_current_verified_user(
     return current_user
 
 
-def get_optional_user(
+async def get_optional_user(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ) -> Optional[User]:
     """Get the current user if authenticated, otherwise None."""
     token = extract_token_from_request(request, credentials)
@@ -145,13 +144,13 @@ def get_optional_user(
         return None
     
     auth_service = AuthService(db)
-    return auth_service.get_user_by_id(user_id)
+    return await auth_service.get_user_by_id(user_id)
 
 
 async def get_current_business_id(
     request: Request,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ) -> str:
     """
     Get the current user's active business ID.
@@ -160,6 +159,7 @@ async def get_current_business_id(
     specific businesses. If not provided, defaults to the oldest business.
     """
     from app.models.business import Business
+    from sqlalchemy import select
     
     # Superadmins can access all businesses
     if current_user.is_superadmin:
@@ -168,10 +168,14 @@ async def get_current_business_id(
         
         if requested_business_id:
             # Validate the requested business exists
-            business = db.query(Business).filter(
+            stmt = select(Business).filter(
                 Business.id == requested_business_id,
                 Business.deleted_at.is_(None)
-            ).first()
+            )
+            result = db.execute(stmt)
+            if inspect.isawaitable(result):
+                result = await result
+            business = result.scalars().first()
             
             if not business:
                 raise HTTPException(
@@ -182,9 +186,13 @@ async def get_current_business_id(
             return str(business.id)
         
         # Default: return the oldest available business
-        first_business = db.query(Business).filter(
+        stmt = select(Business).filter(
             Business.deleted_at.is_(None)
-        ).order_by(Business.created_at.asc()).first()
+        ).order_by(Business.created_at.asc())
+        result = db.execute(stmt)
+        if inspect.isawaitable(result):
+            result = await result
+        first_business = result.scalars().first()
         
         if not first_business:
             raise HTTPException(
@@ -195,10 +203,14 @@ async def get_current_business_id(
         return str(first_business.id)
     
     # Regular users need an active BusinessUser record
-    business_user = db.query(BusinessUser).filter(
+    stmt = select(BusinessUser).filter(
         BusinessUser.user_id == current_user.id,
         BusinessUser.status == BusinessUserStatus.ACTIVE
-    ).first()
+    )
+    result = db.execute(stmt)
+    if inspect.isawaitable(result):
+        result = await result
+    business_user = result.scalars().first()
     
     if not business_user:
         raise HTTPException(
@@ -210,7 +222,7 @@ async def get_current_business_id(
 
 
 async def get_permission_service(
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     redis: Optional[Redis] = Depends(get_redis)
 ) -> PermissionService:
     """
@@ -255,7 +267,7 @@ def check_feature(feature_name: str):
         @router.get("/payroll/reports", dependencies=[Depends(check_feature("has_payroll"))])
         async def get_payroll_reports(
             current_user: User = Depends(get_current_active_user),
-            db: AsyncSession = Depends(get_db)
+            db=Depends(get_db)
         ):
             # Endpoint logic here - access already verified
     
@@ -301,7 +313,7 @@ async def check_device_limit(
     device_name: Optional[str] = Header(None, alias="X-Device-Name"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     permission_service: PermissionService = Depends(get_permission_service)
 ) -> dict:
     """
@@ -315,7 +327,7 @@ async def check_device_limit(
         async def sync_data(
             device: dict = Depends(check_device_limit),
             current_user: User = Depends(get_current_active_user),
-            db: AsyncSession = Depends(get_db)
+            db=Depends(get_db)
         ):
             # Sync logic here - device already validated
     
@@ -411,7 +423,7 @@ async def require_superadmin(
         @router.post("/admin/subscriptions", dependencies=[Depends(require_superadmin)])
         async def create_subscription(
             current_user: User = Depends(require_superadmin),
-            db: AsyncSession = Depends(get_db)
+            db=Depends(get_db)
         ):
             # Admin endpoint logic here - SuperAdmin access verified
     

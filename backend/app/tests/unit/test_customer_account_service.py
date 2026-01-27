@@ -905,3 +905,49 @@ class TestPaymentRecording:
         # Should have no allocations yet
         assert payment.allocated_amount == Decimal('0')
         assert payment.unallocated_amount == Decimal('500')
+
+
+
+class TestPaymentAllocation:
+    """Test suite for payment allocation (FIFO) functionality."""
+
+    @pytest.fixture
+    def business(self, db_session):
+        """Create a test business."""
+        from app.models.organization import Organization
+        from app.models.user import User, UserStatus, SubscriptionStatus
+        from app.core.security import get_password_hash
+        
+        # Create user first
+        user = User(
+            email="test@example.com",
+            hashed_password=get_password_hash("testpassword"),
+            first_name="Test",
+            last_name="User",
+            is_email_verified=True,
+            status=UserStatus.ACTIVE,
+            subscription_status=SubscriptionStatus.ACTIVE,
+        )
+        db_session.add(user)
+        db_session.flush()
+        
+        # Create organization
+        org = Organization(
+            name="Test Organization",
+            slug="test-org",
+            owner_id=user.id,
+        )
+        db_session.add(org)
+        db_session.flush()
+        
+        # Create business
+        from app.models.business import Business
+        business = Business(
+            name="Test Business",
+            slug="test-business",
+            organization_id=org.id,
+            currency="USD",
+        )
+        db_session.add(business)
+        db_session.commit()
+        return business

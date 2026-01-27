@@ -1,7 +1,5 @@
 'use client'
 
-import { useId } from 'react'
-
 interface LogoProps {
   width?: number
   height?: number
@@ -9,7 +7,7 @@ interface LogoProps {
 }
 
 export function Logo({ width = 32, height = 32, className = '' }: LogoProps) {
-  const gradientId = useId()
+  const gradientId = 'bizpilot-logo-gradient'
 
   return (
     <svg 
