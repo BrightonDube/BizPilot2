@@ -18,13 +18,17 @@ class TestCustomerAccountService:
     @pytest.fixture
     def business(self, db_session):
         """Create a test business."""
+        import uuid
         from app.models.organization import Organization
         from app.models.user import User, UserStatus, SubscriptionStatus
         from app.core.security import get_password_hash
         
+        # Use unique identifier to avoid collisions
+        unique_id = uuid.uuid4().hex[:8]
+        
         # Create user first (required for organization owner)
         user = User(
-            email="test@example.com",
+            email=f"test-{unique_id}@example.com",
             hashed_password=get_password_hash("testpassword"),
             first_name="Test",
             last_name="User",
@@ -37,8 +41,8 @@ class TestCustomerAccountService:
         
         # Create organization
         org = Organization(
-            name="Test Organization",
-            slug="test-org",
+            name=f"Test Organization {unique_id}",
+            slug=f"test-org-{unique_id}",
             owner_id=user.id,
         )
         db_session.add(org)
@@ -46,10 +50,10 @@ class TestCustomerAccountService:
         
         # Create business
         business = Business(
-            name="Test Business",
-            slug="test-business",
+            name=f"Test Business {unique_id}",
+            slug=f"test-business-{unique_id}",
             organization_id=org.id,
-            email="test@business.com",
+            email=f"test-{unique_id}@business.com",
             phone="1234567890",
         )
         db_session.add(business)
@@ -60,12 +64,14 @@ class TestCustomerAccountService:
     @pytest.fixture
     def customer(self, db_session, business):
         """Create a test customer."""
+        import uuid
+        unique_id = uuid.uuid4().hex[:8]
         customer = Customer(
             business_id=business.id,
             customer_type=CustomerType.INDIVIDUAL,
             first_name="John",
             last_name="Doe",
-            email="john.doe@example.com",
+            email=f"john.doe-{unique_id}@example.com",
             phone="1234567890",
         )
         db_session.add(customer)
@@ -105,12 +111,14 @@ class TestCustomerAccountService:
         db_session.commit()
         
         # Create second customer
+        import uuid
+        unique_id = uuid.uuid4().hex[:8]
         customer2 = Customer(
             business_id=business.id,
             customer_type=CustomerType.INDIVIDUAL,
             first_name="Jane",
             last_name="Smith",
-            email="jane.smith@example.com",
+            email=f"jane.smith-{unique_id}@example.com",
             phone="0987654321",
         )
         db_session.add(customer2)
@@ -699,40 +707,40 @@ class TestPaymentRecording:
         assert payment.notes == "Partial payment - customer will pay balance next week"
 
     def test_record_payment_zero_amount_fails(self, service, active_account, user):
-        """Test that recording payment with zero amount fails."""
+        """Test that recording payment with zero amount fails at schema validation."""
         from app.schemas.customer_account import PaymentCreate
+        from pydantic import ValidationError
         
-        payment_data = PaymentCreate(
-            amount=Decimal('0'),
-            payment_method="cash",
-        )
-        
-        with pytest.raises(ValueError, match="must be positive"):
-            service.record_payment(active_account, payment_data, user.id)
+        # Pydantic schema validates amount > 0
+        with pytest.raises(ValidationError):
+            PaymentCreate(
+                amount=Decimal('0'),
+                payment_method="cash",
+            )
 
     def test_record_payment_negative_amount_fails(self, service, active_account, user):
-        """Test that recording payment with negative amount fails."""
+        """Test that recording payment with negative amount fails at schema validation."""
         from app.schemas.customer_account import PaymentCreate
+        from pydantic import ValidationError
         
-        payment_data = PaymentCreate(
-            amount=Decimal('-100'),
-            payment_method="cash",
-        )
-        
-        with pytest.raises(ValueError, match="must be positive"):
-            service.record_payment(active_account, payment_data, user.id)
+        # Pydantic schema validates amount > 0
+        with pytest.raises(ValidationError):
+            PaymentCreate(
+                amount=Decimal('-100'),
+                payment_method="cash",
+            )
 
     def test_record_payment_empty_method_fails(self, service, active_account, user):
-        """Test that recording payment with empty payment method fails."""
+        """Test that recording payment with empty payment method fails at schema validation."""
         from app.schemas.customer_account import PaymentCreate
+        from pydantic import ValidationError
         
-        payment_data = PaymentCreate(
-            amount=Decimal('100'),
-            payment_method="",
-        )
-        
-        with pytest.raises(ValueError, match="Payment method is required"):
-            service.record_payment(active_account, payment_data, user.id)
+        # Pydantic schema validates payment_method is not empty
+        with pytest.raises(ValidationError):
+            PaymentCreate(
+                amount=Decimal('100'),
+                payment_method="",
+            )
 
     def test_record_payment_whitespace_method_fails(self, service, active_account, user):
         """Test that recording payment with whitespace-only payment method fails."""
@@ -914,13 +922,17 @@ class TestPaymentAllocation:
     @pytest.fixture
     def business(self, db_session):
         """Create a test business."""
+        import uuid
         from app.models.organization import Organization
         from app.models.user import User, UserStatus, SubscriptionStatus
         from app.core.security import get_password_hash
         
+        # Use unique identifier to avoid collisions
+        unique_id = uuid.uuid4().hex[:8]
+        
         # Create user first
         user = User(
-            email="test@example.com",
+            email=f"test-alloc-{unique_id}@example.com",
             hashed_password=get_password_hash("testpassword"),
             first_name="Test",
             last_name="User",
@@ -933,8 +945,8 @@ class TestPaymentAllocation:
         
         # Create organization
         org = Organization(
-            name="Test Organization",
-            slug="test-org",
+            name=f"Test Organization {unique_id}",
+            slug=f"test-org-alloc-{unique_id}",
             owner_id=user.id,
         )
         db_session.add(org)
@@ -943,8 +955,8 @@ class TestPaymentAllocation:
         # Create business
         from app.models.business import Business
         business = Business(
-            name="Test Business",
-            slug="test-business",
+            name=f"Test Business {unique_id}",
+            slug=f"test-business-alloc-{unique_id}",
             organization_id=org.id,
             currency="USD",
         )

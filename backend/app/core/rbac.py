@@ -1,21 +1,45 @@
 """Role-Based Access Control (RBAC) dependencies and decorators."""
 
+import inspect
 from typing import List, Optional
 from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.models.business_user import BusinessUser
+from app.models.role import Role
 
 
-def get_user_permissions(db: Session, user_id: str, business_id: str) -> List[str]:
+async def get_user_business_users(db, user_id: str) -> List[BusinessUser]:
+    """Get all business_users for a user with roles eagerly loaded."""
+    stmt = (
+        select(BusinessUser)
+        .where(BusinessUser.user_id == user_id)
+        .options(selectinload(BusinessUser.role))
+    )
+    result = db.execute(stmt)
+    if inspect.isawaitable(result):
+        result = await result
+    return list(result.scalars().all())
+
+
+async def get_user_permissions(db, user_id: str, business_id: str) -> List[str]:
     """Get all permissions for a user in a specific business."""
-    business_user = db.query(BusinessUser).filter(
-        BusinessUser.user_id == user_id,
-        BusinessUser.business_id == business_id,
-    ).first()
+    stmt = (
+        select(BusinessUser)
+        .where(
+            BusinessUser.user_id == user_id,
+            BusinessUser.business_id == business_id,
+        )
+        .options(selectinload(BusinessUser.role))
+    )
+    result = db.execute(stmt)
+    if inspect.isawaitable(result):
+        result = await result
+    business_user = result.scalars().first()
     
     if not business_user or not business_user.role:
         return []
@@ -41,16 +65,17 @@ def has_permission(permission: str, business_id: Optional[str] = None):
         # For now, if no business_id is provided, we check if user has the permission
         # in any of their businesses
         if business_id:
-            permissions = get_user_permissions(db, str(current_user.id), business_id)
+            permissions = await get_user_permissions(db, str(current_user.id), business_id)
             if permission not in permissions:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=f"Permission denied: {permission}",
                 )
         else:
-            # Check if user has permission in any business
+            # Check if user has permission in any business - use async-safe query
+            business_users = await get_user_business_users(db, str(current_user.id))
             has_perm = False
-            for bu in current_user.business_users:
+            for bu in business_users:
                 if bu.role and bu.role.has_permission(permission):
                     has_perm = True
                     break
@@ -75,15 +100,17 @@ def has_any_permission(permissions: List[str], business_id: Optional[str] = None
         db: Session = Depends(get_db),
     ) -> User:
         if business_id:
-            user_permissions = get_user_permissions(db, str(current_user.id), business_id)
+            user_permissions = await get_user_permissions(db, str(current_user.id), business_id)
             if not any(p in user_permissions for p in permissions):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Permission denied",
                 )
         else:
+            # Use async-safe query instead of lazy loading
+            business_users = await get_user_business_users(db, str(current_user.id))
             has_perm = False
-            for bu in current_user.business_users:
+            for bu in business_users:
                 if bu.role:
                     for p in permissions:
                         if bu.role.has_permission(p):
@@ -112,16 +139,17 @@ def has_all_permissions(permissions: List[str], business_id: Optional[str] = Non
         db: Session = Depends(get_db),
     ) -> User:
         if business_id:
-            user_permissions = get_user_permissions(db, str(current_user.id), business_id)
+            user_permissions = await get_user_permissions(db, str(current_user.id), business_id)
             if not all(p in user_permissions for p in permissions):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Permission denied",
                 )
         else:
-            # Check if user has all permissions in any single business
+            # Check if user has all permissions in any single business - use async-safe query
+            business_users = await get_user_business_users(db, str(current_user.id))
             has_all = False
-            for bu in current_user.business_users:
+            for bu in business_users:
                 if bu.role:
                     user_perms = bu.role.get_permissions()
                     if all(p in user_perms for p in permissions):
@@ -162,9 +190,10 @@ class RequirePermission:
         current_user: User = Depends(get_current_active_user),
         db: Session = Depends(get_db),
     ) -> User:
-        # Check if user has permission in any business
+        # Check if user has permission in any business - use async-safe query
+        business_users = await get_user_business_users(db, str(current_user.id))
         has_perm = False
-        for bu in current_user.business_users:
+        for bu in business_users:
             if bu.role and bu.role.has_permission(self.permission):
                 has_perm = True
                 break

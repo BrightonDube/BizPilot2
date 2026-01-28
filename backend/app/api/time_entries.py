@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id, check_feature
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -213,7 +213,7 @@ def _entry_to_response(entry: TimeEntry, user: Optional[User] = None) -> TimeEnt
 async def get_clock_status(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get current clock status for the authenticated user."""
     service = TimeTrackingService(db)
@@ -237,7 +237,7 @@ async def clock_in(
     data: TimeEntryCreate,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Clock in for the current user."""
     service = TimeTrackingService(db)
@@ -263,7 +263,7 @@ async def clock_out(
     data: TimeEntryUpdate,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Clock out for the current user."""
     service = TimeTrackingService(db)
@@ -286,7 +286,7 @@ async def clock_out(
 async def start_break(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Start a break for the current user."""
     service = TimeTrackingService(db)
@@ -302,7 +302,7 @@ async def start_break(
 async def end_break(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """End a break for the current user."""
     service = TimeTrackingService(db)
@@ -324,7 +324,7 @@ async def list_time_entries(
     status_filter: Optional[str] = Query(None, alias="status"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List time entries with filtering."""
     service = TimeTrackingService(db)
@@ -382,7 +382,7 @@ async def get_my_time_summary(
     date_to: Optional[date] = None,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get time summary for the current user."""
     service = TimeTrackingService(db)
@@ -420,7 +420,7 @@ async def get_user_time_summary(
     date_to: Optional[date] = None,
     current_user: User = Depends(has_permission("reports:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get time summary for a specific user (requires reports:view permission)."""
     service = TimeTrackingService(db)
@@ -457,7 +457,7 @@ async def get_payroll_report(
     date_to: Optional[date] = None,
     current_user: User = Depends(has_permission("reports:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get payroll report for all users (requires reports:view permission and payroll feature)."""
     service = TimeTrackingService(db)
@@ -493,7 +493,7 @@ async def export_payroll_report(
     date_to: Optional[date] = None,
     current_user: User = Depends(has_permission("reports:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Export payroll report to Excel (requires reports:view permission and payroll feature)."""
     # openpyxl imported at module level for efficiency
@@ -590,7 +590,7 @@ async def create_manual_entry(
     data: TimeEntryManualCreate,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a manual time entry (requires users:manage permission)."""
     if data.clock_out < data.clock_in:
@@ -627,7 +627,7 @@ async def approve_time_entry(
     data: TimeEntryApproval,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Approve or reject a time entry (requires users:manage permission)."""
     entry = db.query(TimeEntry).filter(
@@ -669,7 +669,7 @@ async def inline_edit_time_entry(
     data: TimeEntryInlineUpdate,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Inline edit time entry (admin/manager only)."""
     service = TimeTrackingService(db)
@@ -695,7 +695,7 @@ async def get_team_time_entries(
     end_date: Optional[date] = Query(None),
     current_user: User = Depends(has_permission("reports:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get team time entries grouped by user."""
     service = TimeTrackingService(db)
@@ -721,7 +721,7 @@ async def get_team_time_entries(
 async def get_currently_working_users(
     current_user: User = Depends(has_permission("reports:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get list of currently working users."""
     service = TimeTrackingService(db)
@@ -734,7 +734,7 @@ async def get_currently_working_users(
 async def run_day_end_process(
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Run day-end process to auto clock-out employees."""
     service = TimeTrackingService(db)
@@ -747,7 +747,7 @@ async def run_day_end_process(
 async def get_business_time_settings(
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get business time tracking settings (requires users:manage permission and payroll feature)."""
     service = TimeTrackingService(db)
@@ -770,7 +770,7 @@ async def update_business_time_settings(
     data: BusinessTimeSettingsUpdate,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update business time tracking settings (requires users:manage permission and payroll feature)."""
     from datetime import time as dt_time

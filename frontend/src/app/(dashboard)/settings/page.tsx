@@ -380,7 +380,7 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle tier upgrade
+  // Handle tier upgrade - initiate checkout directly for logged-in users
   const handleUpgrade = async (tier: SubscriptionTier) => {
     // Handle Enterprise tier with custom pricing
     if (PricingUtils.hasCustomPricing(tier)) {
@@ -389,7 +389,36 @@ export default function SettingsPage() {
       return;
     }
     
-    router.push(`/pricing?tier=${encodeURIComponent(tier.id)}&cycle=${encodeURIComponent(selectedBillingCycle)}`);
+    // For free tier, just update subscription
+    if (tier.monthlyPrice === 0) {
+      try {
+        await subscriptionApi.updateSubscription(tier.id, selectedBillingCycle);
+        fetchSubscription();
+        return;
+      } catch (error) {
+        console.error('Failed to update subscription:', error);
+        return;
+      }
+    }
+    
+    // For paid tiers, initiate checkout directly
+    try {
+      const response = await apiClient.post<{
+        reference: string;
+        authorization_url: string;
+        access_code: string;
+      }>('/payments/checkout/initiate', {
+        tier_id: tier.id,
+        billing_cycle: selectedBillingCycle,
+      });
+      
+      // Redirect to Paystack payment page
+      window.location.href = response.data.authorization_url;
+    } catch (error) {
+      console.error('Failed to initiate checkout:', error);
+      // Fallback: show error or redirect to settings with error
+      alert('Failed to initiate payment. Please try again.');
+    }
   };
 
   const formatPrice = (cents: number) => {

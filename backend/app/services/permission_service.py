@@ -8,6 +8,7 @@ Requirements: 1.1, 1.2, 2.1, 2.2, 2.3, 2.4, 4.1, 4.2, 5.1, 5.2, 5.3, 5.4, 5.5, 6
 
 from datetime import datetime, timezone
 from typing import Optional
+import inspect
 import json
 import logging
 from uuid import UUID
@@ -163,10 +164,12 @@ class PermissionService:
         Returns:
             BusinessSubscription or None if not found
         """
-        result = await self.db.execute(
+        result = self.db.execute(
             select(BusinessSubscription)
             .where(BusinessSubscription.business_id == business_id)
         )
+        if inspect.isawaitable(result):
+            result = await result
         return result.scalar_one_or_none()
     
     async def _load_permissions_from_db(
@@ -284,10 +287,12 @@ class PermissionService:
         Validates: Requirement 1.1
         """
         # Load tier configuration
-        result = await self.db.execute(
+        result = self.db.execute(
             select(TierFeature)
             .where(TierFeature.tier_name == tier_name)
         )
+        if inspect.isawaitable(result):
+            result = await result
         tier = result.scalar_one_or_none()
         
         if not tier:
@@ -330,10 +335,12 @@ class PermissionService:
         
         Validates: Requirements 2.2, 2.3
         """
-        result = await self.db.execute(
+        result = self.db.execute(
             select(FeatureOverride)
             .where(FeatureOverride.business_id == business_id)
         )
+        if inspect.isawaitable(result):
+            result = await result
         return list(result.scalars().all())
     
     def _apply_overrides(
@@ -398,13 +405,15 @@ class PermissionService:
         Validates: Requirements 3.1, 3.2
         """
         # Check for max_devices override
-        result = await self.db.execute(
+        result = self.db.execute(
             select(FeatureOverride)
             .where(
                 FeatureOverride.business_id == business_id,
                 FeatureOverride.feature_name == "max_devices"
             )
         )
+        if inspect.isawaitable(result):
+            result = await result
         override = result.scalar_one_or_none()
         
         if override:
@@ -415,10 +424,12 @@ class PermissionService:
                 pass  # Fall through to tier default
         
         # Load tier default
-        result = await self.db.execute(
+        result = self.db.execute(
             select(TierFeature)
             .where(TierFeature.tier_name == subscription.tier_name)
         )
+        if inspect.isawaitable(result):
+            result = await result
         tier = result.scalar_one_or_none()
         
         if tier and tier.max_devices is not None:

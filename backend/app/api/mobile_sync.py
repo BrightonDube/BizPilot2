@@ -19,7 +19,7 @@ from app.api.deps import (
     check_device_limit,
     get_permission_service
 )
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.models.user import User
 from app.services.permission_service import PermissionService
 
@@ -50,7 +50,7 @@ async def sync_data(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     device: dict = Depends(check_device_limit),
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     permission_service: PermissionService = Depends(get_permission_service)
 ) -> SyncResponse:
     """

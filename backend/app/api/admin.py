@@ -8,7 +8,7 @@ from sqlalchemy import or_, func
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.models.base import utc_now
 from app.core.admin import require_admin
 from app.models.user import User, UserStatus, SubscriptionStatus
@@ -168,7 +168,7 @@ async def list_users(
     subscription_status: Optional[SubscriptionStatus] = None,
     tier_id: Optional[UUID] = None,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all users with pagination and filters."""
     query = db.query(User).filter(User.deleted_at.is_(None))
@@ -241,7 +241,7 @@ async def list_users(
 async def get_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific user's details."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -271,7 +271,7 @@ async def update_user(
     user_id: UUID,
     data: UserUpdateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's basic information."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -298,7 +298,7 @@ async def update_user(
 async def delete_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Soft delete a user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -320,7 +320,7 @@ async def delete_user(
 async def block_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Block/suspend a user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -340,7 +340,7 @@ async def block_user(
 async def unblock_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Unblock a suspended user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -363,7 +363,7 @@ async def update_user_subscription(
     user_id: UUID,
     data: SubscriptionUpdateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's subscription status and tier."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -392,7 +392,7 @@ async def update_user_subscription(
 async def pause_user_subscription(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Pause a user's subscription (admin override)."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -409,7 +409,7 @@ async def pause_user_subscription(
 async def unpause_user_subscription(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Unpause a user's subscription."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -432,7 +432,7 @@ async def update_feature_overrides(
     user_id: UUID,
     data: FeatureOverrideRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's feature overrides (enable/disable specific features)."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -454,7 +454,7 @@ async def remove_feature_override(
     user_id: UUID,
     feature: str,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Remove a specific feature override for a user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -477,7 +477,7 @@ async def remove_feature_override(
 async def list_tiers(
     include_inactive: bool = False,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all subscription tiers."""
     query = db.query(SubscriptionTier).filter(SubscriptionTier.deleted_at.is_(None))
@@ -492,7 +492,7 @@ async def list_tiers(
 async def create_tier(
     data: TierCreateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new subscription tier."""
     # Check if name already exists
@@ -515,7 +515,7 @@ async def update_tier(
     tier_id: UUID,
     data: TierUpdateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a subscription tier."""
     tier = db.query(SubscriptionTier).filter(
@@ -538,7 +538,7 @@ async def update_tier(
 async def delete_tier(
     tier_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Soft delete a subscription tier."""
     tier = db.query(SubscriptionTier).filter(
@@ -566,7 +566,7 @@ async def delete_tier(
 @router.post("/tiers/seed")
 async def seed_default_tiers(
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Seed default subscription tiers from configuration."""
     created = []
@@ -586,7 +586,7 @@ async def seed_default_tiers(
 @router.post("/seed/essential")
 async def seed_essential_data(
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Seed essential production data (tiers, roles, categories).
@@ -649,7 +649,7 @@ async def seed_essential_data(
 @router.get("/stats", response_model=AdminStatsResponse)
 async def get_admin_stats(
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get admin dashboard statistics."""
     total_users = db.query(User).filter(User.deleted_at.is_(None)).count()
@@ -713,7 +713,7 @@ async def list_transactions(
     user_id: Optional[UUID] = None,
     status: Optional[str] = None,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List subscription transactions."""
     query = db.query(SubscriptionTransaction)
@@ -743,7 +743,7 @@ async def list_transactions(
 @router.get("/subscriptions", response_model=List[dict])
 async def list_business_subscriptions(
     current_user: User = Depends(require_superadmin),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     List all business subscriptions with current tier and status.
@@ -762,8 +762,8 @@ async def list_business_subscriptions(
     result = []
     for business in businesses:
         try:
-            # Get permissions for each business
-            permissions = perm_service.get_business_permissions(business.id)
+            # Get permissions for each business (async method)
+            permissions = await perm_service.get_business_permissions(business.id)
             
             # Get device count
             devices = device_service.get_business_devices(business.id)
@@ -771,12 +771,12 @@ async def list_business_subscriptions(
             result.append({
                 'business_id': business.id,
                 'business_name': business.name,
-                'tier_name': permissions.tier_name,
-                'status': permissions.status,
+                'tier_name': permissions.get('tier', 'none'),
+                'status': permissions.get('status', 'inactive'),
                 'device_count': len(devices),
-                'max_devices': permissions.max_devices,
-                'valid_until': permissions.valid_until,
-                'is_demo_expired': permissions.is_demo_expired
+                'max_devices': permissions.get('device_limit', 0),
+                'valid_until': permissions.get('demo_expires_at'),
+                'is_demo_expired': False  # Calculated from valid_until if needed
             })
         except Exception as e:
             # Log error but continue with other businesses
@@ -790,7 +790,7 @@ async def list_business_subscriptions(
 async def get_subscription_detail(
     business_id: int,
     current_user: User = Depends(require_superadmin),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Get detailed subscription info for a business.
@@ -814,8 +814,8 @@ async def get_subscription_detail(
     perm_service = PermissionService(db)
     device_service = DeviceService(db)
     
-    # Get permissions
-    permissions = perm_service.get_business_permissions(business_id)
+    # Get permissions (async method)
+    permissions = await perm_service.get_business_permissions(business_id)
     
     # Get devices
     devices = device_service.get_business_devices(business_id)
@@ -826,12 +826,12 @@ async def get_subscription_detail(
     return {
         'business_id': business.id,
         'business_name': business.name,
-        'tier_name': permissions.tier_name,
-        'status': permissions.status,
+        'tier_name': permissions.get('tier', 'none'),
+        'status': permissions.get('status', 'inactive'),
         'device_count': len(devices),
-        'max_devices': permissions.max_devices,
-        'valid_until': permissions.valid_until,
-        'permissions': permissions.model_dump(),
+        'max_devices': permissions.get('device_limit', 0),
+        'valid_until': permissions.get('demo_expires_at'),
+        'permissions': permissions,
         'overrides': overrides,
         'devices': [d.model_dump() if hasattr(d, 'model_dump') else d for d in devices]
     }
@@ -842,7 +842,7 @@ async def update_subscription_tier(
     business_id: int,
     tier_update: NewTierUpdateRequest,
     current_user: User = Depends(require_superadmin),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Update a business's subscription tier.
@@ -884,7 +884,7 @@ async def set_feature_overrides(
     business_id: int,
     overrides: FeatureOverridesRequest,
     current_user: User = Depends(require_superadmin),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Set or update feature overrides for a business.
@@ -933,7 +933,7 @@ async def remove_business_feature_override(
     business_id: int,
     feature_name: str,
     current_user: User = Depends(require_superadmin),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Remove a feature override, reverting to tier default.
@@ -975,7 +975,7 @@ async def remove_business_feature_override(
 async def list_business_devices(
     business_id: int,
     current_user: User = Depends(require_superadmin),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     List all devices for a business.
@@ -1005,7 +1005,7 @@ async def unlink_device(
     business_id: int,
     device_id: str,
     current_user: User = Depends(require_superadmin),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Unlink a device from a business.

@@ -9,7 +9,7 @@ import hashlib
 import logging
 import re
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.core.config import settings
 from app.api.deps import check_feature
 from app.models.user import User
@@ -283,8 +283,8 @@ class ContextResponse(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     request: ChatRequest,
-    current_user: User = Depends(check_feature("ai_assistant")),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(check_feature("has_ai")),
+    db=Depends(get_sync_db),
 ):
     """
     Chat with the AI assistant.
@@ -323,7 +323,7 @@ async def chat(
 async def guest_chat(
     request: GuestChatRequest,
     http_request: Request,
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Chat with the AI assistant for guest users (marketing context only).
@@ -472,8 +472,8 @@ async def guest_chat(
 
 @router.get("/conversations", response_model=list[ConversationResponse])
 async def list_conversations(
-    current_user: User = Depends(check_feature("ai_assistant")),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(check_feature("has_ai")),
+    db=Depends(get_sync_db),
 ):
     svc = AIService(db)
     convos = svc.list_conversations(current_user.id)
@@ -483,8 +483,8 @@ async def list_conversations(
 @router.post("/conversations", response_model=ConversationResponse)
 async def create_conversation(
     payload: ConversationCreateRequest,
-    current_user: User = Depends(check_feature("ai_assistant")),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(check_feature("has_ai")),
+    db=Depends(get_sync_db),
 ):
     svc = AIService(db)
     convo = svc.create_conversation(current_user.id, payload.title)
@@ -494,8 +494,8 @@ async def create_conversation(
 @router.delete("/conversations/{conversation_id}")
 async def delete_conversation(
     conversation_id: str,
-    current_user: User = Depends(check_feature("ai_assistant")),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(check_feature("has_ai")),
+    db=Depends(get_sync_db),
 ):
     svc = AIService(db)
     svc.delete_conversation(current_user.id, conversation_id)
@@ -505,8 +505,8 @@ async def delete_conversation(
 @router.get("/conversations/{conversation_id}/messages", response_model=list[MessageResponse])
 async def list_messages(
     conversation_id: str,
-    current_user: User = Depends(check_feature("ai_assistant")),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(check_feature("has_ai")),
+    db=Depends(get_sync_db),
 ):
     svc = AIService(db)
     msgs = svc.list_messages(current_user.id, conversation_id)
@@ -525,8 +525,8 @@ async def list_messages(
 async def send_message_to_conversation(
     conversation_id: str,
     request: ChatRequest,
-    current_user: User = Depends(check_feature("ai_assistant")),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(check_feature("has_ai")),
+    db=Depends(get_sync_db),
 ):
     svc = AIService(db)
     resp = await svc.send_message(user=current_user, content=request.message, conversation_id=conversation_id)
@@ -535,8 +535,8 @@ async def send_message_to_conversation(
 
 @router.get("/context", response_model=ContextResponse)
 async def get_ai_context(
-    current_user: User = Depends(check_feature("ai_assistant")),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(check_feature("has_ai")),
+    db=Depends(get_sync_db),
 ):
     svc = AIService(db)
     settings_row = svc.get_or_create_user_settings(current_user.id)

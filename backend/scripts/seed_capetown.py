@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import Session
 
-from app.core.database import SessionLocal
+from app.core.sync_database import SyncSessionLocal
 from app.core.security import get_password_hash
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.organization import Organization
@@ -80,7 +80,7 @@ def clear_all_data(db: Session):
         "layby_schedules",
         "layby_items",
         "laybys",
-        "layby_configs",
+        "layby_config",
         "production_orders",
         "favorite_products",
         "notifications",
@@ -153,7 +153,7 @@ def create_user(db: Session, tiers: dict) -> User:
     """Create demo user."""
     print("Creating demo user...")
 
-    email = "demo@bizpilotpro.app"
+    email = "demo@bizpilot.co.za"
     user = db.query(User).filter(User.email == email).first()
     if not user:
         user = User(email=email)
@@ -182,11 +182,8 @@ def create_superadmin(db: Session, tiers: dict) -> tuple[User, str]:
     """Create the single BizPilot superadmin user."""
     print("Creating superadmin user...")
 
-    password = os.getenv("BIZPILOT_SUPERADMIN_PASSWORD")
-    if not password:
-        password = secrets.token_urlsafe(24)
-
     email = "brightondube520@gmail.com"
+    password = "Admin@2026"
 
     # Ensure only this account can be superadmin
     db.query(User).filter(User.is_superadmin.is_(True), User.email != email).update(
@@ -199,7 +196,7 @@ def create_superadmin(db: Session, tiers: dict) -> tuple[User, str]:
         user = User(email=email)
         db.add(user)
 
-    user.hashed_password = get_password_hash("Admin@2026")
+    user.hashed_password = get_password_hash(password)
     user.first_name = "Brighton"
     user.last_name = "Dube"
     user.phone = None
@@ -612,6 +609,110 @@ def create_orders(db: Session, business: Business, customers: list, products: li
     
     print(f"  ✓ Orders: {len(orders)}")
     return orders
+
+
+def create_purchase_orders(db: Session, business: Business, suppliers: list, products: list) -> list:
+    """Create purchase orders (orders from suppliers)."""
+    print("Creating purchase orders...")
+    
+    from app.models.order import OrderDirection
+    
+    purchase_orders = []
+    po_num = 5000
+    
+    # Create purchase orders for past 90 days
+    for i in range(15):
+        order_date = datetime.now() - timedelta(days=random.randint(0, 90))
+        supplier = random.choice(suppliers)
+        
+        # 2-4 products per purchase order
+        num_items = random.randint(2, 4)
+        selected_products = random.sample(products, min(num_items, len(products)))
+        
+        subtotal = Decimal("0")
+        items_data = []
+        
+        for prod in selected_products:
+            # Purchase orders typically have higher quantities
+            qty = random.randint(10, 50)
+            # Use cost price for purchase orders
+            unit_price = prod.cost_price or (prod.selling_price * Decimal("0.6"))
+            line_total = unit_price * qty
+            tax = line_total * Decimal("0.15")
+            items_data.append({
+                "product": prod,
+                "quantity": qty,
+                "unit_price": unit_price,
+                "tax_amount": tax,
+                "total": line_total + tax,
+            })
+            subtotal += line_total
+        
+        tax_amount = subtotal * Decimal("0.15")
+        total = subtotal + tax_amount
+        
+        # Weighted status distribution for purchase orders
+        status_weights = [
+            (OrderStatus.DELIVERED, OrderPaymentStatus.PAID, 0.40),
+            (OrderStatus.SHIPPED, OrderPaymentStatus.PAID, 0.20),
+            (OrderStatus.PROCESSING, OrderPaymentStatus.PENDING, 0.15),
+            (OrderStatus.CONFIRMED, OrderPaymentStatus.PENDING, 0.15),
+            (OrderStatus.PENDING, OrderPaymentStatus.PENDING, 0.10),
+        ]
+        
+        rand = random.random()
+        cumulative = 0
+        order_status = OrderStatus.PENDING
+        payment_status = OrderPaymentStatus.PENDING
+        
+        for o_stat, p_stat, prob in status_weights:
+            cumulative += prob
+            if rand < cumulative:
+                order_status = o_stat
+                payment_status = p_stat
+                break
+        
+        amount_paid = total if payment_status == OrderPaymentStatus.PAID else Decimal("0")
+        
+        order = Order(
+            business_id=business.id,
+            supplier_id=supplier.id,
+            direction=OrderDirection.OUTBOUND,
+            order_number=f"PO-{po_num}",
+            status=order_status,
+            payment_status=payment_status,
+            subtotal=subtotal,
+            tax_amount=tax_amount,
+            total=total,
+            amount_paid=amount_paid,
+            payment_method="bank_transfer" if payment_status == OrderPaymentStatus.PAID else None,
+            order_date=order_date,
+            source="manual",
+            notes=f"Purchase order from {supplier.name}",
+        )
+        db.add(order)
+        db.flush()
+        
+        for item_data in items_data:
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=item_data["product"].id,
+                name=item_data["product"].name,
+                sku=item_data["product"].sku,
+                unit_price=item_data["unit_price"],
+                quantity=item_data["quantity"],
+                tax_rate=Decimal("15.00"),
+                tax_amount=item_data["tax_amount"],
+                total=item_data["total"],
+            )
+            db.add(order_item)
+        
+        purchase_orders.append(order)
+        po_num += 1
+    
+    db.commit()
+    print(f"  ✓ Purchase Orders: {len(purchase_orders)}")
+    return purchase_orders
 
 
 def create_invoices(db: Session, business: Business, orders: list) -> list:
@@ -1035,7 +1136,7 @@ def main():
     print("BizPilot Cape Town Comprehensive Seed Script")
     print("=" * 60 + "\n")
     
-    db = SessionLocal()
+    db = SyncSessionLocal()
     
     try:
         clear_all_data(db)
@@ -1060,6 +1161,7 @@ def main():
         
         # Orders and invoices
         orders = create_orders(db, business, customers, products)
+        purchase_orders = create_purchase_orders(db, business, suppliers, products)
         invoices = create_invoices(db, business, orders)
         
         # Staff and operations
@@ -1089,12 +1191,8 @@ def main():
         print("   Subscription: Pilot Pro (Active)")
 
         print("\n🔐 Superadmin Login (BizPilot platform admin):")
-        print("   Email: admin@bizpilot.co.za")
-        if os.getenv("BIZPILOT_SUPERADMIN_PASSWORD"):
-            print("   Password: (from BIZPILOT_SUPERADMIN_PASSWORD env var)")
-        else:
-            print(f"   Password: {superadmin_password}")
-            print("   NOTE: Password was auto-generated. Set BIZPILOT_SUPERADMIN_PASSWORD to control it.")
+        print(f"   Email: {superadmin_user.email}")
+        print(f"   Password: {superadmin_password}")
         print(f"\n🏢 Business: {business.name}")
         print("   Location: Cape Town, Western Cape")
         print("   Currency: ZAR | VAT: 15%")
@@ -1105,7 +1203,8 @@ def main():
         print(f"   Inventory Items:     {len(inventory)}")
         print(f"   Customers:           {len(customers)}")
         print(f"   Suppliers:           {len(suppliers)}")
-        print(f"   Orders:              {len(orders)}")
+        print(f"   Sales Orders:        {len(orders)}")
+        print(f"   Purchase Orders:     {len(purchase_orders)}")
         print(f"   Invoices:            {len(invoices)}")
         print(f"   Departments:         {len(departments)}")
         print(f"   Time Entries:        {len(time_entries)}")

@@ -1,0 +1,75 @@
+PostgreSQL Complete Reinstall - Manual Steps
+============================================
+
+NEW POSTGRES PASSWORD: BizPilot2026!
+
+STEP 1: Uninstall PostgreSQL
+-----------------------------
+1. Open PowerShell as Administrator
+2. Run these commands:
+
+cd "C:\Program Files\PostgreSQL\17"
+.\uninstall-postgresql.exe --mode unattended
+
+cd "C:\Program Files\PostgreSQL\18"
+.\uninstall-postgresql.exe --mode unattended
+
+STEP 2: Clean Up
+----------------
+Delete these folders if they exist:
+- C:\Program Files\PostgreSQL
+- %LOCALAPPDATA%\PostgreSQL
+- %APPDATA%\postgresql
+
+STEP 3: Download PostgreSQL 18
+-------------------------------
+Download from: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
+Select: PostgreSQL 18.1 for Windows x86-64
+
+STEP 4: Install PostgreSQL 18
+------------------------------
+1. Run the installer
+2. When prompted for password, enter: BizPilot2026!
+3. Port: 5432
+4. Locale: Default
+5. Complete installation
+
+STEP 5: Create Database (Run in PowerShell as Admin)
+-----------------------------------------------------
+$env:PGPASSWORD = "BizPilot2026!"
+cd "C:\Program Files\PostgreSQL\18\bin"
+
+.\psql.exe -U postgres -h localhost -p 5432 -c "DROP DATABASE IF EXISTS bizpilot;"
+.\psql.exe -U postgres -h localhost -p 5432 -c "CREATE DATABASE bizpilot;"
+.\psql.exe -U postgres -h localhost -p 5432 -c "DROP USER IF EXISTS bizpilot_user;"
+.\psql.exe -U postgres -h localhost -p 5432 -c "CREATE USER bizpilot_user WITH LOGIN PASSWORD 'btXZ6v71UVjzTCnaFWqe9oY4';"
+.\psql.exe -U postgres -h localhost -p 5432 -c "GRANT ALL PRIVILEGES ON DATABASE bizpilot TO bizpilot_user;"
+
+.\psql.exe -U postgres -h localhost -p 5432 -d bizpilot -c "GRANT ALL ON SCHEMA public TO bizpilot_user;"
+.\psql.exe -U postgres -h localhost -p 5432 -d bizpilot -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO bizpilot_user;"
+.\psql.exe -U postgres -h localhost -p 5432 -d bizpilot -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO bizpilot_user;"
+
+STEP 6: Run Migrations
+-----------------------
+cd backend
+alembic upgrade head
+
+STEP 7: Seed Database
+----------------------
+python init_local_db.py
+
+STEP 8: Start Backend
+----------------------
+uvicorn app.main:app --reload
+
+CREDENTIALS SUMMARY:
+====================
+Postgres Superuser:
+  Username: postgres
+  Password: BizPilot2026!
+
+BizPilot Database:
+  Database: bizpilot
+  Username: bizpilot_user
+  Password: btXZ6v71UVjzTCnaFWqe9oY4
+  Connection: postgresql+asyncpg://bizpilot_user:btXZ6v71UVjzTCnaFWqe9oY4@localhost:5432/bizpilot

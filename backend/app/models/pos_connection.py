@@ -48,11 +48,28 @@ class POSConnection(BaseModel):
     name = Column(String(255), nullable=False)  # User-friendly name for the connection
     
     # Connection credentials (encrypted in production)
-    api_key = Column(Text, nullable=True)
+    _api_key_encrypted = Column("api_key", Text, nullable=True)  # Encrypted storage
     api_secret = Column(Text, nullable=True)
     access_token = Column(Text, nullable=True)
     refresh_token = Column(Text, nullable=True)
     token_expires_at = Column(DateTime, nullable=True)
+    
+    @property
+    def api_key(self) -> str:
+        """Decrypt and return API key."""
+        from app.core.encryption import decrypt_field
+        if not self._api_key_encrypted:
+            return None
+        return decrypt_field(self._api_key_encrypted)
+    
+    @api_key.setter
+    def api_key(self, value: str) -> None:
+        """Encrypt and store API key."""
+        from app.core.encryption import encrypt_field
+        if value:
+            self._api_key_encrypted = encrypt_field(value)
+        else:
+            self._api_key_encrypted = None
     
     # Connection config
     base_url = Column(String(500), nullable=True)  # For custom integrations

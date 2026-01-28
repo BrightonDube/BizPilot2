@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_business_id, get_current_active_user
 from app.core.rbac import has_permission
 from app.models.product import Product, ProductStatus
@@ -91,7 +91,7 @@ async def list_product_ingredients(
     product_id: str,
     current_user: User = Depends(has_permission("products:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     service = ProductService(db)
     product = service.get_product(product_id, business_id)
@@ -122,7 +122,7 @@ async def create_product_ingredient(
     data: ProductIngredientCreate,
     current_user: User = Depends(has_permission("products:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     service = ProductService(db)
     product = service.get_product(product_id, business_id)
@@ -151,7 +151,7 @@ async def update_product_ingredient(
     data: ProductIngredientUpdate,
     current_user: User = Depends(has_permission("products:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     service = ProductService(db)
     product = service.get_product(product_id, business_id)
@@ -190,7 +190,7 @@ async def delete_product_ingredient(
     ingredient_id: str,
     current_user: User = Depends(has_permission("products:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     service = ProductService(db)
     product = service.get_product(product_id, business_id)
@@ -225,7 +225,7 @@ async def list_products(
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(has_permission("products:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     List products with filtering and pagination.
@@ -259,7 +259,7 @@ async def get_product(
     product_id: str,
     current_user: User = Depends(has_permission("products:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a product by ID."""
     service = ProductService(db)
@@ -279,7 +279,7 @@ async def create_product(
     data: ProductCreate,
     current_user: User = Depends(has_permission("products:create")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new product."""
     service = ProductService(db)
@@ -294,7 +294,7 @@ async def update_product(
     data: ProductUpdate,
     current_user: User = Depends(has_permission("products:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a product."""
     service = ProductService(db)
@@ -316,7 +316,7 @@ async def delete_product(
     product_id: str,
     current_user: User = Depends(has_permission("products:delete")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete a product."""
     service = ProductService(db)
@@ -336,7 +336,7 @@ async def bulk_create_products(
     data: ProductBulkCreate,
     current_user: User = Depends(has_permission("products:create")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create multiple products at once."""
     service = ProductService(db)
@@ -350,7 +350,7 @@ async def bulk_delete_products(
     data: ProductBulkDelete,
     current_user: User = Depends(has_permission("products:delete")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete multiple products at once."""
     service = ProductService(db)
@@ -364,7 +364,7 @@ async def bulk_delete_products(
 @router.get("/template/excel")
 async def get_product_template(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Download an empty Excel template for product import.
@@ -391,7 +391,7 @@ async def get_product_template(
 async def export_products_excel(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Export all products to Excel spreadsheet.
@@ -415,7 +415,7 @@ async def export_products_excel(
 async def import_products_excel(
     file: UploadFile = File(...),
     current_user: User = Depends(has_permission("products:create")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -490,7 +490,7 @@ async def get_product_suppliers(
     product_id: str,
     current_user: User = Depends(has_permission("products:read")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get all suppliers linked to a product."""
     from app.models.product_supplier import ProductSupplier
@@ -538,7 +538,7 @@ async def link_product_supplier(
     supplier_id: str,
     current_user: User = Depends(has_permission("products:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Link a product to a supplier."""
     from app.models.product_supplier import ProductSupplier
@@ -600,7 +600,7 @@ async def unlink_product_supplier(
     supplier_id: str,
     current_user: User = Depends(has_permission("products:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Remove the link between a product and supplier."""
     from datetime import datetime

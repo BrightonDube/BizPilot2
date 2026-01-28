@@ -4,7 +4,7 @@
  * Login page component with BizPilot styling.
  */
 
-import { Suspense, useState, useMemo, FormEvent } from 'react';
+import { Suspense, useState, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
@@ -33,30 +33,30 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [messageDismissed, setMessageDismissed] = useState(false);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
 
-  // Derive session expired message from URL params or sessionStorage
-  const sessionExpiredMessage = useMemo(() => {
-    if (messageDismissed) return null;
+  // Load session expired message on client-side only (useEffect)
+  // This prevents hydration mismatch
+  useEffect(() => {
+    if (messageDismissed) {
+      setSessionExpiredMessage(null);
+      return;
+    }
     
     // Check sessionStorage first (set by session manager)
-    if (typeof window !== 'undefined') {
-      const storedMessage = sessionStorage.getItem('session_expired_message');
-      if (storedMessage) {
-        // Clear the message so it doesn't show again
-        sessionStorage.removeItem('session_expired_message');
-        return storedMessage;
-      }
+    const storedMessage = sessionStorage.getItem('session_expired_message');
+    if (storedMessage) {
+      sessionStorage.removeItem('session_expired_message');
+      setSessionExpiredMessage(storedMessage);
+      return;
     }
     
     // Fall back to URL params
     if (searchParams.get('session_expired') === 'true') {
-      return 'Your session has expired. Please log in again.';
+      setSessionExpiredMessage('Your session has expired. Please log in again.');
+    } else if (searchParams.get('idle') === 'true') {
+      setSessionExpiredMessage('You were logged out due to inactivity.');
     }
-    if (searchParams.get('idle') === 'true') {
-      return 'You were logged out due to inactivity.';
-    }
-    
-    return null;
   }, [searchParams, messageDismissed]);
 
   // Redirect if already authenticated

@@ -83,8 +83,9 @@ export const departmentApi = {
    */
   async getDepartments(businessId: string): Promise<Department[]> {
     try {
+      // Backend gets business_id from user context, not URL
       const { data } = await apiClient.get<DepartmentListResponse>(
-        `/businesses/${businessId}/departments`
+        `/departments`
       );
       return data.departments;
     } catch (error) {
@@ -104,7 +105,7 @@ export const departmentApi = {
   async getDepartment(businessId: string, departmentId: string): Promise<Department> {
     try {
       const { data } = await apiClient.get<Department>(
-        `/businesses/${businessId}/departments/${departmentId}`
+        `/departments/${departmentId}`
       );
       return data;
     } catch (error) {
@@ -124,7 +125,7 @@ export const departmentApi = {
   async createDepartment(businessId: string, departmentData: DepartmentCreate): Promise<Department> {
     try {
       const { data } = await apiClient.post<Department>(
-        `/businesses/${businessId}/departments`,
+        `/departments`,
         departmentData
       );
       return data;
@@ -150,7 +151,7 @@ export const departmentApi = {
   ): Promise<Department> {
     try {
       const { data } = await apiClient.put<Department>(
-        `/businesses/${businessId}/departments/${departmentId}`,
+        `/departments/${departmentId}`,
         departmentData
       );
       return data;
@@ -171,7 +172,7 @@ export const departmentApi = {
    */
   async deleteDepartment(businessId: string, departmentId: string): Promise<void> {
     try {
-      await apiClient.delete(`/businesses/${businessId}/departments/${departmentId}`);
+      await apiClient.delete(`/departments/${departmentId}`);
     } catch (error) {
       handleApiError(error);
     }

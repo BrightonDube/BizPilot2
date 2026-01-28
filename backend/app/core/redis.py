@@ -8,11 +8,46 @@ Requirements: 17.1, 17.4
 import os
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 from redis import asyncio as aioredis
 from redis.asyncio import Redis
 from redis.exceptions import RedisError, ConnectionError as RedisConnectionError
 
 logger = logging.getLogger(__name__)
+
+
+def validate_redis_url(url: str, is_production: bool = False) -> str:
+    """
+    Validate and secure Redis URL.
+    
+    Security:
+    - Requires authentication in production
+    - Warns if TLS is not used in production
+    - Validates URL format
+    """
+    try:
+        parsed = urlparse(url)
+        
+        # Require authentication in production
+        if is_production:
+            if not parsed.password:
+                raise ValueError(
+                    "Redis password required in production. "
+                    "Use format: redis://:password@host:port/db or rediss://:password@host:port/db"
+                )
+            
+            # Warn if not using TLS in production
+            if parsed.scheme not in ["rediss", "redis+tls"]:
+                logger.warning(
+                    "Redis should use TLS in production (rediss:// or redis+tls://). "
+                    "Current scheme: %s", parsed.scheme
+                )
+        
+        return url
+    
+    except Exception as e:
+        logger.error(f"Invalid Redis URL: {e}")
+        raise ValueError(f"Invalid Redis URL format: {url}")
 
 
 class RedisManager:
@@ -38,23 +73,51 @@ class RedisManager:
         
         Attempts to connect to Redis. If connection fails, logs warning
         and sets _available to False for fallback mode.
+        
+        Security:
+        - Validates URL format
+        - Requires authentication in production
+        - Supports TLS connections
         """
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
+        
+        # Validate and secure Redis URL
+        try:
+            redis_url = validate_redis_url(redis_url, is_production)
+        except ValueError as e:
+            logger.error(f"Redis URL validation failed: {e}")
+            self._redis = None
+            self._available = False
+            return
         
         try:
+            # Configure SSL/TLS if using rediss://
+            connection_kwargs = {
+                "encoding": "utf-8",
+                "decode_responses": True,
+                "max_connections": 10,
+                "socket_connect_timeout": 5,
+                "socket_timeout": 5,
+            }
+            
+            # Add SSL support only if using secure Redis URL
+            if redis_url.startswith("rediss://"):
+                try:
+                    import ssl
+                    connection_kwargs["ssl"] = ssl.create_default_context()
+                except ImportError:
+                    logger.warning("SSL support requested but ssl module not available")
+            
             self._redis = await aioredis.from_url(
                 redis_url,
-                encoding="utf-8",
-                decode_responses=True,
-                max_connections=10,
-                socket_connect_timeout=5,
-                socket_timeout=5,
+                **connection_kwargs
             )
             
             # Test connection
             await self._redis.ping()
             self._available = True
-            logger.info(f"Redis connected successfully: {redis_url}")
+            logger.info(f"Redis connected successfully: {redis_url.split('@')[-1]}")  # Don't log password
             
         except (RedisError, RedisConnectionError, Exception) as e:
             logger.warning(

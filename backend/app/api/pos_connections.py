@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_business_id, check_feature
 from app.models.user import User
 from app.models.pos_connection import (
@@ -256,9 +256,9 @@ async def get_pos_providers():
 
 @router.get("", response_model=POSConnectionListResponse)
 async def list_pos_connections(
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all POS connections for the business."""
     connections = db.query(POSConnection).filter(
@@ -275,9 +275,9 @@ async def list_pos_connections(
 @router.get("/{connection_id}", response_model=POSConnectionResponse)
 async def get_pos_connection(
     connection_id: str,
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific POS connection."""
     connection = db.query(POSConnection).filter(
@@ -295,9 +295,9 @@ async def get_pos_connection(
 @router.post("", response_model=POSConnectionResponse, status_code=status.HTTP_201_CREATED)
 async def create_pos_connection(
     data: POSConnectionCreate,
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new POS connection."""
     # Validate provider
@@ -337,9 +337,9 @@ async def create_pos_connection(
 async def update_pos_connection(
     connection_id: str,
     data: POSConnectionUpdate,
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a POS connection."""
     connection = db.query(POSConnection).filter(
@@ -365,9 +365,9 @@ async def update_pos_connection(
 @router.delete("/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_pos_connection(
     connection_id: str,
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete a POS connection."""
     connection = db.query(POSConnection).filter(
@@ -386,9 +386,9 @@ async def delete_pos_connection(
 @router.post("/{connection_id}/test", response_model=SyncResponse)
 async def test_pos_connection(
     connection_id: str,
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Test a POS connection to verify credentials."""
     connection = db.query(POSConnection).filter(
@@ -416,9 +416,9 @@ async def test_pos_connection(
 async def trigger_sync(
     connection_id: str,
     data: SyncRequest,
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Trigger a sync operation for a POS connection."""
     connection = db.query(POSConnection).filter(
@@ -471,9 +471,9 @@ async def trigger_sync(
 async def get_sync_logs(
     connection_id: str,
     limit: int = Query(20, ge=1, le=100),
-    current_user: User = Depends(check_feature("api_integrations")),
+    current_user: User = Depends(check_feature("has_api_access")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get sync logs for a POS connection."""
     connection = db.query(POSConnection).filter(

@@ -7,25 +7,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  ShoppingBag,
   FileText,
   Sparkles,
   MoreHorizontal,
-  Warehouse,
-  Users,
-  Truck,
-  BarChart3,
-  Settings,
   LogOut,
   X,
 } from 'lucide-react';
+import { sidebarBottomNavigation, sidebarNavigation } from './nav-items';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -36,24 +31,46 @@ const navigation = [
   { name: 'More', href: '/menu', icon: MoreHorizontal, isMore: true },
 ];
 
-const moreMenuItems = [
-  { name: 'Inventory', href: '/inventory', icon: Warehouse, description: 'Manage stock levels' },
-  { name: 'Customers', href: '/customers', icon: Users, description: 'Customer management' },
-  { name: 'Suppliers', href: '/suppliers', icon: Truck, description: 'Manage suppliers' },
-  { name: 'Purchases', href: '/purchases', icon: ShoppingBag, description: 'Orders to suppliers' },
-  { name: 'Reports', href: '/reports', icon: BarChart3, description: 'Business analytics' },
-  { name: 'Settings', href: '/settings', icon: Settings, description: 'App preferences' },
-];
-
-// Routes that should highlight the "More" tab
-const moreRoutes = ['/menu', '/inventory', '/customers', '/suppliers', '/purchases', '/reports', '/settings'];
+function buildMoreRoutes(items: Array<{ href: string }>) {
+  return ['/menu', ...items.map((i) => i.href)];
+}
 
 export function MobileNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const isMoreActive = moreRoutes.some(route => pathname.startsWith(route)) || moreOpen;
+  const bottomNav = sidebarBottomNavigation.filter(
+    (item) => !item.requiresSuperadmin || user?.is_superadmin
+  );
+  const moreMenuItems = [...sidebarNavigation, ...bottomNav]
+    // Exclude the items already present in the bottom tab bar
+    .filter((item) => !navigation.some((navItem) => navItem.href === item.href))
+    .filter((item) => !item.requiresSuperadmin || user?.is_superadmin);
+
+  const moreRoutes = buildMoreRoutes(moreMenuItems);
+  const isMoreActive = moreRoutes.some((route) => pathname.startsWith(route)) || moreOpen;
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+
+    if (moreOpen) {
+      // Use mousedown/touchstart to catch clicks before they bubble
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [moreOpen]);
 
   const handleLogout = async () => {
     setMoreOpen(false);
@@ -123,7 +140,7 @@ export function MobileNav() {
       </nav>
       {moreOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden flex items-end">
-          <div className="w-full rounded-t-3xl bg-gray-950 border-t border-gray-800 shadow-2xl max-h-[70vh] overflow-y-auto">
+          <div ref={menuRef} className="w-full rounded-t-3xl bg-gray-950 border-t border-gray-800 shadow-2xl max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
               <div className="flex items-center gap-2">
                 <span className="h-1.5 w-8 rounded-full bg-gray-700" />
@@ -164,7 +181,7 @@ export function MobileNav() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                      <p className="text-xs text-gray-500 truncate">{item.href}</p>
                     </div>
                     <MoreHorizontal className="h-4 w-4 text-gray-500" />
                   </Link>

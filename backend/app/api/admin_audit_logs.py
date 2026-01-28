@@ -39,7 +39,7 @@ async def get_audit_logs(
     limit: int = Query(100, ge=1, le=1000, description="Number of results to return"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db)
+    db=Depends(get_db)
 ):
     """
     Get audit logs with filtering and pagination.
@@ -124,7 +124,7 @@ async def get_audit_logs(
 @router.get("/actions", response_model=List[str])
 async def get_audit_log_actions(
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db)
+    db=Depends(get_db)
 ):
     """
     Get list of all unique action types in audit logs.
@@ -152,7 +152,7 @@ async def get_audit_log_actions(
 async def get_audit_log_by_id(
     log_id: int,
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db)
+    db=Depends(get_db)
 ):
     """
     Get a specific audit log entry by ID.

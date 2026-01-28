@@ -38,7 +38,7 @@ router = APIRouter(
 async def create_subscription(
     request: CreateSubscriptionRequest,
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     redis = Depends(get_redis)
 ):
     """
@@ -87,7 +87,7 @@ async def update_subscription(
     subscription_id: int,
     request: UpdateSubscriptionRequest,
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     redis = Depends(get_redis)
 ):
     """
@@ -139,7 +139,7 @@ async def update_subscription(
 async def reactivate_subscription(
     subscription_id: int,
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     redis = Depends(get_redis)
 ):
     """
@@ -185,7 +185,7 @@ async def add_feature_override(
     subscription_id: int,
     request: FeatureOverrideRequest,
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     redis = Depends(get_redis)
 ):
     """
@@ -250,7 +250,7 @@ async def remove_feature_override(
     subscription_id: int,
     feature_name: str,
     current_user: User = Depends(require_superadmin),
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     redis = Depends(get_redis)
 ):
     """

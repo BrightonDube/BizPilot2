@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import re
 import math
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_user_for_onboarding, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -93,7 +93,7 @@ def slugify(text: str) -> str:
 @router.get("/status", response_model=BusinessStatusResponse)
 async def get_business_status(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Check if the current user has a business associated.
@@ -145,7 +145,7 @@ async def get_business_status(
 async def setup_business(
     business_data: BusinessCreate,
     current_user: User = Depends(get_current_user_for_onboarding),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Set up a new business for a user who doesn't have one.
@@ -279,7 +279,7 @@ async def setup_business(
 @router.get("/current", response_model=BusinessResponse)
 async def get_current_business(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get the current user's primary business."""
     business_user = db.query(BusinessUser).filter(
@@ -325,7 +325,7 @@ async def get_current_business(
 async def update_current_business(
     business_data: BusinessUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update the current user's primary business settings."""
     # Get user's business association
@@ -449,7 +449,7 @@ async def list_business_users(
     search: Optional[str] = Query(None, description="Search by name, email, or department name"),
     current_user: User = Depends(has_permission("users:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all users in the current business."""
     from app.models.department import Department
@@ -531,7 +531,7 @@ async def invite_user_to_business(
     data: InviteUserRequest,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Invite a user to join the business."""
     from app.models.department import Department
@@ -673,7 +673,7 @@ async def get_business_user(
     user_id: str,
     current_user: User = Depends(has_permission("users:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific user in the business."""
     from app.models.department import Department
@@ -725,7 +725,7 @@ async def update_business_user(
     data: UpdateBusinessUserRequest,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's role or status in the business."""
     from app.models.department import Department
@@ -820,7 +820,7 @@ async def remove_user_from_business(
     user_id: str,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Remove a user from the business."""
     business_user = db.query(BusinessUser).filter(

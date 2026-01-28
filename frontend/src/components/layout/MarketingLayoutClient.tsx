@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/common/Logo'
 import { MarketingFooter } from '@/components/common/MarketingFooter'
 import { GlobalAIChat } from '@/components/ai/GlobalAIChat'
+import { useAuth } from '@/hooks/useAuth'
 
 interface MarketingLayoutClientProps {
   children: React.ReactNode
@@ -16,6 +18,24 @@ export function MarketingLayoutClient({
   children,
 }: MarketingLayoutClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  // Redirect logged-in users to dashboard
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace('/dashboard')
+    }
+  }, [user, isLoading, router])
+
+  // Show nothing while checking auth or redirecting
+  if (isLoading || user) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-slate-950">

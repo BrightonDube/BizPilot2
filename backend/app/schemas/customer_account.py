@@ -105,6 +105,7 @@ class AccountBalance(BaseModel):
     credit_limit: Decimal
     credit_utilization: float
     is_over_limit: bool
+    aging: Optional[dict] = Field(None, description="Optional aging breakdown")
 
 
 class CreditValidation(BaseModel):
@@ -141,6 +142,25 @@ class ChargeCreate(TransactionBase):
         if v <= 0:
             raise ValueError('Charge amount must be positive')
         return v
+
+
+class ChargeSlipRequest(BaseModel):
+    """Schema for requesting a charge slip generation."""
+    
+    business_address: Optional[str] = Field(None, description="Business address to display on slip")
+    business_phone: Optional[str] = Field(None, description="Business phone to display on slip")
+    currency: str = Field(default="ZAR", description="Currency code")
+
+
+class ChargeSlipResponse(BaseModel):
+    """Schema for charge slip response."""
+    
+    transaction_id: UUID
+    account_id: UUID
+    pdf_content: bytes = Field(..., description="PDF charge slip content")
+    generated_at: datetime = Field(default_factory=datetime.utcnow, description="When the slip was generated")
+    
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class AdjustmentCreate(TransactionBase):
@@ -212,9 +232,42 @@ class PaymentBase(BaseModel):
     notes: Optional[str] = Field(None, description="Additional payment notes")
 
 
+class PaymentAllocationCreate(BaseModel):
+    """Schema for creating a payment allocation (manual allocation)."""
+    
+    transaction_id: UUID = Field(..., description="ID of the transaction to allocate payment to")
+    amount: Decimal = Field(..., gt=0, description="Amount to allocate to this transaction")
+    
+    @field_validator('amount')
+    @classmethod
+    def validate_allocation_amount(cls, v: Decimal) -> Decimal:
+        """Validate allocation amount is positive."""
+        if v <= 0:
+            raise ValueError('Allocation amount must be positive')
+        return v
+
+
 class PaymentCreate(PaymentBase):
     """Schema for creating a payment."""
     pass
+
+
+class PaymentCreateWithAllocations(PaymentBase):
+    """Schema for creating a payment with manual allocations."""
+    
+    allocations: Optional[List[PaymentAllocationCreate]] = Field(None, description="Manual payment allocations (optional, defaults to FIFO)")
+    
+    @field_validator('allocations')
+    @classmethod
+    def validate_allocations_sum(cls, v: Optional[List[PaymentAllocationCreate]], info) -> Optional[List[PaymentAllocationCreate]]:
+        """Validate that allocation amounts sum to payment amount."""
+        if v is not None and len(v) > 0:
+            amount = info.data.get('amount')
+            if amount is not None:
+                total_allocated = sum(alloc.amount for alloc in v)
+                if total_allocated != amount:
+                    raise ValueError(f'Allocation amounts ({total_allocated}) must equal payment amount ({amount})')
+        return v
 
 
 class PaymentResponse(PaymentBase):
@@ -254,6 +307,16 @@ class PaymentAllocationResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PaymentAllocationListResponse(BaseModel):
+    """Schema for paginated payment allocation list."""
+    
+    items: List[PaymentAllocationResponse]
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
 # ============================================================================
 # Statement Schemas
 # ============================================================================
@@ -281,6 +344,7 @@ class StatementResponse(BaseModel):
     total_payments: Decimal
     closing_balance: Decimal
     aging: AgingBreakdown
+    transactions: List[TransactionSummary] = Field(default_factory=list, description="List of transactions in the statement period")
     sent_at: Optional[datetime] = None
     created_at: datetime
     
@@ -458,3 +522,149 @@ class CustomerAccountMetrics(BaseModel):
     average_payment_days: Optional[float] = None
     last_payment_date: Optional[datetime] = None
     last_charge_date: Optional[datetime] = None
+
+
+class AgingReportFilters(BaseModel):
+    """Schema for aging report filters."""
+    
+    customer_type: Optional[str] = Field(None, description="Filter by customer type/segment")
+    min_balance: Optional[Decimal] = Field(None, ge=0, description="Minimum balance to include")
+    max_balance: Optional[Decimal] = Field(None, ge=0, description="Maximum balance to include")
+    include_current: bool = Field(True, description="Include accounts with current (not overdue) balances")
+    include_suspended: bool = Field(False, description="Include suspended accounts")
+    sort_by: Optional[str] = Field("days_overdue", description="Sort field (days_overdue, balance, customer_name)")
+    sort_order: Optional[str] = Field("desc", description="Sort order (asc, desc)")
+
+
+class AgingReportResponse(BaseModel):
+    """Schema for complete aging report with summary."""
+    
+    report_date: date
+    business_id: UUID
+    accounts: List[OverdueAccount]
+    summary: AgingBreakdown
+    total_accounts: int
+    filters_applied: Optional[AgingReportFilters] = None
+
+
+class CreditUtilizationReport(BaseModel):
+    """Schema for credit utilization report by customer."""
+    
+    account_id: UUID
+    customer_id: UUID
+    customer_name: str
+    account_number: str
+    credit_limit: Decimal
+    current_balance: Decimal
+    available_credit: Decimal
+    utilization_percentage: float
+    status: AccountStatus
+
+
+class CreditUtilizationSummary(BaseModel):
+    """Schema for credit utilization summary."""
+    
+    accounts: List[CreditUtilizationReport]
+    total_credit_extended: Decimal
+    total_credit_used: Decimal
+    average_utilization: float
+    accounts_over_80_percent: int
+    accounts_at_limit: int
+
+
+class BadDebtReport(BaseModel):
+    """Schema for bad debt and write-offs report."""
+    
+    account_id: UUID
+    customer_id: UUID
+    customer_name: str
+    account_number: str
+    write_off_amount: Decimal
+    write_off_date: datetime
+    reason: str
+    approved_by: Optional[UUID] = None
+
+
+class BadDebtSummary(BaseModel):
+    """Schema for bad debt summary."""
+    
+    write_offs: List[BadDebtReport]
+    total_write_offs: Decimal
+    write_off_count: int
+    period_start: date
+    period_end: date
+    write_off_rate: float  # Percentage of total receivables
+
+
+class PaymentHistoryReport(BaseModel):
+    """Schema for payment history and patterns report."""
+    
+    account_id: UUID
+    customer_id: UUID
+    customer_name: str
+    account_number: str
+    total_payments: Decimal
+    payment_count: int
+    average_payment_amount: Decimal
+    average_days_to_pay: Optional[float] = None
+    on_time_payment_rate: float
+    last_payment_date: Optional[datetime] = None
+    payment_trend: str  # 'improving', 'stable', 'declining'
+
+
+class AccountActivityReport(BaseModel):
+    """Schema for customer account activity report."""
+    
+    account_id: UUID
+    customer_id: UUID
+    customer_name: str
+    account_number: str
+    period_start: date
+    period_end: date
+    opening_balance: Decimal
+    total_charges: Decimal
+    total_payments: Decimal
+    total_adjustments: Decimal
+    closing_balance: Decimal
+    transaction_count: int
+    average_transaction_size: Decimal
+
+
+class DashboardWidget(BaseModel):
+    """Schema for AR dashboard widget data."""
+    
+    widget_type: str = Field(..., description="Type of widget (ar_summary, aging_chart, top_debtors, etc.)")
+    title: str
+    data: dict = Field(..., description="Widget-specific data structure")
+    last_updated: datetime
+
+
+class ARDashboard(BaseModel):
+    """Schema for complete AR dashboard."""
+    
+    business_id: UUID
+    summary: ARSummary
+    widgets: List[DashboardWidget]
+    generated_at: datetime
+
+
+class ReportExportRequest(BaseModel):
+    """Schema for requesting report export."""
+    
+    report_type: str = Field(..., description="Type of report (aging, ar_summary, dso, etc.)")
+    format: str = Field(..., description="Export format (csv, pdf, xlsx)")
+    filters: Optional[dict] = Field(None, description="Report-specific filters")
+    include_details: bool = Field(True, description="Include detailed data or summary only")
+
+
+class ReportExportResponse(BaseModel):
+    """Schema for report export response."""
+    
+    export_id: UUID
+    report_type: str
+    format: str
+    file_url: Optional[str] = None
+    file_size: Optional[int] = None
+    status: str  # 'pending', 'completed', 'failed'
+    created_at: datetime
+    expires_at: Optional[datetime] = None

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.models.session import Session as SessionModel
@@ -68,7 +68,7 @@ def _session_to_response(session: SessionModel) -> SessionResponse:
 @router.get("", response_model=SessionListResponse)
 async def list_sessions(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     List all active sessions for the current user.
@@ -89,7 +89,7 @@ async def list_sessions(
 async def get_session(
     session_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get details of a specific session.
@@ -114,7 +114,7 @@ async def get_session(
 async def revoke_session(
     session_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Revoke (logout) a specific session.
@@ -141,7 +141,7 @@ async def revoke_session(
 async def revoke_all_sessions(
     keep_current: bool = True,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     request: Request = None,
 ):
     """

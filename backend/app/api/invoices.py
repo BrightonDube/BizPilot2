@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -110,7 +110,7 @@ async def list_invoices(
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List invoices with filtering and pagination."""
     service = InvoiceService(db)
@@ -167,7 +167,7 @@ async def list_invoices(
 async def get_invoice_stats(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get invoice statistics."""
     service = InvoiceService(db)
@@ -181,7 +181,7 @@ async def get_unpaid_invoices(
     search: Optional[str] = Query(None, description="Search by invoice number"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get all unpaid or partially paid invoices for payment linking.
@@ -249,7 +249,7 @@ async def get_invoice(
     invoice_id: str,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get an invoice by ID."""
     service = InvoiceService(db)
@@ -284,7 +284,7 @@ async def get_invoice_pdf(
     invoice_id: str,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Generate a professionally styled PDF invoice."""
     from app.models.business import Business
@@ -361,7 +361,7 @@ async def create_invoice(
     data: InvoiceCreate,
     current_user: User = Depends(has_permission("invoices:create")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new invoice."""
     service = InvoiceService(db)
@@ -376,7 +376,7 @@ async def update_invoice(
     data: InvoiceUpdate,
     current_user: User = Depends(has_permission("invoices:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update an invoice."""
     service = InvoiceService(db)
@@ -398,7 +398,7 @@ async def send_invoice(
     invoice_id: str,
     current_user: User = Depends(has_permission("invoices:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Send an invoice (mark as sent)."""
     service = InvoiceService(db)
@@ -421,7 +421,7 @@ async def record_payment(
     data: PaymentRecord,
     current_user: User = Depends(has_permission("invoices:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Record a payment for an invoice."""
     service = InvoiceService(db)
@@ -449,7 +449,7 @@ async def delete_invoice(
     invoice_id: str,
     current_user: User = Depends(has_permission("invoices:delete")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete an invoice."""
     service = InvoiceService(db)
@@ -469,7 +469,7 @@ async def get_invoice_items(
     invoice_id: str,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get items for an invoice."""
     service = InvoiceService(db)
@@ -495,7 +495,7 @@ async def initiate_invoice_payment(
     data: InvoicePaymentInitiate,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Initiate a Paystack payment for an invoice.
@@ -557,7 +557,7 @@ async def get_payment_preview(
     invoice_id: str,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get a preview of payment amounts including gateway fees.
@@ -591,7 +591,7 @@ async def get_payment_preview(
 async def verify_invoice_payment(
     data: InvoicePaymentVerify,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Verify a Paystack payment after callback.

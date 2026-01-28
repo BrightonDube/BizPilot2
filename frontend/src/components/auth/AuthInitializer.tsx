@@ -6,18 +6,36 @@ import { subscribeToAuthEvent } from '@/lib/api'
 import { useSessionManager } from '@/hooks/useSessionManager'
 
 /**
+ * Check if authentication cookies exist.
+ * This is a lightweight check to avoid unnecessary API calls.
+ */
+function hasAuthCookies(): boolean {
+  if (typeof document === 'undefined') return false
+  
+  // Check for access_token cookie (set by backend on login)
+  const cookies = document.cookie.split(';')
+  return cookies.some(cookie => cookie.trim().startsWith('access_token='))
+}
+
+/**
  * AuthInitializer component.
  * 
  * Responsibilities:
- * 1. Fetch user data on app mount to verify authentication
+ * 1. Fetch user data on app mount ONLY if auth cookies exist
  * 2. Listen for session expiration events and handle logout + redirect
  * 3. Manage automatic session expiration with activity tracking
+ * 
+ * Best Practices Implemented:
+ * - Token Guard Clause: Checks for cookies before making API calls
+ * - State Optimization: Sets isLoading to false immediately if no cookies
+ * - Error Handling: Silently handles fetch failures without crashing
  * 
  * This component must be mounted high in the component tree (e.g., in AppLayout)
  * to ensure session expiration is handled globally.
  */
 export function AuthInitializer() {
   const fetchUser = useAuthStore((s) => s.fetchUser)
+  const setInitialized = useAuthStore((s) => s.setInitialized)
   const isInitialized = useAuthStore((s) => s.isInitialized)
   const logout = useAuthStore((s) => s.logout)
   
@@ -65,15 +83,37 @@ export function AuthInitializer() {
     return unsubscribe
   }, [handleSessionExpired])
 
-  // Initial user fetch
+  // Initial user fetch with token guard clause
   useEffect(() => {
     // Guard for SSR safety (though useEffect only runs on client)
     if (typeof window === 'undefined') return
 
-    if (!isInitialized) {
-      fetchUser()
+    // Skip if already initialized
+    if (isInitialized) return
+
+    // Don't fetch user on auth pages (login, register, etc.)
+    const isAuthPage = window.location.pathname.startsWith('/auth/')
+    if (isAuthPage) {
+      // Mark as initialized without fetching to prevent loading state
+      setInitialized()
+      return
     }
-  }, [fetchUser, isInitialized])
+
+    // TOKEN GUARD CLAUSE: Check if auth cookies exist before making API call
+    if (!hasAuthCookies()) {
+      // No cookies = not authenticated, mark as initialized immediately
+      // This prevents unnecessary 401 errors and loading states
+      setInitialized()
+      return
+    }
+
+    // Cookies exist, attempt to fetch user data
+    // fetchUser handles errors silently and sets isInitialized
+    fetchUser().catch(() => {
+      // Error already handled in fetchUser, just ensure we're initialized
+      setInitialized()
+    })
+  }, [fetchUser, setInitialized, isInitialized])
 
   return null
 }
