@@ -37,6 +37,7 @@ function LoginForm() {
 
   // Load session expired message on client-side only (useEffect)
   // This prevents hydration mismatch
+  /* eslint-disable react-hooks/set-state-in-effect -- Required for client-only hydration */
   useEffect(() => {
     if (messageDismissed) {
       setSessionExpiredMessage(null);
@@ -58,6 +59,7 @@ function LoginForm() {
       setSessionExpiredMessage('You were logged out due to inactivity.');
     }
   }, [searchParams, messageDismissed]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Redirect if already authenticated
   useGuestOnly();

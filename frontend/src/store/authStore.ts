@@ -218,7 +218,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             isInitialized: true,
           });
-        } catch (err: any) {
+        } catch {
           // Silently handle errors - don't treat 401 as an error
           // User simply isn't authenticated, which is expected behavior
           set({

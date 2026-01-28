@@ -389,11 +389,11 @@ export default function SettingsPage() {
       return;
     }
     
-    // For free tier, just update subscription
-    if (tier.monthlyPrice === 0) {
+    // For free tier, just select the tier directly
+    if (tier.price_monthly_cents === 0) {
       try {
-        await subscriptionApi.updateSubscription(tier.id, selectedBillingCycle);
-        fetchSubscription();
+        await subscriptionApi.selectTier(tier.id, selectedBillingCycle);
+        await loadBillingData();
         return;
       } catch (error) {
         console.error('Failed to update subscription:', error);

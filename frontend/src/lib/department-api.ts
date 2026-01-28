@@ -81,7 +81,8 @@ export const departmentApi = {
    * @param businessId - The business ID to get departments for
    * @returns List of departments
    */
-  async getDepartments(businessId: string): Promise<Department[]> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getDepartments(_businessId: string): Promise<Department[]> {
     try {
       // Backend gets business_id from user context, not URL
       const { data } = await apiClient.get<DepartmentListResponse>(

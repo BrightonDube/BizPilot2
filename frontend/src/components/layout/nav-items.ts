@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -21,7 +22,7 @@ import {
 export type NavItem = {
   name: string;
   href: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   requiresSuperadmin?: boolean;
 };
 

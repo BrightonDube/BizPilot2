@@ -15,7 +15,7 @@
  * - Components can check isSessionExpiring to avoid rendering error states
  */
 
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
 /**
  * Extended request config with retry flag for token refresh logic.
@@ -27,6 +27,37 @@ interface RetryableAxiosRequestConfig extends InternalAxiosRequestConfig {
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (process.env.NODE_ENV === 'production' ? '/api/v1' : 'http://localhost:8000/api/v1');
+
+function getBackendBaseUrl(): string {
+  // API_URL includes the /api/v1 prefix. CSRF endpoint is at /api/csrf-token.
+  if (API_URL.endsWith('/api/v1')) {
+    return API_URL.slice(0, -'/api/v1'.length);
+  }
+  return API_URL;
+}
+
+let csrfTokenCache: string | null = null;
+let csrfTokenPromise: Promise<string> | null = null;
+
+async function getCsrfToken(): Promise<string> {
+  if (csrfTokenCache) return csrfTokenCache;
+  if (csrfTokenPromise) return csrfTokenPromise;
+
+  const base = getBackendBaseUrl();
+  const url = `${base}/api/csrf-token`;
+
+  csrfTokenPromise = axios
+    .get<{ csrf_token: string }>(url, { withCredentials: true })
+    .then((res) => {
+      csrfTokenCache = res.data.csrf_token;
+      return csrfTokenCache;
+    })
+    .finally(() => {
+      csrfTokenPromise = null;
+    });
+
+  return csrfTokenPromise;
+}
 
 /**
  * Event types for auth-related events.
@@ -90,9 +121,22 @@ export const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor - no token handling needed for web (uses cookies)
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     // Cookies are automatically sent with withCredentials: true
-    // No need to manually add Authorization header for web clients
+    // For state-changing requests, include CSRF token
+    const method = (config.method || 'get').toLowerCase();
+    const needsCsrf = ['post', 'put', 'patch', 'delete'].includes(method);
+
+    if (needsCsrf) {
+      if (!config.headers) {
+        config.headers = new AxiosHeaders();
+      }
+      if (!config.headers.get('X-CSRF-Token')) {
+        const token = await getCsrfToken();
+        config.headers.set('X-CSRF-Token', token);
+      }
+    }
+
     return config;
   },
   (error: AxiosError) => {

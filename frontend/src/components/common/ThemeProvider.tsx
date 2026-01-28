@@ -35,6 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   // Load theme from localStorage after mount (client-only)
+  /* eslint-disable react-hooks/set-state-in-effect -- Required for client-only hydration */
   useEffect(() => {
     setMounted(true);
     const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
@@ -42,6 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setThemeState(savedTheme);
     }
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const resolvedTheme: 'dark' | 'light' = theme === 'system' ? systemTheme : theme;
 
