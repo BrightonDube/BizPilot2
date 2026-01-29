@@ -20,6 +20,7 @@ from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
 from app.models.user_settings import UserSettings, AIDataSharingLevel
 from app.models.subscription_tier import SubscriptionTier
+from app.models.subscription_feature_definition import SubscriptionFeatureDefinition
 from app.models.subscription_transaction import (
     SubscriptionTransaction,
     TransactionStatus as SubscriptionTransactionStatus,
@@ -58,6 +59,13 @@ from app.models.customer_account import (
     CollectionActivity,
     ActivityType,
     AccountWriteOff,
+)
+from app.models.report_subscription import (
+    ReportSubscription,
+    ReportType,
+    DeliveryFrequency,
+    DeliveryStatus,
+    ReportDeliveryLog,
 )
 
 __all__ = [
@@ -110,6 +118,7 @@ __all__ = [
     "AIDataSharingLevel",
     # Subscription
     "SubscriptionTier",
+    "SubscriptionFeatureDefinition",
     "SubscriptionTransaction",
     "SubscriptionTransactionStatus",
     "SubscriptionTransactionType",
@@ -167,4 +176,10 @@ __all__ = [
     "CollectionActivity",
     "ActivityType",
     "AccountWriteOff",
+    # Report Subscriptions
+    "ReportSubscription",
+    "ReportType",
+    "DeliveryFrequency",
+    "DeliveryStatus",
+    "ReportDeliveryLog",
 ]

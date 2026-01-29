@@ -163,10 +163,14 @@ async def get_top_products(
     if not business_id:
         return []
 
-    if direction and direction != OrderDirection.INBOUND:
+    # Default to OUTBOUND (sales) for "top products".
+    if direction is None:
+        direction = OrderDirection.OUTBOUND
+
+    if direction != OrderDirection.OUTBOUND:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unsupported direction: only INBOUND is allowed",
+            detail="Unsupported direction: only OUTBOUND is allowed",
         )
 
     start_date, end_date = get_date_range(range)
@@ -181,7 +185,7 @@ async def get_top_products(
         .join(Order, Order.id == OrderItem.order_id)
         .filter(
             Order.business_id == business_id,
-            Order.direction == OrderDirection.INBOUND,
+            Order.direction == OrderDirection.OUTBOUND,
             Order.created_at >= start_date,
             Order.created_at <= end_date,
             Order.deleted_at.is_(None),
@@ -218,10 +222,14 @@ async def get_top_customers(
     if not business_id:
         return []
 
-    if direction and direction != OrderDirection.INBOUND:
+    # Default to OUTBOUND (sales) for "top customers".
+    if direction is None:
+        direction = OrderDirection.OUTBOUND
+
+    if direction != OrderDirection.OUTBOUND:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unsupported direction: only INBOUND is allowed",
+            detail="Unsupported direction: only OUTBOUND is allowed",
         )
 
     start_date, end_date = get_date_range(range)
@@ -239,7 +247,7 @@ async def get_top_customers(
         .filter(
             Order.business_id == business_id,
             Customer.business_id == business_id,
-            Order.direction == OrderDirection.INBOUND,
+            Order.direction == OrderDirection.OUTBOUND,
             Order.created_at >= start_date,
             Order.created_at <= end_date,
             Order.deleted_at.is_(None),

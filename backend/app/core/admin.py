@@ -19,9 +19,9 @@ async def require_admin(
         ):
             ...
     """
-    if not getattr(current_user, "is_superadmin", False):
+    if not (getattr(current_user, "is_admin", False) or getattr(current_user, "is_superadmin", False)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Superadmin access required",
+            detail="Admin access required",
         )
     return current_user

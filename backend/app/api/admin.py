@@ -14,6 +14,7 @@ from app.core.admin import require_admin
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.business_user import BusinessUser
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
+from app.models.subscription_feature_definition import SubscriptionFeatureDefinition
 from app.models.subscription_transaction import SubscriptionTransaction
 from app.schemas.subscription import (
     TierUpdateRequest as NewTierUpdateRequest,
@@ -145,6 +146,30 @@ class TierUpdateRequest(BaseModel):
     feature_flags: Optional[dict] = None
     paystack_plan_code_monthly: Optional[str] = None
     paystack_plan_code_yearly: Optional[str] = None
+
+
+class SubscriptionFeatureDefinitionResponse(BaseModel):
+    id: UUID
+    key: str
+    display_name: str
+    description: Optional[str]
+    category: Optional[str]
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class SubscriptionFeatureDefinitionCreateRequest(BaseModel):
+    key: str
+    display_name: str
+    description: Optional[str] = None
+    category: Optional[str] = None
+    is_active: bool = True
+
+
+class TierFeatureFlagUpdateRequest(BaseModel):
+    enabled: bool
 
 
 class AdminStatsResponse(BaseModel):
@@ -581,6 +606,138 @@ async def seed_default_tiers(
     
     db.commit()
     return {"message": f"Created tiers: {created}" if created else "All tiers already exist"}
+
+
+# ==================== Subscription Feature Catalog (SuperAdmin) ====================
+
+
+@router.get("/feature-definitions", response_model=List[SubscriptionFeatureDefinitionResponse])
+async def list_feature_definitions(
+    include_inactive: bool = False,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    query = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.deleted_at.is_(None)
+    )
+    if not include_inactive:
+        query = query.filter(SubscriptionFeatureDefinition.is_active)
+
+    defs = query.order_by(SubscriptionFeatureDefinition.category.asc().nullsfirst(), SubscriptionFeatureDefinition.key.asc()).all()
+    return [SubscriptionFeatureDefinitionResponse.model_validate(d) for d in defs]
+
+
+@router.post(
+    "/feature-definitions",
+    response_model=SubscriptionFeatureDefinitionResponse,
+    status_code=201,
+)
+async def create_feature_definition(
+    data: SubscriptionFeatureDefinitionCreateRequest,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    existing = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.key == data.key,
+        SubscriptionFeatureDefinition.deleted_at.is_(None),
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Feature key already exists")
+
+    feature_def = SubscriptionFeatureDefinition(**data.model_dump())
+    db.add(feature_def)
+    db.commit()
+    db.refresh(feature_def)
+    return SubscriptionFeatureDefinitionResponse.model_validate(feature_def)
+
+
+@router.delete("/feature-definitions/{feature_key}")
+async def delete_feature_definition(
+    feature_key: str,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    feature_def = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.key == feature_key,
+        SubscriptionFeatureDefinition.deleted_at.is_(None),
+    ).first()
+    if not feature_def:
+        raise HTTPException(status_code=404, detail="Feature not found")
+
+    feature_def.deleted_at = utc_now()
+    feature_def.is_active = False
+    db.commit()
+    return {"message": "Feature deleted"}
+
+
+@router.post("/feature-definitions/seed-from-tiers")
+async def seed_feature_definitions_from_tiers(
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    """Create feature definitions for any feature_flags keys currently used by tiers."""
+    tiers = db.query(SubscriptionTier).filter(SubscriptionTier.deleted_at.is_(None)).all()
+    keys: set[str] = set()
+    for t in tiers:
+        if isinstance(t.feature_flags, dict):
+            keys.update(t.feature_flags.keys())
+
+    created: list[str] = []
+    for key in sorted(keys):
+        existing = db.query(SubscriptionFeatureDefinition).filter(
+            SubscriptionFeatureDefinition.key == key,
+            SubscriptionFeatureDefinition.deleted_at.is_(None),
+        ).first()
+        if existing:
+            continue
+        feature_def = SubscriptionFeatureDefinition(
+            key=key,
+            display_name=key.replace('_', ' ').title(),
+            description=None,
+            category=None,
+            is_active=True,
+        )
+        db.add(feature_def)
+        created.append(key)
+
+    db.commit()
+    return {"message": f"Created features: {created}" if created else "All features already exist"}
+
+
+@router.patch("/tiers/{tier_id}/feature-flags/{feature_key}", response_model=TierResponse)
+async def set_tier_feature_flag(
+    tier_id: UUID,
+    feature_key: str,
+    payload: TierFeatureFlagUpdateRequest,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    """Enable/disable a feature flag on a tier (validated against feature definitions)."""
+    tier = db.query(SubscriptionTier).filter(
+        SubscriptionTier.id == tier_id,
+        SubscriptionTier.deleted_at.is_(None),
+    ).first()
+    if not tier:
+        raise HTTPException(status_code=404, detail="Tier not found")
+
+    feature_def = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.key == feature_key,
+        SubscriptionFeatureDefinition.deleted_at.is_(None),
+        SubscriptionFeatureDefinition.is_active.is_(True),
+    ).first()
+    if not feature_def:
+        raise HTTPException(status_code=400, detail="Unknown feature key. Create it in feature definitions first.")
+
+    if not isinstance(tier.feature_flags, dict) or tier.feature_flags is None:
+        tier.feature_flags = {}
+
+    tier.feature_flags[feature_key] = bool(payload.enabled)
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(tier, "feature_flags")
+
+    db.commit()
+    db.refresh(tier)
+    return TierResponse.model_validate(tier)
 
 
 @router.post("/seed/essential")

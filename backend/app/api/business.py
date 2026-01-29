@@ -90,6 +90,26 @@ def slugify(text: str) -> str:
     return text
 
 
+def _get_or_create_management_department(db: Session, business_id):
+    from app.models.department import Department
+    department = db.query(Department).filter(
+        Department.business_id == business_id,
+        Department.name == "Management",
+        Department.deleted_at.is_(None),
+    ).first()
+    if department:
+        return department
+
+    department = Department(
+        business_id=business_id,
+        name="Management",
+        description="Management and owners",
+    )
+    db.add(department)
+    db.flush()
+    return department
+
+
 @router.get("/status", response_model=BusinessStatusResponse)
 async def get_business_status(
     current_user: User = Depends(get_current_active_user),
@@ -222,17 +242,18 @@ async def setup_business(
         db.add(admin_role)
         db.flush()  # Get the role ID
         
-        # Associate user with business as admin
+        management_department = _get_or_create_management_department(db, business.id)
+
         business_user = BusinessUser(
             user_id=current_user.id,
             business_id=business.id,
             role_id=admin_role.id,
+            department_id=management_department.id,
             status=BusinessUserStatus.ACTIVE,
             is_primary=True,
         )
         db.add(business_user)
-        
-        # Create default "General" department
+
         from app.models.department import Department
         default_department = Department(
             business_id=business.id,
@@ -544,9 +565,13 @@ async def invite_user_to_business(
     if not role.is_system and str(role.business_id) != business_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
     
-    # Validate department if provided
-    if data.department_id:
-        department = db.query(Department).filter(Department.id == data.department_id).first()
+    department_id_to_use = data.department_id
+    if not department_id_to_use and role and role.name and role.name.lower() == "admin":
+        management_department = _get_or_create_management_department(db, business_id)
+        department_id_to_use = management_department.id
+
+    if department_id_to_use:
+        department = db.query(Department).filter(Department.id == department_id_to_use).first()
         if not department:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
         if str(department.business_id) != business_id:
@@ -574,7 +599,7 @@ async def invite_user_to_business(
             user_id=existing_user.id,
             business_id=business_id,
             role_id=data.role_id,
-            department_id=data.department_id,
+            department_id=department_id_to_use,
             status=BusinessUserStatus.ACTIVE,
             is_primary=False,
         )
@@ -629,7 +654,7 @@ async def invite_user_to_business(
             user_id=new_user.id,
             business_id=business_id,
             role_id=data.role_id,
-            department_id=data.department_id,
+            department_id=department_id_to_use,
             status=BusinessUserStatus.INVITED,
             is_primary=False,
         )
@@ -759,6 +784,11 @@ async def update_business_user(
         if not role.is_system and str(role.business_id) != business_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
         business_user.role_id = data.role_id
+
+        # Owners/admins should fall under Management when no explicit department is provided.
+        if role.name and role.name.lower() == "admin" and data.department_id is None:
+            management_department = _get_or_create_management_department(db, business_id)
+            business_user.department_id = management_department.id
     
     # Handle department reassignment
     if data.department_id is not None:

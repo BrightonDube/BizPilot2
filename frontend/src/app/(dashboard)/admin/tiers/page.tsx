@@ -11,12 +11,15 @@ import {
   Zap
 } from 'lucide-react'
 import Link from 'next/link'
-import { adminApi, SubscriptionTier } from '@/lib/admin-api'
+import { adminApi, SubscriptionTier, SubscriptionFeatureDefinition } from '@/lib/admin-api'
 
 export default function AdminTiersPage() {
   const [tiers, setTiers] = useState<SubscriptionTier[]>([])
+  const [featureDefs, setFeatureDefs] = useState<SubscriptionFeatureDefinition[]>([])
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
+  const [seedingFeatures, setSeedingFeatures] = useState(false)
+  const [toggling, setToggling] = useState<Record<string, boolean>>({})
 
   const loadTiers = async () => {
     try {
@@ -29,8 +32,18 @@ export default function AdminTiersPage() {
     }
   }
 
+  const loadFeatureDefinitions = async () => {
+    try {
+      const defs = await adminApi.listFeatureDefinitions(true)
+      setFeatureDefs(defs)
+    } catch (error) {
+      console.error('Failed to load feature definitions:', error)
+    }
+  }
+
   useEffect(() => {
     loadTiers()
+    loadFeatureDefinitions()
   }, [])
 
   const handleSeedTiers = async () => {
@@ -42,6 +55,32 @@ export default function AdminTiersPage() {
       console.error('Failed to seed tiers:', error)
     } finally {
       setSeeding(false)
+    }
+  }
+
+  const handleSeedFeatures = async () => {
+    setSeedingFeatures(true)
+    try {
+      await adminApi.seedFeatureDefinitionsFromTiers()
+      await loadFeatureDefinitions()
+    } catch (error) {
+      console.error('Failed to seed feature definitions:', error)
+    } finally {
+      setSeedingFeatures(false)
+    }
+  }
+
+  const handleToggleFeature = async (tierId: string, featureKey: string, enabled: boolean) => {
+    const toggleKey = `${tierId}:${featureKey}`
+    setToggling((prev) => ({ ...prev, [toggleKey]: true }))
+    try {
+      const updated = await adminApi.setTierFeatureFlag(tierId, featureKey, enabled)
+      setTiers((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update feature'
+      alert(message)
+    } finally {
+      setToggling((prev) => ({ ...prev, [toggleKey]: false }))
     }
   }
 
@@ -94,6 +133,17 @@ export default function AdminTiersPage() {
             >
               <Zap className="w-4 h-4" />
               {seeding ? 'Seeding...' : 'Seed Default Tiers'}
+            </button>
+          )}
+
+          {featureDefs.length === 0 && tiers.length > 0 && (
+            <button
+              onClick={handleSeedFeatures}
+              disabled={seedingFeatures}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Zap className="w-4 h-4" />
+              {seedingFeatures ? 'Seeding...' : 'Seed Features'}
             </button>
           )}
         </div>
@@ -156,20 +206,51 @@ export default function AdminTiersPage() {
                 {/* Features */}
                 <div className="border-t border-slate-700 pt-4">
                   <p className="text-sm font-medium text-gray-300 mb-3">Features</p>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {Object.entries(tier.feature_flags || {}).map(([feature, enabled]) => (
-                      <div key={feature} className="flex items-center gap-2 text-sm">
-                        {enabled ? (
-                          <Check className="w-4 h-4 text-green-400" />
-                        ) : (
-                          <X className="w-4 h-4 text-gray-600" />
-                        )}
-                        <span className={enabled ? 'text-gray-300' : 'text-gray-500'}>
-                          {feature.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {featureDefs.length > 0 ? (
+                    <div className="space-y-2 max-h-56 overflow-y-auto">
+                      {featureDefs
+                        .filter((f) => f.is_active)
+                        .map((f) => {
+                          const enabled = Boolean((tier.feature_flags || {})[f.key])
+                          const toggleKey = `${tier.id}:${f.key}`
+                          const busy = Boolean(toggling[toggleKey])
+
+                          return (
+                            <button
+                              key={f.key}
+                              type="button"
+                              disabled={busy}
+                              onClick={() => handleToggleFeature(String(tier.id), f.key, !enabled)}
+                              className="w-full flex items-center gap-2 text-sm text-left disabled:opacity-60"
+                            >
+                              {enabled ? (
+                                <Check className="w-4 h-4 text-green-400" />
+                              ) : (
+                                <X className="w-4 h-4 text-gray-600" />
+                              )}
+                              <span className={enabled ? 'text-gray-300' : 'text-gray-500'}>
+                                {f.display_name || f.key.replace(/_/g, ' ')}
+                              </span>
+                            </button>
+                          )
+                        })}
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {Object.entries(tier.feature_flags || {}).map(([feature, enabled]) => (
+                        <div key={feature} className="flex items-center gap-2 text-sm">
+                          {enabled ? (
+                            <Check className="w-4 h-4 text-green-400" />
+                          ) : (
+                            <X className="w-4 h-4 text-gray-600" />
+                          )}
+                          <span className={enabled ? 'text-gray-300' : 'text-gray-500'}>
+                            {feature.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Limits */}

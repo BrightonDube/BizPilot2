@@ -170,7 +170,27 @@ class PermissionService:
         )
         if inspect.isawaitable(result):
             result = await result
-        return result.scalar_one_or_none()
+        subscription = result.scalar_one_or_none()
+
+        # Dev-/bootstrap-friendly default: if a business has no subscription row yet,
+        # assign it to the demo tier so feature checks don't hard-fail.
+        if not subscription:
+            subscription = BusinessSubscription(
+                business_id=business_id,
+                tier_name="demo",
+                status="active",
+                valid_until=None,
+                trial_end_date=None,
+            )
+            self.db.add(subscription)
+
+            flush_result = getattr(self.db, "flush", None)
+            if flush_result is not None:
+                r = self.db.flush()
+                if inspect.isawaitable(r):
+                    await r
+
+        return subscription
     
     async def _load_permissions_from_db(
         self,
