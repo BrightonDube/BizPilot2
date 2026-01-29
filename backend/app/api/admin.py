@@ -8,13 +8,22 @@ from sqlalchemy import or_, func
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.models.base import utc_now
 from app.core.admin import require_admin
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.business_user import BusinessUser
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
+from app.models.subscription_feature_definition import SubscriptionFeatureDefinition
 from app.models.subscription_transaction import SubscriptionTransaction
+from app.schemas.subscription import (
+    TierUpdateRequest as NewTierUpdateRequest,
+    FeatureOverridesRequest,
+)
+from app.services.permission_service import PermissionService
+from app.services.subscription_service import SubscriptionService
+from app.services.device_service import DeviceService
+from app.api.deps import require_superadmin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -139,6 +148,30 @@ class TierUpdateRequest(BaseModel):
     paystack_plan_code_yearly: Optional[str] = None
 
 
+class SubscriptionFeatureDefinitionResponse(BaseModel):
+    id: UUID
+    key: str
+    display_name: str
+    description: Optional[str]
+    category: Optional[str]
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class SubscriptionFeatureDefinitionCreateRequest(BaseModel):
+    key: str
+    display_name: str
+    description: Optional[str] = None
+    category: Optional[str] = None
+    is_active: bool = True
+
+
+class TierFeatureFlagUpdateRequest(BaseModel):
+    enabled: bool
+
+
 class AdminStatsResponse(BaseModel):
     total_users: int
     active_users: int
@@ -160,7 +193,7 @@ async def list_users(
     subscription_status: Optional[SubscriptionStatus] = None,
     tier_id: Optional[UUID] = None,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all users with pagination and filters."""
     query = db.query(User).filter(User.deleted_at.is_(None))
@@ -233,7 +266,7 @@ async def list_users(
 async def get_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific user's details."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -263,7 +296,7 @@ async def update_user(
     user_id: UUID,
     data: UserUpdateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's basic information."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -290,7 +323,7 @@ async def update_user(
 async def delete_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Soft delete a user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -312,7 +345,7 @@ async def delete_user(
 async def block_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Block/suspend a user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -332,7 +365,7 @@ async def block_user(
 async def unblock_user(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Unblock a suspended user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -355,7 +388,7 @@ async def update_user_subscription(
     user_id: UUID,
     data: SubscriptionUpdateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's subscription status and tier."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -384,7 +417,7 @@ async def update_user_subscription(
 async def pause_user_subscription(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Pause a user's subscription (admin override)."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -401,7 +434,7 @@ async def pause_user_subscription(
 async def unpause_user_subscription(
     user_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Unpause a user's subscription."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -424,7 +457,7 @@ async def update_feature_overrides(
     user_id: UUID,
     data: FeatureOverrideRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's feature overrides (enable/disable specific features)."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -446,7 +479,7 @@ async def remove_feature_override(
     user_id: UUID,
     feature: str,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Remove a specific feature override for a user."""
     user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
@@ -469,7 +502,7 @@ async def remove_feature_override(
 async def list_tiers(
     include_inactive: bool = False,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all subscription tiers."""
     query = db.query(SubscriptionTier).filter(SubscriptionTier.deleted_at.is_(None))
@@ -484,7 +517,7 @@ async def list_tiers(
 async def create_tier(
     data: TierCreateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new subscription tier."""
     # Check if name already exists
@@ -507,7 +540,7 @@ async def update_tier(
     tier_id: UUID,
     data: TierUpdateRequest,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a subscription tier."""
     tier = db.query(SubscriptionTier).filter(
@@ -530,7 +563,7 @@ async def update_tier(
 async def delete_tier(
     tier_id: UUID,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Soft delete a subscription tier."""
     tier = db.query(SubscriptionTier).filter(
@@ -558,7 +591,7 @@ async def delete_tier(
 @router.post("/tiers/seed")
 async def seed_default_tiers(
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Seed default subscription tiers from configuration."""
     created = []
@@ -575,10 +608,142 @@ async def seed_default_tiers(
     return {"message": f"Created tiers: {created}" if created else "All tiers already exist"}
 
 
+# ==================== Subscription Feature Catalog (SuperAdmin) ====================
+
+
+@router.get("/feature-definitions", response_model=List[SubscriptionFeatureDefinitionResponse])
+async def list_feature_definitions(
+    include_inactive: bool = False,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    query = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.deleted_at.is_(None)
+    )
+    if not include_inactive:
+        query = query.filter(SubscriptionFeatureDefinition.is_active)
+
+    defs = query.order_by(SubscriptionFeatureDefinition.category.asc().nullsfirst(), SubscriptionFeatureDefinition.key.asc()).all()
+    return [SubscriptionFeatureDefinitionResponse.model_validate(d) for d in defs]
+
+
+@router.post(
+    "/feature-definitions",
+    response_model=SubscriptionFeatureDefinitionResponse,
+    status_code=201,
+)
+async def create_feature_definition(
+    data: SubscriptionFeatureDefinitionCreateRequest,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    existing = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.key == data.key,
+        SubscriptionFeatureDefinition.deleted_at.is_(None),
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Feature key already exists")
+
+    feature_def = SubscriptionFeatureDefinition(**data.model_dump())
+    db.add(feature_def)
+    db.commit()
+    db.refresh(feature_def)
+    return SubscriptionFeatureDefinitionResponse.model_validate(feature_def)
+
+
+@router.delete("/feature-definitions/{feature_key}")
+async def delete_feature_definition(
+    feature_key: str,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    feature_def = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.key == feature_key,
+        SubscriptionFeatureDefinition.deleted_at.is_(None),
+    ).first()
+    if not feature_def:
+        raise HTTPException(status_code=404, detail="Feature not found")
+
+    feature_def.deleted_at = utc_now()
+    feature_def.is_active = False
+    db.commit()
+    return {"message": "Feature deleted"}
+
+
+@router.post("/feature-definitions/seed-from-tiers")
+async def seed_feature_definitions_from_tiers(
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    """Create feature definitions for any feature_flags keys currently used by tiers."""
+    tiers = db.query(SubscriptionTier).filter(SubscriptionTier.deleted_at.is_(None)).all()
+    keys: set[str] = set()
+    for t in tiers:
+        if isinstance(t.feature_flags, dict):
+            keys.update(t.feature_flags.keys())
+
+    created: list[str] = []
+    for key in sorted(keys):
+        existing = db.query(SubscriptionFeatureDefinition).filter(
+            SubscriptionFeatureDefinition.key == key,
+            SubscriptionFeatureDefinition.deleted_at.is_(None),
+        ).first()
+        if existing:
+            continue
+        feature_def = SubscriptionFeatureDefinition(
+            key=key,
+            display_name=key.replace('_', ' ').title(),
+            description=None,
+            category=None,
+            is_active=True,
+        )
+        db.add(feature_def)
+        created.append(key)
+
+    db.commit()
+    return {"message": f"Created features: {created}" if created else "All features already exist"}
+
+
+@router.patch("/tiers/{tier_id}/feature-flags/{feature_key}", response_model=TierResponse)
+async def set_tier_feature_flag(
+    tier_id: UUID,
+    feature_key: str,
+    payload: TierFeatureFlagUpdateRequest,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db),
+):
+    """Enable/disable a feature flag on a tier (validated against feature definitions)."""
+    tier = db.query(SubscriptionTier).filter(
+        SubscriptionTier.id == tier_id,
+        SubscriptionTier.deleted_at.is_(None),
+    ).first()
+    if not tier:
+        raise HTTPException(status_code=404, detail="Tier not found")
+
+    feature_def = db.query(SubscriptionFeatureDefinition).filter(
+        SubscriptionFeatureDefinition.key == feature_key,
+        SubscriptionFeatureDefinition.deleted_at.is_(None),
+        SubscriptionFeatureDefinition.is_active.is_(True),
+    ).first()
+    if not feature_def:
+        raise HTTPException(status_code=400, detail="Unknown feature key. Create it in feature definitions first.")
+
+    if not isinstance(tier.feature_flags, dict) or tier.feature_flags is None:
+        tier.feature_flags = {}
+
+    tier.feature_flags[feature_key] = bool(payload.enabled)
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(tier, "feature_flags")
+
+    db.commit()
+    db.refresh(tier)
+    return TierResponse.model_validate(tier)
+
+
 @router.post("/seed/essential")
 async def seed_essential_data(
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Seed essential production data (tiers, roles, categories).
@@ -641,7 +806,7 @@ async def seed_essential_data(
 @router.get("/stats", response_model=AdminStatsResponse)
 async def get_admin_stats(
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get admin dashboard statistics."""
     total_users = db.query(User).filter(User.deleted_at.is_(None)).count()
@@ -705,7 +870,7 @@ async def list_transactions(
     user_id: Optional[UUID] = None,
     status: Optional[str] = None,
     admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List subscription transactions."""
     query = db.query(SubscriptionTransaction)
@@ -725,4 +890,300 @@ async def list_transactions(
         "total": total,
         "page": page,
         "per_page": per_page,
+    }
+
+
+
+# ==================== Subscription Management Endpoints (New) ====================
+
+
+@router.get("/subscriptions", response_model=List[dict])
+async def list_business_subscriptions(
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db)
+):
+    """
+    List all business subscriptions with current tier and status.
+    
+    Returns list of all businesses with subscription details including:
+    - business_id, business_name, tier, status, device_count, valid_until
+    """
+    from app.models.business import Business
+    
+    # Query all businesses
+    businesses = db.query(Business).filter(Business.deleted_at.is_(None)).all()
+    
+    perm_service = PermissionService(db)
+    device_service = DeviceService(db)
+    
+    result = []
+    for business in businesses:
+        try:
+            # Get permissions for each business (async method)
+            permissions = await perm_service.get_business_permissions(business.id)
+            
+            # Get device count
+            devices = device_service.get_business_devices(business.id)
+            
+            result.append({
+                'business_id': business.id,
+                'business_name': business.name,
+                'tier_name': permissions.get('tier', 'none'),
+                'status': permissions.get('status', 'inactive'),
+                'device_count': len(devices),
+                'max_devices': permissions.get('device_limit', 0),
+                'valid_until': permissions.get('demo_expires_at'),
+                'is_demo_expired': False  # Calculated from valid_until if needed
+            })
+        except Exception as e:
+            # Log error but continue with other businesses
+            print(f"Error getting subscription for business {business.id}: {e}")
+            continue
+    
+    return result
+
+
+@router.get("/subscriptions/{business_id}", response_model=dict)
+async def get_subscription_detail(
+    business_id: int,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db)
+):
+    """
+    Get detailed subscription info for a business.
+    
+    Returns detailed subscription info including:
+    - Current tier and features
+    - Active overrides
+    - Device list with last sync times
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    perm_service = PermissionService(db)
+    device_service = DeviceService(db)
+    
+    # Get permissions (async method)
+    permissions = await perm_service.get_business_permissions(business_id)
+    
+    # Get devices
+    devices = device_service.get_business_devices(business_id)
+    
+    # TODO: Get overrides from FeatureOverrides table once populated
+    overrides = {}
+    
+    return {
+        'business_id': business.id,
+        'business_name': business.name,
+        'tier_name': permissions.get('tier', 'none'),
+        'status': permissions.get('status', 'inactive'),
+        'device_count': len(devices),
+        'max_devices': permissions.get('device_limit', 0),
+        'valid_until': permissions.get('demo_expires_at'),
+        'permissions': permissions,
+        'overrides': overrides,
+        'devices': [d.model_dump() if hasattr(d, 'model_dump') else d for d in devices]
+    }
+
+
+@router.put("/subscriptions/{business_id}/tier")
+async def update_subscription_tier(
+    business_id: int,
+    tier_update: NewTierUpdateRequest,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db)
+):
+    """
+    Update a business's subscription tier.
+    
+    Invalidates permission cache after update.
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    sub_service = SubscriptionService(db)
+    
+    try:
+        result = sub_service.update_tier(
+            business_id=business_id,
+            tier_name=tier_update.tier_name,
+            valid_until=tier_update.valid_until,
+            admin_user_id=current_user.id
+        )
+        
+        return {
+            'success': True,
+            'message': f'Tier updated to {tier_update.tier_name}',
+            'subscription': result
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/subscriptions/{business_id}/overrides")
+async def set_feature_overrides(
+    business_id: int,
+    overrides: FeatureOverridesRequest,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db)
+):
+    """
+    Set or update feature overrides for a business.
+    
+    Accepts: max_devices, max_users, has_payroll, has_ai, has_api_access, has_advanced_reporting
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    sub_service = SubscriptionService(db)
+    
+    # Set each override that was provided
+    override_data = overrides.model_dump(exclude_unset=True)
+    results = []
+    
+    for feature_name, feature_value in override_data.items():
+        if feature_value is not None:
+            try:
+                result = sub_service.set_feature_override(
+                    business_id=business_id,
+                    feature_name=feature_name,
+                    feature_value=feature_value,
+                    admin_user_id=current_user.id
+                )
+                results.append(result)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+    
+    return {
+        'success': True,
+        'message': f'Set {len(results)} feature overrides',
+        'overrides': results
+    }
+
+
+@router.delete("/subscriptions/{business_id}/overrides/{feature_name}")
+async def remove_business_feature_override(
+    business_id: int,
+    feature_name: str,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db)
+):
+    """
+    Remove a feature override, reverting to tier default.
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    sub_service = SubscriptionService(db)
+    
+    removed = sub_service.remove_feature_override(
+        business_id=business_id,
+        feature_name=feature_name,
+        admin_user_id=current_user.id
+    )
+    
+    if not removed:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No override found for feature '{feature_name}'"
+        )
+    
+    return {
+        'success': True,
+        'message': f'Removed override for {feature_name}'
+    }
+
+
+# ==================== Device Management Endpoints ====================
+
+@router.get("/devices/{business_id}", response_model=List[dict])
+async def list_business_devices(
+    business_id: int,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db)
+):
+    """
+    List all devices for a business.
+    
+    Returns list of all devices including:
+    - device_id, device_name, user_name, last_sync_time, is_active
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    device_service = DeviceService(db)
+    devices = device_service.get_business_devices(business_id)
+    
+    return [d.model_dump() if hasattr(d, 'model_dump') else d for d in devices]
+
+
+@router.delete("/devices/{business_id}/{device_id}")
+async def unlink_device(
+    business_id: int,
+    device_id: str,
+    current_user: User = Depends(require_superadmin),
+    db=Depends(get_sync_db)
+):
+    """
+    Unlink a device from a business.
+    
+    Sets is_active = FALSE for the device.
+    """
+    from app.models.business import Business
+    
+    # Verify business exists
+    business = db.query(Business).filter(
+        Business.id == business_id,
+        Business.deleted_at.is_(None)
+    ).first()
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    device_service = DeviceService(db)
+    device_service.unlink_device(business_id, device_id)
+    
+    return {
+        'success': True,
+        'message': f'Device {device_id} unlinked from business {business_id}'
     }

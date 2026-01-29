@@ -6,9 +6,8 @@ from fastapi.testclient import TestClient
 
 # Set test environment variables BEFORE importing app modules
 os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
-# Use the production database URL for tests that need database access
-# Property tests that don't need database will not use this
-os.environ.setdefault("DATABASE_URL", os.getenv("DATABASE_URL", "sqlite:///./test.db"))
+# Use PostgreSQL for tests - requires DATABASE_URL to be set in environment
+# Tests will use the same database as development (ensure it exists)
 
 from app.main import app
 

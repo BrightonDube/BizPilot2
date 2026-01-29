@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 const ShaderBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -110,7 +110,7 @@ const ShaderBackground = () => {
   `;
 
   // Helper function to compile shader
-  const loadShader = (gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null => {
+  const loadShader = useCallback((gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null => {
     const shader = gl.createShader(type);
     if (!shader) return null;
     
@@ -124,10 +124,10 @@ const ShaderBackground = () => {
     }
 
     return shader;
-  };
+  }, []);
 
   // Initialize shader program
-  const initShaderProgram = (gl: WebGLRenderingContext, vsSource: string, fsSource: string): WebGLProgram | null => {
+  const initShaderProgram = useCallback((gl: WebGLRenderingContext, vsSource: string, fsSource: string): WebGLProgram | null => {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
@@ -146,7 +146,7 @@ const ShaderBackground = () => {
     }
 
     return shaderProgram;
-  };
+  }, [loadShader]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -226,7 +226,7 @@ const ShaderBackground = () => {
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [fsSource, initShaderProgram, vsSource]);
 
   return (
     <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10" />

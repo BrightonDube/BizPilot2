@@ -6,8 +6,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
-  Settings as SettingsIcon,
   User,
   Users,
   Building2,
@@ -16,7 +16,6 @@ import {
   CreditCard,
   Palette,
   Sparkles,
-  Globe,
   Save,
   Camera,
   Check,
@@ -26,7 +25,6 @@ import {
   EyeOff,
   Crown,
   Zap,
-  ExternalLink,
   Receipt,
   Monitor,
   Smartphone,
@@ -41,10 +39,8 @@ import {
   Select,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/lib/api';
@@ -111,7 +107,6 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const billingProvider: 'payfast' | 'paystack' = 'paystack';
   const tabParam = searchParams.get('tab') as SettingsTab | null;
   const [activeTab, setActiveTab] = useState<SettingsTab>(tabParam || 'profile');
   const [isSaving, setIsSaving] = useState(false);
@@ -385,7 +380,7 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle tier upgrade
+  // Handle tier upgrade - initiate checkout directly for logged-in users
   const handleUpgrade = async (tier: SubscriptionTier) => {
     // Handle Enterprise tier with custom pricing
     if (PricingUtils.hasCustomPricing(tier)) {
@@ -394,7 +389,36 @@ export default function SettingsPage() {
       return;
     }
     
-    router.push(`/pricing?tier=${encodeURIComponent(tier.id)}&cycle=${encodeURIComponent(selectedBillingCycle)}`);
+    // For free tier, just select the tier directly
+    if (tier.price_monthly_cents === 0) {
+      try {
+        await subscriptionApi.selectTier(tier.id, selectedBillingCycle);
+        await loadBillingData();
+        return;
+      } catch (error) {
+        console.error('Failed to update subscription:', error);
+        return;
+      }
+    }
+    
+    // For paid tiers, initiate checkout directly
+    try {
+      const response = await apiClient.post<{
+        reference: string;
+        authorization_url: string;
+        access_code: string;
+      }>('/payments/checkout/initiate', {
+        tier_id: tier.id,
+        billing_cycle: selectedBillingCycle,
+      });
+      
+      // Redirect to Paystack payment page
+      window.location.href = response.data.authorization_url;
+    } catch (error) {
+      console.error('Failed to initiate checkout:', error);
+      // Fallback: show error or redirect to settings with error
+      alert('Failed to initiate payment. Please try again.');
+    }
   };
 
   const formatPrice = (cents: number) => {
@@ -578,10 +602,9 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden relative">
                     {user?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                      <Image src={user.avatar_url} alt="Avatar" fill sizes="80px" className="object-cover" />
                     ) : (
                       <User className="w-8 h-8 text-muted-foreground" />
                     )}

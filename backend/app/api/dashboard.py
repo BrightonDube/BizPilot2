@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
 from app.models.product import Product, ProductStatus, ProductCategory
@@ -88,7 +88,7 @@ class DashboardResponse(BaseModel):
 async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get dashboard statistics for the current user's business.
@@ -184,7 +184,7 @@ async def get_recent_orders(
     limit: int = 5,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get recent orders for the dashboard.
@@ -226,7 +226,7 @@ async def get_top_products(
     limit: int = 5,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get top selling products for the dashboard.
@@ -257,7 +257,7 @@ async def get_revenue_by_month(
     months: int = 6,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get revenue data by month for charts.
@@ -304,7 +304,7 @@ async def get_revenue_by_month(
 async def get_products_by_category(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get product distribution by category for pie chart.
@@ -350,7 +350,7 @@ async def get_products_by_category(
 async def get_inventory_status(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get inventory status summary for bar chart.
@@ -393,7 +393,7 @@ async def get_inventory_status(
 async def get_full_dashboard(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get complete dashboard data including stats, recent orders, top products, and chart data.

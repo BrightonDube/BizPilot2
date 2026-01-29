@@ -2,11 +2,11 @@
 
 from decimal import Decimal
 from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum as SQLEnum, Date
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 import enum
 from datetime import date
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, JSONType
 
 
 class InvoiceStatus(str, enum.Enum):
@@ -73,7 +73,7 @@ class Invoice(BaseModel):
     gateway_status = Column(String(50), nullable=True)
     
     # Addresses
-    billing_address = Column(JSONB, nullable=True)
+    billing_address = Column(JSONType, nullable=True)
     
     # Notes
     notes = Column(Text, nullable=True)

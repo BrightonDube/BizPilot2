@@ -1,11 +1,11 @@
 """Order models for order management."""
 
 from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime
-from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship
 import enum
 
-from app.models.base import BaseModel, utc_now
+from app.models.base import BaseModel, utc_now, JSONType
 
 
 class OrderStatus(str, enum.Enum):
@@ -79,8 +79,8 @@ class Order(BaseModel):
     payment_method = Column(String(50), nullable=True)
     
     # Shipping
-    shipping_address = Column(JSONB, nullable=True)  # {line1, line2, city, state, postal_code, country}
-    billing_address = Column(JSONB, nullable=True)
+    shipping_address = Column(JSONType, nullable=True)  # {line1, line2, city, state, postal_code, country}
+    billing_address = Column(JSONType, nullable=True)
     
     # Notes
     notes = Column(Text, nullable=True)

@@ -3,11 +3,11 @@
 import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
-from sqlalchemy.orm import Session
 from pydantic import BaseModel as PydanticBaseModel
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.core.config import settings
+from app.core.rate_limit import limiter, AUTH_RATE_LIMIT, REGISTER_RATE_LIMIT, PASSWORD_RESET_RATE_LIMIT, EMAIL_VERIFY_RATE_LIMIT
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -94,13 +94,13 @@ def clear_auth_cookies(response: Response) -> None:
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-# @limiter.limit(REGISTER_RATE_LIMIT)  # Temporarily disabled for debugging
-async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit(REGISTER_RATE_LIMIT)
+async def register(request: Request, user_data: UserCreate, db=Depends(get_db)):
     """Register a new user."""
     auth_service = AuthService(db)
     
     # Check if user already exists
-    existing_user = auth_service.get_user_by_email(user_data.email)
+    existing_user = await auth_service.get_user_by_email(user_data.email)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -108,7 +108,7 @@ async def register(request: Request, user_data: UserCreate, db: Session = Depend
         )
     
     # Create user
-    user = auth_service.create_user(user_data)
+    user = await auth_service.create_user(user_data)
     
     # Generate email verification token
     verification_token = create_email_verification_token(user.email)
@@ -187,16 +187,19 @@ async def test_auth_components():
 
 
 @router.get("/test-db-query")
-async def test_db_query(db: Session = Depends(get_db)):
+async def test_db_query(db=Depends(get_db)):
     """Test database connection and user query."""
     try:
         from app.models.user import User
+        from sqlalchemy import select
         
         # Test 1: Simple count query
-        user_count = db.query(User).count()
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        user_count = len(users)
         
         # Test 2: Try to get first user (if any)
-        first_user = db.query(User).first()
+        first_user = users[0] if users else None
         user_info = None
         if first_user:
             user_info = {
@@ -227,7 +230,7 @@ async def test_db_query(db: Session = Depends(get_db)):
 async def test_login(
     request: Request,
     credentials: UserLogin,
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     """Debug endpoint to test login and capture exact errors."""
     import traceback
@@ -235,7 +238,7 @@ async def test_login(
         auth_service = AuthService(db)
         
         # Step 1: Try to get user
-        user = auth_service.get_user_by_email(credentials.email)
+        user = await auth_service.get_user_by_email(credentials.email)
         if not user:
             return {"status": "error", "step": "get_user", "error": "User not found"}
         
@@ -268,12 +271,12 @@ async def test_login(
 
 
 @router.post("/login", response_model=Token)
-# @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
+@limiter.limit(AUTH_RATE_LIMIT)
 async def login(
     request: Request,
     credentials: UserLogin,
     response: Response,
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     """
     Login with email and password.
@@ -285,7 +288,7 @@ async def login(
     """
     auth_service = AuthService(db)
     
-    user = auth_service.authenticate_user(credentials.email, credentials.password)
+    user = await auth_service.authenticate_user(credentials.email, credentials.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -333,7 +336,7 @@ async def refresh_token(
     request: Request,
     response: Response,
     token_data: Optional[TokenRefresh] = None,
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     """
     Refresh access token using refresh token.
@@ -341,6 +344,7 @@ async def refresh_token(
     For web clients: Reads refresh token from cookie.
     For mobile clients: Reads refresh token from request body.
     """
+    auth_service = AuthService(db)
     # Get refresh token from cookie or body
     if is_mobile_client(request):
         if not token_data or not token_data.refresh_token:
@@ -367,8 +371,7 @@ async def refresh_token(
         )
     
     user_id = payload.get("sub")
-    auth_service = AuthService(db)
-    user = auth_service.get_user_by_id(user_id)
+    user = await auth_service.get_user_by_id(user_id)
     
     if not user:
         raise HTTPException(
@@ -391,7 +394,7 @@ async def refresh_token(
 
 
 @router.post("/verify-email")
-async def verify_email(data: EmailVerification, db: Session = Depends(get_db)):
+async def verify_email(data: EmailVerification, db=Depends(get_db)):
     """Verify email address with token."""
     email = verify_email_token(data.token)
     
@@ -402,7 +405,7 @@ async def verify_email(data: EmailVerification, db: Session = Depends(get_db)):
         )
     
     auth_service = AuthService(db)
-    if not auth_service.verify_email(email):
+    if not await auth_service.verify_email(email):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
@@ -412,11 +415,11 @@ async def verify_email(data: EmailVerification, db: Session = Depends(get_db)):
 
 
 @router.post("/forgot-password")
-# @limiter.limit(PASSWORD_RESET_RATE_LIMIT)  # Temporarily disabled for debugging
-async def forgot_password(request: Request, data: PasswordReset, db: Session = Depends(get_db)):
+@limiter.limit(PASSWORD_RESET_RATE_LIMIT)
+async def forgot_password(request: Request, data: PasswordReset, db=Depends(get_db)):
     """Request password reset email."""
     auth_service = AuthService(db)
-    user = auth_service.get_user_by_email(data.email)
+    user = await auth_service.get_user_by_email(data.email)
     
     if user:
         # Generate reset token
@@ -462,7 +465,7 @@ The BizPilot Team
 
 @router.post("/reset-password")
 # @limiter.limit(PASSWORD_RESET_RATE_LIMIT)  # Temporarily disabled for debugging
-async def reset_password(request: Request, data: PasswordResetConfirm, db: Session = Depends(get_db)):
+async def reset_password(request: Request, data: PasswordResetConfirm, db=Depends(get_db)):
     """Reset password with token."""
     email = verify_password_reset_token(data.token)
     
@@ -473,7 +476,7 @@ async def reset_password(request: Request, data: PasswordResetConfirm, db: Sessi
         )
     
     auth_service = AuthService(db)
-    if not auth_service.reset_password(email, data.new_password):
+    if not await auth_service.reset_password(email, data.new_password):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
@@ -520,7 +523,7 @@ async def get_current_user_profile(
 async def change_password(
     data: PasswordChange,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     """Change password for authenticated user."""
     if not current_user.hashed_password:
@@ -536,7 +539,7 @@ async def change_password(
         )
     
     auth_service = AuthService(db)
-    auth_service.update_password(current_user, data.new_password)
+    await auth_service.update_password(current_user, data.new_password)
     
     return {"message": "Password changed successfully"}
 
@@ -559,7 +562,7 @@ class PINLogin(PydanticBaseModel):
 async def setup_pin(
     data: PINSetup,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     """Set up a PIN code for quick login (requires authentication)."""
     from app.core.security import hash_pin_code
@@ -582,7 +585,7 @@ async def setup_pin(
         hashed_pin = hash_pin_code(data.pin)
         current_user.pin_code_hash = hashed_pin
         # Don't store any part of the PIN in plain text for security
-        db.commit()
+        await db.commit()
         
         return {"message": "PIN set up successfully"}
     except ValueError as e:
@@ -595,7 +598,7 @@ async def pin_login(
     request: Request,
     credentials: PINLogin,
     response: Response,
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     """
     Login with email and PIN code (for POS terminals).
@@ -607,7 +610,7 @@ async def pin_login(
     from app.core.security import verify_pin_code
     
     auth_service = AuthService(db)
-    user = auth_service.get_user_by_email(credentials.email)
+    user = await auth_service.get_user_by_email(credentials.email)
     
     if not user:
         raise HTTPException(
@@ -648,12 +651,12 @@ async def pin_login(
 @router.delete("/pin")
 async def remove_pin(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     """Remove the PIN code from the current user's account."""
     current_user.pin_code = None
     current_user.pin_code_hash = None
-    db.commit()
+    await db.commit()
     
     return {"message": "PIN removed successfully"}
 

@@ -4,18 +4,15 @@
  * Reports page - Financial reports and analytics dashboard.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   DollarSign,
   ShoppingCart,
   Users,
   Package,
-  Calendar,
   Download,
-  Filter,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -30,6 +27,16 @@ import {
 import { apiClient } from '@/lib/api';
 import { RevenueTrendChart } from '@/components/charts/RevenueTrendChart';
 import { OrdersTrendChart } from '@/components/charts/OrdersTrendChart';
+
+// Helper function to extract filename from Content-Disposition header
+function extractFilenameFromContentDisposition(contentDisposition: string | undefined): string | null {
+  if (!contentDisposition) return null;
+  const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+  if (filenameMatch && filenameMatch[1]) {
+    return filenameMatch[1].replace(/['"]/g, '');
+  }
+  return null;
+}
 
 interface ReportStats {
   total_revenue: number;
@@ -84,11 +91,7 @@ export default function ReportsPage() {
   const [dateRange, setDateRange] = useState('30d');
   const [category, setCategory] = useState<'all' | 'sales' | 'purchases'>('sales');
 
-  useEffect(() => {
-    fetchReportData();
-  }, [dateRange, category]);
-
-  const fetchReportData = async () => {
+  const fetchReportData = useCallback(async () => {
     setIsLoading(true);
     try {
       const direction = category === 'sales' ? 'inbound' : category === 'purchases' ? 'outbound' : undefined;
@@ -104,7 +107,7 @@ export default function ReportsPage() {
       setTopCustomers(customersRes.data || []);
       setRevenueTrend(revenueTrendRes.data || { data: [], total: 0, average: 0 });
       setOrdersTrend(ordersTrendRes.data || { data: [], total: 0, average: 0 });
-    } catch (error) {
+    } catch {
       // Use default values if API is not available
       setStats({
         total_revenue: 0,
@@ -122,7 +125,11 @@ export default function ReportsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dateRange, category]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [fetchReportData]);
 
   const dateRangeOptions = [
     { value: '7d', label: 'Last 7 days' },
@@ -136,12 +143,6 @@ export default function ReportsPage() {
     { value: 'purchases', label: 'Purchases report' },
     { value: 'all', label: 'All activity' },
   ] as const;
-
-  const extractFilenameFromContentDisposition = (value?: string) => {
-    if (!value) return null;
-    const match = value.match(/filename="?([^\";]+)"?/i);
-    return match?.[1] || null;
-  };
 
   const handleExportPdf = async () => {
     setIsExporting(true);

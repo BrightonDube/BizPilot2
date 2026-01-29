@@ -1,14 +1,18 @@
 """SubscriptionTier model for defining pricing tiers and features."""
 
-from sqlalchemy import Column, String, Boolean, Integer
+from sqlalchemy import Column, String, Boolean, Integer, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
 
+# Use JSON type that works with both PostgreSQL and SQLite
+# PostgreSQL will use JSONB, SQLite will use JSON
+JSONType = JSON().with_variant(JSONB(), 'postgresql')
+
 # Import shared pricing configuration
-import sys
-import os
+import sys  # noqa: E402
+import os  # noqa: E402
 # Add shared directory to path - works in both local dev and Docker container
 shared_paths = [
     os.path.join(os.path.dirname(__file__), '..', '..', '..', 'shared'),  # Local dev
@@ -21,6 +25,17 @@ for path in shared_paths:
         break
 
 # Import the shared configuration
+try:
+    from pricing_config import DEFAULT_TIERS, SUBSCRIPTION_TIERS, PricingUtils  # noqa: E402, F401
+except ImportError as e:
+    # Fallback if shared module not available
+    print(f"Warning: Could not import from pricing_config: {e}")
+    DEFAULT_TIERS = {}
+    SUBSCRIPTION_TIERS = []
+    PricingUtils = None
+
+# Explicitly export for other modules
+__all__ = ['SubscriptionTier', 'DEFAULT_TIERS', 'SUBSCRIPTION_TIERS', 'PricingUtils']
 
 
 class SubscriptionTier(BaseModel):
@@ -51,13 +66,13 @@ class SubscriptionTier(BaseModel):
     # Custom pricing flag for Enterprise tier
     is_custom_pricing = Column(Boolean, default=False, nullable=False)
     
-    # Features and limits as JSONB for flexibility
+    # Features and limits as JSON for flexibility
     # Example: {"max_products": 5, "max_users": 1, "features": ["basic_reports"]}
-    features = Column(JSONB, nullable=False, default={})
+    features = Column(JSONType, nullable=False, default={})
     
     # Feature flags - granular feature access
     # Example: {"export_reports": true, "ai_insights": false, "multi_location": false}
-    feature_flags = Column(JSONB, nullable=False, default={})
+    feature_flags = Column(JSONType, nullable=False, default={})
 
     # Relationships
     users = relationship("User", back_populates="current_tier")

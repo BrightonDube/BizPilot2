@@ -5,13 +5,12 @@
  * Checks if user has a business and redirects to setup if not.
  */
 
-import { useState, ReactNode, useEffect } from 'react';
+import { useState, ReactNode, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { useRequireAuth } from '@/hooks/useAuth';
-import { useSubscription } from '@/hooks/useSubscription';
 import { LoadingSpinner } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 import { GlobalAIChat } from '@/components/ai/GlobalAIChat';
@@ -66,25 +65,25 @@ function AppLayoutInner({
 }) {
   const { isLoading } = useRequireAuth();
 
-  useEffect(() => {
-    const checkBusinessStatus = async () => {
-      try {
-        const response = await apiClient.get('/business/status');
-        if (!response.data.has_business) {
-          router.push('/business/setup');
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking business status:', error);
-        // Allow dashboard to render even if status check fails
+  const checkBusinessStatus = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/business/status');
+      if (!response.data.has_business) {
+        router.push('/business/setup');
+        return;
       }
-      setCheckingBusiness(false);
-    };
+    } catch (error) {
+      console.error('Error checking business status:', error);
+      // Allow dashboard to render even if status check fails
+    }
+    setCheckingBusiness(false);
+  }, [router, setCheckingBusiness]);
 
+  useEffect(() => {
     if (!isLoading) {
       checkBusinessStatus();
     }
-  }, [isLoading, router]);
+  }, [isLoading, checkBusinessStatus]);
 
   if (isLoading || checkingBusiness) {
     return (

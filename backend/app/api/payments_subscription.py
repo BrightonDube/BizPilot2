@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user
 from app.models.user import User, SubscriptionStatus
 from app.models.subscription_tier import SubscriptionTier
@@ -48,7 +48,7 @@ class VerifyPaymentRequest(BaseModel):
 async def initiate_checkout(
     data: InitiateCheckoutRequest,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Initialize a Paystack checkout session for a subscription.
@@ -143,7 +143,7 @@ async def initiate_checkout(
 async def verify_payment(
     data: VerifyPaymentRequest,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Verify a payment after callback from Paystack.
@@ -238,7 +238,7 @@ async def verify_payment(
 async def paystack_webhook(
     request: Request,
     x_paystack_signature: Optional[str] = Header(None),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Handle Paystack webhook events.
@@ -400,7 +400,7 @@ class TransactionListResponse(BaseModel):
 async def get_my_transactions(
     limit: int = 10,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Get the current user's subscription transaction history.

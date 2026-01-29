@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
 from app.schemas.department import (
@@ -36,7 +36,7 @@ def _department_to_response(department) -> DepartmentResponse:
 @router.get("", response_model=DepartmentListResponse)
 async def list_departments(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -57,7 +57,7 @@ async def list_departments(
 async def get_department(
     department_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -83,7 +83,7 @@ async def get_department(
 async def create_department(
     data: DepartmentCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -106,7 +106,7 @@ async def update_department(
     department_id: str,
     data: DepartmentUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -129,7 +129,7 @@ async def update_department(
 async def delete_department(
     department_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """

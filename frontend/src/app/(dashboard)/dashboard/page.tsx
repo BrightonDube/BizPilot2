@@ -15,8 +15,7 @@ import {
   DollarSign,
   ShoppingCart,
   Users,
-  FileText,
-  Loader2
+  FileText
 } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { apiClient } from '@/lib/api'
@@ -114,11 +113,6 @@ function formatCurrency(amount: number, currency: string = 'ZAR'): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount)
-}
-
-function formatPercentage(value: number): string {
-  const n = Number.isFinite(value) ? value : 0
-  return `${n.toFixed(1)}%`
 }
 
 function getStatusColor(status: string): string {

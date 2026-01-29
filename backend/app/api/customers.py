@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -64,7 +64,7 @@ async def list_customers(
     sort_by: str = Query("created_at", pattern="^(first_name|last_name|email|company_name|total_spent|total_orders|created_at|updated_at)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -95,7 +95,7 @@ async def list_customers(
 async def get_top_customers(
     limit: int = Query(10, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get top customers by total spent."""
@@ -108,7 +108,7 @@ async def get_top_customers(
 async def get_customer(
     customer_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get a customer by ID."""
@@ -128,7 +128,7 @@ async def get_customer(
 async def get_customer_metrics(
     customer_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get customer metrics (orders, spending)."""
@@ -154,7 +154,7 @@ async def get_customer_metrics(
 async def create_customer(
     data: CustomerCreate,
     current_user: User = Depends(has_permission("customers:create")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Create a new customer."""
@@ -178,7 +178,7 @@ async def update_customer(
     customer_id: str,
     data: CustomerUpdate,
     current_user: User = Depends(has_permission("customers:edit")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Update a customer."""
@@ -208,7 +208,7 @@ async def update_customer(
 async def delete_customer(
     customer_id: str,
     current_user: User = Depends(has_permission("customers:delete")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Delete a customer."""
@@ -228,7 +228,7 @@ async def delete_customer(
 async def bulk_create_customers(
     data: CustomerBulkCreate,
     current_user: User = Depends(has_permission("customers:create")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Create multiple customers at once."""
@@ -241,7 +241,7 @@ async def bulk_create_customers(
 async def bulk_delete_customers(
     data: CustomerBulkDelete,
     current_user: User = Depends(has_permission("customers:delete")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Delete multiple customers at once."""

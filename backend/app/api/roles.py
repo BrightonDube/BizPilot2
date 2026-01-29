@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -118,7 +118,7 @@ async def get_permissions_flat():
 async def list_roles(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all roles available for the business (system + custom)."""
     service = RoleService(db)
@@ -133,7 +133,7 @@ async def list_roles(
 @router.get("/system", response_model=RoleListResponse)
 async def list_system_roles(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List system-defined roles."""
     service = RoleService(db)
@@ -149,7 +149,7 @@ async def list_system_roles(
 async def get_role(
     role_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific role by ID."""
     service = RoleService(db)
@@ -166,7 +166,7 @@ async def create_role(
     data: RoleCreate,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new custom role for the business."""
     service = RoleService(db)
@@ -196,7 +196,7 @@ async def update_role(
     data: RoleUpdate,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a custom role."""
     service = RoleService(db)
@@ -244,7 +244,7 @@ async def delete_role(
     role_id: str,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete a custom role."""
     service = RoleService(db)
@@ -278,7 +278,7 @@ async def assign_role_to_user(
     data: AssignRoleRequest,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Assign a role to a user in the business."""
     service = RoleService(db)

@@ -15,7 +15,7 @@ import { GlobalAIChat } from '@/components/ai/GlobalAIChat';
 import { useGuestAISession } from '@/hooks/useGuestAISession';
 import { useAuthStore } from '@/store/authStore';
 import { apiClient } from '@/lib/api';
-import { MarketingAIContextManager } from '../../../shared/marketing-ai-context';
+import { MarketingAIContextManager } from '@/shared/marketing-ai-context';
 import {
   TEST_CONSTANTS,
   createMockGuestSession,

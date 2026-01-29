@@ -53,6 +53,7 @@
     "puppeteer": "^24.35.0",
     "tailwindcss": "^4.1.18",
     "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

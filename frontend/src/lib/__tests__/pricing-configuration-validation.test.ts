@@ -8,7 +8,7 @@
  * - 5.1.3: All tiers have correct feature availability
  */
 
-import { SUBSCRIPTION_TIERS } from '../../../../shared/pricing-config';
+import { SUBSCRIPTION_TIERS } from '@/shared/pricing-config';
 import { PRICING_PLANS, FEATURE_COMPARISON, PricingUtils } from '../pricing-config';
 
 describe('Task 5.1: Pricing Configuration Validation', () => {

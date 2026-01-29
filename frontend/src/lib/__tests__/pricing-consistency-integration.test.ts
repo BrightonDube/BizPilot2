@@ -12,7 +12,7 @@
  */
 
 import { PRICING_PLANS, PricingUtils, type BillingCycle } from '../pricing-config';
-import { SUBSCRIPTION_TIERS, PricingUtils as SharedPricingUtils } from '../../../../shared/pricing-config';
+import { SUBSCRIPTION_TIERS, PricingUtils as SharedPricingUtils } from '@/shared/pricing-config';
 
 describe('Frontend Pricing Consistency Integration', () => {
   

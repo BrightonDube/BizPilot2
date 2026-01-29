@@ -20,6 +20,7 @@ from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
 from app.models.user_settings import UserSettings, AIDataSharingLevel
 from app.models.subscription_tier import SubscriptionTier
+from app.models.subscription_feature_definition import SubscriptionFeatureDefinition
 from app.models.subscription_transaction import (
     SubscriptionTransaction,
     TransactionStatus as SubscriptionTransactionStatus,
@@ -40,6 +41,32 @@ from app.models.layby_audit import LaybyAudit
 from app.models.layby_notification import LaybyNotification, NotificationChannel, NotificationStatus as LaybyNotificationStatus
 from app.models.stock_reservation import StockReservation
 from app.models.job_execution_log import JobExecutionLog, JobStatus
+from app.models.subscription import (
+    TierFeature,
+    BusinessSubscription,
+    FeatureOverride,
+    DeviceRegistry,
+    AuditLog,
+)
+from app.models.customer_account import (
+    CustomerAccount,
+    AccountStatus,
+    AccountTransaction,
+    TransactionType as AccountTransactionType,
+    AccountPayment,
+    PaymentAllocation,
+    AccountStatement,
+    CollectionActivity,
+    ActivityType,
+    AccountWriteOff,
+)
+from app.models.report_subscription import (
+    ReportSubscription,
+    ReportType,
+    DeliveryFrequency,
+    DeliveryStatus,
+    ReportDeliveryLog,
+)
 
 __all__ = [
     "BaseModel",
@@ -91,6 +118,7 @@ __all__ = [
     "AIDataSharingLevel",
     # Subscription
     "SubscriptionTier",
+    "SubscriptionFeatureDefinition",
     "SubscriptionTransaction",
     "SubscriptionTransactionStatus",
     "SubscriptionTransactionType",
@@ -131,4 +159,27 @@ __all__ = [
     # Job Execution
     "JobExecutionLog",
     "JobStatus",
+    # Subscription System
+    "TierFeature",
+    "BusinessSubscription",
+    "FeatureOverride",
+    "DeviceRegistry",
+    "AuditLog",
+    # Customer Accounts
+    "CustomerAccount",
+    "AccountStatus",
+    "AccountTransaction",
+    "AccountTransactionType",
+    "AccountPayment",
+    "PaymentAllocation",
+    "AccountStatement",
+    "CollectionActivity",
+    "ActivityType",
+    "AccountWriteOff",
+    # Report Subscriptions
+    "ReportSubscription",
+    "ReportType",
+    "DeliveryFrequency",
+    "DeliveryStatus",
+    "ReportDeliveryLog",
 ]

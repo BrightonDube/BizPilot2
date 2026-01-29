@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Plus, Factory, Play, CheckCircle, XCircle, Eye, Trash2 } from 'lucide-react'
 
@@ -56,7 +56,7 @@ export default function ProductionPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [statusFilter, setStatusFilter] = useState<string>('')
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setIsLoading(true)
       const params = new URLSearchParams({ page: String(page), per_page: '20' })
@@ -71,11 +71,11 @@ export default function ProductionPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [page, statusFilter])
 
   useEffect(() => {
     fetchOrders()
-  }, [page, statusFilter])
+  }, [fetchOrders])
 
   const handleStartProduction = async (orderId: string) => {
     try {

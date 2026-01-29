@@ -8,7 +8,6 @@
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5
  */
 
-import React from 'react';
 import { AI_MESSAGING_CONFIG, AIValueProposition, AICapability, AIFAQ } from '@/lib/ai-messaging-config';
 
 // AI Hero Section Component

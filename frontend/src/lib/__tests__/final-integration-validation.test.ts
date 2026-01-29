@@ -8,7 +8,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { SUBSCRIPTION_TIERS } from '../../../../shared/pricing-config';
+import { SUBSCRIPTION_TIERS } from '@/shared/pricing-config';
 
 // Mock API calls
 global.fetch = jest.fn();

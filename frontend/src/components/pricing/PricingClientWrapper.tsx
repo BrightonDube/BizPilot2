@@ -46,7 +46,6 @@ function PricingCard({
   benefits, 
   featured = false, 
   ctaHref, 
-  planId: _planId,
   onCtaClick,
   isCurrentPlan = false,
   theme,

@@ -60,7 +60,6 @@ function formatCurrency(amount: number): string {
 
 export default function NewInvoicePage() {
   const router = useRouter()
-  const [_loading, _setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   

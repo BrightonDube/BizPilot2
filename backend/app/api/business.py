@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import re
 import math
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_user_for_onboarding, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -90,10 +90,30 @@ def slugify(text: str) -> str:
     return text
 
 
+def _get_or_create_management_department(db: Session, business_id):
+    from app.models.department import Department
+    department = db.query(Department).filter(
+        Department.business_id == business_id,
+        Department.name == "Management",
+        Department.deleted_at.is_(None),
+    ).first()
+    if department:
+        return department
+
+    department = Department(
+        business_id=business_id,
+        name="Management",
+        description="Management and owners",
+    )
+    db.add(department)
+    db.flush()
+    return department
+
+
 @router.get("/status", response_model=BusinessStatusResponse)
 async def get_business_status(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Check if the current user has a business associated.
@@ -145,7 +165,7 @@ async def get_business_status(
 async def setup_business(
     business_data: BusinessCreate,
     current_user: User = Depends(get_current_user_for_onboarding),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Set up a new business for a user who doesn't have one.
@@ -222,17 +242,18 @@ async def setup_business(
         db.add(admin_role)
         db.flush()  # Get the role ID
         
-        # Associate user with business as admin
+        management_department = _get_or_create_management_department(db, business.id)
+
         business_user = BusinessUser(
             user_id=current_user.id,
             business_id=business.id,
             role_id=admin_role.id,
+            department_id=management_department.id,
             status=BusinessUserStatus.ACTIVE,
             is_primary=True,
         )
         db.add(business_user)
-        
-        # Create default "General" department
+
         from app.models.department import Department
         default_department = Department(
             business_id=business.id,
@@ -279,7 +300,7 @@ async def setup_business(
 @router.get("/current", response_model=BusinessResponse)
 async def get_current_business(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get the current user's primary business."""
     business_user = db.query(BusinessUser).filter(
@@ -325,7 +346,7 @@ async def get_current_business(
 async def update_current_business(
     business_data: BusinessUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update the current user's primary business settings."""
     # Get user's business association
@@ -449,7 +470,7 @@ async def list_business_users(
     search: Optional[str] = Query(None, description="Search by name, email, or department name"),
     current_user: User = Depends(has_permission("users:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all users in the current business."""
     from app.models.department import Department
@@ -531,7 +552,7 @@ async def invite_user_to_business(
     data: InviteUserRequest,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Invite a user to join the business."""
     from app.models.department import Department
@@ -544,9 +565,13 @@ async def invite_user_to_business(
     if not role.is_system and str(role.business_id) != business_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
     
-    # Validate department if provided
-    if data.department_id:
-        department = db.query(Department).filter(Department.id == data.department_id).first()
+    department_id_to_use = data.department_id
+    if not department_id_to_use and role and role.name and role.name.lower() == "admin":
+        management_department = _get_or_create_management_department(db, business_id)
+        department_id_to_use = management_department.id
+
+    if department_id_to_use:
+        department = db.query(Department).filter(Department.id == department_id_to_use).first()
         if not department:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
         if str(department.business_id) != business_id:
@@ -574,7 +599,7 @@ async def invite_user_to_business(
             user_id=existing_user.id,
             business_id=business_id,
             role_id=data.role_id,
-            department_id=data.department_id,
+            department_id=department_id_to_use,
             status=BusinessUserStatus.ACTIVE,
             is_primary=False,
         )
@@ -629,7 +654,7 @@ async def invite_user_to_business(
             user_id=new_user.id,
             business_id=business_id,
             role_id=data.role_id,
-            department_id=data.department_id,
+            department_id=department_id_to_use,
             status=BusinessUserStatus.INVITED,
             is_primary=False,
         )
@@ -673,7 +698,7 @@ async def get_business_user(
     user_id: str,
     current_user: User = Depends(has_permission("users:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific user in the business."""
     from app.models.department import Department
@@ -725,7 +750,7 @@ async def update_business_user(
     data: UpdateBusinessUserRequest,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a user's role or status in the business."""
     from app.models.department import Department
@@ -759,6 +784,11 @@ async def update_business_user(
         if not role.is_system and str(role.business_id) != business_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot use roles from other businesses")
         business_user.role_id = data.role_id
+
+        # Owners/admins should fall under Management when no explicit department is provided.
+        if role.name and role.name.lower() == "admin" and data.department_id is None:
+            management_department = _get_or_create_management_department(db, business_id)
+            business_user.department_id = management_department.id
     
     # Handle department reassignment
     if data.department_id is not None:
@@ -820,7 +850,7 @@ async def remove_user_from_business(
     user_id: str,
     current_user: User = Depends(has_permission("users:manage")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Remove a user from the business."""
     business_user = db.query(BusinessUser).filter(

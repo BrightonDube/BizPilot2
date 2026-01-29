@@ -41,25 +41,22 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const productId = params.id as string;
+  const params = useParams()
+  const router = useRouter()
+  const productId = params.id as string
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     async function fetchProduct() {
       try {
         setIsLoading(true);
-        setError(null);
         const response = await apiClient.get<Product>(`/products/${productId}`);
         setProduct(response.data);
       } catch (err) {
         console.error('Error fetching product:', err);
-        setError('Failed to load product');
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +79,6 @@ export default function ProductDetailPage() {
       router.push('/products');
     } catch (err) {
       console.error('Error deleting product:', err);
-      setError('Failed to delete product');
       setIsDeleting(false);
     }
   };
@@ -98,12 +94,12 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (error || !product) {
+  if (!product) {
     return (
       <div className="text-center py-12">
         <Package className="h-12 w-12 text-gray-500 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-100 mb-2">Product not found</h3>
-        <p className="text-gray-400 mb-6">{error || 'The product you are looking for does not exist.'}</p>
+        <p className="text-gray-400 mb-6">The product you are looking for does not exist.</p>
         <Link href="/products">
           <Button variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -114,30 +110,12 @@ export default function ProductDetailPage() {
     );
   }
 
-  const toNumber = (value: unknown, fallback = 0): number => {
-    if (value === null || value === undefined) return fallback;
-    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-  };
-
-  const sellingPrice = toNumber(product.selling_price, 0);
-  const costPrice = toNumber(product.cost_price, 0);
-  const compareAtPrice = product.compare_at_price === null ? null : toNumber(product.compare_at_price, 0);
-
-  const profitMargin = sellingPrice > 0 && costPrice > 0
-    ? ((sellingPrice - costPrice) / sellingPrice * 100).toFixed(1)
-    : '0.0';
-
+  // Derive computed values from product
+  const sellingPrice = typeof product.selling_price === 'number' ? product.selling_price : parseFloat(product.selling_price) || 0;
+  const costPrice = typeof product.cost_price === 'number' ? product.cost_price : (product.cost_price ? parseFloat(product.cost_price) : 0);
+  const compareAtPrice = product.compare_at_price ? (typeof product.compare_at_price === 'number' ? product.compare_at_price : parseFloat(product.compare_at_price)) : null;
+  const profitMargin = costPrice > 0 ? (((sellingPrice - costPrice) / costPrice) * 100).toFixed(2) : '0.00';
   const isLowStock = product.track_inventory && product.quantity <= product.low_stock_threshold;
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-ZA', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
 
   return (
     <div>

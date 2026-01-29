@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
@@ -67,7 +67,7 @@ async def get_current_user_profile(
 async def update_current_user_profile(
     user_data: UserUpdateMe,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update the current user's profile."""
     try:
@@ -100,7 +100,7 @@ async def update_current_user_profile(
 @router.get("/me/settings", response_model=UserSettingsResponse)
 async def get_current_user_settings(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get the current user's settings (including AI privacy controls)."""
     svc = AIService(db)
@@ -112,7 +112,7 @@ async def get_current_user_settings(
 async def update_current_user_settings(
     payload: UserSettingsUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update the current user's settings (including AI privacy controls)."""
     svc = AIService(db)

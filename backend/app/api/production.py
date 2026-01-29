@@ -5,7 +5,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_business_id
 from app.core.rbac import has_permission
 from app.models.production import ProductionStatus
@@ -76,7 +76,7 @@ async def list_production_orders(
     search: Optional[str] = None,
     current_user: User = Depends(has_permission("inventory:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List production orders with filtering and pagination."""
     service = ProductionService(db)
@@ -105,7 +105,7 @@ async def get_ingredient_suggestions(
     limit: int = Query(10, ge=1, le=50),
     current_user: User = Depends(has_permission("products:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get AI-powered ingredient suggestions based on search query."""
     service = ProductionService(db)
@@ -123,7 +123,7 @@ async def get_production_order(
     order_id: str,
     current_user: User = Depends(has_permission("inventory:view")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a production order by ID."""
     service = ProductionService(db)
@@ -143,7 +143,7 @@ async def create_production_order(
     data: ProductionOrderCreate,
     current_user: User = Depends(has_permission("inventory:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new production order."""
     service = ProductionService(db)
@@ -167,7 +167,7 @@ async def update_production_order(
     data: ProductionOrderUpdate,
     current_user: User = Depends(has_permission("inventory:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a production order."""
     service = ProductionService(db)
@@ -188,7 +188,7 @@ async def start_production(
     order_id: str,
     current_user: User = Depends(has_permission("inventory:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Start a production order."""
     service = ProductionService(db)
@@ -216,7 +216,7 @@ async def complete_production(
     data: CompleteProductionRequest,
     current_user: User = Depends(has_permission("inventory:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Complete a production order and update inventory."""
     service = ProductionService(db)
@@ -247,7 +247,7 @@ async def cancel_production(
     order_id: str,
     current_user: User = Depends(has_permission("inventory:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Cancel a production order."""
     service = ProductionService(db)
@@ -274,7 +274,7 @@ async def delete_production_order(
     order_id: str,
     current_user: User = Depends(has_permission("inventory:delete")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete a production order."""
     service = ProductionService(db)

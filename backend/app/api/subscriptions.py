@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.models.base import utc_now
 from app.api.deps import get_current_active_user
 from app.models.user import User, SubscriptionStatus
@@ -55,7 +55,7 @@ class SelectTierRequest(BaseModel):
 
 @router.get("/tiers", response_model=List[TierPublicResponse])
 async def list_available_tiers(
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     List all active subscription tiers (public endpoint).
@@ -72,7 +72,7 @@ async def list_available_tiers(
 @router.get("/tiers/{tier_id}", response_model=TierPublicResponse)
 async def get_tier(
     tier_id: UUID,
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific tier by ID."""
     tier = db.query(SubscriptionTier).filter(
@@ -92,7 +92,7 @@ async def get_tier(
 @router.get("/me", response_model=UserSubscriptionResponse)
 async def get_my_subscription(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get the current user's subscription details and available features."""
     tier_info = get_user_tier_info(current_user, db)
@@ -111,7 +111,7 @@ async def get_my_subscription(
 @router.get("/features")
 async def get_my_features(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get all features available to the current user."""
     return get_user_effective_features(current_user, db)
@@ -121,7 +121,7 @@ async def get_my_features(
 async def check_feature_access(
     feature: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Check if the current user has access to a specific feature."""
     if getattr(current_user, "is_superadmin", False):
@@ -141,7 +141,7 @@ async def check_feature_access(
 async def select_tier(
     data: SelectTierRequest,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Select a subscription tier (for free tiers or to initiate paid checkout).
@@ -189,7 +189,7 @@ async def select_tier(
 @router.post("/start-trial")
 async def start_trial(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Start a free trial for the Professional tier.
@@ -231,7 +231,7 @@ async def start_trial(
 @router.post("/cancel")
 async def cancel_subscription(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Cancel the current subscription."""
     if current_user.subscription_status not in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL]:

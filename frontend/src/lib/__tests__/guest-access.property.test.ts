@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { middleware } from '../../../middleware';
+import { middleware } from '@/root/middleware';
 
 /**
  * Property 1: Guest Access to Marketing Pages

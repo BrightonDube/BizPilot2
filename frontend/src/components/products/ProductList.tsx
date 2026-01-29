@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
@@ -16,7 +16,6 @@ import {
   Grid3X3,
   List,
   Upload,
-  Download,
 } from 'lucide-react'
 
 import { Badge, Button, Input } from '@/components/ui'
@@ -98,7 +97,7 @@ export function ProductList() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -122,12 +121,12 @@ export function ProductList() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [page, searchTerm])
 
   useEffect(() => {
     const timeoutId = setTimeout(fetchProducts, 300)
     return () => clearTimeout(timeoutId)
-  }, [page, searchTerm])
+  }, [fetchProducts])
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
     if (!window.confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {

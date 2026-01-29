@@ -22,7 +22,7 @@ router = APIRouter(prefix="/favorites", tags=["favorites"])
 
 @router.get("", response_model=List[FavoriteProductResponse])
 async def list_favorites(
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     business_id: UUID = Depends(get_current_business_id),
     user_specific: bool = False,
@@ -78,7 +78,7 @@ async def list_favorites(
 @router.post("", response_model=FavoriteProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_favorite(
     favorite_in: FavoriteProductCreate,
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     business_id: UUID = Depends(get_current_business_id),
 ):
@@ -167,7 +167,7 @@ async def create_favorite(
 @router.get("/{favorite_id}", response_model=FavoriteProductResponse)
 async def get_favorite(
     favorite_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     business_id: UUID = Depends(get_current_business_id),
 ):
@@ -221,7 +221,7 @@ async def get_favorite(
 async def update_favorite(
     favorite_id: UUID,
     favorite_in: FavoriteProductUpdate,
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     business_id: UUID = Depends(get_current_business_id),
 ):
@@ -282,7 +282,7 @@ async def update_favorite(
 @router.delete("/{favorite_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_favorite(
     favorite_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     business_id: UUID = Depends(get_current_business_id),
 ):
@@ -314,7 +314,7 @@ async def delete_favorite(
 
 @router.get("/reorder/suggestions", response_model=List[ReorderSuggestion])
 async def get_reorder_suggestions(
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     business_id: UUID = Depends(get_current_business_id),
 ):

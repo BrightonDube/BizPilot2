@@ -13,7 +13,7 @@ services:
   - name: api
     github:
       repo: BrightonDube/BizPilot2
-      branch: dev
+      branch: main
       deploy_on_push: true
     source_dir: .
     dockerfile_path: backend/Dockerfile
@@ -114,7 +114,7 @@ services:
   - name: web
     github:
       repo: BrightonDube/BizPilot2
-      branch: dev
+      branch: main
       deploy_on_push: true
     source_dir: .
     dockerfile_path: frontend/Dockerfile
@@ -149,7 +149,7 @@ jobs:
     kind: PRE_DEPLOY
     github:
       repo: BrightonDube/BizPilot2
-      branch: dev
+      branch: main
       deploy_on_push: true
     source_dir: .
     dockerfile_path: backend/Dockerfile
