@@ -57,3 +57,4 @@ user-agents==2.2.0
 hypothesis==6.122.3
 apscheduler==3.10.4
 cryptography==44.0.0
+itsdangerous==2.2.0
