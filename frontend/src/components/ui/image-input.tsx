@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import NextImage from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Upload, 
@@ -110,7 +111,7 @@ export function ImageInput({
         onError?.('Failed to read file')
       }
       reader.readAsDataURL(file)
-    } catch (err) {
+    } catch {
       setError('Failed to process image')
       setIsLoading(false)
       onError?.('Failed to process image')
@@ -150,7 +151,7 @@ export function ImageInput({
         onError?.('Invalid image URL')
       }
       img.src = normalizedUrl
-    } catch (err) {
+    } catch {
       setError('Please enter a valid image URL')
       setIsLoading(false)
       onError?.('Please enter a valid image URL')
@@ -216,11 +217,13 @@ export function ImageInput({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
         >
-          <div className="relative rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
-            <img
+          <div className="relative rounded-lg overflow-hidden bg-gray-800 border border-gray-700 h-48">
+            <NextImage
               src={value}
               alt="Preview"
-              className="w-full h-48 object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
               onError={() => setError('Failed to load image')}
             />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">

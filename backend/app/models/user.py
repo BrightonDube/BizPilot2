@@ -1,11 +1,11 @@
 """User model for authentication and profile."""
 
 from sqlalchemy import Column, String, Boolean, Enum as SQLEnum, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, JSONType
 
 
 class UserStatus(str, enum.Enum):
@@ -63,7 +63,7 @@ class User(BaseModel):
     paystack_subscription_code = Column(String(100), nullable=True)
     
     # Feature overrides - admin can enable/disable specific features for a user regardless of tier
-    feature_overrides = Column(JSONB, nullable=True, default={})
+    feature_overrides = Column(JSONType, nullable=True, default={})
     
     # POS login fields - PIN is only stored as a secure hash
     pin_code_hash = Column(String(255), nullable=True)  # Hashed PIN for verification

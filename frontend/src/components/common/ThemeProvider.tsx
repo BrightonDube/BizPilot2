@@ -14,43 +14,52 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const STORAGE_KEY = 'bizpilot-theme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  // Always start with 'dark' on both server and initial client render
+  const [theme, setThemeState] = useState<Theme>('dark');
+  const [mounted, setMounted] = useState(false);
+
   const getSystemTheme = (): 'dark' | 'light' => {
+    if (typeof window === 'undefined') return 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   };
 
   const systemTheme = useSyncExternalStore<'dark' | 'light'>(
     (onStoreChange) => {
+      if (typeof window === 'undefined') return () => {};
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       mediaQuery.addEventListener('change', onStoreChange);
       return () => mediaQuery.removeEventListener('change', onStoreChange);
     },
     getSystemTheme,
-    () => 'dark'
+    () => 'dark' // Server snapshot
   );
 
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'dark';
+  // Load theme from localStorage after mount (client-only)
+  /* eslint-disable react-hooks/set-state-in-effect -- Required for client-only hydration */
+  useEffect(() => {
+    setMounted(true);
     const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
     if (savedTheme && ['dark', 'light', 'system'].includes(savedTheme)) {
-      return savedTheme;
+      setThemeState(savedTheme);
     }
-    return 'dark';
-  });
-
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const resolvedTheme: 'dark' | 'light' = theme === 'system' ? systemTheme : theme;
 
   // Apply theme class to document
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!mounted) return;
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
-    root.classList.add(theme === 'system' ? resolvedTheme : theme);
-  }, [theme, resolvedTheme]);
+    root.classList.add(resolvedTheme);
+  }, [theme, resolvedTheme, mounted]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem(STORAGE_KEY, newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, newTheme);
+    }
   };
 
   return (

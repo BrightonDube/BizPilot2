@@ -8,6 +8,8 @@ const nextConfig = {
     'http://localhost:3000',
     'http://127.0.0.1:3000',
   ],
+  // Suppress hydration warnings caused by browser extensions
+  reactStrictMode: true,
   // Turbopack configuration for Next.js 16+
   turbopack: {
     resolveAlias: {

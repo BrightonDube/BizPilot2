@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -50,7 +50,7 @@ async def list_notifications(
     unread_only: bool = False,
     notification_type: Optional[NotificationType] = None,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """List notifications for the current user."""
@@ -80,7 +80,7 @@ async def list_notifications(
 @router.get("/stats", response_model=NotificationStats)
 async def get_notification_stats(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get notification statistics."""
@@ -92,7 +92,7 @@ async def get_notification_stats(
 @router.get("/unread-count")
 async def get_unread_count(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get count of unread notifications."""
@@ -104,7 +104,7 @@ async def get_unread_count(
 @router.post("/check-low-stock")
 async def check_low_stock(
     current_user: User = Depends(has_permission("inventory:view")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Check inventory and create low stock notifications."""
@@ -121,7 +121,7 @@ async def check_low_stock(
 @router.post("/mark-all-read")
 async def mark_all_as_read(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Mark all notifications as read."""
@@ -138,7 +138,7 @@ async def mark_all_as_read(
 async def get_notification(
     notification_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get a notification by ID."""
@@ -166,7 +166,7 @@ async def update_notification(
     notification_id: str,
     data: NotificationUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Update a notification (mark as read/archived)."""
@@ -194,7 +194,7 @@ async def update_notification(
 async def delete_notification(
     notification_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Delete a notification."""
@@ -223,7 +223,7 @@ async def delete_notification(
 async def create_notification(
     data: NotificationCreate,
     current_user: User = Depends(has_permission("notifications:create")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Create a new notification (admin only)."""

@@ -12,7 +12,7 @@
  */
 
 import { PRICING_PLANS, PricingUtils } from '../pricing-config';
-import { SUBSCRIPTION_TIERS } from '../../../../shared/pricing-config';
+import { SUBSCRIPTION_TIERS } from '@/shared/pricing-config';
 
 describe('Core Pricing Consistency - Task 7.1', () => {
   

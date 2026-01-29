@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   CreditCard, 
@@ -63,7 +63,7 @@ export default function AdminTransactionsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
 
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     setLoading(true)
     try {
       const data: TransactionListResponse = await adminApi.listTransactions({
@@ -80,11 +80,11 @@ export default function AdminTransactionsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, statusFilter])
 
   useEffect(() => {
     loadTransactions()
-  }, [page, statusFilter])
+  }, [loadTransactions])
 
   const formatAmount = (cents: number, currency: string) => {
     const amount = cents / 100

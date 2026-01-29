@@ -7,7 +7,6 @@ use cases, and benefits for use by the guest AI widget on marketing pages.
 Requirements: 4.1, 4.2, 4.3, 4.4
 """
 
-from typing import Dict, List, Any
 
 # Core BizPilot Features and Capabilities
 BIZPILOT_FEATURES = {

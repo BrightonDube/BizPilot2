@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -50,7 +50,7 @@ async def list_suppliers(
     sort_by: str = Query("created_at", pattern="^(name|contact_name|email|created_at|updated_at)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     service = SupplierService(db)
@@ -77,7 +77,7 @@ async def list_suppliers(
 async def get_supplier(
     supplier_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     service = SupplierService(db)
@@ -91,7 +91,7 @@ async def get_supplier(
 async def create_supplier(
     data: SupplierCreate,
     current_user: User = Depends(has_permission("suppliers:create")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     service = SupplierService(db)
@@ -113,7 +113,7 @@ async def update_supplier(
     supplier_id: str,
     data: SupplierUpdate,
     current_user: User = Depends(has_permission("suppliers:edit")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     service = SupplierService(db)
@@ -137,7 +137,7 @@ async def update_supplier(
 async def delete_supplier(
     supplier_id: str,
     current_user: User = Depends(has_permission("suppliers:delete")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     service = SupplierService(db)
@@ -151,7 +151,7 @@ async def delete_supplier(
 async def get_supplier_products(
     supplier_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get all products linked to a supplier."""
@@ -197,7 +197,7 @@ async def link_supplier_product(
     supplier_id: str,
     product_id: str,
     current_user: User = Depends(has_permission("suppliers:edit")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Link a supplier to a product."""

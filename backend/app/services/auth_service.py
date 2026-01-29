@@ -1,8 +1,11 @@
 """Authentication service for user management."""
 
+import inspect
 import uuid
 from typing import Optional, Union
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.models.user import User, UserStatus
 from app.core.security import get_password_hash, verify_password
@@ -10,16 +13,40 @@ from app.schemas.auth import UserCreate
 
 
 class AuthService:
-    """Service for authentication operations."""
+    """Service for authentication operations. Supports both sync and async sessions."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Union[AsyncSession, Session]):
         self.db = db
+        self._is_async = isinstance(db, AsyncSession)
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    async def _execute(self, stmt):
+        """Execute a statement, handling both sync and async sessions."""
+        if self._is_async:
+            return await self.db.execute(stmt)
+        else:
+            return self.db.execute(stmt)
+
+    async def _commit(self):
+        """Commit the session, handling both sync and async sessions."""
+        if self._is_async:
+            await self.db.commit()
+        else:
+            self.db.commit()
+
+    async def _refresh(self, obj):
+        """Refresh an object, handling both sync and async sessions."""
+        if self._is_async:
+            await self.db.refresh(obj)
+        else:
+            self.db.refresh(obj)
+
+    async def get_user_by_email(self, email: str) -> Optional[User]:
         """Get a user by email."""
-        return self.db.query(User).filter(User.email == email).first()
+        stmt = select(User).filter(User.email == email)
+        result = await self._execute(stmt)
+        return result.scalars().first()
 
-    def get_user_by_id(self, user_id: Union[str, uuid.UUID]) -> Optional[User]:
+    async def get_user_by_id(self, user_id: Union[str, uuid.UUID]) -> Optional[User]:
         """Get a user by ID."""
         # Convert string to UUID if needed for PostgreSQL
         if isinstance(user_id, str):
@@ -27,12 +54,14 @@ class AuthService:
                 user_id = uuid.UUID(user_id)
             except ValueError:
                 return None
-        return self.db.query(User).filter(User.id == user_id).first()
+        stmt = select(User).filter(User.id == user_id)
+        result = await self._execute(stmt)
+        return result.scalars().first()
 
-    def create_user(self, user_data: UserCreate) -> User:
+    async def create_user(self, user_data: UserCreate) -> User:
         """Create a new user."""
         hashed_password = get_password_hash(user_data.password)
-        
+
         user = User(
             email=user_data.email,
             hashed_password=hashed_password,
@@ -42,15 +71,15 @@ class AuthService:
             status=UserStatus.PENDING,
             is_email_verified=False,
         )
-        
+
         self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
+        await self._commit()
+        await self._refresh(user)
         return user
 
-    def authenticate_user(self, email: str, password: str) -> Optional[User]:
+    async def authenticate_user(self, email: str, password: str) -> Optional[User]:
         """Authenticate a user with email and password."""
-        user = self.get_user_by_email(email)
+        user = await self.get_user_by_email(email)
         if not user:
             return None
         if not user.hashed_password:
@@ -59,29 +88,29 @@ class AuthService:
             return None
         return user
 
-    def verify_email(self, email: str) -> bool:
+    async def verify_email(self, email: str) -> bool:
         """Mark a user's email as verified."""
-        user = self.get_user_by_email(email)
+        user = await self.get_user_by_email(email)
         if not user:
             return False
-        
+
         user.is_email_verified = True
         user.status = UserStatus.ACTIVE
-        self.db.commit()
+        await self._commit()
         return True
 
-    def update_password(self, user: User, new_password: str) -> bool:
+    async def update_password(self, user: User, new_password: str) -> bool:
         """Update a user's password."""
         user.hashed_password = get_password_hash(new_password)
-        self.db.commit()
+        await self._commit()
         return True
 
-    def reset_password(self, email: str, new_password: str) -> bool:
+    async def reset_password(self, email: str, new_password: str) -> bool:
         """Reset a user's password."""
-        user = self.get_user_by_email(email)
+        user = await self.get_user_by_email(email)
         if not user:
             return False
-        
+
         user.hashed_password = get_password_hash(new_password)
-        self.db.commit()
+        await self._commit()
         return True

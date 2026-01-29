@@ -1,0 +1,22 @@
+{
+  "name": "bizpilot-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build and maintenance scripts for BizPilot2",
+  "scripts": {
+    "scan:unused-imports": "ts-node unused-import-scanner.ts",
+    "scan:image-migration": "ts-node image-component-migrator.ts ../frontend/src --json=image-migration-report.json",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^25.0.2",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6"
+  }
+}

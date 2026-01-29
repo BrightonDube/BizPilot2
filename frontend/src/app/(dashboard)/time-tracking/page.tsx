@@ -217,11 +217,6 @@ export default function TimeTrackingPage() {
     }
   };
 
-  const formatDateTime = (dateStr?: string) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleString();
-  };
-
   const formatHours = (hours?: number) => {
     if (hours === undefined || hours === null) return '-';
     return `${hours.toFixed(2)} hrs`;

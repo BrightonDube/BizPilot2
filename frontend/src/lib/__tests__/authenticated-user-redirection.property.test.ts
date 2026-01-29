@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { middleware } from '../../../middleware';
+import { middleware } from '@/root/middleware';
 
 // Mock the fetch function to simulate authenticated sessions
 const originalFetch = global.fetch;

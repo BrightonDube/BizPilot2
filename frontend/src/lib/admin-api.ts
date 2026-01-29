@@ -65,6 +65,15 @@ export interface AdminStats {
   users_by_status: Record<string, number>;
 }
 
+export interface SubscriptionFeatureDefinition {
+  id: string;
+  key: string;
+  display_name: string;
+  description?: string | null;
+  category?: string | null;
+  is_active: boolean;
+}
+
 export interface UserUpdateData {
   first_name?: string;
   last_name?: string;
@@ -168,6 +177,39 @@ export const adminApi = {
 
   async seedDefaultTiers(): Promise<{ message: string }> {
     const { data } = await apiClient.post('/admin/tiers/seed');
+    return data;
+  },
+
+  async listFeatureDefinitions(includeInactive = false): Promise<SubscriptionFeatureDefinition[]> {
+    const { data } = await apiClient.get('/admin/feature-definitions', {
+      params: { include_inactive: includeInactive },
+    });
+    return data;
+  },
+
+  async createFeatureDefinition(payload: {
+    key: string;
+    display_name: string;
+    description?: string | null;
+    category?: string | null;
+    is_active?: boolean;
+  }): Promise<SubscriptionFeatureDefinition> {
+    const { data } = await apiClient.post('/admin/feature-definitions', payload);
+    return data;
+  },
+
+  async deleteFeatureDefinition(featureKey: string): Promise<{ message: string }> {
+    const { data } = await apiClient.delete(`/admin/feature-definitions/${featureKey}`);
+    return data;
+  },
+
+  async seedFeatureDefinitionsFromTiers(): Promise<{ message: string }> {
+    const { data } = await apiClient.post('/admin/feature-definitions/seed-from-tiers');
+    return data;
+  },
+
+  async setTierFeatureFlag(tierId: string, featureKey: string, enabled: boolean): Promise<SubscriptionTier> {
+    const { data } = await apiClient.patch(`/admin/tiers/${tierId}/feature-flags/${featureKey}`, { enabled });
     return data;
   },
 

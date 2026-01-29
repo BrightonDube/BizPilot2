@@ -2,8 +2,8 @@
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, DateTime, JSON
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from app.core.database import Base
 
@@ -11,6 +11,11 @@ from app.core.database import Base
 def utc_now() -> datetime:
     """Get current UTC time (timezone-aware)."""
     return datetime.now(timezone.utc)
+
+
+# JSON type that works with both PostgreSQL and SQLite
+# PostgreSQL will use JSONB, SQLite will use JSON
+JSONType = JSON().with_variant(JSONB(), 'postgresql')
 
 
 class BaseModel(Base):

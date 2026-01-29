@@ -52,6 +52,7 @@ interface AuthState {
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   fetchUser: () => Promise<void>;
+  setInitialized: () => void;
   clearError: () => void;
 }
 
@@ -201,6 +202,7 @@ export const useAuthStore = create<AuthState>()(
     },
 
     fetchUser: async () => {
+      // Prevent concurrent calls
       if (fetchUserPromise) {
         return fetchUserPromise;
       }
@@ -217,11 +219,14 @@ export const useAuthStore = create<AuthState>()(
             isInitialized: true,
           });
         } catch {
+          // Silently handle errors - don't treat 401 as an error
+          // User simply isn't authenticated, which is expected behavior
           set({
             user: null,
             isAuthenticated: false,
             isLoading: false,
             isInitialized: true,
+            error: null, // Clear any previous errors
           });
         } finally {
           fetchUserPromise = null;
@@ -229,6 +234,10 @@ export const useAuthStore = create<AuthState>()(
       })();
 
       return fetchUserPromise;
+    },
+
+    setInitialized: () => {
+      set({ isInitialized: true, isLoading: false });
     },
 
     clearError: () => {

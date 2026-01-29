@@ -1,0 +1,53 @@
+PostgreSQL Setup for BizPilot - Quick Guide
+===========================================
+
+STEP 1: Create Database Using pgAdmin
+--------------------------------------
+1. Open pgAdmin 4 from Start Menu
+2. Right-click "PostgreSQL 18" -> "Query Tool"
+3. Copy and paste this SQL:
+
+DROP DATABASE IF EXISTS bizpilot;
+CREATE DATABASE bizpilot;
+DROP USER IF EXISTS bizpilot_user;
+CREATE USER bizpilot_user WITH LOGIN PASSWORD 'btXZ6v71UVjzTCnaFWqe9oY4';
+GRANT ALL PRIVILEGES ON DATABASE bizpilot TO bizpilot_user;
+
+4. Click Execute (F5)
+5. Right-click "Databases" -> "Refresh" to see "bizpilot" database
+6. Right-click "bizpilot" database -> "Query Tool"
+7. Copy and paste this SQL:
+
+GRANT ALL ON SCHEMA public TO bizpilot_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO bizpilot_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO bizpilot_user;
+
+8. Click Execute (F5)
+
+STEP 2: Run Migrations
+----------------------
+Open PowerShell in the backend folder and run:
+
+cd backend
+alembic upgrade head
+
+STEP 3: Seed Database (Optional)
+---------------------------------
+python init_local_db.py
+
+STEP 4: Start Backend
+---------------------
+uvicorn app.main:app --reload
+
+Database Connection Details:
+----------------------------
+Host: localhost
+Port: 5432
+Database: bizpilot
+Username: bizpilot_user
+Password: btXZ6v71UVjzTCnaFWqe9oY4
+
+Connection String (already in .env):
+postgresql+asyncpg://bizpilot_user:btXZ6v71UVjzTCnaFWqe9oY4@localhost:5432/bizpilot
+
+Done! Your PostgreSQL database is ready.

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save } from 'lucide-react'
 
 import { apiClient } from '@/lib/api'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, PageHeader } from '@/components/ui'

@@ -1,7 +1,5 @@
 """Email service for sending transactional emails."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from email.message import EmailMessage
 from typing import Iterable, Optional

@@ -5,12 +5,16 @@ Pricing is stored in cents to avoid floating-point precision issues.
 """
 
 from enum import Enum
-from typing import Optional, Dict, Any
-from sqlalchemy import Column, String, Boolean, Integer
+from typing import Dict, Any
+from sqlalchemy import Column, String, Boolean, Integer, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
+
+# Use JSON type that works with both PostgreSQL and SQLite
+# PostgreSQL will use JSONB, SQLite will use JSON
+JSONType = JSON().with_variant(JSONB(), 'postgresql')
 
 # Import shared pricing configuration
 # Note: Ensure 'shared' directory is in PYTHONPATH via deployment config
@@ -84,13 +88,13 @@ class SubscriptionTier(BaseModel):
     is_active = Column(Boolean, default=True, nullable=False)
     is_custom_pricing = Column(Boolean, default=False, nullable=False)
     
-    # Features and limits as JSONB for flexibility
+    # Features and limits as JSON for flexibility
     # Example features: {"max_products": 5, "max_users": 1, "max_locations": 1}
-    features = Column(JSONB, nullable=False, default={})
+    features = Column(JSONType, nullable=False, default={})
     
     # Feature flags - granular feature access
     # Example: {"export_reports": true, "ai_insights": false, "multi_location": false}
-    feature_flags = Column(JSONB, nullable=False, default={})
+    feature_flags = Column(JSONType, nullable=False, default={})
 
     # Relationships
     users = relationship("User", back_populates="current_tier")

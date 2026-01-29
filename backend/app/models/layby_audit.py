@@ -1,10 +1,10 @@
 """Layby audit model for tracking changes to layby orders."""
 
 from sqlalchemy import Column, String, Text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.models.base import BaseModel
+from app.models.base import BaseModel, JSONType
 
 
 class LaybyAudit(BaseModel):
@@ -14,8 +14,8 @@ class LaybyAudit(BaseModel):
 
     layby_id = Column(UUID(as_uuid=True), ForeignKey("laybys.id", ondelete="CASCADE"), nullable=False, index=True)
     action = Column(String(50), nullable=False)
-    old_value = Column(JSONB, nullable=True)
-    new_value = Column(JSONB, nullable=True)
+    old_value = Column(JSONType, nullable=True)
+    new_value = Column(JSONType, nullable=True)
     details = Column(Text, nullable=True)
     performed_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     terminal_id = Column(UUID(as_uuid=True), nullable=True)

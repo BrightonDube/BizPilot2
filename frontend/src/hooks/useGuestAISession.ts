@@ -7,7 +7,7 @@
  * Requirements: 2.2, 2.4
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface GuestSession {
   id: string;

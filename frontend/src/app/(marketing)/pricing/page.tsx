@@ -9,22 +9,6 @@ export const metadata: Metadata = {
   keywords: ['BizPilot pricing', 'business management plans', 'POS system pricing', 'ERP software costs', 'inventory management pricing', 'business automation pricing', 'smart business tools'],
 }
 
-interface Benefit {
-  text: string
-  checked: boolean
-}
-
-interface PricingCardProps {
-  tier: string
-  price: string
-  bestFor: string
-  cta: string
-  benefits: Benefit[]
-  featured?: boolean
-  ctaHref?: string
-  planId: string
-}
-
 export default function PricingPage() {
   // Use centralized pricing configuration - show all 5 tiers including Enterprise
   const displayTiers = PRICING_PLANS // Show all plans including Enterprise

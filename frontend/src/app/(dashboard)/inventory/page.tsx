@@ -6,15 +6,10 @@ import { motion } from 'framer-motion'
 import { 
   Search, 
   Plus,
-  Package,
   AlertTriangle,
   TrendingDown,
   DollarSign,
-  ArrowUpDown,
-  History,
-  Loader2,
   Edit,
-  Trash2,
   Grid,
   List,
   Warehouse,
@@ -102,24 +97,6 @@ function toNumber(value: unknown, fallback = 0): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
-}
-
-function InventoryCardSkeleton() {
-  return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
-      <div className="flex items-center mb-4">
-        <div className="p-2 bg-gray-700 rounded-lg w-10 h-10" />
-        <div className="ml-4 space-y-2 flex-1">
-          <div className="h-4 bg-gray-700 rounded w-3/4" />
-          <div className="h-3 bg-gray-700 rounded w-1/2" />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-700 rounded w-2/3" />
-      </div>
-    </div>
-  )
 }
 
 export default function InventoryPage() {

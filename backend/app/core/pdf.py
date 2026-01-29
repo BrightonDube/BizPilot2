@@ -3,7 +3,6 @@
 Provides styled PDF generation with proper formatting, tables, and branding.
 """
 
-from __future__ import annotations
 from typing import Optional
 from decimal import Decimal
 from datetime import date, datetime

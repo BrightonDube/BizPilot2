@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Edit,
@@ -63,7 +62,6 @@ function formatDate(dateString: string | null): string {
 
 export default function InventoryDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const itemId = params.id as string
 
   const [item, setItem] = useState<InventoryDetail | null>(null)

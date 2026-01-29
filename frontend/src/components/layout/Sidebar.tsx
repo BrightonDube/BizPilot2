@@ -9,48 +9,14 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/common/Logo';
 import {
-  LayoutDashboard,
-  Package,
-  Warehouse,
-  ShoppingCart,
-  ShoppingBag,
-  Users,
-  Truck,
-  FileText,
-  BarChart3,
-  Sparkles,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Building2,
   LogOut,
   User,
-  Factory,
-  Shield,
-  Clock,
-  UsersRound,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Products', href: '/products', icon: Package },
-  { name: 'Inventory', href: '/inventory', icon: Warehouse },
-  { name: 'Production', href: '/production', icon: Factory },
-  { name: 'Orders', href: '/orders', icon: ShoppingCart },
-  { name: 'Purchases', href: '/purchases', icon: ShoppingBag },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Suppliers', href: '/suppliers', icon: Truck },
-  { name: 'Invoices', href: '/invoices', icon: FileText },
-  { name: 'Time Tracking', href: '/time-tracking', icon: Clock },
-  { name: 'Team', href: '/team', icon: UsersRound },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'AI Assistant', href: '/ai', icon: Sparkles },
-];
-
-const bottomNavigation = [
-  { name: 'Settings', href: '/settings', icon: Settings },
-];
+import { sidebarBottomNavigation, sidebarNavigation } from './nav-items';
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -110,7 +76,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
       {/* Main Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
+        {sidebarNavigation.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
             <Link
@@ -134,43 +100,37 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
       {/* Bottom Navigation */}
       <div className="px-2 py-4 border-t border-slate-700 space-y-1">
-        {/* Superadmin-only Admin link */}
-        {user?.is_superadmin && (
-          <Link
-            href="/admin"
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-              pathname.startsWith('/admin')
-                ? "bg-red-600/20 text-red-400"
-                : "text-red-400/70 hover:bg-red-900/20 hover:text-red-400",
-              collapsed && "justify-center"
-            )}
-            title={collapsed ? "Admin Panel" : undefined}
-          >
-            <Shield className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Admin Panel</span>}
-          </Link>
-        )}
-        {bottomNavigation.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-                isActive
-                  ? "bg-purple-600/20 text-purple-400"
-                  : "text-muted-foreground hover:bg-slate-800 hover:text-foreground",
-                collapsed && "justify-center"
-              )}
-              title={collapsed ? item.name : undefined}
-            >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm font-medium">{item.name}</span>}
-            </Link>
-          );
-        })}
+        {sidebarBottomNavigation
+          .filter((item) => !item.requiresSuperadmin || user?.is_superadmin)
+          .map((item) => {
+            const isActive = pathname.startsWith(item.href);
+            const isAdmin = item.href === '/admin';
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+                  isAdmin
+                    ? (
+                      isActive
+                        ? "bg-red-600/20 text-red-400"
+                        : "text-red-400/70 hover:bg-red-900/20 hover:text-red-400"
+                    )
+                    : (
+                      isActive
+                        ? "bg-purple-600/20 text-purple-400"
+                        : "text-muted-foreground hover:bg-slate-800 hover:text-foreground"
+                    ),
+                  collapsed && "justify-center"
+                )}
+                title={collapsed ? item.name : undefined}
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium">{item.name}</span>}
+              </Link>
+            );
+          })}
       </div>
 
       {/* User Menu */}

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", ".env.local"),  # Load both .env and .env.local (local overrides)
         case_sensitive=True,
         extra="ignore",  # Ignore extra environment variables
     )
@@ -51,11 +51,31 @@ class Settings(BaseSettings):
     @classmethod
     def secret_key_must_be_set(cls, v: str) -> str:
         """Validate that SECRET_KEY is set and not empty."""
-        if v == "" or len(v) < 16:
+        import os
+        
+        if v == "" or len(v) < 32:
             raise ValueError(
-                "SECRET_KEY must be set and at least 16 characters. "
+                "SECRET_KEY must be set and at least 32 characters. "
                 "Generate one with: openssl rand -hex 32"
             )
+        
+        # Prevent weak or default keys in production
+        weak_keys = [
+            "dev-secret-key",
+            "test-secret-key",
+            "change-me",
+            "your-secret-key",
+            "0123456789abcdef",
+        ]
+        
+        if any(weak in v.lower() for weak in weak_keys):
+            environment = os.getenv("ENVIRONMENT", "development")
+            if environment.lower() == "production":
+                raise ValueError(
+                    "Cannot use default or weak SECRET_KEY in production. "
+                    "Generate a strong key with: openssl rand -hex 32"
+                )
+        
         return v
 
     @field_validator("COOKIE_DOMAIN", mode="before")

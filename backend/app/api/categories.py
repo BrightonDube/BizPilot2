@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.schemas.category import (
@@ -28,7 +28,7 @@ async def list_categories(
     limit: int = Query(100, ge=1, le=500),
     parent_id: Optional[UUID] = None,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """List all categories with pagination."""
     category_service = CategoryService(db)
@@ -44,7 +44,7 @@ async def list_categories(
 @router.get("/tree", response_model=CategoryTreeResponse)
 async def get_category_tree(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get hierarchical category tree."""
     category_service = CategoryService(db)
@@ -64,7 +64,7 @@ async def get_category_tree(
 async def create_category(
     category_data: CategoryCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new category."""
     category_service = CategoryService(db)
@@ -82,7 +82,7 @@ async def create_category(
 async def get_category(
     category_id: UUID,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get a specific category by ID."""
     category_service = CategoryService(db)
@@ -100,7 +100,7 @@ async def update_category(
     category_id: UUID,
     category_data: CategoryUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update a category."""
     category_service = CategoryService(db)
@@ -123,7 +123,7 @@ async def update_category(
 async def delete_category(
     category_id: UUID,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete a category. Children will be moved to the deleted category's parent."""
     category_service = CategoryService(db)
@@ -138,7 +138,7 @@ async def delete_category(
 async def reorder_categories(
     category_orders: List[CategoryReorderItem],
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Reorder categories by updating sort_order and optionally parent_id.

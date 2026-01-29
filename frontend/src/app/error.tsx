@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, RefreshCw, ArrowLeft, Home } from 'lucide-react'
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.rbac import has_permission
 from app.models.user import User
@@ -97,7 +97,7 @@ async def list_inventory(
     sort_by: str = Query("created_at", pattern="^(quantity_on_hand|location|created_at|updated_at)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """List inventory items with filtering and pagination."""
@@ -125,7 +125,7 @@ async def list_inventory(
 @router.get("/summary", response_model=InventorySummary)
 async def get_inventory_summary(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get inventory summary statistics."""
@@ -137,7 +137,7 @@ async def get_inventory_summary(
 @router.get("/low-stock", response_model=list[InventoryItemResponse])
 async def get_low_stock_items(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get items below reorder point."""
@@ -153,7 +153,7 @@ async def list_transactions(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """List inventory transactions."""
@@ -174,7 +174,7 @@ async def list_transactions(
 @router.get("/export/excel")
 async def export_inventory_excel(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -205,7 +205,7 @@ async def export_inventory_excel(
 @router.get("/export/pdf")
 async def export_inventory_pdf(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -278,7 +278,7 @@ async def export_inventory_pdf(
 @router.get("/template/excel")
 async def get_inventory_template(
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Download an empty Excel template for inventory import.
@@ -305,7 +305,7 @@ async def get_inventory_template(
 async def import_inventory_excel(
     file: UploadFile = File(...),
     current_user: User = Depends(has_permission("inventory:edit")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """
@@ -392,7 +392,7 @@ async def import_inventory_excel(
 async def get_inventory_item(
     item_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get an inventory item by ID."""
@@ -412,7 +412,7 @@ async def get_inventory_item(
 async def get_inventory_by_product(
     product_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Get inventory for a specific product."""
@@ -432,7 +432,7 @@ async def get_inventory_by_product(
 async def create_inventory_item(
     data: InventoryItemCreate,
     current_user: User = Depends(has_permission("inventory:create")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Create a new inventory item."""
@@ -455,7 +455,7 @@ async def update_inventory_item(
     item_id: str,
     data: InventoryItemUpdate,
     current_user: User = Depends(has_permission("inventory:edit")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Update an inventory item."""
@@ -477,7 +477,7 @@ async def adjust_inventory(
     item_id: str,
     data: InventoryAdjustment,
     current_user: User = Depends(has_permission("inventory:edit")),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
     business_id: str = Depends(get_current_business_id),
 ):
     """Adjust inventory quantity."""

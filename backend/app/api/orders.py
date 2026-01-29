@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.config import settings
 from app.core.rbac import has_permission
@@ -114,7 +114,7 @@ async def list_orders(
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     List orders with filtering and pagination.
@@ -162,7 +162,7 @@ async def list_orders(
 async def get_order_stats(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get order statistics."""
     service = OrderService(db)
@@ -175,7 +175,7 @@ async def get_order(
     order_id: str,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get an order by ID."""
     service = OrderService(db)
@@ -196,7 +196,7 @@ async def get_order_pdf(
     order_id: str,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Return a professionally styled PDF document for a given order.
 
@@ -283,7 +283,7 @@ async def create_order(
     data: OrderCreate,
     current_user: User = Depends(has_permission("orders:create")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Create a new order."""
     from app.models.business import Business
@@ -423,7 +423,7 @@ async def update_order(
     data: OrderUpdate,
     current_user: User = Depends(has_permission("orders:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update an order."""
     service = OrderService(db)
@@ -446,7 +446,7 @@ async def update_order_status(
     data: OrderStatusUpdate,
     current_user: User = Depends(has_permission("orders:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Update order status."""
     service = OrderService(db)
@@ -469,7 +469,7 @@ async def record_payment(
     data: PaymentRecord,
     current_user: User = Depends(has_permission("orders:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Record a payment for an order."""
     service = OrderService(db)
@@ -497,7 +497,7 @@ async def delete_order(
     order_id: str,
     current_user: User = Depends(has_permission("orders:delete")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Delete an order."""
     service = OrderService(db)
@@ -518,7 +518,7 @@ async def get_order_items(
     order_id: str,
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Get items for an order."""
     service = OrderService(db)
@@ -540,7 +540,7 @@ async def add_order_item(
     data: OrderItemCreate,
     current_user: User = Depends(has_permission("orders:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Add an item to an order."""
     service = OrderService(db)
@@ -562,7 +562,7 @@ async def remove_order_item(
     item_id: str,
     current_user: User = Depends(has_permission("orders:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """Remove an item from an order."""
     service = OrderService(db)
@@ -583,7 +583,7 @@ async def receive_purchase_order(
     data: ReceivePurchaseOrder,
     current_user: User = Depends(has_permission("orders:edit")),
     business_id: str = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db=Depends(get_sync_db),
 ):
     """
     Receive a purchase order and update inventory.

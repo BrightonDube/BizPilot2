@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_current_user
+from app.core.database import get_db, get_sync_db
 from app.models.user import User
 from app.models.job_execution_log import JobExecutionLog, JobStatus
 
@@ -22,7 +23,7 @@ def get_scheduler_manager():
 @router.get("/status")
 def get_scheduler_status(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Get scheduler status and last execution details.
@@ -87,7 +88,7 @@ def get_job_executions(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Get paginated list of job execution history.
@@ -156,7 +157,7 @@ def get_job_executions(
 def get_job_execution_details(
     execution_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db=Depends(get_sync_db)
 ):
     """
     Get detailed information about a specific job execution.

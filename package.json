@@ -16,7 +16,8 @@
     "backend:test": "cd backend && python -m pytest --cov --cov-report=term-missing --cov-report=xml --cov-fail-under=45",
     "backend:check-migrations": "cd backend && python scripts/check_alembic_revision_lengths.py",
     "backend:migrate": "cd backend && python -m alembic upgrade head",
-    "beads:sync": "pwsh -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\beads-sync.ps1"
+    "beads:sync": "pwsh -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\beads-sync.ps1",
+    "scan:unused-imports": "cd scripts && pnpm scan:unused-imports"
   },
   "keywords": [
     "bizpilot",

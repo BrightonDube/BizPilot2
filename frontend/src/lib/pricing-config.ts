@@ -14,7 +14,7 @@ import {
   SubscriptionTier,
   BillingCycle,
   Currency
-} from '../../../shared/pricing-config';
+} from '@/shared/pricing-config';
 
 // Re-export shared types for frontend use
 export type { SubscriptionTier, BillingCycle, Currency };

@@ -11,7 +11,6 @@ import {
   Building2, 
   User,
   Users,
-  Tag,
   DollarSign,
   ShoppingCart,
   Loader2,
@@ -23,7 +22,7 @@ import {
   LayoutGrid,
   List
 } from 'lucide-react'
-import { Button, Input, Select, Card, CardContent, Badge } from '@/components/ui'
+import { Button, Input, Select, Card, CardContent } from '@/components/ui'
 import { apiClient } from '@/lib/api'
 import { formatCurrency, toNumber } from '@/lib/utils'
 
@@ -501,21 +500,19 @@ export default function CustomersPage() {
                           </div>
 
                           <div className="flex items-center space-x-1">
-                            <Link
-                              href={`/customers/${customer.id}/edit`}
+                            <motion.button
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
+                                window.location.href = `/customers/${customer.id}/edit`;
                               }}
+                              className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                              title="Edit"
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
                             >
-                              <motion.button
-                                className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
-                                title="Edit"
-                                whileHover={{ scale: 1.2 }}
-                                whileTap={{ scale: 0.9 }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </motion.button>
-                            </Link>
+                              <Edit className="h-4 w-4" />
+                            </motion.button>
                             <motion.button
                               onClick={(e) => handleDeleteCustomer(customer.id, customerName, e)}
                               className="p-1 text-gray-400 hover:text-red-400 transition-colors"

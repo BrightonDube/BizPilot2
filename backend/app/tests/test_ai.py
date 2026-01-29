@@ -25,28 +25,26 @@ class TestAIAPI:
         assert response.status_code == 401
 
     def test_ai_chat_returns_clear_4xx_when_unconfigured(self, client, monkeypatch):
-        from app.api.deps import get_current_active_user
+        from app.api.deps import get_current_active_user, get_current_business_id
         from app.main import app
         from app.core import config as config_mod
-        from app.core.subscription import require_feature
+        from uuid import UUID
 
-        # Override auth so we can reach the handler
-        app.dependency_overrides[get_current_active_user] = lambda: SimpleNamespace(
-            id="u1", 
-            current_tier_id=None, 
-            feature_overrides={"ai_insights": True}, 
+        # Create a mock user
+        mock_user = SimpleNamespace(
+            id=UUID("00000000-0000-0000-0000-000000000001"),
+            current_tier_id=None,
+            feature_overrides={"ai_assistant": True},
             subscription_status=None,
-            is_superadmin=False
+            is_superadmin=True  # SuperAdmin bypasses feature checks
         )
-        
-        # Override feature check to allow access to ai_insights
-        app.dependency_overrides[require_feature("ai_insights")] = lambda: SimpleNamespace(
-            id="u1", 
-            current_tier_id=None, 
-            feature_overrides={"ai_insights": True}, 
-            subscription_status=None,
-            is_superadmin=False
-        )
+
+        # Create a mock business ID
+        mock_business_id = UUID("00000000-0000-0000-0000-000000000002")
+
+        # Override auth dependencies
+        app.dependency_overrides[get_current_active_user] = lambda: mock_user
+        app.dependency_overrides[get_current_business_id] = lambda: mock_business_id
 
         # Force unconfigured state
         monkeypatch.setattr(config_mod.settings, "GROQ_API_KEY", None, raising=False)
@@ -60,7 +58,7 @@ class TestAIAPI:
             assert "GROQ_API_KEY" in body["detail"]
         finally:
             app.dependency_overrides.pop(get_current_active_user, None)
-            app.dependency_overrides.pop(require_feature("ai_insights"), None)
+            app.dependency_overrides.pop(get_current_business_id, None)
 
 
 class TestUserSettingsAPI:

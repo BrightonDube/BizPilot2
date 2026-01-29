@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -63,7 +63,6 @@ function formatCurrency(amount: number): string {
 
 export default function ReceivePurchaseOrderPage() {
   const params = useParams()
-  const router = useRouter()
   const purchaseId = params.id as string
 
   const [purchase, setPurchase] = useState<PurchaseOrder | null>(null)
