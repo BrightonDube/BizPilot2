@@ -112,7 +112,6 @@ def clear_all_data(db: Session):
         "roles",
         "businesses",
         "organizations",
-        "subscription_transactions",
         "subscription_tiers",
         "user_settings",
         "users",
@@ -1184,7 +1183,7 @@ def create_product_ingredients(db: Session, business: Business, products: list) 
             ingredient = ProductIngredient(
                 business_id=business.id,
                 product_id=product.id,
-                ingredient_name=random.choice(["Flour", "Sugar", "Salt", "Yeast", "Water", "Milk", "Eggs", "Butter", "Oil", "Spice Mix"]),
+                name=random.choice(["Flour", "Sugar", "Salt", "Yeast", "Water", "Milk", "Eggs", "Butter", "Oil", "Spice Mix"]),
                 quantity=Decimal(str(random.randint(1, 10))),
                 unit=random.choice(["kg", "g", "l", "ml", "pcs"]),
             )
@@ -1196,23 +1195,24 @@ def create_product_ingredients(db: Session, business: Business, products: list) 
     return ingredients
 
 
-def create_stock_reservations(db: Session, business: Business, products: list) -> list:
-    """Create stock reservations."""
+def create_stock_reservations(db: Session, business: Business, products: list, laybys: list) -> list:
+    """Create stock reservations linked to laybys."""
     print("Creating stock reservations...")
     
     reservations = []
-    # Create reservations for a few products
-    for product in random.sample(products, min(5, len(products))):
-        reservation = StockReservation(
-            business_id=business.id,
-            product_id=product.id,
-            quantity=Decimal(str(random.randint(1, 20))),
-            reserved_at=datetime.now() - timedelta(hours=random.randint(1, 24)),
-            expires_at=datetime.now() + timedelta(hours=random.randint(1, 48)),
-            reason="Order fulfillment",
-        )
-        db.add(reservation)
-        reservations.append(reservation)
+    # Create reservations for a few laybys
+    for layby in random.sample(laybys, min(3, len(laybys))):
+        # Get layby items
+        layby_items = db.query(LaybyItem).filter(LaybyItem.layby_id == layby.id).all()
+        for item in layby_items:
+            reservation = StockReservation(
+                layby_id=layby.id,
+                product_id=item.product_id,
+                quantity=item.quantity,
+                status="reserved",
+            )
+            db.add(reservation)
+            reservations.append(reservation)
     
     db.commit()
     print(f"  ✓ Stock reservations: {len(reservations)}")
@@ -1308,8 +1308,7 @@ def main():
         # Advanced features
         production_orders = create_production_orders(db, business, products)
         laybys = create_laybys(db, business, customers, products, user)
-        
-        # Metrics
+        stock_reservations = create_stock_reservations(db, business, products, laybys)
         update_customer_metrics(db, business)
         
         # Summary
