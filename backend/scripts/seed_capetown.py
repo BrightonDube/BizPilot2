@@ -63,6 +63,11 @@ from app.models.layby_schedule import LaybySchedule, ScheduleStatus
 from app.models.layby_config import LaybyConfig
 from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
+from app.models.business_time_settings import BusinessTimeSettings
+from app.models.subscription_transaction import SubscriptionTransaction, TransactionStatus, TransactionType
+from app.models.user_settings import UserSettings, AIDataSharingLevel
+from app.models.product_ingredient import ProductIngredient
+from app.models.stock_reservation import StockReservation
 
 
 def clear_all_data(db: Session):
@@ -74,6 +79,11 @@ def clear_all_data(db: Session):
     # Use TRUNCATE ... CASCADE to reliably clear data even when there are
     # foreign keys or additional dependent tables.
     tables = [
+        "stock_reservations",
+        "product_ingredients",
+        "user_settings",
+        "subscription_transactions",
+        "business_time_settings",
         "ai_messages",
         "ai_conversations",
         "layby_payments",
@@ -94,7 +104,6 @@ def clear_all_data(db: Session):
         "invoices",
         "order_items",
         "orders",
-        "product_ingredients",
         "products",
         "product_categories",
         "customers",
@@ -994,6 +1003,121 @@ def create_laybys(db: Session, business: Business, customers: list, products: li
     return laybys
 
 
+def create_business_time_settings(db: Session, business: Business) -> BusinessTimeSettings:
+    """Create business time settings for time tracking."""
+    print("Creating business time settings...")
+    
+    from datetime import time
+    
+    settings = BusinessTimeSettings(
+        business_id=business.id,
+        day_end_time=time(23, 59),
+        auto_clock_out_penalty_hours=Decimal("5.00"),
+        standard_work_hours=Decimal("8.00"),
+        overtime_threshold=Decimal("8.00"),
+        payroll_period_type="monthly",
+        payroll_period_start_day=1,
+    )
+    db.add(settings)
+    db.commit()
+    db.refresh(settings)
+    
+    print("  ✓ Business time settings created")
+    return settings
+
+
+def create_user_settings(db: Session, user: User) -> UserSettings:
+    """Create user settings."""
+    print("Creating user settings...")
+    
+    settings = UserSettings(
+        user_id=user.id,
+        ai_data_sharing_level=AIDataSharingLevel.FULL_BUSINESS,
+    )
+    db.add(settings)
+    db.commit()
+    db.refresh(settings)
+    
+    print("  ✓ User settings created")
+    return settings
+
+
+def create_subscription_transaction(db: Session, user: User, tier: SubscriptionTier) -> SubscriptionTransaction:
+    """Create subscription transaction for demo user."""
+    print("Creating subscription transaction...")
+    
+    transaction = SubscriptionTransaction(
+        user_id=user.id,
+        tier_id=tier.id,
+        transaction_type=TransactionType.SUBSCRIPTION,
+        status=TransactionStatus.SUCCESS,
+        amount_cents=int(tier.price_monthly * 100),
+        currency="ZAR",
+        paystack_reference=f"PAY_{secrets.token_urlsafe(16)}",
+        paystack_transaction_id=f"TXN_{secrets.token_urlsafe(16)}",
+        payment_method="card",
+        card_last_four="4242",
+        card_brand="visa",
+        paid_at=datetime.now() - timedelta(days=30),
+        period_start=datetime.now() - timedelta(days=30),
+        period_end=datetime.now() + timedelta(days=30),
+    )
+    db.add(transaction)
+    db.commit()
+    db.refresh(transaction)
+    
+    print("  ✓ Subscription transaction created")
+    return transaction
+
+
+def create_product_ingredients(db: Session, business: Business, products: list) -> list:
+    """Create product ingredients/recipes."""
+    print("Creating product ingredients...")
+    
+    ingredients = []
+    # Create ingredients for a few products (recipes)
+    for product in random.sample(products, min(10, len(products))):
+        # Add 1-3 ingredients per product
+        num_ingredients = random.randint(1, 3)
+        for _ in range(num_ingredients):
+            ingredient = ProductIngredient(
+                business_id=business.id,
+                product_id=product.id,
+                ingredient_name=random.choice(["Flour", "Sugar", "Salt", "Yeast", "Water", "Milk", "Eggs", "Butter", "Oil", "Spice Mix"]),
+                quantity=Decimal(str(random.randint(1, 10))),
+                unit=random.choice(["kg", "g", "l", "ml", "pcs"]),
+            )
+            db.add(ingredient)
+            ingredients.append(ingredient)
+    
+    db.commit()
+    print(f"  ✓ Product ingredients: {len(ingredients)}")
+    return ingredients
+
+
+def create_stock_reservations(db: Session, business: Business, products: list) -> list:
+    """Create stock reservations."""
+    print("Creating stock reservations...")
+    
+    reservations = []
+    # Create reservations for a few products
+    for product in random.sample(products, min(5, len(products))):
+        reservation = StockReservation(
+            business_id=business.id,
+            product_id=product.id,
+            quantity=Decimal(str(random.randint(1, 20))),
+            reserved_at=datetime.now() - timedelta(hours=random.randint(1, 24)),
+            expires_at=datetime.now() + timedelta(hours=random.randint(1, 48)),
+            reason="Order fulfillment",
+        )
+        db.add(reservation)
+        reservations.append(reservation)
+    
+    db.commit()
+    print(f"  ✓ Stock reservations: {len(reservations)}")
+    return reservations
+
+
 def create_ai_conversations(db: Session, user: User) -> list:
     """Create AI conversation history."""
     print("Creating AI conversations...")
@@ -1050,6 +1174,11 @@ def main():
         link_user_business(db, user, business, roles["admin"])
         link_user_business(db, superadmin_user, business, roles["admin"])
         
+        # Business configuration
+        business_time_settings = create_business_time_settings(db, business)
+        user_settings = create_user_settings(db, user)
+        subscription_transaction = create_subscription_transaction(db, user, tiers["pilot_pro"])
+        
         # Business data
         categories = create_categories(db, business)
         products = create_products(db, business, categories)
@@ -1057,6 +1186,8 @@ def main():
         customers = create_customers(db, business)
         suppliers = create_suppliers(db, business)
         link_products_suppliers(db, products, suppliers)
+        product_ingredients = create_product_ingredients(db, business, products)
+        stock_reservations = create_stock_reservations(db, business, products)
         
         # Orders and invoices
         orders = create_orders(db, business, customers, products)
@@ -1102,7 +1233,9 @@ def main():
         print(f"   Subscription Tiers:  {len(tiers)}")
         print(f"   Categories:          {len(categories)}")
         print(f"   Products:            {len(products)}")
+        print(f"   Product Ingredients: {len(product_ingredients)}")
         print(f"   Inventory Items:     {len(inventory)}")
+        print(f"   Stock Reservations:  {len(stock_reservations)}")
         print(f"   Customers:           {len(customers)}")
         print(f"   Suppliers:           {len(suppliers)}")
         print(f"   Orders:              {len(orders)}")
@@ -1115,6 +1248,7 @@ def main():
         print(f"   Production Orders:   {len(production_orders)}")
         print(f"   Layby Orders:        {len(laybys)}")
         print(f"   AI Conversations:    {len(ai_conversations)}")
+        print(f"   Subscription Txns:   1")
         print("=" * 60 + "\n")
         
     except Exception as e:
