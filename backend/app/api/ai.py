@@ -20,10 +20,10 @@ from app.services.marketing_ai_context import MarketingAIContextManager
 router = APIRouter(prefix="/ai", tags=["AI Assistant"])
 
 # In-memory rate limiting store (in production, use Redis)
-guest_rate_limits = {}
+guest_rate_limits: dict = {}
 
 # In-memory cache for common marketing responses (in production, use Redis)
-marketing_response_cache = {}
+marketing_response_cache: dict = {}
 CACHE_TTL = 3600  # 1 hour cache TTL
 
 # Set up logging for guest AI
@@ -34,9 +34,6 @@ if not logger.handlers:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
-
-# In-memory rate limiting store (in production, use Redis)
-guest_rate_limits = {}
 
 def sanitize_input(text: str) -> str:
     """Sanitize user input to prevent injection attacks and clean up content."""
@@ -63,9 +60,9 @@ def get_cache_key(message: str, session_id: str = None) -> str:
     """Generate cache key for marketing responses."""
     # Normalize message for caching
     normalized = message.lower().strip()
-    # Create hash to avoid key length issues
+    # Create hash to avoid key length issues (using sha256 for better security)
     key_data = f"marketing_ai:{normalized}:{session_id or 'anonymous'}"
-    return hashlib.md5(key_data.encode()).hexdigest()
+    return hashlib.sha256(key_data.encode()).hexdigest()[:32]
 
 
 def get_cached_response(cache_key: str) -> Optional[str]:
