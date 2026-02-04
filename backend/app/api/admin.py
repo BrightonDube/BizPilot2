@@ -3,12 +3,12 @@
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, func
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.models.base import utc_now
 from app.core.admin import require_admin
 from app.models.user import User, UserStatus, SubscriptionStatus

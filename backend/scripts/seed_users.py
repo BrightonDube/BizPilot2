@@ -144,7 +144,7 @@ def main():
         tiers = ensure_tiers(db)
         
         # Create users
-        demo_user = create_demo_user(db, tiers)
+        create_demo_user(db, tiers)
         superadmin, superadmin_pwd = create_superadmin(db)
         
         print("\n" + "=" * 50)

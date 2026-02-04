@@ -7,14 +7,13 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
 # Import openpyxl at module level for efficiency
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id, check_feature
 from app.core.rbac import has_permission
 from app.models.user import User

@@ -3,9 +3,8 @@
 import math
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_business_id
 from app.core.rbac import has_permission
 from app.models.production import ProductionStatus

@@ -1276,9 +1276,9 @@ def main():
         link_user_business(db, superadmin_user, business, roles["admin"])
         
         # Business configuration
-        business_time_settings = create_business_time_settings(db, business)
-        user_settings = create_user_settings(db, user)
-        subscription_transaction = create_subscription_transaction(db, user, tiers["pilot_pro"])
+        create_business_time_settings(db, business)
+        create_user_settings(db, user)
+        create_subscription_transaction(db, user, tiers["pilot_pro"])
         
         # Business data
         categories = create_categories(db, business)
@@ -1345,7 +1345,7 @@ def main():
         print(f"   Production Orders:   {len(production_orders)}")
         print(f"   Layby Orders:        {len(laybys)}")
         print(f"   AI Conversations:    {len(ai_conversations)}")
-        print(f"   Subscription Txns:   1")
+        print("   Subscription Txns:   1")
         print("=" * 60 + "\n")
         
     except Exception as e:

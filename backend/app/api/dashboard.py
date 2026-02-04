@@ -1,14 +1,13 @@
 """Dashboard API endpoints for overview statistics."""
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
 from app.models.product import Product, ProductStatus, ProductCategory

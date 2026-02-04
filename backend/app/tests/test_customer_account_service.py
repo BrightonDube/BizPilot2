@@ -1000,7 +1000,7 @@ def test_generate_charge_slip_calculates_balances_correctly(business_id, custome
     # The PDF should contain balance information
     # Previous balance: 900, This charge: +300, New balance: 1200
     # Available credit: 5000 - 1200 = 3800
-    pdf_str = pdf_bytes.decode('latin-1', errors='ignore')
+    pdf_bytes.decode('latin-1', errors='ignore')
     
     # Check that it's a valid PDF with content
     assert len(pdf_bytes) > 500
@@ -2141,7 +2141,6 @@ def test_generate_payment_receipt_includes_payment_details(
 ):
     """Test that payment receipt includes all payment details."""
     from app.models.customer_account import AccountPayment
-    from unittest.mock import Mock
     
     customer = _make_customer(customer_id, business_id)
     customer.name = "Jane Smith"

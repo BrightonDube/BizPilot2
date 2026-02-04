@@ -1,6 +1,5 @@
 """Authentication service for user management."""
 
-import inspect
 import uuid
 from typing import Optional, Union
 from sqlalchemy.ext.asyncio import AsyncSession

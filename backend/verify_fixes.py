@@ -52,7 +52,7 @@ def test_environment_variables():
     if encryption_key:
         print(f"✅ DB_ENCRYPTION_KEY: Set ({len(encryption_key)} chars)")
     else:
-        print(f"⚠️  DB_ENCRYPTION_KEY: Not set (POS API keys won't be encrypted)")
+        print("⚠️  DB_ENCRYPTION_KEY: Not set (POS API keys won't be encrypted)")
     
     return all(checks.values())
 
@@ -61,7 +61,7 @@ def test_database():
     print_section("2. Database Connection")
     
     from app.core.config import settings
-    from app.core.database import SessionLocal, async_engine
+    from app.core.database import SessionLocal
     from sqlalchemy import text
     
     # Check database type
@@ -75,9 +75,9 @@ def test_database():
     try:
         db = SessionLocal()
         result = db.execute(text("SELECT 1 as test"))
-        row = result.fetchone()
+        result.fetchone()
         db.close()
-        print(f"✅ Sync database connection: OK")
+        print("✅ Sync database connection: OK")
         return True
     except Exception as e:
         print(f"❌ Sync database connection: FAILED - {e}")
@@ -101,13 +101,13 @@ def test_encryption():
         decrypted = encryption_service.decrypt(encrypted)
         
         if decrypted == test_data:
-            print(f"✅ Encryption/Decryption: OK")
+            print("✅ Encryption/Decryption: OK")
             print(f"   Original: {test_data}")
             print(f"   Encrypted: {encrypted[:20]}...")
             print(f"   Decrypted: {decrypted}")
             return True
         else:
-            print(f"❌ Encryption/Decryption: FAILED (data mismatch)")
+            print("❌ Encryption/Decryption: FAILED (data mismatch)")
             return False
     except Exception as e:
         print(f"❌ Encryption service: FAILED - {e}")
@@ -124,7 +124,7 @@ def test_redis():
         await redis_manager.connect()
         
         if redis_manager.is_available():
-            print(f"✅ Redis connection: OK")
+            print("✅ Redis connection: OK")
             
             # Test operations
             await redis_manager.set("test_key", "test_value", ttl_seconds=60)
@@ -132,20 +132,20 @@ def test_redis():
             await redis_manager.delete("test_key")
             
             if value == "test_value":
-                print(f"✅ Redis operations: OK")
+                print("✅ Redis operations: OK")
                 return True
             else:
-                print(f"❌ Redis operations: FAILED")
+                print("❌ Redis operations: FAILED")
                 return False
         else:
-            print(f"⚠️  Redis connection: UNAVAILABLE (fallback mode active)")
+            print("⚠️  Redis connection: UNAVAILABLE (fallback mode active)")
             return False
     
     try:
         return asyncio.run(check_redis())
     except Exception as e:
         print(f"⚠️  Redis connection: FAILED - {e}")
-        print(f"   Application will use database fallback (slower but functional)")
+        print("   Application will use database fallback (slower but functional)")
         return False
 
 def test_rate_limiting():
@@ -176,7 +176,7 @@ def test_api_startup():
     
     try:
         from app.main import app
-        print(f"✅ FastAPI app: OK")
+        print("✅ FastAPI app: OK")
         print(f"   Title: {app.title}")
         print(f"   Version: {app.version}")
         

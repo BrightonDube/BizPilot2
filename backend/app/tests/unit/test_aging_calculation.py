@@ -25,7 +25,6 @@ from app.models.customer_account import (
     AccountStatus,
     AccountTransaction,
     TransactionType,
-    PaymentAllocation,
 )
 from app.services.customer_account_service import CustomerAccountService
 

@@ -13,7 +13,6 @@ from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.business import Business
 from app.models.order import Order, OrderDirection, OrderItem
 from app.models.customer import Customer
-from app.models.product import Product
 from app.models.inventory import InventoryItem
 from app.models.invoice import Invoice, InvoiceStatus
 from app.models.report_subscription import ReportType
@@ -67,7 +66,7 @@ class ReportGeneratorService:
             and_(
                 BusinessUser.user_id == user_id,
                 BusinessUser.status == BusinessUserStatus.ACTIVE,
-                BusinessUser.is_primary == True,
+                BusinessUser.is_primary,
                 BusinessUser.deleted_at.is_(None),
             )
         ).first()

@@ -70,7 +70,7 @@ for pwd in COMMON_PASSWORDS:
             cursor.execute(f"DROP DATABASE IF EXISTS {DB_NAME};")
             cursor.execute(f"CREATE DATABASE {DB_NAME};")
             print(f"✅ Database '{DB_NAME}' created")
-        except:
+        except Exception:
             print(f"⚠️  Database '{DB_NAME}' may already exist")
         
         # Create user
@@ -78,7 +78,7 @@ for pwd in COMMON_PASSWORDS:
             cursor.execute(f"DROP USER IF EXISTS {DB_USER};")
             cursor.execute(f"CREATE USER {DB_USER} WITH PASSWORD '{DB_PASSWORD}';")
             print(f"✅ User '{DB_USER}' created")
-        except:
+        except Exception:
             print(f"⚠️  User '{DB_USER}' may already exist")
         
         # Grant privileges
@@ -133,8 +133,8 @@ if success:
     print(f"Password: {DB_PASSWORD}")
     print()
     print("⚠️  IMPORTANT: Change the postgres password for security:")
-    print(f"  psql -U postgres")
-    print(f"  ALTER USER postgres WITH PASSWORD 'your_secure_password';")
+    print("  psql -U postgres")
+    print("  ALTER USER postgres WITH PASSWORD 'your_secure_password';")
     print()
 else:
     print("="*60)

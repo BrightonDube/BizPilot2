@@ -5,9 +5,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from pydantic import BaseModel as PydanticBaseModel
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_db
 from app.core.config import settings
-from app.core.rate_limit import limiter, AUTH_RATE_LIMIT, REGISTER_RATE_LIMIT, PASSWORD_RESET_RATE_LIMIT, EMAIL_VERIFY_RATE_LIMIT
+from app.core.rate_limit import limiter, AUTH_RATE_LIMIT, REGISTER_RATE_LIMIT, PASSWORD_RESET_RATE_LIMIT
 from app.core.security import (
     create_access_token,
     create_refresh_token,

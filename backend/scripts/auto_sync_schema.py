@@ -84,7 +84,7 @@ def sync_table_schema(conn, table_name, model_class):
     missing_columns = set(model_columns.keys()) - set(existing_columns.keys())
     
     if not missing_columns:
-        print(f"  ✓ All columns exist")
+        print("  ✓ All columns exist")
         return
     
     print(f"  Adding {len(missing_columns)} missing columns: {', '.join(missing_columns)}")

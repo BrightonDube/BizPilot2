@@ -10,7 +10,6 @@ Requirements: 7.3, 7.4, 7.5
 
 from typing import Optional
 from fastapi import APIRouter, Depends, Header
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.api.deps import (
@@ -19,7 +18,7 @@ from app.api.deps import (
     check_device_limit,
     get_permission_service
 )
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_db
 from app.models.user import User
 from app.services.permission_service import PermissionService
 

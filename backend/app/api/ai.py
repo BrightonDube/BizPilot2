@@ -9,7 +9,7 @@ import hashlib
 import logging
 import re
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.core.config import settings
 from app.api.deps import check_feature
 from app.models.user import User

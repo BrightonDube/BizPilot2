@@ -5,9 +5,8 @@ from typing import Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import Response
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.config import settings
 from app.core.rbac import has_permission

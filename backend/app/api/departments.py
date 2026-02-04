@@ -2,9 +2,8 @@
 
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
 from app.schemas.department import (
