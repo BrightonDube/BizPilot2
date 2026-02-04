@@ -10,6 +10,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from dotenv import load_dotenv
 
 # Setup logging
 logger = logging.getLogger("alembic.env")
@@ -17,9 +18,6 @@ logger = logging.getLogger("alembic.env")
 # Add the backend directory to path
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, backend_dir)
-
-# Load .env file
-from dotenv import load_dotenv
 
 # Load alembic-specific env file if it exists, otherwise load default .env
 alembic_env_path = os.path.join(backend_dir, '.env.alembic')
@@ -181,7 +179,7 @@ database_url = os.getenv("DATABASE_URL")
 if database_url:
     database_url = convert_async_url_to_sync(database_url)
     config.set_main_option("sqlalchemy.url", database_url)
-    logger.debug(f"Using database URL from DATABASE_URL environment variable")
+    logger.debug("Using database URL from DATABASE_URL environment variable")
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:

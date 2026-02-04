@@ -1,7 +1,7 @@
 """Authentication dependencies for FastAPI."""
 
 import inspect
-from typing import Optional, Literal, Union
+from typing import Optional, Literal
 from fastapi import Depends, HTTPException, status, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from redis.asyncio import Redis

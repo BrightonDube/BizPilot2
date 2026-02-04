@@ -10,7 +10,6 @@ from app.core.database import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.models.business_user import BusinessUser
-from app.models.role import Role
 
 
 async def get_user_business_users(db, user_id: str) -> List[BusinessUser]:

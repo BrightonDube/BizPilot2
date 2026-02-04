@@ -13,6 +13,7 @@ from app.models.customer_account import (
     AccountTransaction,
     TransactionType,
     AccountPayment,
+    AccountStatement,
 )
 from app.models.customer import Customer
 from app.schemas.customer_account import (
@@ -837,8 +838,8 @@ class CustomerAccountService:
             alert_info['should_alert'] = True
             alert_info['alert_level'] = 'critical'
             alert_info['message'] = (
-                f"Account has reached credit limit. "
-                f"No credit available."
+                "Account has reached credit limit. "
+                "No credit available."
             )
             return alert_info
         
@@ -1945,7 +1946,6 @@ class CustomerAccountService:
         Returns:
             list: List of AccountTransaction objects in the statement period
         """
-        from app.models.customer_account import AccountStatement
         
         # Convert dates to datetime for comparison
         period_start_dt = datetime.combine(statement.period_start, datetime.min.time())
@@ -1990,7 +1990,6 @@ class CustomerAccountService:
                 - aging_matches: bool
                 - message: str
         """
-        from app.models.customer_account import AccountStatement
         
         # Calculate expected closing balance using Property 4
         calculated_closing = (

@@ -12,7 +12,6 @@ Requirements: 6.1, 6.2, 6.3, 6.4, 12.5
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_superadmin, get_db
 from app.models.user import User

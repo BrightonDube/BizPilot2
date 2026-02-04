@@ -4,10 +4,9 @@ from typing import List, Optional
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
-from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id, check_feature
 from app.models.user import User
 from app.models.business_user import BusinessUser

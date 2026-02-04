@@ -15,7 +15,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, and_
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_superadmin, get_db
 from app.models.user import User

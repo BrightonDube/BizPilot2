@@ -1,9 +1,8 @@
 """Google OAuth API endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token
 from app.core.rate_limit import limiter, AUTH_RATE_LIMIT

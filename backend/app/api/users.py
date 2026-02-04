@@ -2,10 +2,9 @@
 
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel

@@ -133,7 +133,7 @@ class ReportSubscriptionService:
         )
 
         if active_only:
-            query = query.filter(ReportSubscription.is_active == True)
+            query = query.filter(ReportSubscription.is_active)
 
         return query.all()
 
@@ -183,7 +183,7 @@ class ReportSubscriptionService:
         return self.db.query(ReportSubscription).filter(
             and_(
                 ReportSubscription.frequency == frequency.value,
-                ReportSubscription.is_active == True,
+                ReportSubscription.is_active,
                 ReportSubscription.deleted_at.is_(None),
             )
         ).offset(offset).limit(batch_size).all()
@@ -204,7 +204,7 @@ class ReportSubscriptionService:
         return self.db.query(ReportSubscription).filter(
             and_(
                 ReportSubscription.frequency == frequency.value,
-                ReportSubscription.is_active == True,
+                ReportSubscription.is_active,
                 ReportSubscription.deleted_at.is_(None),
             )
         ).count()

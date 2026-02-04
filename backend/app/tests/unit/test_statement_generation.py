@@ -7,11 +7,8 @@ from uuid import uuid4
 
 from app.services.customer_account_service import CustomerAccountService
 from app.models.customer_account import (
-    CustomerAccount,
-    AccountStatus,
     AccountTransaction,
     TransactionType,
-    AccountStatement,
 )
 from app.models.customer import Customer
 from app.models.business import Business
@@ -134,14 +131,14 @@ class TestStatementGeneration:
     def test_generate_statement_basic(self, service, account, user):
         """Test basic statement generation with charges and payments."""
         # Create some charges
-        charge1 = service.charge_to_account(
+        service.charge_to_account(
             account=account,
             amount=Decimal('1000.00'),
             user_id=user.id,
             description="Charge 1",
         )
         
-        charge2 = service.charge_to_account(
+        service.charge_to_account(
             account=account,
             amount=Decimal('500.00'),
             user_id=user.id,
@@ -406,8 +403,8 @@ class TestStatementGeneration:
     def test_get_statement_transactions(self, service, account, user):
         """Test retrieving transactions for a statement."""
         # Create transactions
-        charge1 = service.charge_to_account(account, Decimal('1000.00'), user.id, description="Charge 1")
-        charge2 = service.charge_to_account(account, Decimal('500.00'), user.id, description="Charge 2")
+        service.charge_to_account(account, Decimal('1000.00'), user.id, description="Charge 1")
+        service.charge_to_account(account, Decimal('500.00'), user.id, description="Charge 2")
         
         payment_data = PaymentCreate(amount=Decimal('600.00'), payment_method="cash")
         payment, allocations = service.process_payment(account, payment_data, user.id)

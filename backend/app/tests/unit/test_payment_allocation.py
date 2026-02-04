@@ -2,16 +2,12 @@
 
 import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
 from uuid import uuid4
 
 from app.services.customer_account_service import CustomerAccountService
 from app.models.customer_account import (
-    CustomerAccount,
-    AccountStatus,
     AccountTransaction,
     TransactionType,
-    AccountPayment,
     PaymentAllocation,
 )
 from app.models.customer import Customer, CustomerType
@@ -161,7 +157,7 @@ class TestPaymentAllocation:
     ):
         """Test allocating payment that partially pays a single charge."""
         # Create a charge
-        charge = service.charge_to_account(
+        service.charge_to_account(
             active_account,
             Decimal('1000'),
             user.id,
@@ -218,7 +214,7 @@ class TestPaymentAllocation:
         
         time.sleep(0.01)
         
-        charge3 = service.charge_to_account(
+        service.charge_to_account(
             active_account,
             Decimal('500'),
             user.id,
@@ -309,7 +305,7 @@ class TestPaymentAllocation:
     ):
         """Test allocating payment larger than total charges."""
         # Create a charge
-        charge = service.charge_to_account(
+        service.charge_to_account(
             active_account,
             Decimal('500'),
             user.id,
@@ -370,7 +366,7 @@ class TestPaymentAllocation:
     ):
         """Test that allocating an already-allocated payment fails."""
         # Create a charge
-        charge = service.charge_to_account(
+        service.charge_to_account(
             active_account,
             Decimal('500'),
             user.id,
@@ -419,7 +415,7 @@ class TestPaymentAllocation:
     ):
         """Test that allocation creates a payment transaction."""
         # Create a charge
-        charge = service.charge_to_account(
+        service.charge_to_account(
             active_account,
             Decimal('500'),
             user.id,
@@ -514,14 +510,14 @@ class TestPaymentAllocation:
     ):
         """Test that allocation maintains decimal precision."""
         # Create charges with precise amounts
-        charge1 = service.charge_to_account(
+        service.charge_to_account(
             active_account,
             Decimal('123.45'),
             user.id,
             description="Charge 1",
         )
         
-        charge2 = service.charge_to_account(
+        service.charge_to_account(
             active_account,
             Decimal('67.89'),
             user.id,

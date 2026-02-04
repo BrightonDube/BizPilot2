@@ -3,11 +3,10 @@
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.models.base import utc_now
 from app.api.deps import get_current_active_user
 from app.models.user import User, SubscriptionStatus

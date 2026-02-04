@@ -15,7 +15,7 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import text, inspect
+from sqlalchemy import text
 from app.core.sync_database import sync_engine
 
 def fix_subscription_tiers(conn):

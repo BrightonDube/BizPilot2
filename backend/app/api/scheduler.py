@@ -3,11 +3,10 @@
 from typing import Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from app.api.deps import get_current_user
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.models.user import User
 from app.models.job_execution_log import JobExecutionLog, JobStatus
 

@@ -5,9 +5,8 @@ from typing import Optional
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_business_id, get_current_active_user
 from app.core.rbac import has_permission
 from app.models.product import Product, ProductStatus

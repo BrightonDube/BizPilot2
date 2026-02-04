@@ -3,10 +3,9 @@
 from typing import Optional, List
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
 from pydantic import BaseModel, ConfigDict
 
-from app.core.database import get_db, get_sync_db
+from app.core.database import get_sync_db
 from app.api.deps import get_current_business_id, check_feature
 from app.models.user import User
 from app.models.pos_connection import (

@@ -3,7 +3,6 @@ Revert the incorrect sync database changes.
 This script will change all endpoints back to using get_db() instead of get_sync_db().
 """
 
-import os
 import re
 from pathlib import Path
 

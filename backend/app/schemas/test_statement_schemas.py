@@ -1,6 +1,5 @@
 """Unit tests for statement schemas."""
 
-import pytest
 from decimal import Decimal
 from datetime import date, datetime
 from uuid import uuid4
