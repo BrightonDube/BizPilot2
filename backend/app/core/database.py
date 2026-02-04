@@ -27,9 +27,32 @@ def _normalize_db_url(url: str, driver: str) -> str:
     Returns:
         Normalized URL with correct driver
     """
+    from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
+    
     # Remove existing driver specifications
     url = url.replace("postgresql+asyncpg://", "postgresql://")
     url = url.replace("postgresql+psycopg://", "postgresql://")
+    
+    # For asyncpg, we need to handle sslmode differently
+    if driver == "asyncpg":
+        parsed = urlparse(url)
+        query_params = parse_qs(parsed.query)
+        
+        # Remove sslmode as asyncpg uses ssl parameter differently
+        # asyncpg handles SSL via the ssl argument to create_async_engine
+        if 'sslmode' in query_params:
+            del query_params['sslmode']
+        
+        # Reconstruct query string
+        new_query = urlencode(query_params, doseq=True)
+        url = urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            new_query,
+            parsed.fragment
+        ))
     
     # Add new driver
     return url.replace("postgresql://", f"postgresql+{driver}://")
@@ -61,11 +84,22 @@ if is_async_supported:
         "pool_timeout": 30,    # Wait 30s for connection
     }
     
+    # Configure SSL for asyncpg if sslmode was in the original URL
+    connect_args = {}
+    if "sslmode" in settings.DATABASE_URL:
+        import ssl
+        # Create SSL context that doesn't verify certificates (like sslmode=require)
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        connect_args["ssl"] = ssl_context
+    
     # Create async engine for PostgreSQL (primary for API endpoints)
     async_engine = create_async_engine(
         async_db_url,
         **POOL_CONFIG,
         echo=settings.DEBUG,
+        connect_args=connect_args,
     )
     
     # Create async session factory
