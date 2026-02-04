@@ -1288,7 +1288,6 @@ def main():
         suppliers = create_suppliers(db, business)
         link_products_suppliers(db, products, suppliers)
         product_ingredients = create_product_ingredients(db, business, products)
-        stock_reservations = create_stock_reservations(db, business, products)
         
         # Orders and invoices
         orders = create_orders(db, business, customers, products)
