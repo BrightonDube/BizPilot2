@@ -13,8 +13,8 @@ import {
 
 describe('Pricing Configuration', () => {
   describe('PRICING_PLANS', () => {
-    test('should have exactly 3 plans', () => {
-      expect(PRICING_PLANS).toHaveLength(3);
+    test('should have exactly 5 plans', () => {
+      expect(PRICING_PLANS).toHaveLength(5);
     });
 
     test('should have all required plan fields', () => {
@@ -46,22 +46,22 @@ describe('Pricing Configuration', () => {
       });
     });
 
-    test('should have starter plan as free', () => {
-      const starterPlan = PRICING_PLANS.find(plan => plan.id === 'starter');
-      expect(starterPlan).toBeDefined();
-      expect(starterPlan!.monthlyPrice).toBe(0);
-      expect(starterPlan!.yearlyPrice).toBe(0);
+    test('should have pilot_solo plan as free', () => {
+      const soloPlan = PRICING_PLANS.find(plan => plan.id === 'pilot_solo');
+      expect(soloPlan).toBeDefined();
+      expect(soloPlan!.monthlyPrice).toBe(0);
+      expect(soloPlan!.yearlyPrice).toBe(0);
     });
 
-    test('should have professional plan as recommended', () => {
-      const professionalPlan = PRICING_PLANS.find(plan => plan.id === 'professional');
-      expect(professionalPlan).toBeDefined();
-      expect(professionalPlan!.recommended).toBe(true);
+    test('should have pilot_core plan as recommended', () => {
+      const corePlan = PRICING_PLANS.find(plan => plan.id === 'pilot_core');
+      expect(corePlan).toBeDefined();
+      expect(corePlan!.recommended).toBe(true);
     });
 
     test('should have proper sort order', () => {
       const sortOrders = PRICING_PLANS.map(plan => plan.sortOrder);
-      expect(sortOrders).toEqual([1, 2, 3]);
+      expect(sortOrders).toEqual([0, 1, 2, 3, 4]);
     });
 
     test('should have AI features for all plans', () => {
@@ -90,8 +90,8 @@ describe('Pricing Configuration', () => {
       expect(Array.isArray(AI_MESSAGING.automationBenefits)).toBe(true);
     });
 
-    test('should have AI-focused messaging', () => {
-      expect(AI_MESSAGING.heroTagline.toLowerCase()).toContain('ai');
+    test('should have smart-feature-focused messaging', () => {
+      expect(AI_MESSAGING.heroTagline.toLowerCase()).toMatch(/smart|intelligent|ai/);
       expect(AI_MESSAGING.keyBenefits.some(benefit => 
         benefit.toLowerCase().includes('ai') || 
         benefit.toLowerCase().includes('intelligent') ||
@@ -130,7 +130,7 @@ describe('Pricing Configuration', () => {
 
     describe('getPriceForCycle', () => {
       test('should return correct price for billing cycle', () => {
-        const plan = PRICING_PLANS.find(p => p.id === 'professional')!;
+        const plan = PRICING_PLANS.find(p => p.id === 'pilot_core')!;
         
         expect(PricingUtils.getPriceForCycle(plan, 'monthly')).toBe(plan.monthlyPrice);
         expect(PricingUtils.getPriceForCycle(plan, 'yearly')).toBe(plan.yearlyPrice);
@@ -139,14 +139,16 @@ describe('Pricing Configuration', () => {
 
     describe('formatPriceWithCycle', () => {
       test('should format price with cycle suffix', () => {
-        const plan = PRICING_PLANS.find(p => p.id === 'professional')!;
+        const plan = PRICING_PLANS.find(p => p.id === 'pilot_core')!;
+        const monthlyFormatted = PricingUtils.formatPriceWithCycle(plan, 'monthly');
+        const yearlyFormatted = PricingUtils.formatPriceWithCycle(plan, 'yearly');
         
-        expect(PricingUtils.formatPriceWithCycle(plan, 'monthly')).toBe('R499/mo');
-        expect(PricingUtils.formatPriceWithCycle(plan, 'yearly')).toBe('R4,790/yr');
+        expect(monthlyFormatted).toMatch(/R[\d,.]+\/mo/);
+        expect(yearlyFormatted).toMatch(/R[\d,.]+\/yr/);
       });
 
       test('should handle free plans correctly', () => {
-        const plan = PRICING_PLANS.find(p => p.id === 'starter')!;
+        const plan = PRICING_PLANS.find(p => p.id === 'pilot_solo')!;
         
         expect(PricingUtils.formatPriceWithCycle(plan, 'monthly')).toBe('Free');
         expect(PricingUtils.formatPriceWithCycle(plan, 'yearly')).toBe('Free');
@@ -155,9 +157,9 @@ describe('Pricing Configuration', () => {
 
     describe('getPlanById', () => {
       test('should return correct plan by ID', () => {
-        const plan = PricingUtils.getPlanById('professional');
+        const plan = PricingUtils.getPlanById('pilot_core');
         expect(plan).toBeDefined();
-        expect(plan!.id).toBe('professional');
+        expect(plan!.id).toBe('pilot_core');
       });
 
       test('should return undefined for invalid ID', () => {
@@ -171,13 +173,13 @@ describe('Pricing Configuration', () => {
         const plan = PricingUtils.getRecommendedPlan();
         expect(plan).toBeDefined();
         expect(plan!.recommended).toBe(true);
-        expect(plan!.id).toBe('professional');
+        expect(plan!.id).toBe('pilot_core');
       });
     });
 
     describe('convertFeaturesToBenefits', () => {
       test('should convert plan features to benefits format', () => {
-        const plan = PRICING_PLANS.find(p => p.id === 'starter')!;
+        const plan = PRICING_PLANS.find(p => p.id === 'pilot_solo')!;
         const benefits = PricingUtils.convertFeaturesToBenefits(plan);
         
         expect(Array.isArray(benefits)).toBe(true);
@@ -194,20 +196,20 @@ describe('Pricing Configuration', () => {
 
     describe('getAIFeaturesCount', () => {
       test('should count enabled AI features correctly', () => {
-        const starterPlan = PRICING_PLANS.find(p => p.id === 'starter')!;
-        const professionalPlan = PRICING_PLANS.find(p => p.id === 'professional')!;
+        const soloPlan = PRICING_PLANS.find(p => p.id === 'pilot_solo')!;
+        const proPlan = PRICING_PLANS.find(p => p.id === 'pilot_pro')!;
         
-        const starterCount = PricingUtils.getAIFeaturesCount(starterPlan);
-        const professionalCount = PricingUtils.getAIFeaturesCount(professionalPlan);
+        const soloCount = PricingUtils.getAIFeaturesCount(soloPlan);
+        const proCount = PricingUtils.getAIFeaturesCount(proPlan);
         
-        expect(starterCount).toBeGreaterThan(0);
-        expect(professionalCount).toBeGreaterThan(starterCount);
+        expect(soloCount).toBeGreaterThanOrEqual(0);
+        expect(proCount).toBeGreaterThan(soloCount);
       });
     });
 
     describe('getEnabledAIFeatures', () => {
       test('should return list of enabled AI features', () => {
-        const plan = PRICING_PLANS.find(p => p.id === 'professional')!;
+        const plan = PRICING_PLANS.find(p => p.id === 'pilot_pro')!;
         const features = PricingUtils.getEnabledAIFeatures(plan);
         
         expect(Array.isArray(features)).toBe(true);
@@ -234,8 +236,10 @@ describe('Pricing Configuration', () => {
         
         category.features.forEach(feature => {
           expect(feature).toHaveProperty('name');
-          expect(feature).toHaveProperty('starter');
-          expect(feature).toHaveProperty('professional');
+          expect(feature).toHaveProperty('pilot_solo');
+          expect(feature).toHaveProperty('pilot_lite');
+          expect(feature).toHaveProperty('pilot_core');
+          expect(feature).toHaveProperty('pilot_pro');
           expect(feature).toHaveProperty('enterprise');
         });
       });

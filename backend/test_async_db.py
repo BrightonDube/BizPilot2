@@ -1,8 +1,10 @@
 """Test async database connection."""
 import asyncio
+import pytest
 from app.core.database import get_db, async_engine
 from sqlalchemy import text
 
+@pytest.mark.asyncio
 async def test_async_db():
     """Test async database connection."""
     if not async_engine:

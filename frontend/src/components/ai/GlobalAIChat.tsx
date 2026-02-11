@@ -401,6 +401,7 @@ export function GlobalAIChat() {
                     onClick={sendMessage}
                     disabled={isSending || input.trim().length === 0 || !canUseChat}
                     className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    aria-label="Send"
                   >
                     <Send className="h-4 w-4" />
                   </Button>

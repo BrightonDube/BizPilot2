@@ -273,5 +273,5 @@ class TestSeedScript:
         import os
         CURRENT_FILE = os.path.abspath(__file__)
         PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_FILE))))
-        seed_script = os.path.join(PROJECT_ROOT, "backend", "scripts", "seed_db.py")
+        seed_script = os.path.join(PROJECT_ROOT, "backend", "scripts", "seed_users.py")
         assert os.path.exists(seed_script)

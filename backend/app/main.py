@@ -20,6 +20,7 @@ from app.core.redis import startup_redis, shutdown_redis
 from app.scheduler.config import SchedulerConfig
 from app.scheduler.manager import SchedulerManager
 from app.scheduler.jobs.overdue_invoice_job import check_overdue_invoices_job
+from app.scheduler.jobs.auto_clockout_job import auto_clock_out_job
 
 # Configure logging for performance monitoring
 logging.basicConfig(level=logging.INFO)
@@ -389,6 +390,24 @@ async def startup_event():
 async def shutdown_event():
     """Shutdown Redis and scheduler on application shutdown."""
     global scheduler_manager
+    
+    # Shutdown Redis connection
+    try:
+        logger.info("Shutting down Redis connection...")
+        await shutdown_redis()
+        logger.info("Redis shutdown successfully")
+    except Exception as e:
+        logger.error(f"Error shutting down Redis: {e}", exc_info=True)
+    
+    # Shutdown scheduler
+    if scheduler_manager:
+        try:
+            logger.info("Shutting down scheduler...")
+            scheduler_manager.shutdown(wait=True)
+            logger.info("Scheduler shutdown successfully")
+        except Exception as e:
+            logger.error(f"Error shutting down scheduler: {e}", exc_info=True)
+
     
     # Shutdown Redis connection
     try:

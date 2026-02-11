@@ -75,7 +75,7 @@ class TestBusinessUsersAPI:
         response = client.post("/api/v1/business/users/invite", json={
             "email": "test@example.com",
             "role_id": str(uuid4())
-        })
+        }, headers={"Authorization": "Bearer dummy"})
         # Should return 401 (unauthorized) not 404 (not found)
         assert response.status_code == 401
 
@@ -83,7 +83,7 @@ class TestBusinessUsersAPI:
         """Test that PUT /business/users/{user_id} endpoint exists (returns 401 without auth)."""
         response = client.put(f"/api/v1/business/users/{uuid4()}", json={
             "role_id": str(uuid4())
-        })
+        }, headers={"Authorization": "Bearer dummy"})
         # Should return 401 (unauthorized) not 404 (not found)
         assert response.status_code == 401
 

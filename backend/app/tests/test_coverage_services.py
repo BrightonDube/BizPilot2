@@ -31,7 +31,7 @@ def _make_request(headers: dict[str, str] | None = None, cookie: str | None = No
 
 
 def test_settings_parse_cors_origins_json_list(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
     monkeypatch.setenv("CORS_ORIGINS", json.dumps(["http://a.com", "http://b.com"]))
 
     from app.core.config import Settings
@@ -43,7 +43,7 @@ def test_settings_parse_cors_origins_json_list(monkeypatch):
 def test_settings_parse_cors_origins_csv(monkeypatch):
     from app.core.config import Settings
 
-    s = Settings(SECRET_KEY="0123456789abcdef", CORS_ORIGINS="http://a.com, http://b.com")
+    s = Settings(SECRET_KEY="0123456789abcdef0123456789abcdef", CORS_ORIGINS="http://a.com, http://b.com")
     assert s.CORS_ORIGINS == ["http://a.com", "http://b.com"]
 
 
@@ -57,7 +57,7 @@ def test_settings_secret_key_validator_requires_min_length(monkeypatch):
 
 
 def test_invoice_service_generate_invoice_number_increments_count(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.services.invoice_service import InvoiceService
 
@@ -75,7 +75,7 @@ def test_invoice_service_generate_invoice_number_increments_count(monkeypatch):
 
 
 def test_invoice_service_record_payment_sets_status_paid(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.services.invoice_service import InvoiceService
     from app.models.invoice import InvoiceStatus
@@ -99,7 +99,7 @@ def test_invoice_service_record_payment_sets_status_paid(monkeypatch):
 
 
 def test_invoice_service_record_payment_sets_status_partial(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.services.invoice_service import InvoiceService
     from app.models.invoice import InvoiceStatus
@@ -121,7 +121,7 @@ def test_invoice_service_record_payment_sets_status_partial(monkeypatch):
 
 
 def test_invoice_service_send_invoice(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.services.invoice_service import InvoiceService
     from app.models.invoice import InvoiceStatus
@@ -138,7 +138,7 @@ def test_invoice_service_send_invoice(monkeypatch):
 
 
 def test_product_service_bulk_delete_enforces_max_ids(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.services.product_service import ProductService
 
@@ -150,7 +150,7 @@ def test_product_service_bulk_delete_enforces_max_ids(monkeypatch):
 
 
 def test_product_service_update_inventory_sets_out_of_stock(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.services.product_service import ProductService
     from app.models.product import ProductStatus
@@ -173,7 +173,7 @@ def test_product_service_update_inventory_sets_out_of_stock(monkeypatch):
 
 
 def test_product_service_update_inventory_recovers_from_out_of_stock(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.services.product_service import ProductService
     from app.models.product import ProductStatus
@@ -194,7 +194,7 @@ def test_product_service_update_inventory_recovers_from_out_of_stock(monkeypatch
 
 
 def test_customer_display_name_company_and_fallback(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.models.customer import Customer
 
@@ -209,7 +209,7 @@ def test_customer_display_name_company_and_fallback(monkeypatch):
 
 
 def test_invoice_is_overdue_property(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.models.invoice import Invoice, InvoiceStatus
 
@@ -280,7 +280,7 @@ async def test_cached_response_decorator_caches_result(monkeypatch):
 
 
 def test_deps_extract_token_prefers_bearer_over_cookie(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from fastapi.security import HTTPAuthorizationCredentials
     from app.api.deps import extract_token_from_request
@@ -291,7 +291,7 @@ def test_deps_extract_token_prefers_bearer_over_cookie(monkeypatch):
 
 
 def test_deps_extract_token_cookie_fallback(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.api.deps import extract_token_from_request
 
@@ -301,7 +301,7 @@ def test_deps_extract_token_cookie_fallback(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_current_user_happy_path(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
 
@@ -313,7 +313,7 @@ async def test_get_current_user_happy_path(monkeypatch):
         def __init__(self, db):
             self.db = db
 
-        def get_user_by_id(self, user_id: str):
+        async def get_user_by_id(self, user_id: str):
             assert user_id == "u1"
             return fake_user
 
@@ -326,7 +326,7 @@ async def test_get_current_user_happy_path(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_current_user_raises_on_missing_token(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
 
@@ -336,7 +336,7 @@ async def test_get_current_user_raises_on_missing_token(monkeypatch):
 
 
 def test_auth_is_mobile_client_and_cookie_helpers(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from fastapi import Response
     from app.api.auth import is_mobile_client, set_auth_cookies, clear_auth_cookies
@@ -359,7 +359,7 @@ def test_auth_is_mobile_client_and_cookie_helpers(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_ai_chat_returns_fallback_when_not_configured(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.ai as ai
 
@@ -378,7 +378,7 @@ async def test_ai_chat_returns_fallback_when_not_configured(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_ai_generate_ai_response_keyword_paths(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.ai as ai
 
@@ -393,7 +393,7 @@ async def test_ai_generate_ai_response_keyword_paths(monkeypatch):
 
 
 def test_deps_get_current_active_user_blocks_inactive(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
     from app.models.user import UserStatus
@@ -406,7 +406,7 @@ def test_deps_get_current_active_user_blocks_inactive(monkeypatch):
 
 
 def test_deps_get_current_user_for_onboarding_allows_pending(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
     from app.models.user import UserStatus
@@ -419,7 +419,7 @@ def test_deps_get_current_user_for_onboarding_allows_pending(monkeypatch):
 
 
 def test_deps_get_current_verified_user_blocks_unverified(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
 
@@ -430,17 +430,19 @@ def test_deps_get_current_verified_user_blocks_unverified(monkeypatch):
         anyio.run(deps.get_current_verified_user, user)
 
 
-def test_get_optional_user_returns_none_when_no_token(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+@pytest.mark.asyncio
+async def test_get_optional_user_returns_none_when_no_token(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
 
     req = _make_request()
-    assert deps.get_optional_user(request=req, credentials=None, db=MagicMock()) is None
+    assert await deps.get_optional_user(request=req, credentials=None, db=MagicMock()) is None
 
 
-def test_get_optional_user_returns_user_when_valid_access(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+@pytest.mark.asyncio
+async def test_get_optional_user_returns_user_when_valid_access(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
 
@@ -451,18 +453,18 @@ def test_get_optional_user_returns_user_when_valid_access(monkeypatch):
         def __init__(self, db):
             self.db = db
 
-        def get_user_by_id(self, user_id: str):
+        async def get_user_by_id(self, user_id: str):
             return fake_user
 
     monkeypatch.setattr(deps, "AuthService", FakeAuthService)
 
     req = _make_request(cookie="access_token=tok")
-    assert deps.get_optional_user(request=req, credentials=None, db=MagicMock()) is fake_user
+    assert await deps.get_optional_user(request=req, credentials=None, db=MagicMock()) is fake_user
 
 
 @pytest.mark.asyncio
 async def test_get_current_business_id_raises_when_missing(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
 
@@ -478,16 +480,18 @@ async def test_get_current_business_id_raises_when_missing(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_current_business_id_returns_id(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.deps as deps
     from unittest.mock import MagicMock
 
     db = MagicMock()
-    q = MagicMock()
-    db.query.return_value = q
-    q.filter.return_value = q
-    q.first.return_value = SimpleNamespace(business_id="b1")
+    # Mock the db.execute() -> result.scalars().first() chain
+    result_mock = MagicMock()
+    scalars_mock = MagicMock()
+    scalars_mock.first.return_value = SimpleNamespace(business_id="b1")
+    result_mock.scalars.return_value = scalars_mock
+    db.execute.return_value = result_mock
 
     # Mock request object
     request = MagicMock()
@@ -503,7 +507,7 @@ async def test_get_current_business_id_returns_id(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_auth_login_sets_cookies_for_web(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.auth as auth
 
@@ -514,7 +518,7 @@ async def test_auth_login_sets_cookies_for_web(monkeypatch):
         def __init__(self, db):
             self.db = db
 
-        def authenticate_user(self, email: str, password: str):
+        async def authenticate_user(self, email: str, password: str):
             return SimpleNamespace(id="u1")
 
     monkeypatch.setattr(auth, "AuthService", FakeAuthService)
@@ -531,7 +535,7 @@ async def test_auth_login_sets_cookies_for_web(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_auth_login_does_not_set_cookies_for_mobile(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.auth as auth
 
@@ -542,7 +546,7 @@ async def test_auth_login_does_not_set_cookies_for_mobile(monkeypatch):
         def __init__(self, db):
             self.db = db
 
-        def authenticate_user(self, email: str, password: str):
+        async def authenticate_user(self, email: str, password: str):
             return SimpleNamespace(id="u1")
 
     monkeypatch.setattr(auth, "AuthService", FakeAuthService)
@@ -558,7 +562,7 @@ async def test_auth_login_does_not_set_cookies_for_mobile(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_auth_refresh_token_web_cookie_missing(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.auth as auth
     from fastapi import Response
@@ -571,7 +575,7 @@ async def test_auth_refresh_token_web_cookie_missing(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_auth_refresh_token_mobile_requires_body(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.auth as auth
     from fastapi import Response
@@ -584,7 +588,7 @@ async def test_auth_refresh_token_mobile_requires_body(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_auth_forgot_password_always_returns_success(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.auth as auth
 
@@ -594,7 +598,7 @@ async def test_auth_forgot_password_always_returns_success(monkeypatch):
         def __init__(self, db):
             self.db = db
 
-        def get_user_by_email(self, email: str):
+        async def get_user_by_email(self, email: str):
             return None
 
     monkeypatch.setattr(auth, "AuthService", FakeAuthService)
@@ -618,7 +622,7 @@ def test_invoice_pdf_helpers_escape_and_build_pdf():
 
 @pytest.mark.asyncio
 async def test_orders_create_outbound_validates_supplier_before_creation(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.orders as orders_api
     from app.models.order import OrderDirection
@@ -655,7 +659,7 @@ async def test_orders_create_outbound_validates_supplier_before_creation(monkeyp
 
 
 def test_email_service_requires_password_when_user_set(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.core.config import settings
     from app.services.email_service import EmailService
@@ -669,7 +673,7 @@ def test_email_service_requires_password_when_user_set(monkeypatch):
 
 
 def test_email_service_uses_timeout_and_starttls(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     from app.core.config import settings
     from app.services.email_service import EmailService
@@ -718,7 +722,7 @@ def test_email_service_uses_timeout_and_starttls(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_invoices_get_invoice_not_found(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.invoices as inv_api
 
@@ -737,7 +741,7 @@ async def test_invoices_get_invoice_not_found(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_invoices_record_payment_exceeds_balance(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.invoices as inv_api
 
@@ -764,7 +768,7 @@ async def test_invoices_record_payment_exceeds_balance(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_invoices_get_invoice_pdf_builds_response(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.invoices as inv_api
 
@@ -846,7 +850,7 @@ async def test_invoices_get_invoice_pdf_builds_response(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_customers_create_customer_duplicate_email(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.customers as cust_api
 
@@ -870,7 +874,7 @@ async def test_customers_create_customer_duplicate_email(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_inventory_adjust_inventory_handles_value_error(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.inventory as inv_api
 
@@ -898,7 +902,7 @@ async def test_inventory_adjust_inventory_handles_value_error(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_products_bulk_delete_returns_deleted_count(monkeypatch):
-    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef")
+    monkeypatch.setenv("SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
     import app.api.products as prod_api
 

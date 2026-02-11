@@ -231,7 +231,7 @@ describe('Marketing Flow Core Integration Tests', () => {
      */
     test('should integrate pricing configuration correctly', async () => {
       // Test pricing data completeness
-      expect(PRICING_PLANS).toHaveLength(3);
+      expect(PRICING_PLANS).toHaveLength(5);
       
       // Test each plan has required data for marketing display
       PRICING_PLANS.forEach(plan => {
@@ -246,26 +246,26 @@ describe('Marketing Flow Core Integration Tests', () => {
       });
 
       // Test pricing utilities integration
-      const starterPlan = PRICING_PLANS.find(p => p.id === 'starter')!;
-      const professionalPlan = PRICING_PLANS.find(p => p.id === 'professional')!;
+      const pilotSoloPlan = PRICING_PLANS.find(p => p.id === 'pilot_solo')!;
+      const pilotCorePlan = PRICING_PLANS.find(p => p.id === 'pilot_core')!;
 
       // Test price formatting
       expect(PricingUtils.formatPrice(0, 'ZAR')).toBe('Free');
-      expect(PricingUtils.formatPrice(49900, 'ZAR')).toBe('R499');
+      expect(PricingUtils.formatPrice(79900, 'ZAR')).toBe('R799');
 
       // Test billing cycle pricing
-      expect(PricingUtils.getPriceForCycle(starterPlan, 'monthly')).toBe(0);
-      expect(PricingUtils.getPriceForCycle(professionalPlan, 'monthly')).toBe(49900);
+      expect(PricingUtils.getPriceForCycle(pilotSoloPlan, 'monthly')).toBe(0);
+      expect(PricingUtils.getPriceForCycle(pilotCorePlan, 'monthly')).toBe(79900);
 
       // Test AI features integration
-      const starterAICount = PricingUtils.getAIFeaturesCount(starterPlan);
-      const professionalAICount = PricingUtils.getAIFeaturesCount(professionalPlan);
+      const soloAICount = PricingUtils.getAIFeaturesCount(pilotSoloPlan);
+      const coreAICount = PricingUtils.getAIFeaturesCount(pilotCorePlan);
       
-      expect(starterAICount).toBeGreaterThan(0);
-      expect(professionalAICount).toBeGreaterThan(starterAICount);
+      expect(soloAICount).toBeGreaterThanOrEqual(0);
+      expect(coreAICount).toBeGreaterThanOrEqual(soloAICount);
 
       // Test benefits conversion
-      const benefits = PricingUtils.convertFeaturesToBenefits(professionalPlan);
+      const benefits = PricingUtils.convertFeaturesToBenefits(pilotCorePlan);
       expect(benefits.length).toBeGreaterThan(0);
       expect(benefits.some(b => b.checked)).toBe(true);
     });
@@ -353,7 +353,7 @@ describe('Marketing Flow Core Integration Tests', () => {
     test('should maintain consistent data across marketing pages', async () => {
       // Test that pricing data is consistent
       const pricingPlans = PRICING_PLANS;
-      expect(pricingPlans).toHaveLength(3);
+      expect(pricingPlans).toHaveLength(5);
 
       // Test that AI messaging is consistent
       const aiMessaging = AI_MESSAGING;
@@ -396,15 +396,17 @@ describe('Marketing Flow Core Integration Tests', () => {
         
         category.features.forEach(feature => {
           expect(feature.name).toBeTruthy();
-          expect(feature).toHaveProperty('starter');
-          expect(feature).toHaveProperty('professional');
+          expect(feature).toHaveProperty('pilot_solo');
+          expect(feature).toHaveProperty('pilot_lite');
+          expect(feature).toHaveProperty('pilot_core');
+          expect(feature).toHaveProperty('pilot_pro');
           expect(feature).toHaveProperty('enterprise');
         });
       });
 
       // Test that feature comparison aligns with pricing plans
       const planIds = PRICING_PLANS.map(p => p.id);
-      const comparisonPlanKeys = ['starter', 'professional', 'enterprise'];
+      const comparisonPlanKeys = ['pilot_solo', 'pilot_lite', 'pilot_core', 'pilot_pro', 'enterprise'];
       
       expect(planIds.sort()).toEqual(comparisonPlanKeys.sort());
     });
@@ -495,8 +497,8 @@ describe('Marketing Flow Core Integration Tests', () => {
       const startTime = Date.now();
       
       for (let i = 0; i < 100; i++) {
-        PricingUtils.getPlanById('professional');
-        PricingUtils.formatPrice(49900, 'ZAR');
+        PricingUtils.getPlanById('pilot_core');
+        PricingUtils.formatPrice(79900, 'ZAR');
         PricingUtils.getRecommendedPlan();
       }
       

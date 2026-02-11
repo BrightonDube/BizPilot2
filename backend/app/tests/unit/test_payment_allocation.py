@@ -400,15 +400,13 @@ class TestPaymentAllocation:
         service.activate_account(account)
         service.close_account(account)
         
-        # Try to allocate payment
+        # Try to record payment on closed account - should fail
         payment_data = PaymentCreate(
             amount=Decimal('100'),
             payment_method="cash",
         )
-        payment = service.record_payment(account, payment_data, user.id)
-        
         with pytest.raises(ValueError, match="closed account"):
-            service.allocate_payment(payment)
+            service.record_payment(account, payment_data, user.id)
 
     def test_allocate_payment_creates_transaction(
         self, service, active_account, user, db_session

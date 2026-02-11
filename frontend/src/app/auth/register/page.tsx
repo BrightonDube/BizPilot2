@@ -6,7 +6,6 @@
 
 import { useState, FormEvent, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Phone, UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
@@ -63,7 +62,6 @@ declare global {
 }
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { register, loginWithGoogle, isLoading, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -138,7 +136,8 @@ export default function RegisterPage() {
                 setGoogleError(null);
                 try {
                   await loginWithGoogle(response.code);
-                  router.push('/business/setup');
+                  // 🔒 HARD NAVIGATION — prevents RSC flight data issues
+                  window.location.href = '/business/setup';
                 } catch {
                   setGoogleError('Google sign-up failed. Please try again.');
                 } finally {
@@ -238,8 +237,9 @@ export default function RegisterPage() {
       setSuccessMessage('Account created successfully! Redirecting to business setup...');
       
       // Redirect to business setup after a short delay
+      // 🔒 HARD NAVIGATION — prevents RSC flight data issues
       setTimeout(() => {
-        router.push('/business/setup');
+        window.location.href = '/business/setup';
       }, 1500);
     } catch (err) {
       // Error is handled by the store, but let's also show a clear message

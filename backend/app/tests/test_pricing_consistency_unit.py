@@ -121,8 +121,8 @@ class TestPricingConsistencyUnit:
         assert pilot_pro.feature_flags["basic_reports"] is True
         assert enterprise.feature_flags["basic_reports"] is True
 
-        # Inventory tracking should be available from Pilot Core onwards
-        assert pilot_solo.feature_flags["inventory_tracking"] is False
+        # Inventory tracking: Pilot Solo has simple inventory, Pilot Lite doesn't, Pilot Core onwards has full
+        assert pilot_solo.feature_flags["inventory_tracking"] is True  # Simple inventory
         assert pilot_lite.feature_flags["inventory_tracking"] is False
         assert pilot_core.feature_flags["inventory_tracking"] is True
         assert pilot_pro.feature_flags["inventory_tracking"] is True
@@ -259,7 +259,7 @@ class TestPricingConsistencyUnit:
         assert enterprise.features["max_users"] == -1  # Unlimited
 
         # Terminal limits should increase
-        assert pilot_solo.features["max_terminals"] == 1
+        assert pilot_solo.features["max_terminals"] == 0  # No POS on free tier
         assert pilot_lite.features["max_terminals"] == 1
         assert pilot_core.features["max_terminals"] == 2
         assert pilot_pro.features["max_terminals"] == -1  # Unlimited

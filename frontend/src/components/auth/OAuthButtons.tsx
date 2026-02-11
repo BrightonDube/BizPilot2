@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AlertCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { apiClient } from '@/lib/api'
 
@@ -32,7 +31,6 @@ const GoogleIcon = () => (
 )
 
 export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
-  const router = useRouter()
   const { loginWithGoogle } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -107,8 +105,12 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
                 setError(null)
                 try {
                   await loginWithGoogle(response.code)
-                  onSuccess?.()
-                  router.push('/dashboard')
+                  if (onSuccess) {
+                    onSuccess()
+                  } else {
+                    // 🔒 HARD NAVIGATION — prevents RSC flight data issues
+                    window.location.href = '/dashboard'
+                  }
                 } catch (err) {
                   console.error('[OAuth] Backend login failed:', err)
                   setError('Google sign-in failed. Please try again.')

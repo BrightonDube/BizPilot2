@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import Link from 'next/link'
 import { subscriptionApi } from '@/lib/subscription-api'
 import { apiClient } from '@/lib/api'
@@ -118,25 +118,6 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
   const [tierIdBySlug, setTierIdBySlug] = useState<Record<string, string>>({})
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-
-  const scrollPrevious = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: -300,
-        behavior: 'smooth'
-      })
-    }
-  }
-
-  const scrollNext = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: 300,
-        behavior: 'smooth'
-      })
-    }
-  }
 
   useEffect(() => {
     let cancelled = false
@@ -298,7 +279,7 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
   return (
     <>
       <motion.div
-        className="mb-8 flex justify-center"
+        className="mb-8 flex flex-col items-center gap-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.35, ease: "easeOut" }}
@@ -328,75 +309,47 @@ export function PricingClientWrapper({ monthlyCards, yearlyCards }: PricingClien
             <span className="ml-1 text-xs text-green-400">Save 20%</span>
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-2 text-center">
+        <p className="text-xs text-gray-400 text-center">
           * Enterprise pricing is custom - contact sales for details
         </p>
       </motion.div>
 
+      {/* Responsive Grid Layout */}
       <motion.div 
-        className="relative"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
       >
-        {/* Previous Button */}
-        <button
-          type="button"
-          onClick={scrollPrevious}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
-          aria-label="Previous pricing tier"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
+        {currentCards.map((card) => {
+          const isProcessing = isPurchasing === card.planId
+          const isEnterprise = card.planId === 'enterprise'
+          const isCurrentPlan = !!currentTierName && currentTierName === String(card.planId).toLowerCase()
+          const ctaText = user
+            ? (isProcessing ? 'Processing...' : card.cta)
+            : card.cta
 
-        {/* Scrollable Container */}
-        <div 
-          ref={scrollContainerRef}
-          className="flex overflow-x-auto gap-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-12"
-        >
-          {currentCards.map((card) => {
-            const isProcessing = isPurchasing === card.planId
-            const isEnterprise = card.planId === 'enterprise'
-            const isCurrentPlan = !!currentTierName && currentTierName === String(card.planId).toLowerCase()
-            const ctaText = user
-              ? (isProcessing ? 'Processing...' : card.cta)
-              : card.cta
+          const theme = getTheme(card.planId, card.featured)
 
-            const theme = getTheme(card.planId, card.featured)
-
-            return (
-              <div key={card.key} className="flex-shrink-0 w-[300px] snap-center">
-                <PricingCard
-                  key={card.key}
-                  tier={card.tier}
-                  price={card.price}
-                  bestFor={card.bestFor}
-                  cta={ctaText}
-                  featured={card.featured}
-                  benefits={card.benefits}
-                  ctaHref={card.ctaHref}
-                  planId={card.planId}
-                  isCurrentPlan={isCurrentPlan}
-                  theme={theme}
-                  onCtaClick={isCurrentPlan ? undefined : (isEnterprise || user ? () => handleSelectTier(card.planId) : undefined)}
-                />
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Next Button */}
-        <button
-          type="button"
-          onClick={scrollNext}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-slate-800/90 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950"
-          aria-label="Next pricing tier"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
-
-        {/* Gradient Overlay */}
-        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
+          return (
+            <div key={card.key} className={card.featured ? 'lg:scale-105 lg:z-10' : ''}>
+              <PricingCard
+                key={card.key}
+                tier={card.tier}
+                price={card.price}
+                bestFor={card.bestFor}
+                cta={ctaText}
+                featured={card.featured}
+                benefits={card.benefits}
+                ctaHref={card.ctaHref}
+                planId={card.planId}
+                isCurrentPlan={isCurrentPlan}
+                theme={theme}
+                onCtaClick={isCurrentPlan ? undefined : (isEnterprise || user ? () => handleSelectTier(card.planId) : undefined)}
+              />
+            </div>
+          )
+        })}
       </motion.div>
     </>
   )

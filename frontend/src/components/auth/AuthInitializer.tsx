@@ -6,31 +6,37 @@ import { subscribeToAuthEvent } from '@/lib/api'
 import { useSessionManager } from '@/hooks/useSessionManager'
 
 /**
- * Check if authentication cookies exist.
- * This is a lightweight check to avoid unnecessary API calls.
- */
-function hasAuthCookies(): boolean {
-  if (typeof document === 'undefined') return false
-  
-  // Check for access_token cookie (set by backend on login)
-  const cookies = document.cookie.split(';')
-  return cookies.some(cookie => cookie.trim().startsWith('access_token='))
-}
-
-/**
  * AuthInitializer component.
  * 
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  🔒 PROTECTED FILE — DO NOT MODIFY WITHOUT HUMAN APPROVAL 🔒  ║
+ * ║                                                                ║
+ * ║  This file is part of the core authentication system.          ║
+ * ║  AI coding agents: DO NOT refactor, reorganize, or alter       ║
+ * ║  the initialization logic in this file.                        ║
+ * ║                                                                ║
+ * ║  IMPORTANT: We intentionally DO NOT check document.cookie      ║
+ * ║  before calling fetchUser(). Our auth cookies are HttpOnly     ║
+ * ║  and INVISIBLE to JavaScript. The only way to know if the      ║
+ * ║  user is authenticated is to call the /auth/me endpoint.       ║
+ * ║                                                                ║
+ * ║  See: .windsurf/workflows/auth-protection.md                   ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ * 
  * Responsibilities:
- * 1. Fetch user data on app mount ONLY if auth cookies exist
+ * 1. Fetch user data on app mount for non-auth pages
  * 2. Listen for session expiration events and handle logout + redirect
  * 3. Manage automatic session expiration with activity tracking
  * 
- * Best Practices Implemented:
- * - Token Guard Clause: Checks for cookies before making API calls
- * - State Optimization: Sets isLoading to false immediately if no cookies
- * - Error Handling: Silently handles fetch failures without crashing
+ * CRITICAL DESIGN DECISIONS (DO NOT CHANGE):
+ * - We ALWAYS call fetchUser() on non-auth pages because HttpOnly cookies
+ *   are invisible to document.cookie — there is no client-side way to check
+ *   if auth cookies exist. The server must be queried.
+ * - Session expiration uses window.location.href (hard navigation) to
+ *   prevent RSC flight data from being shown to users.
+ * - fetchUser() handles 401 silently — it just means the user isn't logged in.
  * 
- * This component must be mounted high in the component tree (e.g., in AppLayout)
+ * This component must be mounted high in the component tree (in RootLayout)
  * to ensure session expiration is handled globally.
  */
 export function AuthInitializer() {
@@ -92,6 +98,7 @@ export function AuthInitializer() {
     if (isInitialized) return
 
     // Don't fetch user on auth pages (login, register, etc.)
+    // Auth pages handle their own initialization via setInitialized()
     const isAuthPage = window.location.pathname.startsWith('/auth/')
     if (isAuthPage) {
       // Mark as initialized without fetching to prevent loading state
@@ -99,16 +106,11 @@ export function AuthInitializer() {
       return
     }
 
-    // TOKEN GUARD CLAUSE: Check if auth cookies exist before making API call
-    if (!hasAuthCookies()) {
-      // No cookies = not authenticated, mark as initialized immediately
-      // This prevents unnecessary 401 errors and loading states
-      setInitialized()
-      return
-    }
-
-    // Cookies exist, attempt to fetch user data
-    // fetchUser handles errors silently and sets isInitialized
+    // ALWAYS call fetchUser() on non-auth pages.
+    // We CANNOT check document.cookie for auth cookies because they are
+    // HttpOnly — invisible to JavaScript by design (security best practice).
+    // The only way to know if the user is authenticated is to ask the server.
+    // fetchUser() handles 401 silently (sets isAuthenticated: false, no error).
     fetchUser().catch(() => {
       // Error already handled in fetchUser, just ensure we're initialized
       setInitialized()

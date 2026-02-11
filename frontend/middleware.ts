@@ -1,4 +1,31 @@
+/**
+ * Next.js Middleware for authentication routing.
+ * 
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  🔒 PROTECTED FILE — DO NOT MODIFY WITHOUT HUMAN APPROVAL 🔒  ║
+ * ║                                                                ║
+ * ║  This file is part of the core authentication system.          ║
+ * ║  AI coding agents: DO NOT refactor, reorganize, or alter       ║
+ * ║  the routing logic, redirect behavior, or auth check in        ║
+ * ║  this file. The timeout, error handling, and redirect logic    ║
+ * ║  are carefully designed to prevent RSC flight data leaks.      ║
+ * ║                                                                ║
+ * ║  See: .windsurf/workflows/auth-protection.md                   ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ * 
+ * CRITICAL DESIGN DECISIONS (DO NOT CHANGE):
+ * 1. Auth check has a 5-second timeout — if backend is slow/down,
+ *    we fail OPEN (treat as guest) on marketing/auth pages and
+ *    fail CLOSED (redirect to login) on protected pages.
+ * 2. Redirects use 302 status — never 307/308 which can cache.
+ * 3. INTERNAL_API_URL should always be set in production to avoid
+ *    the middleware fetch going through the public load balancer.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
+
+/** Timeout for the auth check fetch (milliseconds). */
+const AUTH_CHECK_TIMEOUT_MS = 5000;
 
 function resolveApiBaseUrl(request: NextRequest): string {
   // In production on DigitalOcean App Platform, use internal service URL
@@ -45,6 +72,12 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
   const apiBaseUrl = resolveApiBaseUrl(request);
 
   try {
+    // CRITICAL: Use AbortController to enforce a timeout.
+    // Without this, a slow/hung backend can cause the middleware to hang
+    // indefinitely, leading to RSC flight data being shown to users.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AUTH_CHECK_TIMEOUT_MS);
+
     const res = await fetch(`${apiBaseUrl}/auth/me`, {
       method: 'GET',
       headers: {
@@ -57,12 +90,16 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
       },
+      signal: controller.signal,
       // Never cache auth checks at the edge
       cache: 'no-store',
     });
 
+    clearTimeout(timeoutId);
     return res.ok;
   } catch {
+    // Auth check failed (network error, timeout, etc.)
+    // Caller decides what to do — see middleware() logic below.
     return false;
   }
 }

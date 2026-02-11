@@ -14,7 +14,14 @@ import { middleware } from '@/root/middleware';
 import { PRICING_PLANS, PricingUtils } from '../pricing-config';
 import { AI_MESSAGING_CONFIG } from '../ai-messaging-config';
 
-describe('Marketing Flow Integration Tests', () => {
+// These are E2E tests requiring a running dev server and Chrome browser.
+// Skip in unit test runs (jest). Run separately with: TEST_E2E=true npx jest marketing-flow-integration
+const isE2E = process.env.TEST_E2E === 'true';
+
+// eslint-disable-next-line jest/valid-describe-callback, jest/no-disabled-tests
+const describeE2E = isE2E ? describe : describe.skip;
+
+describeE2E('Marketing Flow Integration Tests', () => {
   let browser: Browser;
   let page: Page;
   

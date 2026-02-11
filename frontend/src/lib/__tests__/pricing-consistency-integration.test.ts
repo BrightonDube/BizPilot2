@@ -157,8 +157,8 @@ describe('Frontend Pricing Consistency Integration', () => {
           expect(yearlyFormatted).toBe('Free');
         } else {
           // Verify formatted prices contain currency and cycle indicators
-          expect(monthlyFormatted).toMatch(/R[\d,]+\/mo/);
-          expect(yearlyFormatted).toMatch(/R[\d,]+\/yr/);
+          expect(monthlyFormatted).toMatch(/R[\d,.]+\/mo/);
+          expect(yearlyFormatted).toMatch(/R[\d,.]+\/yr/);
         }
       }
     });

@@ -23,8 +23,10 @@ const config = {
   ],
   modulePathIgnorePatterns: ['<rootDir>/node_modules/'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^next/server$': '<rootDir>/src/lib/__tests__/__mocks__/next-server.ts',
     '^@/shared/(.*)$': '<rootDir>/../shared/$1',
+    '^@/root/(.*)$': '<rootDir>/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   setupFilesAfterEnv: ['<rootDir>/src/lib/__tests__/setup.ts'],
   testTimeout: 30000,

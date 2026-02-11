@@ -4,6 +4,7 @@ import "./globals.css";
 import "./console-filter";
 import AuthInitializer from "@/components/auth/AuthInitializer";
 import { ThemeProvider } from "@/components/common/ThemeProvider";
+import { GlobalAIChat } from "@/components/ai/GlobalAIChat";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,6 +40,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthInitializer />
           {children}
+          <GlobalAIChat />
         </ThemeProvider>
       </body>
     </html>

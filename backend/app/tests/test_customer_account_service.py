@@ -2101,13 +2101,13 @@ def test_generate_payment_receipt_returns_structured_data(
     # Update the sum query to return the allocated amount for this transaction
     db.query.side_effect = lambda model_or_expr: (
         type('obj', (), {
-            'filter': lambda *args: type('obj', (), {
-                'scalar': lambda: Decimal("300")
+            'filter': lambda self, *args: type('obj', (), {
+                'scalar': lambda self: Decimal("300")
             })()
         })() if 'sum' in str(model_or_expr).lower() else
         type('obj', (), {
-            'filter': lambda *args: type('obj', (), {
-                'all': lambda: [allocation]
+            'filter': lambda self, *args: type('obj', (), {
+                'all': lambda self: [allocation]
             })()
         })()
     )
@@ -2521,7 +2521,7 @@ def test_generate_payment_receipt_with_allocations(
         
         def query(self, model_or_expr):
             # Handle PaymentAllocation queries
-            if model_or_expr == PaymentAllocation:
+            if model_or_expr is PaymentAllocation:
                 return FakeAllocQuery(self.allocations)
             # Handle sum queries (func.sum)
             if hasattr(model_or_expr, '__name__') and 'sum' in str(model_or_expr).lower():
