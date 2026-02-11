@@ -50,6 +50,11 @@ class ReportSubscription(BaseModel):
         Index("idx_report_subscriptions_frequency_active", "frequency", "is_active"),
     )
 
+    @property
+    def report_type_enum(self) -> ReportType:
+        """Get the ReportType enum from the string value."""
+        return ReportType(self.report_type)
+
 
 class ReportDeliveryLog(BaseModel):
     """Log of report delivery attempts for debugging and auditing."""

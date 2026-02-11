@@ -76,8 +76,8 @@ export const AI_MESSAGING: AIMessaging = {
   controlMessage: "You're always in control. AI provides helpful recommendations - you make the final decisions.",
   automationBenefits: [
     "Reduce manual inventory counting and tracking",
-    "Get smart reorder suggestions based on sales patterns",
-    "Automate routine reporting and analytics",
+    "Get smart reorder suggestions to improve stock levels based on sales patterns",
+    "Save time by automating routine reporting and analytics",
     "Streamline customer management and loyalty programs",
     "Optimize pricing based on market data and costs"
   ],
@@ -91,7 +91,7 @@ export const AI_MESSAGING: AIMessaging = {
   valuePropositions: [
     {
       title: "Smart Automation",
-      description: "Intelligent features that handle routine tasks while you focus on growth",
+      description: "Intelligent features that handle routine business tasks while you focus on growth",
       icon: "🤖",
       benefits: [
         "Automated inventory tracking and alerts",
@@ -102,8 +102,8 @@ export const AI_MESSAGING: AIMessaging = {
       context: 'features'
     },
     {
-      title: "Complete Business Suite",
-      description: "Everything you need to run your business in one integrated platform",
+      title: "Complete Smart Business Suite",
+      description: "Everything you need to run your business in one intelligent integrated platform",
       icon: "🏢",
       benefits: [
         "POS system with payment processing",
@@ -114,8 +114,8 @@ export const AI_MESSAGING: AIMessaging = {
       context: 'features'
     },
     {
-      title: "User-Controlled Intelligence",
-      description: "AI features that enhance your expertise without taking over",
+      title: "User-Controlled Intelligent Enhancement",
+      description: "AI features that enhance your business expertise without taking over",
       icon: "🎛️",
       benefits: [
         "Customizable automation levels",
@@ -126,8 +126,8 @@ export const AI_MESSAGING: AIMessaging = {
       context: 'features'
     },
     {
-      title: "Privacy-First Approach",
-      description: "Your business data remains private and secure",
+      title: "Privacy-First Smart Approach",
+      description: "Your business data remains private and secure with intelligent safeguards",
       icon: "🔒",
       benefits: [
         "Local data processing options",
@@ -450,7 +450,7 @@ export const AI_CONTENT_COMPONENTS: AIContentComponent[] = [
   {
     id: 'control-emphasis',
     title: 'User Control Emphasis',
-    content: 'You make the decisions. Smart features provide helpful suggestions that you can customize, override, or disable.',
+    content: 'You make the business decisions. Smart features provide helpful suggestions that you can customize, override, or disable.',
     type: 'benefit',
     context: ['features', 'faq'],
     aiEmphasis: 'medium'
@@ -565,6 +565,28 @@ export class AIMessagingUtils {
   static shouldEmphasizeSmartFeatures(context: string): boolean {
     const moderateEmphasisContexts = ['features', 'pricing'];
     return moderateEmphasisContexts.includes(context);
+  }
+
+  /**
+   * Alias: Check if content should emphasize AI (used by marketing pages)
+   */
+  static shouldEmphasizeAI(context: string): boolean {
+    const aiEmphasisContexts = ['features', 'pricing', 'home'];
+    return aiEmphasisContexts.includes(context);
+  }
+
+  /**
+   * Alias: Get a random tagline (delegates to getBalancedTagline)
+   */
+  static getRandomTagline(): string {
+    return this.getBalancedTagline();
+  }
+
+  /**
+   * Alias: Format an AI benefit with optional emphasis prefix
+   */
+  static formatAIBenefit(benefit: string, emphasis: boolean = false): string {
+    return this.formatBenefit(benefit, emphasis);
   }
 }
 

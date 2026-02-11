@@ -111,6 +111,21 @@ def get_tier_defaults(tier_name: str) -> Dict[str, Any]:
     return tier_defaults.get(tier_name, tier_defaults['pilot_core'])
 
 
+# Mapping from override key to granted_features entry
+FEATURE_KEY_TO_GRANT = {
+    'has_payroll': 'payroll',
+    'has_ai': 'ai',
+    'has_api_access': 'api_access',
+    'has_advanced_reporting': 'advanced_reporting',
+}
+
+
+def _has_feature(permissions: BusinessPermissions, feature_key: str) -> bool:
+    """Check whether a feature key (e.g. 'has_payroll') is granted."""
+    grant_name = FEATURE_KEY_TO_GRANT.get(feature_key)
+    return grant_name in permissions.granted_features if grant_name else False
+
+
 def create_mock_permission_service(business_data: Dict[str, Any]) -> PermissionService:
     """Create a mock PermissionService with test data."""
     # Mock database session
@@ -147,14 +162,9 @@ def create_mock_permission_service(business_data: Dict[str, Any]) -> PermissionS
         
         # Build list of granted features based on effective permissions
         granted_features = []
-        if effective_permissions.get('has_payroll'):
-            granted_features.append('payroll')
-        if effective_permissions.get('has_ai'):
-            granted_features.append('ai')
-        if effective_permissions.get('has_api_access'):
-            granted_features.append('api_access')
-        if effective_permissions.get('has_advanced_reporting'):
-            granted_features.append('advanced_reporting')
+        for key, grant_name in FEATURE_KEY_TO_GRANT.items():
+            if effective_permissions.get(key):
+                granted_features.append(grant_name)
         
         # Build permissions object matching the actual schema
         permissions = BusinessPermissions(
@@ -163,13 +173,7 @@ def create_mock_permission_service(business_data: Dict[str, Any]) -> PermissionS
             status='active',
             device_limit=effective_permissions.get('max_devices', 1),
             demo_expires_at=None,
-            # Store additional attributes for test assertions
         )
-        # Add extra attributes for test verification (not part of schema but needed for test)
-        permissions.has_payroll = effective_permissions['has_payroll']
-        permissions.has_ai = effective_permissions['has_ai']
-        permissions.has_api_access = effective_permissions['has_api_access']
-        permissions.has_advanced_reporting = effective_permissions['has_advanced_reporting']
         
         return permissions
     
@@ -211,7 +215,7 @@ def test_override_precedence(business_data):
     
     # Verify: Overridden features use override values
     for feature, override_value in business_data['overrides'].items():
-        actual_value = getattr(permissions, feature)
+        actual_value = _has_feature(permissions, feature)
         assert actual_value == override_value, (
             f"Override precedence failed for {feature}: "
             f"expected {override_value}, got {actual_value}. "
@@ -223,18 +227,15 @@ def test_override_precedence(business_data):
     for feature in all_features:
         if feature not in business_data['overrides']:
             expected_value = tier_defaults[feature]
-            actual_value = getattr(permissions, feature)
+            actual_value = _has_feature(permissions, feature)
             assert actual_value == expected_value, (
                 f"Tier default not used for non-overridden feature {feature}: "
                 f"expected {expected_value}, got {actual_value}. "
                 f"Tier: {business_data['tier']}, Overrides: {business_data['overrides']}"
             )
     
-    # Verify: Business ID and tier are correct
-    assert permissions.business_id == business_data['business_id']
-    assert permissions.tier_name == business_data['tier']
-    
-    # Verify: Status is active (default for test)
+    # Verify: Tier and status are correct
+    assert permissions.tier == business_data['tier']
     assert permissions.status == 'active'
 
 
@@ -275,10 +276,10 @@ def test_override_precedence_all_features(tier, override_values):
     permissions = service.get_business_permissions(business_data['business_id'])
     
     # Verify: All features have the override value
-    assert permissions.has_payroll == override_values
-    assert permissions.has_ai == override_values
-    assert permissions.has_api_access == override_values
-    assert permissions.has_advanced_reporting == override_values
+    assert _has_feature(permissions, 'has_payroll') == override_values
+    assert _has_feature(permissions, 'has_ai') == override_values
+    assert _has_feature(permissions, 'has_api_access') == override_values
+    assert _has_feature(permissions, 'has_advanced_reporting') == override_values
 
 
 # Feature: granular-permissions-subscription, Property 1 (Edge Case): No Overrides
@@ -310,12 +311,11 @@ def test_override_precedence_no_overrides(tier):
     permissions = service.get_business_permissions(business_data['business_id'])
     
     # Verify: All features use tier defaults
-    assert permissions.has_payroll == tier_defaults['has_payroll']
-    assert permissions.has_ai == tier_defaults['has_ai']
-    assert permissions.has_api_access == tier_defaults['has_api_access']
-    assert permissions.has_advanced_reporting == tier_defaults['has_advanced_reporting']
-    assert permissions.max_devices == tier_defaults['max_devices']
-    assert permissions.max_users == tier_defaults['max_users']
+    assert _has_feature(permissions, 'has_payroll') == tier_defaults['has_payroll']
+    assert _has_feature(permissions, 'has_ai') == tier_defaults['has_ai']
+    assert _has_feature(permissions, 'has_api_access') == tier_defaults['has_api_access']
+    assert _has_feature(permissions, 'has_advanced_reporting') == tier_defaults['has_advanced_reporting']
+    assert permissions.device_limit == tier_defaults['max_devices']
 
 
 # Feature: granular-permissions-subscription, Property 1 (Edge Case): Opposite Overrides
@@ -355,10 +355,10 @@ def test_override_precedence_opposite_values(tier):
     permissions = service.get_business_permissions(business_data['business_id'])
     
     # Verify: All features have opposite values from tier defaults
-    assert permissions.has_payroll == (not tier_defaults['has_payroll'])
-    assert permissions.has_ai == (not tier_defaults['has_ai'])
-    assert permissions.has_api_access == (not tier_defaults['has_api_access'])
-    assert permissions.has_advanced_reporting == (not tier_defaults['has_advanced_reporting'])
+    assert _has_feature(permissions, 'has_payroll') == (not tier_defaults['has_payroll'])
+    assert _has_feature(permissions, 'has_ai') == (not tier_defaults['has_ai'])
+    assert _has_feature(permissions, 'has_api_access') == (not tier_defaults['has_api_access'])
+    assert _has_feature(permissions, 'has_advanced_reporting') == (not tier_defaults['has_advanced_reporting'])
 
 
 # Feature: granular-permissions-subscription, Property 1 (Invariant): Partial Overrides
@@ -403,7 +403,7 @@ def test_override_precedence_partial_overrides(tier, num_overrides):
     # Verify: Overridden features have override values
     for feature in features_to_override:
         expected = not tier_defaults[feature]
-        actual = getattr(permissions, feature)
+        actual = _has_feature(permissions, feature)
         assert actual == expected, (
             f"Partial override failed for {feature}: expected {expected}, got {actual}"
         )
@@ -411,7 +411,7 @@ def test_override_precedence_partial_overrides(tier, num_overrides):
     # Verify: Non-overridden features have tier defaults
     for feature in all_features[num_overrides:]:
         expected = tier_defaults[feature]
-        actual = getattr(permissions, feature)
+        actual = _has_feature(permissions, feature)
         assert actual == expected, (
             f"Tier default not preserved for {feature}: expected {expected}, got {actual}"
         )

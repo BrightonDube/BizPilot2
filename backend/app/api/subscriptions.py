@@ -28,6 +28,7 @@ class TierPublicResponse(BaseModel):
     currency: str
     sort_order: int
     is_default: bool
+    is_custom_pricing: bool = False
     features: dict
     feature_flags: dict
 

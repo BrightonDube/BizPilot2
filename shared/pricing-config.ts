@@ -167,7 +167,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     id: "enterprise",
     name: "enterprise",
     display_name: "Enterprise",
-    description: "Custom enterprise solution with tailored features and dedicated support",
+    description: "Custom AI-powered enterprise solution with tailored features and dedicated support",
     price_monthly_cents: -1, // Custom pricing indicator
     price_yearly_cents: -1, // Custom pricing indicator
     currency: "ZAR",
@@ -295,6 +295,40 @@ export class PricingUtils {
     return SUBSCRIPTION_TIERS
       .filter(tier => tier.is_active)
       .sort((a, b) => a.sort_order - b.sort_order);
+  }
+
+  /**
+   * Check if a tier is free (zero cost)
+   */
+  static isFree(tier: SubscriptionTier): boolean {
+    return tier.price_monthly_cents === 0 && tier.price_yearly_cents === 0;
+  }
+
+  /**
+   * Compare two tiers by sort order
+   */
+  static compareTiers(a: SubscriptionTier, b: SubscriptionTier, cycle: BillingCycle = 'monthly'): { tier1IsMoreExpensive: boolean; priceDifference: number; tier1HasCustomPricing: boolean; tier2HasCustomPricing: boolean } {
+    const priceA = cycle === 'monthly' ? a.price_monthly_cents : a.price_yearly_cents;
+    const priceB = cycle === 'monthly' ? b.price_monthly_cents : b.price_yearly_cents;
+    const t1Custom = PricingUtils.hasCustomPricing(a);
+    const t2Custom = PricingUtils.hasCustomPricing(b);
+    // If either has custom pricing, price difference is 0
+    const diff = (t1Custom || t2Custom) ? 0 : priceA - priceB;
+    return { tier1IsMoreExpensive: diff > 0, priceDifference: diff, tier1HasCustomPricing: t1Custom, tier2HasCustomPricing: t2Custom };
+  }
+
+  /**
+   * Validate a tier has required fields
+   */
+  static validateTier(tier: SubscriptionTier): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    if (!tier.id) errors.push('Missing id');
+    if (!tier.name) errors.push('Missing name');
+    if (!tier.display_name) errors.push('Missing display_name');
+    if (tier.price_monthly_cents === undefined || tier.price_monthly_cents === null) errors.push('Missing price_monthly_cents');
+    if (tier.price_yearly_cents === undefined || tier.price_yearly_cents === null) errors.push('Missing price_yearly_cents');
+    if (!tier.currency) errors.push('Missing currency');
+    return { isValid: errors.length === 0, errors };
   }
 }
 

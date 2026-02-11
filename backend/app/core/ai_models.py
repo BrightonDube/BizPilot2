@@ -189,6 +189,8 @@ async def run_groq(model: str, messages: list[dict[str, Any]], **kwargs) -> LLMR
                 usage=data.get("usage", {}),
             )
     
+    except ModelExecutionError:
+        raise
     except httpx.TimeoutException as e:
         raise ModelExecutionError(model, f"Request timeout: {str(e)}")
     except httpx.RequestError as e:

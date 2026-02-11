@@ -67,17 +67,21 @@ export type PlanTier = 'pilot_solo' | 'pilot_lite' | 'pilot_core' | 'pilot_pro' 
  */
 function convertTierToPlan(tier: SubscriptionTier): PricingPlan {
   // Map feature flags to AI features for marketing display
+  // AI features require ai_insights flag to be enabled.
+  // Basic features like inventory_tracking or basic_reports are NOT AI-powered
+  // unless the plan also includes ai_insights.
+  const hasAI = tier.feature_flags.ai_insights || false;
   const aiFeatures: AIFeatures = {
-    smartAnalytics: tier.feature_flags.basic_reports || false,
-    predictiveInsights: tier.feature_flags.ai_insights || false,
-    automatedReordering: tier.feature_flags.ai_insights || false,
-    intelligentPricing: tier.feature_flags.ai_insights || false,
-    aiPoweredInventoryTracking: tier.feature_flags.inventory_tracking || false,
-    smartCustomerSegmentation: tier.feature_flags.ai_insights || false,
-    predictiveStockAlerts: tier.feature_flags.inventory_tracking || false,
-    intelligentCostOptimization: tier.feature_flags.cost_calculations || false,
-    aiDrivenSalesForecasting: tier.feature_flags.ai_insights || false,
-    automatedSupplierRecommendations: tier.feature_flags.ai_insights || false
+    smartAnalytics: hasAI && (tier.feature_flags.basic_reports || false),
+    predictiveInsights: hasAI,
+    automatedReordering: hasAI,
+    intelligentPricing: hasAI,
+    aiPoweredInventoryTracking: hasAI && (tier.feature_flags.inventory_tracking || false),
+    smartCustomerSegmentation: hasAI,
+    predictiveStockAlerts: hasAI && (tier.feature_flags.inventory_tracking || false),
+    intelligentCostOptimization: hasAI && (tier.feature_flags.cost_calculations || false),
+    aiDrivenSalesForecasting: hasAI,
+    automatedSupplierRecommendations: hasAI
   };
 
   // Generate marketing-friendly features list
@@ -364,6 +368,36 @@ export class PricingUtils {
     return aiKeywords.some(keyword => 
       feature.toLowerCase().includes(keyword.toLowerCase())
     );
+  }
+
+  /**
+   * Check if a plan is free (zero cost)
+   */
+  static isFree(plan: PricingPlan): boolean {
+    return plan.monthlyPrice === 0 && plan.yearlyPrice === 0;
+  }
+
+  /**
+   * Compare two tiers by sort order (-1 if a < b, 0 if equal, 1 if a > b)
+   */
+  static compareTiers(a: PricingPlan, b: PricingPlan): number {
+    if (a.sortOrder < b.sortOrder) return -1;
+    if (a.sortOrder > b.sortOrder) return 1;
+    return 0;
+  }
+
+  /**
+   * Validate a tier has required fields
+   */
+  static validateTier(plan: PricingPlan): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    if (!plan.id) errors.push('Missing id');
+    if (!plan.name) errors.push('Missing name');
+    if (!plan.displayName) errors.push('Missing displayName');
+    if (plan.monthlyPrice === undefined || plan.monthlyPrice === null) errors.push('Missing monthlyPrice');
+    if (plan.yearlyPrice === undefined || plan.yearlyPrice === null) errors.push('Missing yearlyPrice');
+    if (!plan.currency) errors.push('Missing currency');
+    return { valid: errors.length === 0, errors };
   }
 
   /**

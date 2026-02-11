@@ -5,29 +5,33 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Clock,
-  Play,
-  Square,
-  Coffee,
-  Download,
-  Calendar,
+import { 
+  Clock, 
+  Calendar, 
+  Play, 
+  Square, 
+  Coffee, 
+  AlertCircle,
   Users,
+  Download,
+  Filter,
   Timer,
   CheckCircle,
   XCircle,
-  AlertCircle,
+  Pencil,
+  Save,
+  X
 } from 'lucide-react';
-import {
-  PageHeader,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
   CardTitle,
+  Button,
   Select,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
+import { PageHeader } from '@/components/ui/bizpilot';
 
 interface ClockStatus {
   is_clocked_in: boolean;
@@ -81,6 +85,20 @@ export default function TimeTrackingPage() {
   const [dateRange, setDateRange] = useState('7d');
   const [activeTab, setActiveTab] = useState<'my-time' | 'all-entries' | 'payroll'>('my-time');
   const [elapsedTime, setElapsedTime] = useState<string>('00:00:00');
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ clock_in: '', clock_out: '', break_duration: '' });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const getDateFrom = (range: string): string => {
+    const now = new Date();
+    switch (range) {
+      case '7d': now.setDate(now.getDate() - 7); break;
+      case '14d': now.setDate(now.getDate() - 14); break;
+      case '30d': now.setDate(now.getDate() - 30); break;
+      default: now.setDate(now.getDate() - 7);
+    }
+    return now.toISOString().split('T')[0];
+  };
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -145,17 +163,6 @@ export default function TimeTrackingPage() {
     return () => clearInterval(interval);
   }, [clockStatus?.is_clocked_in, clockStatus?.clock_in]);
 
-  const getDateFrom = (range: string): string => {
-    const now = new Date();
-    switch (range) {
-      case '7d': now.setDate(now.getDate() - 7); break;
-      case '14d': now.setDate(now.getDate() - 14); break;
-      case '30d': now.setDate(now.getDate() - 30); break;
-      default: now.setDate(now.getDate() - 7);
-    }
-    return now.toISOString().split('T')[0];
-  };
-
   const handleClockIn = async () => {
     setIsClocking(true);
     try {
@@ -214,6 +221,53 @@ export default function TimeTrackingPage() {
       window.URL.revokeObjectURL(url);
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleStartEdit = (entry: TimeEntry) => {
+    setEditingEntryId(entry.id);
+    // Format times for input type="datetime-local" (YYYY-MM-DDTHH:mm)
+    const formatForInput = (dateStr?: string) => {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
+
+    setEditForm({
+      clock_in: formatForInput(entry.clock_in),
+      clock_out: formatForInput(entry.clock_out),
+      break_duration: entry.break_duration?.toString() || '0',
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEntryId(null);
+    setEditForm({ clock_in: '', clock_out: '', break_duration: '' });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingEntryId) return;
+    setIsSaving(true);
+    try {
+      // Convert local inputs back to UTC ISO strings
+      const toISO = (localStr: string) => {
+        if (!localStr) return null;
+        return new Date(localStr).toISOString();
+      };
+
+      await apiClient.patch(`/time-entries/${editingEntryId}/inline-edit`, {
+        clock_in: toISO(editForm.clock_in),
+        clock_out: toISO(editForm.clock_out),
+        break_duration: parseFloat(editForm.break_duration),
+      });
+      
+      await fetchData();
+      setEditingEntryId(null);
+    } catch (error) {
+      console.error('Failed to update entry:', error);
+      alert('Failed to update entry. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -461,23 +515,89 @@ export default function TimeTrackingPage() {
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Clock In</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Clock Out</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Hours</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Break</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Status</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {entries.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center py-8 text-gray-500">No time entries found</td>
+                          <td colSpan={8} className="text-center py-8 text-gray-500">No time entries found</td>
                         </tr>
                       ) : (
                         entries.map((entry) => (
                           <tr key={entry.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                             <td className="py-3 px-4 text-sm text-white">{entry.user_name || 'Unknown'}</td>
                             <td className="py-3 px-4 text-sm text-gray-300">{entry.clock_in ? new Date(entry.clock_in).toLocaleDateString() : '-'}</td>
-                            <td className="py-3 px-4 text-sm text-gray-300">{entry.clock_in ? new Date(entry.clock_in).toLocaleTimeString() : '-'}</td>
-                            <td className="py-3 px-4 text-sm text-gray-300">{entry.clock_out ? new Date(entry.clock_out).toLocaleTimeString() : '-'}</td>
-                            <td className="py-3 px-4 text-sm text-white font-medium">{formatHours(entry.hours_worked)}</td>
+                            {editingEntryId === entry.id ? (
+                              <>
+                                <td className="py-2 px-3">
+                                  <input
+                                    type="datetime-local"
+                                    value={editForm.clock_in}
+                                    onChange={(e) => setEditForm(f => ({ ...f, clock_in: e.target.value }))}
+                                    className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </td>
+                                <td className="py-2 px-3">
+                                  <input
+                                    type="datetime-local"
+                                    value={editForm.clock_out}
+                                    onChange={(e) => setEditForm(f => ({ ...f, clock_out: e.target.value }))}
+                                    className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </td>
+                                <td className="py-3 px-4 text-sm text-white font-medium">{formatHours(entry.hours_worked)}</td>
+                                <td className="py-2 px-3">
+                                  <input
+                                    type="number"
+                                    step="0.25"
+                                    min="0"
+                                    value={editForm.break_duration}
+                                    onChange={(e) => setEditForm(f => ({ ...f, break_duration: e.target.value }))}
+                                    className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="py-3 px-4 text-sm text-gray-300">{entry.clock_in ? new Date(entry.clock_in).toLocaleTimeString() : '-'}</td>
+                                <td className="py-3 px-4 text-sm text-gray-300">{entry.clock_out ? new Date(entry.clock_out).toLocaleTimeString() : '-'}</td>
+                                <td className="py-3 px-4 text-sm text-white font-medium">{formatHours(entry.hours_worked)}</td>
+                                <td className="py-3 px-4 text-sm text-gray-300">{formatHours(entry.break_duration)}</td>
+                              </>
+                            )}
                             <td className="py-3 px-4">{getStatusBadge(entry.status)}</td>
+                            <td className="py-3 px-4">
+                              {editingEntryId === entry.id ? (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={handleSaveEdit}
+                                    disabled={isSaving}
+                                    className="p-1.5 rounded bg-green-600/20 text-green-400 hover:bg-green-600/40 transition-colors disabled:opacity-50"
+                                    title="Save"
+                                  >
+                                    <Save className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="p-1.5 rounded bg-gray-600/20 text-gray-400 hover:bg-gray-600/40 transition-colors"
+                                    title="Cancel"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleStartEdit(entry)}
+                                  className="p-1.5 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 transition-colors"
+                                  title="Edit entry"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </td>
                           </tr>
                         ))
                       )}

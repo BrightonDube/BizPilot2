@@ -4,9 +4,9 @@
  * Login page component with BizPilot styling.
  */
 
-import { Suspense, useState, useEffect, FormEvent } from 'react';
+import { Suspense, useState, useEffect, useRef, FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useAuth, useGuestOnly } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, Clock, Loader2 } from 'lucide-react';
@@ -27,13 +27,14 @@ function LoginPageLoading() {
  * Main login form component that uses useSearchParams
  */
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isLoading, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [messageDismissed, setMessageDismissed] = useState(false);
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
+  // Track whether the form is actively submitting to prevent useGuestOnly race
+  const isSubmitting = useRef(false);
 
   // Load session expired message on client-side only (useEffect)
   // This prevents hydration mismatch
@@ -61,20 +62,26 @@ function LoginForm() {
   }, [searchParams, messageDismissed]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Redirect if already authenticated
-  useGuestOnly();
+  // Redirect if already authenticated (but skip if form is submitting to prevent race)
+  // 🔒 HARD NAVIGATION — useGuestOnly uses window.location.href internally
+  useGuestOnly('/dashboard', isSubmitting.current);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     // Clear session expired message on new login attempt
     setMessageDismissed(true);
+    // Mark as submitting to prevent useGuestOnly from racing with our redirect
+    isSubmitting.current = true;
     try {
       await login(email, password);
       const next = searchParams.get('next');
       const target = next && next.startsWith('/') ? next : '/dashboard';
-      router.push(target);
+      // 🔒 HARD NAVIGATION — prevents RSC flight data issues
+      // DO NOT replace with router.push() — see useAuth.ts header comment
+      window.location.href = target;
     } catch {
       // Error is handled by the store
+      isSubmitting.current = false;
     }
   };
 
@@ -222,7 +229,10 @@ function LoginForm() {
           </div>
         </div>
 
-        <OAuthButtons onSuccess={() => router.push('/dashboard')} />
+        <OAuthButtons onSuccess={() => {
+          // 🔒 HARD NAVIGATION — prevents RSC flight data issues
+          window.location.href = '/dashboard';
+        }} />
       </motion.div>
 
       <motion.div 

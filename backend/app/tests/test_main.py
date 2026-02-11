@@ -14,7 +14,7 @@ class TestHealthEndpoint:
         """Test that health check returns healthy status."""
         response = client.get("/health")
         data = response.json()
-        assert data["status"] == "healthy"
+        assert data["status"] == "ready"
 
     def test_health_check_returns_version(self, client):
         """Test that health check returns version."""

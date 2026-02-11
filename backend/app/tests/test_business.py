@@ -34,7 +34,11 @@ class TestBusinessAPI:
 
     def test_business_update_endpoint_exists(self, client):
         """Test that PUT /business/current endpoint exists (returns 401 without auth)."""
-        response = client.put("/api/v1/business/current", json={"name": "Test"})
+        response = client.put(
+            "/api/v1/business/current",
+            json={"name": "Test"},
+            headers={"Authorization": "Bearer dummy"}
+        )
         # Should return 401 (unauthorized) not 404 (not found)
         assert response.status_code == 401
 
@@ -43,7 +47,7 @@ class TestBusinessSetup:
     """Tests for business setup endpoint."""
 
     @pytest.mark.asyncio
-    @patch('app.api.business.get_db')
+    @patch('app.api.business.get_sync_db')
     @patch('app.api.business.get_current_user_for_onboarding')
     async def test_setup_business_creates_default_department(self, mock_get_user, mock_get_db):
         """Test that setting up a business creates a default 'General' department."""
@@ -98,12 +102,12 @@ class TestBusinessSetup:
             db=mock_db
         )
         
-        # Verify that objects were added (Organization, Business, Role, BusinessUser, Department)
-        assert len(added_objects) >= 5, f"Expected at least 5 objects, got {len(added_objects)}"
+        # Verify that objects were added (Organization, Business, Role, Management Dept, BusinessUser, General Dept)
+        assert len(added_objects) >= 6, f"Expected at least 6 objects, got {len(added_objects)}"
         
-        # Check that a Department was created
+        # Check that Departments were created (Management + General)
         departments = [obj for obj in added_objects if isinstance(obj, Department)]
-        assert len(departments) == 1, "Expected exactly one department to be created"
+        assert len(departments) == 2, f"Expected 2 departments, got {len(departments)}"
         
         # Check that a Role was created
         roles = [obj for obj in added_objects if isinstance(obj, Role)]
@@ -113,10 +117,15 @@ class TestBusinessSetup:
         business_users = [obj for obj in added_objects if isinstance(obj, BusinessUser)]
         assert len(business_users) == 1, "Expected exactly one business user to be created"
         
-        # Verify the department is named "General"
-        default_dept = departments[0]
-        assert default_dept.name == "General"
+        # Verify the General department exists
+        general_depts = [d for d in departments if d.name == "General"]
+        assert len(general_depts) == 1, "Expected a General department"
+        default_dept = general_depts[0]
         assert default_dept.description == "Default department for general team members"
+        
+        # Verify the Management department exists
+        mgmt_depts = [d for d in departments if d.name == "Management"]
+        assert len(mgmt_depts) == 1, "Expected a Management department"
         
         # Verify the department is linked to the business
         businesses = [obj for obj in added_objects if isinstance(obj, Business)]
@@ -124,7 +133,7 @@ class TestBusinessSetup:
         assert default_dept.business_id == businesses[0].id
 
     @pytest.mark.asyncio
-    @patch('app.api.business.get_db')
+    @patch('app.api.business.get_sync_db')
     @patch('app.api.business.get_current_user_for_onboarding')
     async def test_setup_business_department_in_same_transaction(self, mock_get_user, mock_get_db):
         """Test that default department is created in the same transaction as business."""

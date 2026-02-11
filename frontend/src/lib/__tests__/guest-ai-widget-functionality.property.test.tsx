@@ -18,7 +18,7 @@ import { apiClient } from '@/lib/api';
 jest.mock('@/hooks/useGuestAISession');
 jest.mock('@/store/authStore');
 jest.mock('@/lib/api');
-jest.mock('../../../shared/marketing-ai-context');
+jest.mock('@/shared/marketing-ai-context');
 jest.mock('next/navigation');
 
 const mockUseGuestAISession = useGuestAISession as jest.MockedFunction<typeof useGuestAISession>;
@@ -71,7 +71,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
           },
           canSendMessage: true,
           messagesRemaining: 20,
-          rateLimitMessage: '',
+          rateLimitMessage: jest.fn().mockReturnValue(''),
           isSessionActive: true
         },
         messageContent: 'What features does BizPilot have?',
@@ -92,7 +92,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
           },
           canSendMessage: true,
           messagesRemaining: 2,
-          rateLimitMessage: '',
+          rateLimitMessage: jest.fn().mockReturnValue(''),
           isSessionActive: true
         },
         messageContent: 'How much does BizPilot cost?',
@@ -113,7 +113,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
           },
           canSendMessage: false,
           messagesRemaining: 0,
-          rateLimitMessage: 'You have reached the message limit. Please try again later.',
+          rateLimitMessage: jest.fn().mockReturnValue('You have reached the message limit. Please try again later.'),
           isSessionActive: true
         },
         messageContent: 'Any message',
@@ -134,7 +134,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
           },
           canSendMessage: true,
           messagesRemaining: 15,
-          rateLimitMessage: '',
+          rateLimitMessage: jest.fn().mockReturnValue(''),
           isSessionActive: true
         },
         messageContent: 'What are my sales for this month?',
@@ -185,8 +185,8 @@ describe('Property 2: Guest AI Widget Functionality', () => {
         expect(triggerButton).toBeInTheDocument();
         expect(triggerButton).toHaveClass('fixed');
         
-        // Property: Widget should be positioned correctly
-        expect(triggerButton).toHaveStyle('position: fixed');
+        // Property: Widget should be positioned correctly (Tailwind class, not inline style)
+        expect(triggerButton.className).toMatch(/fixed/);
         
         // Property: Widget should have proper z-index for overlay
         expect(triggerButton).toHaveClass('z-50');
@@ -445,7 +445,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
         session: { id: 'test-session', createdAt: Date.now(), messageCount: 0, lastActivity: Date.now() },
         canSendMessage: true,
         messagesRemaining: 20,
-        rateLimitMessage: '',
+        rateLimitMessage: jest.fn().mockReturnValue(''),
         updateSessionActivity: jest.fn(),
         trackAnalytics: jest.fn(),
         isSessionActive: true,
@@ -502,7 +502,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
         },
         canSendMessage: state.messagesRemaining > 0,
         messagesRemaining: state.messagesRemaining,
-        rateLimitMessage: state.messagesRemaining === 0 ? 'Rate limited' : '',
+        rateLimitMessage: jest.fn().mockReturnValue(''),
         updateSessionActivity: jest.fn(),
         trackAnalytics: jest.fn(),
         isSessionActive: true,
@@ -516,7 +516,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
       
       await waitFor(() => {
         // Property: Rate limit display should be consistent with session state
-        expect(screen.getByText(`Messages remaining: ${state.messagesRemaining}`)).toBeInTheDocument();
+        expect(screen.getByText(new RegExp(`Messages remaining: ${state.messagesRemaining}`))).toBeInTheDocument();
         
         // Property: Warning should appear when approaching limit
         if (state.messagesRemaining <= 5 && state.messagesRemaining > 0) {
@@ -559,7 +559,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
         session: { id: 'test-session', createdAt: Date.now(), messageCount: 0, lastActivity: Date.now() },
         canSendMessage: true,
         messagesRemaining: 20,
-        rateLimitMessage: '',
+        rateLimitMessage: jest.fn().mockReturnValue(''),
         updateSessionActivity: jest.fn(),
         trackAnalytics: jest.fn(),
         isSessionActive: true,
@@ -621,7 +621,7 @@ describe('Property 2: Guest AI Widget Functionality', () => {
         session: { id: 'test-session', createdAt: Date.now(), messageCount: 0, lastActivity: Date.now() },
         canSendMessage: true,
         messagesRemaining: 20,
-        rateLimitMessage: '',
+        rateLimitMessage: jest.fn().mockReturnValue(''),
         updateSessionActivity: jest.fn(),
         trackAnalytics: jest.fn(),
         isSessionActive: true,

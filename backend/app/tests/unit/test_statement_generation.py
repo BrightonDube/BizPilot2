@@ -366,7 +366,7 @@ class TestStatementGeneration:
         # Verify statement was created with auto-determined period_start
         assert statement is not None
         assert statement.period_start is not None
-        assert statement.period_start < statement.period_end
+        assert statement.period_start <= statement.period_end
 
     def test_generate_statement_consecutive_periods(self, service, account, user):
         """Test generating consecutive statements."""

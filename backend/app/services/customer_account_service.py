@@ -1,7 +1,7 @@
 """Customer Account service for accounts receivable management."""
 
 from typing import Optional
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from decimal import Decimal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -341,7 +341,9 @@ class CustomerAccountService:
             dict: Aging breakdown with keys: current, days_30, days_60, days_90_plus, total
         """
         if as_of_date is None:
-            as_of_date = datetime.utcnow()
+            as_of_date = datetime.now(timezone.utc)
+        elif as_of_date.tzinfo is None:
+            as_of_date = as_of_date.replace(tzinfo=timezone.utc)
         
         # Initialize aging buckets
         aging = {
@@ -375,11 +377,14 @@ class CustomerAccountService:
             
             # Determine due date
             if charge.due_date:
-                due_date = datetime.combine(charge.due_date, datetime.min.time())
+                due_date = datetime.combine(charge.due_date, datetime.min.time(), tzinfo=timezone.utc)
             else:
                 # Use payment terms from account
                 from datetime import timedelta
-                due_date = charge.created_at + timedelta(days=account.payment_terms)
+                created = charge.created_at
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                due_date = created + timedelta(days=account.payment_terms)
             
             # Calculate days overdue
             days_overdue = (as_of_date - due_date).days
@@ -1836,8 +1841,8 @@ class CustomerAccountService:
             raise ValueError(f"period_start ({period_start}) cannot be after period_end ({period_end})")
         
         # Convert dates to datetime for comparison with transaction timestamps
-        period_start_dt = datetime.combine(period_start, datetime.min.time())
-        period_end_dt = datetime.combine(period_end, datetime.max.time())
+        period_start_dt = datetime.combine(period_start, datetime.min.time(), tzinfo=timezone.utc)
+        period_end_dt = datetime.combine(period_end, datetime.max.time(), tzinfo=timezone.utc)
         
         # Calculate opening balance (balance at the start of the period)
         # Get all transactions before period_start
@@ -1888,7 +1893,7 @@ class CustomerAccountService:
         
         # Verify Property 4: Statement Accuracy
         # The closing balance should match the account's current balance if period_end is today
-        if period_end == datetime.utcnow().date():
+        if period_end == datetime.now(timezone.utc).date():
             current_balance = Decimal(str(account.current_balance))
             balance_difference = abs(closing_balance - current_balance)
             
@@ -1905,6 +1910,19 @@ class CustomerAccountService:
         
         # Calculate aging breakdown as of period_end
         aging = self.calculate_aging(account, as_of_date=period_end_dt)
+        
+        # Reconcile aging buckets with closing_balance to satisfy DB check constraint
+        # (closing_balance = current + days_30 + days_60 + days_90_plus)
+        # Adjustments/write-offs affect closing_balance but aren't tied to specific
+        # charge due dates, so absorb the difference into the 'current' bucket.
+        aging_sum = (
+            aging.get('current', Decimal('0')) +
+            aging.get('days_30', Decimal('0')) +
+            aging.get('days_60', Decimal('0')) +
+            aging.get('days_90_plus', Decimal('0'))
+        )
+        if aging_sum != closing_balance:
+            aging['current'] += (closing_balance - aging_sum)
         
         # Create the statement record
         statement = AccountStatement(

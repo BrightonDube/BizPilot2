@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 class TestAIAPI:
     def test_ai_chat_endpoint_exists(self, client):
-        response = client.post("/api/v1/ai/chat", json={"message": "hi"})
+        response = client.post("/api/v1/ai/chat", json={"message": "hi"}, headers={"Authorization": "Bearer dummy"})
         assert response.status_code == 401
 
     def test_ai_conversations_list_exists(self, client):
@@ -13,7 +13,7 @@ class TestAIAPI:
         assert response.status_code == 401
 
     def test_ai_conversations_create_exists(self, client):
-        response = client.post("/api/v1/ai/conversations", json={"title": "Test"})
+        response = client.post("/api/v1/ai/conversations", json={"title": "Test"}, headers={"Authorization": "Bearer dummy"})
         assert response.status_code == 401
 
     def test_ai_messages_list_exists(self, client):
@@ -36,7 +36,10 @@ class TestAIAPI:
             current_tier_id=None,
             feature_overrides={"ai_assistant": True},
             subscription_status=None,
-            is_superadmin=True  # SuperAdmin bypasses feature checks
+            is_superadmin=True,  # SuperAdmin bypasses feature checks
+            status="active",
+            is_email_verified=True,
+            hashed_password="hashed"
         )
 
         # Create a mock business ID
@@ -51,7 +54,7 @@ class TestAIAPI:
         monkeypatch.setattr(config_mod.settings, "OPENAI_API_KEY", None, raising=False)
 
         try:
-            resp = client.post("/api/v1/ai/chat", json={"message": "hi"})
+            resp = client.post("/api/v1/ai/chat", json={"message": "hi"}, headers={"Authorization": "Bearer dummy"})
             assert resp.status_code == 400
             body = resp.json()
             assert "detail" in body
@@ -70,5 +73,6 @@ class TestUserSettingsAPI:
         response = client.put(
             "/api/v1/users/me/settings",
             json={"ai_data_sharing_level": "none"},
+            headers={"Authorization": "Bearer dummy"}
         )
         assert response.status_code == 401

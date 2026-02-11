@@ -35,7 +35,7 @@ class TestUsersAPI:
 
     def test_user_update_endpoint_exists(self, client):
         """Test that PUT /users/me endpoint exists (returns 401 without auth)."""
-        response = client.put("/api/v1/users/me", json={"first_name": "Test"})
+        response = client.put("/api/v1/users/me", json={"first_name": "Test"}, headers={"Authorization": "Bearer dummy"})
         # Should return 401 (unauthorized) not 404 (not found)
         assert response.status_code == 401
 

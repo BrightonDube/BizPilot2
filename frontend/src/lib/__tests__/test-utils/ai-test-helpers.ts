@@ -20,7 +20,7 @@ export const createMockGuestSession = (overrides = {}) => ({
   },
   canSendMessage: true,
   messagesRemaining: 20,
-  rateLimitMessage: '',
+  rateLimitMessage: jest.fn().mockReturnValue(''),
   updateSessionActivity: jest.fn(),
   trackAnalytics: jest.fn(),
   ...overrides
@@ -51,7 +51,7 @@ export const setupRateLimitedContext = (mockUseGuestAISession: jest.Mock) => {
     createMockGuestSession({
       canSendMessage: false,
       messagesRemaining: 0,
-      rateLimitMessage: TEST_CONSTANTS.RATE_LIMIT_MESSAGE,
+      rateLimitMessage: jest.fn().mockReturnValue(TEST_CONSTANTS.RATE_LIMIT_MESSAGE),
       session: {
         id: TEST_CONSTANTS.SESSION_ID,
         createdAt: Date.now(),
