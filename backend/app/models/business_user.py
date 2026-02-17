@@ -1,6 +1,6 @@
 """BusinessUser model for user-business-role relationship."""
 
-from sqlalchemy import Column, ForeignKey, Boolean, Enum as SQLEnum
+from sqlalchemy import Column, ForeignKey, Boolean, Enum as SQLEnum, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import enum
@@ -30,6 +30,7 @@ class BusinessUser(BaseModel):
         default=BusinessUserStatus.ACTIVE
     )
     is_primary = Column(Boolean, default=False)  # User's primary business
+    employment_start_date = Column(Date, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="business_users")

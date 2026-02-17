@@ -9,6 +9,9 @@ from sqlalchemy import func
 from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id, check_feature
 from app.models.user import User
+from app.services.sales_report_service import SalesReportService
+from app.services.staff_report_service import StaffReportService
+from app.services.inventory_report_service import InventoryReportService
 from app.models.business_user import BusinessUser
 from app.models.order import Order, OrderDirection
 from app.models.customer import Customer
@@ -935,3 +938,384 @@ async def get_login_history_report(
         unique_users=len(unique_users),
         suspicious_count=suspicious_count,
     )
+
+
+# ---------------------------------------------------------------------------
+# Sales Report Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/sales/daily")
+async def get_daily_sales_report(
+    date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format, defaults to today"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get daily sales report with hourly breakdown."""
+    from datetime import date as date_type
+
+    if date:
+        try:
+            target_date = date_type.fromisoformat(date)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date format. Use YYYY-MM-DD.",
+            )
+    else:
+        target_date = date_type.today()
+
+    service = SalesReportService(db)
+    return service.get_daily_report(business_id, target_date)
+
+
+@router.get("/sales/weekly")
+async def get_weekly_sales_report(
+    week_start: Optional[str] = Query(None, description="Monday date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get weekly sales report with daily breakdown."""
+    from datetime import date as date_type
+
+    if week_start:
+        try:
+            start = date_type.fromisoformat(week_start)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date format. Use YYYY-MM-DD.",
+            )
+    else:
+        today = date_type.today()
+        start = today - timedelta(days=today.weekday())  # Monday
+
+    service = SalesReportService(db)
+    return service.get_weekly_report(business_id, start)
+
+
+@router.get("/sales/monthly")
+async def get_monthly_sales_report(
+    year: Optional[int] = Query(None, description="Year (e.g. 2024)"),
+    month: Optional[int] = Query(None, ge=1, le=12, description="Month (1-12)"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get monthly sales report with daily breakdown."""
+    from datetime import date as date_type
+
+    today = date_type.today()
+    year = year or today.year
+    month = month or today.month
+
+    service = SalesReportService(db)
+    return service.get_monthly_report(business_id, year, month)
+
+
+@router.get("/sales/products")
+async def get_product_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get product performance report ranked by revenue."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_product_performance(business_id, start, end, limit)
+
+
+@router.get("/sales/categories")
+async def get_category_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get category performance report."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_category_performance(business_id, start, end)
+
+
+@router.get("/sales/payments")
+async def get_payment_breakdown_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get payment method breakdown report."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_payment_breakdown(business_id, start, end)
+
+
+@router.get("/sales/time-analysis")
+async def get_time_analysis_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get time-based analysis with peak hours and day-of-week breakdown."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_time_analysis(business_id, start, end)
+
+
+# ── Staff Reports ──────────────────────────────────────────────────────────
+
+
+@router.get("/staff/performance")
+async def get_staff_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Staff performance report with hours worked and ranking."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_performance_report(business_id, start, end)
+
+
+@router.get("/staff/attendance")
+async def get_staff_attendance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by specific user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Staff attendance report with daily breakdown and summaries."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_attendance_report(business_id, start, end, user_id=user_id)
+
+
+@router.get("/staff/departments")
+async def get_department_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Department performance report with staff and hours breakdown."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_department_performance(business_id, start, end)
+
+
+@router.get("/staff/productivity")
+async def get_staff_productivity_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Staff productivity analysis with efficiency metrics."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_productivity_report(business_id, start, end)
+
+
+# ---------------------------------------------------------------------------
+# Inventory Report Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/inventory/stock-levels")
+async def get_stock_levels_report(
+    category_id: Optional[str] = Query(None, description="Filter by category ID"),
+    low_stock_only: bool = Query(False, description="Show only low stock items"),
+    out_of_stock_only: bool = Query(False, description="Show only out of stock items"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get current stock levels with low/out-of-stock flags."""
+    service = InventoryReportService(db)
+    return service.get_stock_levels(
+        business_id,
+        category_id=category_id,
+        low_stock_only=low_stock_only,
+        out_of_stock_only=out_of_stock_only,
+    )
+
+
+@router.get("/inventory/movements")
+async def get_stock_movements_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    product_id: Optional[str] = Query(None, description="Filter by product ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get stock movement report showing ins, outs, and adjustments."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_stock_movements(business_id, start, end, product_id=product_id)
+
+
+@router.get("/inventory/valuation")
+async def get_inventory_valuation_report(
+    method: str = Query("average", description="Valuation method (average)"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory valuation report grouped by category."""
+    service = InventoryReportService(db)
+    return service.get_valuation(business_id, method=method)
+
+
+@router.get("/inventory/turnover")
+async def get_inventory_turnover_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory turnover analysis with fast/slow/dead stock classification."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_turnover_analysis(business_id, start, end)
+
+
+@router.get("/inventory/supplier-performance")
+async def get_supplier_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get supplier performance report based on purchase orders."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_supplier_performance(business_id, start, end)

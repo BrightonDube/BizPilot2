@@ -124,3 +124,61 @@ def test_email_attachment_generation(report_data):
     excel_attachment = attachments[0]
     assert excel_attachment.filename.endswith('.xlsx')
     assert 'spreadsheet' in excel_attachment.content_type or 'excel' in excel_attachment.content_type
+
+
+@given(report_data=report_data_strategy())
+@settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.too_slow], deadline=None)
+def test_email_subject_completeness(report_data):
+    """
+    Property 12: Email Subject Completeness
+
+    Verifies that the generated email subject line contains the report type,
+    the reporting period, and the business name.
+
+    Validates: Requirements 3.5.3
+    """
+    mock_email_service = Mock(spec=EmailService)
+    service = ReportEmailService(mock_email_service)
+
+    subject = service.generate_subject(report_data)
+
+    # Subject must contain business name
+    assert report_data.business_name in subject
+
+    # Subject must contain readable report type (e.g. "Sales Summary")
+    report_name = report_data.report_type.value.replace('_', ' ').title()
+    assert report_name in subject
+
+    # Subject must contain period dates
+    period_start_str = report_data.period_start.strftime('%Y-%m-%d')
+    period_end_str = report_data.period_end.strftime('%Y-%m-%d')
+    assert period_start_str in subject
+    assert period_end_str in subject
+
+
+@given(report_data=report_data_strategy())
+@settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.too_slow], deadline=None)
+def test_email_link_presence(report_data):
+    """
+    Property 13: Email Link Presence
+
+    Verifies that the generated HTML email body contains a link to the
+    full report in the application and an unsubscribe link.
+
+    Validates: Requirements 3.5.5, 3.5.6
+    """
+    mock_email_service = Mock(spec=EmailService)
+    service = ReportEmailService(mock_email_service)
+
+    body = service.generate_html_body(report_data)
+
+    # Body must be valid HTML with content
+    assert len(body) > 0
+    assert '<html' in body.lower()
+
+    # Body should contain a link (href) to view the report
+    assert 'href=' in body.lower(), "Email body should contain at least one link"
+
+    # Body should contain an unsubscribe mechanism
+    body_lower = body.lower()
+    assert 'unsubscribe' in body_lower, "Email body should contain an unsubscribe link or text"
