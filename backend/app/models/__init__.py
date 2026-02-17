@@ -84,6 +84,26 @@ from app.models.loyalty import (
     LoyaltyTier,
     PointsTransactionType,
 )
+from app.models.menu import (
+    MenuItem,
+    ModifierGroup,
+    Modifier,
+    MenuItemModifierGroup,
+    Recipe,
+    RecipeIngredient,
+)
+from app.models.stock_take import (
+    StockTakeSession,
+    StockTakeStatus,
+    StockCount,
+    InventoryAdjustment,
+)
+from app.models.delivery import (
+    DeliveryStatus as DeliveryTrackingStatus,
+    DeliveryZone,
+    Driver,
+    Delivery,
+)
 
 __all__ = [
     "BaseModel",
@@ -218,4 +238,21 @@ __all__ = [
     "PointsTransaction",
     "LoyaltyTier",
     "PointsTransactionType",
+    # Stock Take
+    "StockTakeSession",
+    "StockTakeStatus",
+    "StockCount",
+    "InventoryAdjustment",
+    # Menu Engineering
+    "MenuItem",
+    "ModifierGroup",
+    "Modifier",
+    "MenuItemModifierGroup",
+    "Recipe",
+    "RecipeIngredient",
+    # Delivery Management
+    "DeliveryTrackingStatus",
+    "DeliveryZone",
+    "Driver",
+    "Delivery",
 ]
