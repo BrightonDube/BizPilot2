@@ -224,3 +224,57 @@ def test_active_subscription_query_filtering(data):
     
     # Verify filters were applied
     assert mock_query.filter.called
+
+
+@given(
+    user_id=st.uuids(),
+    report_type=report_type_strategy(),
+    freq1=frequency_strategy(),
+    freq2=frequency_strategy(),
+)
+@settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.too_slow], deadline=None)
+def test_multiple_frequencies_per_report_type(user_id, report_type, freq1, freq2):
+    """
+    Property 4: Multiple Frequencies Per Report Type
+
+    Verifies that a user can have different frequencies for the same report type.
+    Each (user_id, report_type, frequency) tuple is a distinct subscription.
+
+    Validates: Requirements 3.1.8
+    """
+    service, storage = create_mock_service()
+
+    # Make db.query().filter().first() return None so create_subscription creates new objects
+    mock_query = MagicMock()
+    mock_query.filter.return_value = mock_query
+    mock_query.first.return_value = None
+    service.db.query.return_value = mock_query
+    service.db.query.side_effect = None
+
+    sub1 = service.create_subscription(
+        user_id=user_id,
+        report_type=report_type,
+        frequency=freq1,
+    )
+
+    # Reset mock so second create also sees no existing subscription
+    mock_query.first.return_value = None
+
+    sub2 = service.create_subscription(
+        user_id=user_id,
+        report_type=report_type,
+        frequency=freq2,
+    )
+
+    # Both subscriptions should exist and reference the same report type
+    assert sub1.report_type == report_type.value
+    assert sub2.report_type == report_type.value
+    assert sub1.frequency == freq1.value
+    assert sub2.frequency == freq2.value
+
+    # If frequencies differ, the subscriptions are distinct objects
+    if freq1 != freq2:
+        assert sub1 is not sub2
+    # Both should be active
+    assert sub1.is_active is True
+    assert sub2.is_active is True
