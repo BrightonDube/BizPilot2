@@ -918,11 +918,11 @@ def create_notifications(db: Session, business: Business, user: User) -> list:
     print("Creating notifications...")
     
     notifications_data = [
-        {"type": "system", "priority": "low", "title": "Welcome to BizPilot", "message": "Your account has been set up successfully."},
-        {"type": "order_shipped", "priority": "medium", "title": "Order Completed", "message": "Order TBS-1025 has been delivered."},
-        {"type": "low_stock", "priority": "high", "title": "Low Stock Alert", "message": "5 products are running low on stock."},
-        {"type": "system", "priority": "low", "title": "New Customer", "message": "A new customer has been added to your database."},
-        {"type": "payment_received", "priority": "medium", "title": "Payment Received", "message": "Payment of R2,500 received from Table Mountain Catering."},
+        {"type": "system", "title": "Welcome to BizPilot", "message": "Your account has been set up successfully."},
+        {"type": "order", "title": "Order Completed", "message": "Order TBS-1025 has been delivered."},
+        {"type": "inventory", "title": "Low Stock Alert", "message": "5 products are running low on stock."},
+        {"type": "info", "title": "New Customer", "message": "A new customer has been added to your database."},
+        {"type": "payment", "title": "Payment Received", "message": "Payment of R2,500 received from Table Mountain Catering."},
     ]
     
     notifications = []
@@ -931,7 +931,6 @@ def create_notifications(db: Session, business: Business, user: User) -> list:
             business_id=business.id,
             user_id=user.id,
             notification_type=n["type"],
-            priority=n["priority"],
             title=n["title"],
             message=n["message"],
             is_read=i < 2,  # First 2 are read

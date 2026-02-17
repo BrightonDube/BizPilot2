@@ -29,7 +29,7 @@ from app.models.subscription_transaction import (
 from app.models.time_entry import TimeEntry, TimeEntryType, TimeEntryStatus
 from app.models.pos_connection import POSConnection, POSProvider, POSConnectionStatus, POSSyncLog
 from app.models.session import Session
-from app.models.notification import Notification, NotificationType, NotificationPriority
+from app.models.notification import Notification, NotificationType, NotificationChannel as NotifChannel, NotificationPreference
 from app.models.favorite_product import FavoriteProduct
 from app.models.layby_config import LaybyConfig
 from app.models.layby import Layby, LaybyStatus, PaymentFrequency
@@ -136,6 +136,7 @@ from app.models.online_order import (
 from app.models.custom_dashboard import Dashboard, DashboardWidget
 from app.models.addon import ProductModifierGroup, SelectionType
 from app.models.audit_log import UserAuditLog, AuditAction
+from app.models.shift import Shift, ShiftStatus, LeaveRequest, LeaveType, LeaveStatus
 from app.models.location import (
     Location,
     LocationStock,
@@ -143,6 +144,7 @@ from app.models.location import (
     StockTransferItem,
     TransferStatus as LocationTransferStatus,
 )
+from app.models.tax import TaxType, TaxRate, ProductTaxRate, CategoryTaxRate
 
 __all__ = [
     "BaseModel",
@@ -213,7 +215,8 @@ __all__ = [
     # Notification
     "Notification",
     "NotificationType",
-    "NotificationPriority",
+    "NotifChannel",
+    "NotificationPreference",
     # Favorite Product
     "FavoriteProduct",
     # Layby
@@ -334,4 +337,15 @@ __all__ = [
     # Product Addons
     "ProductModifierGroup",
     "SelectionType",
+    # Shift Management
+    "Shift",
+    "ShiftStatus",
+    "LeaveRequest",
+    "LeaveType",
+    "LeaveStatus",
+    # Tax Configuration
+    "TaxType",
+    "TaxRate",
+    "ProductTaxRate",
+    "CategoryTaxRate",
 ]

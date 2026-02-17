@@ -119,7 +119,7 @@ def test_notification_creation_for_new_overdue_invoices(invoices):
         notification = Mock(spec=Notification)
         notification.id = uuid4()
         notification.reference_id = kwargs.get('invoice_id')
-        notification.notification_type = NotificationType.PAYMENT_OVERDUE
+        notification.notification_type = NotificationType.PAYMENT
         notification.business_id = kwargs.get('business_id')
         # Simulate the actual notification service behavior
         invoice_number = kwargs.get('invoice_number', 'INV-0000')
@@ -148,7 +148,7 @@ def test_notification_creation_for_new_overdue_invoices(invoices):
     for invoice in mock_invoices:
         matching_notifications = [
             n for n in created_notifications
-            if n.reference_id == str(invoice.id) and n.notification_type == NotificationType.PAYMENT_OVERDUE
+            if n.reference_id == str(invoice.id) and n.notification_type == NotificationType.PAYMENT
         ]
         
         assert len(matching_notifications) == 1, f"Expected exactly 1 notification for invoice {invoice.id}"
@@ -199,7 +199,7 @@ def test_notification_contains_days_overdue(invoice_data):
         notification = Mock(spec=Notification)
         notification.id = uuid4()
         notification.reference_id = kwargs.get('invoice_id')
-        notification.notification_type = NotificationType.PAYMENT_OVERDUE
+        notification.notification_type = NotificationType.PAYMENT
         notification.business_id = kwargs.get('business_id')
         # Simulate the actual notification service behavior
         invoice_number = kwargs.get('invoice_number', 'INV-0000')

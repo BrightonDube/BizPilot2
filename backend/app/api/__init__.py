@@ -51,6 +51,8 @@ from app.api.bulk_operations import router as bulk_operations_router
 from app.api.addons import router as addons_router
 from app.api.locations import router as locations_router
 from app.api.audit import router as audit_router
+from app.api.tax import router as tax_router
+from app.api.shifts import router as shifts_router
 
 router = APIRouter()
 
@@ -103,6 +105,8 @@ router.include_router(online_orders_router)
 router.include_router(audit_router)
 router.include_router(locations_router)
 router.include_router(addons_router)
+router.include_router(shifts_router)
+router.include_router(tax_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 

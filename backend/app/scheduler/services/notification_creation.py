@@ -54,14 +54,11 @@ class NotificationCreationService:
                     customer_name = customer.name
             
             # Create notification using existing service
-            self.notification_service.create_payment_overdue_notification(
+            self.notification_service.notify_business_users(
                 business_id=str(invoice.business_id),
-                invoice_id=str(invoice.id),
-                invoice_number=invoice.invoice_number,
-                customer_name=customer_name,
-                amount=float(invoice.balance_due),
-                days_overdue=days_overdue,
-                user_id=None  # Broadcast to all users in business
+                title=f"Payment Overdue: Invoice #{invoice.invoice_number}",
+                message=f"Invoice from {customer_name} for ${float(invoice.balance_due):.2f} is {days_overdue} days overdue",
+                notification_type="payment",
             )
             
             logger.info(
