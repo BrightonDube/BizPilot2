@@ -25,8 +25,9 @@ import {
   StatCard,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 
-type TabKey = 'stock-levels' | 'movements' | 'valuation' | 'turnover' | 'supplier-performance';
+type TabKey= 'stock-levels' | 'movements' | 'valuation' | 'turnover' | 'supplier-performance';
 
 interface Tab {
   key: TabKey;
@@ -125,6 +126,7 @@ export default function InventoryReportsPage() {
   const showDateRange = activeTab !== 'stock-levels' && activeTab !== 'valuation';
 
   return (
+    <FeatureGate feature="reports">
     <div className="space-y-6">
       <PageHeader
         title="Inventory Reports"
@@ -247,6 +249,7 @@ export default function InventoryReportsPage() {
         </div>
       ) : null}
     </div>
+    </FeatureGate>
   );
 }
 

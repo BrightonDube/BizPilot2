@@ -25,6 +25,7 @@ import {
   StatCard,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 
 type TabKey = 'daily' | 'weekly' | 'monthly' | 'products' | 'categories' | 'payments' | 'time';
 
@@ -127,6 +128,7 @@ export default function SalesReportsPage() {
   }, [fetchData]);
 
   return (
+    <FeatureGate feature="reports">
     <div className="space-y-6">
       <PageHeader
         title="Sales Reports"
@@ -206,6 +208,7 @@ export default function SalesReportsPage() {
         </div>
       ) : null}
     </div>
+    </FeatureGate>
   );
 }
 
