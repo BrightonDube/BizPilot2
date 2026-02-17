@@ -145,6 +145,18 @@ from app.models.location import (
     TransferStatus as LocationTransferStatus,
 )
 from app.models.tax import TaxType, TaxRate, ProductTaxRate, CategoryTaxRate
+from app.models.cash_register import (
+    RegisterStatus,
+    CashRegister,
+    RegisterSession,
+    CashMovement,
+)
+from app.models.gift_card import GiftCard, GiftCardStatus, GiftCardTransaction
+from app.models.expense import (
+    Expense,
+    ExpenseTrackingCategory,
+    ExpenseTrackingStatus,
+)
 
 __all__ = [
     "BaseModel",
@@ -348,4 +360,17 @@ __all__ = [
     "TaxRate",
     "ProductTaxRate",
     "CategoryTaxRate",
+    # Gift Cards
+    "GiftCard",
+    "GiftCardStatus",
+    "GiftCardTransaction",
+    # Expense Tracking
+    "Expense",
+    "ExpenseTrackingCategory",
+    "ExpenseTrackingStatus",
+    # Cash Register
+    "RegisterStatus",
+    "CashRegister",
+    "RegisterSession",
+    "CashMovement",
 ]
