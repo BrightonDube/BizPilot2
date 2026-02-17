@@ -10,7 +10,7 @@ from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.product import Product, ProductStatus, ProductCategory
 from app.models.customer import Customer, CustomerType
 from app.models.supplier import Supplier
-from app.models.order import Order, OrderStatus, PaymentStatus, OrderItem
+from app.models.order import Order, OrderStatus, PaymentStatus, OrderItem, OrderType
 from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem, InvoiceType
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
 from app.models.product_supplier import ProductSupplier
@@ -67,6 +67,8 @@ from app.models.report_subscription import (
     DeliveryStatus,
     ReportDeliveryLog,
 )
+from app.models.restaurant_table import RestaurantTable, TableStatus
+from app.models.order_status_history import OrderStatusHistory
 
 __all__ = [
     "BaseModel",
@@ -96,6 +98,7 @@ __all__ = [
     # Order
     "Order",
     "OrderStatus",
+    "OrderType",
     "PaymentStatus",
     "OrderItem",
     # Invoice
@@ -182,4 +185,9 @@ __all__ = [
     "DeliveryFrequency",
     "DeliveryStatus",
     "ReportDeliveryLog",
+    # Restaurant Tables
+    "RestaurantTable",
+    "TableStatus",
+    # Order Status History
+    "OrderStatusHistory",
 ]
