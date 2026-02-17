@@ -69,6 +69,21 @@ from app.models.report_subscription import (
 )
 from app.models.restaurant_table import RestaurantTable, TableStatus
 from app.models.order_status_history import OrderStatusHistory
+from app.models.petty_cash import (
+    PettyCashFund,
+    FundStatus,
+    ExpenseCategory,
+    PettyCashExpense,
+    ExpenseStatus,
+    FundReplenishment,
+)
+from app.models.loyalty import (
+    LoyaltyProgram,
+    CustomerLoyalty,
+    PointsTransaction,
+    LoyaltyTier,
+    PointsTransactionType,
+)
 
 __all__ = [
     "BaseModel",
@@ -190,4 +205,17 @@ __all__ = [
     "TableStatus",
     # Order Status History
     "OrderStatusHistory",
+    # Petty Cash
+    "PettyCashFund",
+    "FundStatus",
+    "ExpenseCategory",
+    "PettyCashExpense",
+    "ExpenseStatus",
+    "FundReplenishment",
+    # Loyalty Program
+    "LoyaltyProgram",
+    "CustomerLoyalty",
+    "PointsTransaction",
+    "LoyaltyTier",
+    "PointsTransactionType",
 ]
