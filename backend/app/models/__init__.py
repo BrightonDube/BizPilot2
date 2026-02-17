@@ -134,6 +134,15 @@ from app.models.online_order import (
     OnlineOrderItem,
 )
 from app.models.custom_dashboard import Dashboard, DashboardWidget
+from app.models.addon import ProductModifierGroup, SelectionType
+from app.models.audit_log import UserAuditLog, AuditAction
+from app.models.location import (
+    Location,
+    LocationStock,
+    StockTransfer,
+    StockTransferItem,
+    TransferStatus as LocationTransferStatus,
+)
 
 __all__ = [
     "BaseModel",
@@ -313,4 +322,16 @@ __all__ = [
     "OnlineStore",
     "OnlineOrder",
     "OnlineOrderItem",
+    # User Audit Logs
+    "UserAuditLog",
+    "AuditAction",
+    # Multi-Location
+    "Location",
+    "LocationStock",
+    "StockTransfer",
+    "StockTransferItem",
+    "LocationTransferStatus",
+    # Product Addons
+    "ProductModifierGroup",
+    "SelectionType",
 ]

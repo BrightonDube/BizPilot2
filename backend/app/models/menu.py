@@ -3,6 +3,7 @@
 from sqlalchemy import (
     Boolean,
     Column,
+    Enum as SQLEnum,
     ForeignKey,
     Integer,
     Numeric,
@@ -12,6 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+from app.models.addon import SelectionType
 from app.models.base import BaseModel
 
 
@@ -61,16 +63,29 @@ class ModifierGroup(BaseModel):
     business_id = Column(
         UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True
     )
-    name = Column(String(100), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    selection_type = Column(
+        SQLEnum(
+            SelectionType,
+            values_callable=lambda x: [e.value for e in x],
+            name="selectiontype",
+        ),
+        default=SelectionType.SINGLE,
+    )
     min_selections = Column(Integer, nullable=False, default=0)
-    max_selections = Column(Integer, nullable=False, default=1)
+    max_selections = Column(Integer, nullable=True, default=1)
     is_required = Column(Boolean, nullable=False, default=False)
+    sort_order = Column(Integer, default=0)
 
-    modifiers = relationship("Modifier", back_populates="group")
+    modifiers = relationship("Modifier", back_populates="group", lazy="selectin")
     menu_items = relationship(
         "MenuItem",
         secondary="menu_item_modifier_groups",
         back_populates="modifier_groups",
+    )
+    product_links = relationship(
+        "ProductModifierGroup", back_populates="modifier_group", lazy="selectin"
     )
 
 
@@ -88,9 +103,11 @@ class Modifier(BaseModel):
     business_id = Column(
         UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True
     )
-    name = Column(String(100), nullable=False)
+    name = Column(String(255), nullable=False)
     price_adjustment = Column(Numeric(12, 2), nullable=False, default=0)
+    is_default = Column(Boolean, default=False)
     is_available = Column(Boolean, nullable=False, default=True)
+    sort_order = Column(Integer, default=0)
 
     group = relationship("ModifierGroup", back_populates="modifiers")
 
