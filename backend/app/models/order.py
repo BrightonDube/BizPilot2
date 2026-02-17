@@ -1,6 +1,6 @@
 """Order models for order management."""
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime
+from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship
 import enum
@@ -37,6 +37,15 @@ class OrderDirection(str, enum.Enum):
 
     INBOUND = "inbound"  # customer orders (sales)
     OUTBOUND = "outbound"  # supplier orders (purchasing)
+
+
+class OrderType(str, enum.Enum):
+    """Order type for restaurant/retail."""
+    DINE_IN = "dine_in"
+    TAKEAWAY = "takeaway"
+    DELIVERY = "delivery"
+    COLLECTION = "collection"
+    STANDARD = "standard"  # Default for non-restaurant
 
 
 class Order(BaseModel):
@@ -94,11 +103,28 @@ class Order(BaseModel):
     # Metadata
     tags = Column(ARRAY(String), default=[])
     source = Column(String(50), default="manual")  # manual, pos, online, etc.
-    
+
+    # Order management extensions
+    order_type = Column(
+        SQLEnum(OrderType, values_callable=lambda x: [e.value for e in x], name='ordertype'),
+        default=OrderType.STANDARD,
+        nullable=True,
+    )
+    table_id = Column(UUID(as_uuid=True), ForeignKey("restaurant_tables.id", use_alter=True), nullable=True, index=True)
+    delivery_address_text = Column(Text, nullable=True)
+    delivery_phone = Column(String(50), nullable=True)
+    driver_id = Column(UUID(as_uuid=True), nullable=True)
+    estimated_delivery_time = Column(DateTime(timezone=True), nullable=True)
+    delivery_fee = Column(Numeric(12, 2), default=0)
+    is_tab = Column(Boolean, default=False)
+    tab_name = Column(String(100), nullable=True)
+    course_count = Column(Integer, default=1)
+
     # Relationships
     items = relationship("OrderItem", back_populates="order", lazy="selectin")
     customer = relationship("Customer", backref="orders", lazy="joined")
     supplier = relationship("Supplier", backref="orders", lazy="joined")
+    table = relationship("RestaurantTable", backref="orders", foreign_keys=[table_id], lazy="joined")
 
     def __repr__(self) -> str:
         return f"<Order {self.order_number}>"
