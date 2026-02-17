@@ -42,6 +42,9 @@ from app.api.loyalty import router as loyalty_router
 from app.api.deliveries import router as deliveries_router
 from app.api.menu import router as menu_router
 from app.api.stock_takes import router as stock_takes_router
+from app.api.reorder import router as reorder_router
+from app.api.crm import router as crm_router
+from app.api.general_ledger import router as general_ledger_router
 
 router = APIRouter()
 
@@ -85,6 +88,9 @@ router.include_router(loyalty_router)
 router.include_router(menu_router)
 router.include_router(stock_takes_router)
 router.include_router(deliveries_router)
+router.include_router(crm_router)
+router.include_router(reorder_router)
+router.include_router(general_ledger_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 

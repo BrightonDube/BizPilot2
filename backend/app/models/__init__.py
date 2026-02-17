@@ -104,6 +104,28 @@ from app.models.delivery import (
     Driver,
     Delivery,
 )
+from app.models.reorder import (
+    ReorderRule,
+    ReorderRuleStatus,
+    PurchaseRequest,
+    PurchaseRequestItem,
+    PurchaseOrderStatus,
+)
+from app.models.general_ledger import (
+    AccountType,
+    JournalEntryStatus,
+    ChartOfAccount,
+    JournalEntry,
+    JournalLine,
+    FiscalPeriod,
+)
+from app.models.crm import (
+    InteractionType,
+    CustomerSegment,
+    CustomerSegmentMember,
+    CustomerInteraction,
+    CustomerMetrics,
+)
 
 __all__ = [
     "BaseModel",
@@ -255,4 +277,23 @@ __all__ = [
     "DeliveryZone",
     "Driver",
     "Delivery",
+    # CRM
+    "InteractionType",
+    "CustomerSegment",
+    "CustomerSegmentMember",
+    "CustomerInteraction",
+    "CustomerMetrics",
+    # Automated Reorder
+    "ReorderRule",
+    "ReorderRuleStatus",
+    "PurchaseRequest",
+    "PurchaseRequestItem",
+    "PurchaseOrderStatus",
+    # General Ledger
+    "AccountType",
+    "JournalEntryStatus",
+    "ChartOfAccount",
+    "JournalEntry",
+    "JournalLine",
+    "FiscalPeriod",
 ]
