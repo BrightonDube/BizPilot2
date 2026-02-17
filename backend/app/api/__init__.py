@@ -45,6 +45,9 @@ from app.api.stock_takes import router as stock_takes_router
 from app.api.reorder import router as reorder_router
 from app.api.crm import router as crm_router
 from app.api.general_ledger import router as general_ledger_router
+from app.api.online_orders import router as online_orders_router
+from app.api.dashboards import router as custom_dashboards_router
+from app.api.bulk_operations import router as bulk_operations_router
 
 router = APIRouter()
 
@@ -91,6 +94,9 @@ router.include_router(deliveries_router)
 router.include_router(crm_router)
 router.include_router(reorder_router)
 router.include_router(general_ledger_router)
+router.include_router(custom_dashboards_router)
+router.include_router(bulk_operations_router)
+router.include_router(online_orders_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
