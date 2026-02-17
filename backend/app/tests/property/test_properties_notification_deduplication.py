@@ -106,7 +106,7 @@ def test_notification_deduplication(invoices_with_notifications, invoices_withou
         notification = Mock(spec=Notification)
         notification.id = uuid4()
         notification.reference_id = str(invoice.id)
-        notification.notification_type = NotificationType.PAYMENT_OVERDUE
+        notification.notification_type = NotificationType.PAYMENT
         notification.business_id = str(invoice.business_id)
         existing_notifications.append(notification)
     
@@ -132,7 +132,7 @@ def test_notification_deduplication(invoices_with_notifications, invoices_withou
         notification = Mock(spec=Notification)
         notification.id = uuid4()
         notification.reference_id = invoice_id
-        notification.notification_type = NotificationType.PAYMENT_OVERDUE
+        notification.notification_type = NotificationType.PAYMENT
         notification.business_id = kwargs.get('business_id')
         created_notifications.append(notification)
         return notification

@@ -1,67 +1,60 @@
 """Notification schemas for API validation."""
 
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
-from app.models.notification import NotificationType, NotificationPriority
 
 
-class NotificationBase(BaseModel):
-    """Base schema for notification."""
-    
-    notification_type: NotificationType
-    priority: NotificationPriority = NotificationPriority.MEDIUM
-    title: str
-    message: str
-    reference_type: Optional[str] = None
-    reference_id: Optional[str] = None
-    action_url: Optional[str] = None
-    action_label: Optional[str] = None
-
-
-class NotificationCreate(NotificationBase):
-    """Schema for creating a notification."""
-    
-    user_id: Optional[str] = None  # Null = broadcast to all users
-
-
-class NotificationUpdate(BaseModel):
-    """Schema for updating a notification."""
-    
-    is_read: Optional[bool] = None
-    is_archived: Optional[bool] = None
-
-
-class NotificationResponse(NotificationBase):
+class NotificationResponse(BaseModel):
     """Schema for notification response."""
-    
+
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     business_id: str
-    user_id: Optional[str] = None
+    user_id: str
+    title: str
+    message: str
+    notification_type: str
+    channel: str
     is_read: bool
-    is_archived: bool
+    action_url: Optional[str] = None
+    resource_type: Optional[str] = None
+    resource_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    
-    model_config = {"from_attributes": True}
 
 
 class NotificationListResponse(BaseModel):
     """Schema for paginated notification list."""
-    
-    notifications: List[NotificationResponse]
+
+    items: List[NotificationResponse]
     total: int
-    unread_count: int
     page: int
     per_page: int
     pages: int
 
 
-class NotificationStats(BaseModel):
-    """Schema for notification statistics."""
-    
-    total: int
-    unread: int
-    by_type: dict[str, int]
-    by_priority: dict[str, int]
+class NotificationPreferenceResponse(BaseModel):
+    """Schema for notification preference response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    order_notifications: bool
+    inventory_alerts: bool
+    payment_notifications: bool
+    system_notifications: bool
+    email_enabled: bool
+    push_enabled: bool
+
+
+class NotificationPreferenceUpdate(BaseModel):
+    """Schema for updating notification preferences."""
+
+    order_notifications: Optional[bool] = None
+    inventory_alerts: Optional[bool] = None
+    payment_notifications: Optional[bool] = None
+    system_notifications: Optional[bool] = None
+    email_enabled: Optional[bool] = None
+    push_enabled: Optional[bool] = None
