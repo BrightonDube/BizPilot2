@@ -33,6 +33,7 @@ from app.api.permissions import router as permissions_router
 from app.api.admin_subscriptions import router as admin_subscriptions_router
 from app.api.admin_audit_logs import router as admin_audit_logs_router
 from app.api.mobile_sync import router as mobile_sync_router
+from app.api.laybys import router as laybys_router
 
 router = APIRouter()
 
@@ -67,6 +68,7 @@ router.include_router(permissions_router)
 router.include_router(admin_subscriptions_router)
 router.include_router(admin_audit_logs_router)
 router.include_router(mobile_sync_router)
+router.include_router(laybys_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
