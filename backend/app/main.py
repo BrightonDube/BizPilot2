@@ -21,6 +21,8 @@ from app.scheduler.config import SchedulerConfig
 from app.scheduler.manager import SchedulerManager
 from app.scheduler.jobs.overdue_invoice_job import check_overdue_invoices_job
 from app.scheduler.jobs.auto_clockout_job import auto_clock_out_job
+from app.scheduler.jobs.device_cleanup_job import device_cleanup_job
+from app.scheduler.jobs.demo_expiry_job import demo_expiry_job
 
 # Configure logging for performance monitoring
 logging.basicConfig(level=logging.INFO)
@@ -375,6 +377,24 @@ async def startup_event():
                 name='Check Overdue Invoices'
             )
         
+        # Register device cleanup job (daily at 2 AM)
+        scheduler_manager.add_job(
+            device_cleanup_job,
+            trigger='cron',
+            cron_expression='0 2 * * *',
+            job_id='device_cleanup',
+            name='Device Cleanup'
+        )
+
+        # Register demo expiry job (hourly)
+        scheduler_manager.add_job(
+            demo_expiry_job,
+            trigger='interval',
+            hours=1,
+            job_id='demo_expiry',
+            name='Demo Expiry Check'
+        )
+
         # Start scheduler
         scheduler_manager.start()
         

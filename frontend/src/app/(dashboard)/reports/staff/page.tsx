@@ -30,8 +30,9 @@ import {
   StatCard,
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 
-type TabKey = 'performance' | 'attendance' | 'departments' | 'productivity';
+type TabKey= 'performance' | 'attendance' | 'departments' | 'productivity';
 
 interface Tab {
   key: TabKey;
@@ -118,6 +119,7 @@ export default function StaffReportsPage() {
   }, [fetchData]);
 
   return (
+    <FeatureGate feature="reports">
     <div className="space-y-6">
       <PageHeader
         title="Staff Reports"
@@ -206,6 +208,7 @@ export default function StaffReportsPage() {
         </div>
       ) : null}
     </div>
+    </FeatureGate>
   );
 }
 
