@@ -126,6 +126,14 @@ from app.models.crm import (
     CustomerInteraction,
     CustomerMetrics,
 )
+from app.models.online_order import (
+    OnlineOrderStatus,
+    FulfillmentType,
+    OnlineStore,
+    OnlineOrder,
+    OnlineOrderItem,
+)
+from app.models.custom_dashboard import Dashboard, DashboardWidget
 
 __all__ = [
     "BaseModel",
@@ -296,4 +304,13 @@ __all__ = [
     "JournalEntry",
     "JournalLine",
     "FiscalPeriod",
+    # Custom Dashboards
+    "Dashboard",
+    "DashboardWidget",
+    # Online Ordering
+    "OnlineOrderStatus",
+    "FulfillmentType",
+    "OnlineStore",
+    "OnlineOrder",
+    "OnlineOrderItem",
 ]
