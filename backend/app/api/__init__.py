@@ -34,8 +34,11 @@ from app.api.admin_subscriptions import router as admin_subscriptions_router
 from app.api.admin_audit_logs import router as admin_audit_logs_router
 from app.api.mobile_sync import router as mobile_sync_router
 from app.api.laybys import router as laybys_router
+from app.api.customer_accounts import router as customer_accounts_router
 from app.api.tables import router as tables_router
 from app.api.order_management import router as order_management_router
+from app.api.petty_cash import router as petty_cash_router
+from app.api.loyalty import router as loyalty_router
 
 router = APIRouter()
 
@@ -71,8 +74,11 @@ router.include_router(admin_subscriptions_router)
 router.include_router(admin_audit_logs_router)
 router.include_router(mobile_sync_router)
 router.include_router(laybys_router)
+router.include_router(customer_accounts_router)
 router.include_router(tables_router)
 router.include_router(order_management_router)
+router.include_router(petty_cash_router)
+router.include_router(loyalty_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
