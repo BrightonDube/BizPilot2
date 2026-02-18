@@ -1345,9 +1345,65 @@ async def get_staff_productivity_report(
     return service.get_productivity_report(business_id, start, end)
 
 
-# ---------------------------------------------------------------------------
-# Inventory Report Endpoints
-# ---------------------------------------------------------------------------
+@router.get("/staff/commissions")
+async def get_staff_commission_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    commission_rate: float = Query(5.0, description="Commission rate percentage"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Commission report based on sales attributed to staff."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_commission_report(business_id, start, end, commission_rate)
+
+
+@router.get("/staff/activity")
+async def get_staff_activity_log(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    action_type: Optional[str] = Query(None, description="Filter by action type"),
+    resource_type: Optional[str] = Query(None, description="Filter by resource type"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Activity log report from audit trail."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_activity_log(
+        business_id, start, end,
+        user_id=user_id,
+        action_type=action_type,
+        resource_type=resource_type,
+        page=page,
+        per_page=per_page,
+    )
 
 
 @router.get("/inventory/stock-levels")

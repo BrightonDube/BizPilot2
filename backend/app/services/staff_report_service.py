@@ -4,13 +4,15 @@ from datetime import date, datetime, timedelta
 from typing import Dict, Optional
 from uuid import UUID
 
-from sqlalchemy import func, extract, case
+from sqlalchemy import String, func, extract, case
 from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.time_entry import TimeEntry, TimeEntryStatus
 from app.models.department import Department
+from app.models.audit_log import UserAuditLog, AuditAction
+from app.models.order import Order, OrderDirection
 
 
 class StaffReportService:
@@ -473,4 +475,194 @@ class StaffReportService:
             "average_days_per_staff": avg_days,
             "staff": staff_list,
             "clock_in_distribution": hourly_distribution,
+        }
+
+    def get_commission_report(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+        commission_rate: float = 5.0,
+    ) -> dict:
+        """Commission report based on sales attributed to staff via audit logs.
+
+        Uses audit logs to link orders to staff who created them, then
+        calculates commissions at the given rate.
+        """
+        start, end = self._parse_dates(start_date, end_date)
+
+        # Join audit logs (CREATE order) → orders to attribute sales to staff
+        rows = (
+            self.db.query(
+                UserAuditLog.user_id,
+                User.first_name,
+                User.last_name,
+                User.email,
+                func.count(func.distinct(Order.id)).label("order_count"),
+                func.coalesce(func.sum(Order.total), 0).label("total_sales"),
+                func.coalesce(func.sum(Order.discount_amount), 0).label(
+                    "total_discounts"
+                ),
+            )
+            .join(User, User.id == UserAuditLog.user_id)
+            .join(
+                Order,
+                (func.cast(Order.id, String) == UserAuditLog.resource_id)
+                & (Order.business_id == str(business_id))
+                & (Order.direction == OrderDirection.OUTBOUND),
+            )
+            .filter(
+                UserAuditLog.business_id == str(business_id),
+                UserAuditLog.action == AuditAction.CREATE,
+                UserAuditLog.resource_type == "order",
+                UserAuditLog.created_at >= start,
+                UserAuditLog.created_at < end,
+                UserAuditLog.user_id.isnot(None),
+            )
+            .group_by(
+                UserAuditLog.user_id, User.first_name, User.last_name, User.email
+            )
+            .order_by(func.coalesce(func.sum(Order.total), 0).desc())
+            .all()
+        )
+
+        rate = commission_rate / 100.0
+        staff_commissions = []
+        total_commissions = 0.0
+        total_sales = 0.0
+
+        for rank, r in enumerate(rows, 1):
+            sales = round(float(r.total_sales or 0), 2)
+            commission = round(sales * rate, 2)
+            total_commissions += commission
+            total_sales += sales
+
+            staff_name = (
+                f"{r.first_name or ''} {r.last_name or ''}".strip() or "Unknown"
+            )
+            staff_commissions.append(
+                {
+                    "rank": rank,
+                    "user_id": str(r.user_id),
+                    "staff_name": staff_name,
+                    "email": r.email,
+                    "order_count": int(r.order_count or 0),
+                    "total_sales": sales,
+                    "total_discounts": round(float(r.total_discounts or 0), 2),
+                    "commission_rate": commission_rate,
+                    "commission_amount": commission,
+                }
+            )
+
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "commission_rate": commission_rate,
+            "total_staff": len(staff_commissions),
+            "total_sales": round(total_sales, 2),
+            "total_commissions": round(total_commissions, 2),
+            "staff": staff_commissions,
+        }
+
+    def get_activity_log(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+        user_id: Optional[str] = None,
+        action_type: Optional[str] = None,
+        resource_type: Optional[str] = None,
+        page: int = 1,
+        per_page: int = 50,
+    ) -> dict:
+        """Activity log report from audit trail."""
+        start, end = self._parse_dates(start_date, end_date)
+
+        query = (
+            self.db.query(
+                UserAuditLog.id,
+                UserAuditLog.user_id,
+                User.first_name,
+                User.last_name,
+                UserAuditLog.action,
+                UserAuditLog.resource_type,
+                UserAuditLog.resource_id,
+                UserAuditLog.description,
+                UserAuditLog.ip_address,
+                UserAuditLog.created_at,
+            )
+            .outerjoin(User, User.id == UserAuditLog.user_id)
+            .filter(
+                UserAuditLog.business_id == str(business_id),
+                UserAuditLog.created_at >= start,
+                UserAuditLog.created_at < end,
+            )
+        )
+
+        if user_id:
+            query = query.filter(UserAuditLog.user_id == user_id)
+        if action_type:
+            try:
+                action_enum = AuditAction(action_type)
+                query = query.filter(UserAuditLog.action == action_enum)
+            except ValueError:
+                pass
+        if resource_type:
+            query = query.filter(UserAuditLog.resource_type == resource_type)
+
+        total = query.count()
+        rows = (
+            query.order_by(UserAuditLog.created_at.desc())
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+
+        entries = []
+        for r in rows:
+            staff_name = (
+                f"{r.first_name or ''} {r.last_name or ''}".strip() or "System"
+            )
+            entries.append(
+                {
+                    "id": str(r.id),
+                    "user_id": str(r.user_id) if r.user_id else None,
+                    "staff_name": staff_name,
+                    "action": r.action.value if r.action else None,
+                    "resource_type": r.resource_type,
+                    "resource_id": r.resource_id,
+                    "description": r.description,
+                    "ip_address": r.ip_address,
+                    "timestamp": r.created_at.isoformat() if r.created_at else None,
+                }
+            )
+
+        # Action type summary
+        summary_rows = (
+            self.db.query(
+                UserAuditLog.action,
+                func.count(UserAuditLog.id).label("count"),
+            )
+            .filter(
+                UserAuditLog.business_id == str(business_id),
+                UserAuditLog.created_at >= start,
+                UserAuditLog.created_at < end,
+            )
+            .group_by(UserAuditLog.action)
+            .all()
+        )
+
+        action_summary = {
+            r.action.value: int(r.count) for r in summary_rows if r.action
+        }
+
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "pages": (total + per_page - 1) // per_page if per_page > 0 else 0,
+            "action_summary": action_summary,
+            "entries": entries,
         }
