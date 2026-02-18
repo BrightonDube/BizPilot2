@@ -20,7 +20,9 @@ import {
   MapPin,
   Calendar,
   LayoutGrid,
-  List
+  List,
+  Download,
+  Upload
 } from 'lucide-react'
 import { Button, Input, Select, Card, CardContent } from '@/components/ui'
 import { apiClient } from '@/lib/api'
@@ -196,6 +198,42 @@ export default function CustomersPage() {
     }
   }
 
+  const handleExportCSV = async () => {
+    try {
+      const res = await apiClient.get('/customers/export/csv', { responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'customers.csv')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export failed:', err)
+      setError('Failed to export customers')
+    }
+  }
+
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await apiClient.post('/customers/import/csv', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      const { created, skipped, errors: importErrors } = res.data
+      alert(`Import complete: ${created} created, ${skipped} duplicates skipped${importErrors?.length ? `, ${importErrors.length} errors` : ''}`)
+      setPage(1)
+    } catch (err) {
+      console.error('Import failed:', err)
+      setError('Failed to import customers')
+    }
+    e.target.value = ''
+  }
+
   const totalCustomers = total
   const totalRevenue = customers.reduce((sum, c) => sum + toNumber(c.total_spent, 0), 0)
   const businessCustomers = customers.filter(c => c.customer_type === 'business').length
@@ -286,6 +324,29 @@ export default function CustomersPage() {
               Grid
             </button>
           </div>
+
+          <Button
+            variant="outline"
+            onClick={handleExportCSV}
+            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+
+          <label>
+            <Button
+              variant="outline"
+              className="border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
+              asChild
+            >
+              <span>
+                <Upload className="h-4 w-4 mr-2" />
+                Import CSV
+              </span>
+            </Button>
+            <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
+          </label>
 
           <Link href="/customers/new">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
