@@ -20,6 +20,9 @@ import {
   BarChart3,
   Target,
   Search,
+  DollarSign,
+  FileText,
+  Activity,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -32,7 +35,7 @@ import {
 import { apiClient } from '@/lib/api';
 import { FeatureGate } from '@/components/subscription/FeatureGate';
 
-type TabKey= 'performance' | 'attendance' | 'departments' | 'productivity';
+type TabKey= 'performance' | 'attendance' | 'departments' | 'productivity' | 'commissions' | 'activity';
 
 interface Tab {
   key: TabKey;
@@ -45,6 +48,8 @@ const TABS: Tab[] = [
   { key: 'attendance', label: 'Attendance', icon: <CalendarCheck className="w-4 h-4" /> },
   { key: 'departments', label: 'Departments', icon: <Building2 className="w-4 h-4" /> },
   { key: 'productivity', label: 'Productivity', icon: <BarChart3 className="w-4 h-4" /> },
+  { key: 'commissions', label: 'Commissions', icon: <DollarSign className="w-4 h-4" /> },
+  { key: 'activity', label: 'Activity Log', icon: <Activity className="w-4 h-4" /> },
 ];
 
 function formatHours(value: number): string {
@@ -73,6 +78,8 @@ export default function StaffReportsPage() {
   const [startDate, setStartDate] = useState(defaults.start);
   const [endDate, setEndDate] = useState(defaults.end);
   const [userId, setUserId] = useState('');
+  const [commissionRate, setCommissionRate] = useState('5');
+  const [actionType, setActionType] = useState('');
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +111,20 @@ export default function StaffReportsPage() {
             params: dateParams,
           });
           break;
+        case 'commissions':
+          res = await apiClient.get('/reports/staff/commissions', {
+            params: { ...dateParams, commission_rate: parseFloat(commissionRate) || 5 },
+          });
+          break;
+        case 'activity':
+          res = await apiClient.get('/reports/staff/activity', {
+            params: {
+              ...dateParams,
+              ...(userId ? { user_id: userId } : {}),
+              ...(actionType ? { action_type: actionType } : {}),
+            },
+          });
+          break;
       }
       setData(res.data);
     } catch (err: any) {
@@ -112,7 +133,7 @@ export default function StaffReportsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, startDate, endDate, userId]);
+  }, [activeTab, startDate, endDate, userId, commissionRate, actionType]);
 
   useEffect(() => {
     fetchData();
@@ -166,6 +187,54 @@ export default function StaffReportsPage() {
                 />
               </div>
             )}
+            {activeTab === 'commissions' && (
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-gray-400" />
+                <input
+                  type="number"
+                  placeholder="Commission %"
+                  value={commissionRate}
+                  onChange={(e) => setCommissionRate(e.target.value)}
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  className="w-28 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-400">%</span>
+              </div>
+            )}
+            {activeTab === 'activity' && (
+              <>
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Filter by User ID"
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gray-400" />
+                  <select
+                    value={actionType}
+                    onChange={(e) => setActionType(e.target.value)}
+                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">All Actions</option>
+                    <option value="login">Login</option>
+                    <option value="logout">Logout</option>
+                    <option value="create">Create</option>
+                    <option value="update">Update</option>
+                    <option value="delete">Delete</option>
+                    <option value="void">Void</option>
+                    <option value="refund">Refund</option>
+                    <option value="export">Export</option>
+                  </select>
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -205,6 +274,8 @@ export default function StaffReportsPage() {
           {activeTab === 'attendance' && <AttendanceReport data={data} />}
           {activeTab === 'departments' && <DepartmentsReport data={data} />}
           {activeTab === 'productivity' && <ProductivityReport data={data} />}
+          {activeTab === 'commissions' && <CommissionsReport data={data} />}
+          {activeTab === 'activity' && <ActivityLogReport data={data} />}
         </div>
       ) : null}
     </div>
@@ -439,6 +510,131 @@ function ProductivityReport({ data }: { data: any }) {
         <Card className="bg-gray-800/50 border-gray-700">
           <CardContent className="py-8">
             <p className="text-center text-gray-500">No productivity data available</p>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function CommissionsReport({ data }: { data: any }) {
+  const staff = data.staff ?? [];
+  const list = Array.isArray(staff) ? staff : [];
+
+  function formatCurrency(value: number): string {
+    return `R ${value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Staff"
+          value={data.total_staff ?? list.length ?? 0}
+          icon={<Users className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Total Sales"
+          value={formatCurrency(data.total_sales ?? 0)}
+          icon={<DollarSign className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Total Commissions"
+          value={formatCurrency(data.total_commissions ?? 0)}
+          icon={<DollarSign className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Commission Rate"
+          value={`${data.commission_rate ?? 0}%`}
+          icon={<Target className="w-5 h-5" />}
+        />
+      </div>
+      {list.length > 0 ? (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-400" />
+              Commission Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Rank', 'Name', 'Orders', 'Total Sales', 'Commission']}
+              rows={list.map((s: any) => [
+                s.rank ?? '-',
+                s.staff_name ?? '-',
+                s.order_count ?? 0,
+                formatCurrency(s.total_sales ?? 0),
+                formatCurrency(s.commission_amount ?? 0),
+              ])}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="py-8">
+            <p className="text-center text-gray-500">No commission data available for this period</p>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function ActivityLogReport({ data }: { data: any }) {
+  const entries = data.entries ?? [];
+  const list = Array.isArray(entries) ? entries : [];
+  const summary = data.action_summary ?? {};
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Events"
+          value={data.total ?? list.length ?? 0}
+          icon={<Activity className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Creates"
+          value={summary.create ?? 0}
+          icon={<FileText className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Logins"
+          value={summary.login ?? 0}
+          icon={<UserCheck className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Voids/Refunds"
+          value={(summary.void ?? 0) + (summary.refund ?? 0)}
+          icon={<AlertTriangle className="w-5 h-5" />}
+        />
+      </div>
+      {list.length > 0 ? (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-400" />
+              Activity Log (Page {data.page ?? 1} of {data.pages ?? 1})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Timestamp', 'Staff', 'Action', 'Resource', 'Description']}
+              rows={list.map((e: any) => [
+                e.timestamp ? new Date(e.timestamp).toLocaleString() : '-',
+                e.staff_name ?? '-',
+                e.action ?? '-',
+                e.resource_type ?? '-',
+                e.description ?? '-',
+              ])}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="py-8">
+            <p className="text-center text-gray-500">No activity log entries found</p>
           </CardContent>
         </Card>
       )}
