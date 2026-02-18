@@ -520,3 +520,254 @@ class SalesReportService:
             "peak_hour": peak_hour,
             "day_of_week_breakdown": day_of_week_data,
         }
+
+    def get_discount_analysis(
+        self, business_id: UUID, start_date: date, end_date: date
+    ) -> dict:
+        """Discount analysis report: totals, by product, by category."""
+        start = datetime.combine(start_date, datetime.min.time())
+        end = datetime.combine(end_date, datetime.min.time()) + timedelta(days=1)
+
+        # Overall discount totals
+        totals_row = (
+            self.db.query(
+                func.coalesce(func.sum(Order.discount_amount), 0).label("total_discounts"),
+                func.coalesce(func.sum(Order.total), 0).label("gross_sales"),
+                func.count(Order.id).label("total_orders"),
+            )
+        )
+        totals_row = self._base_sales_filter(totals_row, business_id, start, end)
+        totals_row = totals_row.one()
+
+        total_discounts = float(totals_row.total_discounts)
+        gross_sales = float(totals_row.gross_sales)
+        total_orders = int(totals_row.total_orders)
+
+        # Orders with discounts
+        discounted_orders_row = (
+            self.db.query(func.count(Order.id).label("count"))
+        )
+        discounted_orders_row = self._base_sales_filter(
+            discounted_orders_row, business_id, start, end
+        )
+        discounted_orders_row = discounted_orders_row.filter(
+            Order.discount_amount > 0
+        ).one()
+        discounted_order_count = int(discounted_orders_row.count)
+
+        discount_percentage = round(
+            (total_discounts / gross_sales * 100) if gross_sales > 0 else 0, 1
+        )
+
+        # Discount by product (item-level discounts)
+        product_rows = (
+            self.db.query(
+                OrderItem.product_id,
+                OrderItem.name.label("product_name"),
+                func.coalesce(func.sum(OrderItem.discount_amount), 0).label("discount_total"),
+                func.coalesce(func.sum(OrderItem.total), 0).label("revenue"),
+                func.count(OrderItem.id).label("item_count"),
+            )
+            .join(Order, Order.id == OrderItem.order_id)
+            .filter(
+                Order.business_id == str(business_id),
+                Order.direction == OrderDirection.OUTBOUND,
+                Order.deleted_at.is_(None),
+                OrderItem.deleted_at.is_(None),
+                OrderItem.discount_amount > 0,
+                Order.created_at >= start,
+                Order.created_at < end,
+            )
+            .group_by(OrderItem.product_id, OrderItem.name)
+            .order_by(func.coalesce(func.sum(OrderItem.discount_amount), 0).desc())
+            .limit(20)
+            .all()
+        )
+
+        by_product = []
+        for r in product_rows:
+            disc = round(float(r.discount_total), 2)
+            rev = round(float(r.revenue), 2)
+            by_product.append({
+                "product_id": str(r.product_id) if r.product_id else None,
+                "product_name": r.product_name,
+                "discount_total": disc,
+                "revenue": rev,
+                "discount_percentage": round(
+                    (disc / (rev + disc) * 100) if (rev + disc) > 0 else 0, 1
+                ),
+                "item_count": int(r.item_count),
+            })
+
+        # Discount by category
+        category_rows = (
+            self.db.query(
+                ProductCategory.id.label("category_id"),
+                ProductCategory.name.label("category_name"),
+                func.coalesce(func.sum(OrderItem.discount_amount), 0).label("discount_total"),
+                func.coalesce(func.sum(OrderItem.total), 0).label("revenue"),
+            )
+            .join(Order, Order.id == OrderItem.order_id)
+            .join(Product, Product.id == OrderItem.product_id)
+            .outerjoin(ProductCategory, ProductCategory.id == Product.category_id)
+            .filter(
+                Order.business_id == str(business_id),
+                Order.direction == OrderDirection.OUTBOUND,
+                Order.deleted_at.is_(None),
+                OrderItem.deleted_at.is_(None),
+                OrderItem.discount_amount > 0,
+                Order.created_at >= start,
+                Order.created_at < end,
+            )
+            .group_by(ProductCategory.id, ProductCategory.name)
+            .order_by(func.coalesce(func.sum(OrderItem.discount_amount), 0).desc())
+            .all()
+        )
+
+        by_category = []
+        for r in category_rows:
+            disc = round(float(r.discount_total), 2)
+            rev = round(float(r.revenue), 2)
+            by_category.append({
+                "category_id": str(r.category_id) if r.category_id else None,
+                "category_name": r.category_name or "Uncategorized",
+                "discount_total": disc,
+                "revenue": rev,
+                "discount_percentage": round(
+                    (disc / (rev + disc) * 100) if (rev + disc) > 0 else 0, 1
+                ),
+            })
+
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_discounts": round(total_discounts, 2),
+            "gross_sales": round(gross_sales, 2),
+            "discount_percentage": discount_percentage,
+            "total_orders": total_orders,
+            "discounted_order_count": discounted_order_count,
+            "by_product": by_product,
+            "by_category": by_category,
+        }
+
+    def get_refund_analysis(
+        self, business_id: UUID, start_date: date, end_date: date
+    ) -> dict:
+        """Refund analysis report: totals, by product, patterns."""
+        start = datetime.combine(start_date, datetime.min.time())
+        end = datetime.combine(end_date, datetime.min.time()) + timedelta(days=1)
+
+        # Total refunds
+        refund_row = (
+            self.db.query(
+                func.coalesce(func.sum(Order.total), 0).label("total_refunds"),
+                func.count(Order.id).label("refund_count"),
+            )
+            .filter(
+                Order.business_id == str(business_id),
+                Order.direction == OrderDirection.OUTBOUND,
+                Order.deleted_at.is_(None),
+                Order.status == OrderStatus.REFUNDED,
+                Order.created_at >= start,
+                Order.created_at < end,
+            )
+            .one()
+        )
+        total_refunds = float(refund_row.total_refunds)
+        refund_count = int(refund_row.refund_count)
+
+        # Total sales for refund rate
+        sales_row = (
+            self.db.query(
+                func.coalesce(func.sum(Order.total), 0).label("gross_sales"),
+                func.count(Order.id).label("total_orders"),
+            )
+        )
+        sales_row = self._base_sales_filter(sales_row, business_id, start, end)
+        sales_row = sales_row.one()
+        gross_sales = float(sales_row.gross_sales)
+        total_orders = int(sales_row.total_orders)
+
+        refund_rate = round(
+            (refund_count / total_orders * 100) if total_orders > 0 else 0, 1
+        )
+
+        # Refunds by product
+        product_rows = (
+            self.db.query(
+                OrderItem.product_id,
+                OrderItem.name.label("product_name"),
+                func.coalesce(func.sum(OrderItem.total), 0).label("refund_total"),
+                func.coalesce(func.sum(OrderItem.quantity), 0).label("quantity"),
+                func.count(func.distinct(Order.id)).label("refund_count"),
+            )
+            .join(Order, Order.id == OrderItem.order_id)
+            .filter(
+                Order.business_id == str(business_id),
+                Order.direction == OrderDirection.OUTBOUND,
+                Order.deleted_at.is_(None),
+                OrderItem.deleted_at.is_(None),
+                Order.status == OrderStatus.REFUNDED,
+                Order.created_at >= start,
+                Order.created_at < end,
+            )
+            .group_by(OrderItem.product_id, OrderItem.name)
+            .order_by(func.coalesce(func.sum(OrderItem.total), 0).desc())
+            .limit(20)
+            .all()
+        )
+
+        by_product = []
+        for r in product_rows:
+            refund_total = round(float(r.refund_total), 2)
+            by_product.append({
+                "product_id": str(r.product_id) if r.product_id else None,
+                "product_name": r.product_name,
+                "refund_total": refund_total,
+                "quantity": int(r.quantity),
+                "refund_count": int(r.refund_count),
+                "percentage_of_refunds": round(
+                    (refund_total / total_refunds * 100) if total_refunds > 0 else 0, 1
+                ),
+            })
+
+        # Refund trend by day
+        daily_rows = (
+            self.db.query(
+                func.date(Order.created_at).label("day"),
+                func.count(Order.id).label("count"),
+                func.coalesce(func.sum(Order.total), 0).label("amount"),
+            )
+            .filter(
+                Order.business_id == str(business_id),
+                Order.direction == OrderDirection.OUTBOUND,
+                Order.deleted_at.is_(None),
+                Order.status == OrderStatus.REFUNDED,
+                Order.created_at >= start,
+                Order.created_at < end,
+            )
+            .group_by(func.date(Order.created_at))
+            .order_by(func.date(Order.created_at))
+            .all()
+        )
+
+        daily_trend = [
+            {
+                "date": str(r.day),
+                "count": int(r.count),
+                "amount": round(float(r.amount), 2),
+            }
+            for r in daily_rows
+        ]
+
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_refunds": round(total_refunds, 2),
+            "refund_count": refund_count,
+            "gross_sales": round(gross_sales, 2),
+            "total_orders": total_orders,
+            "refund_rate": refund_rate,
+            "by_product": by_product,
+            "daily_trend": daily_trend,
+        }

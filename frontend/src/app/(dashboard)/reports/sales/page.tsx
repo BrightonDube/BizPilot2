@@ -15,6 +15,9 @@ import {
   CreditCard,
   Clock,
   Calendar,
+  Percent,
+  RotateCcw,
+  Download,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -27,7 +30,7 @@ import {
 import { apiClient } from '@/lib/api';
 import { FeatureGate } from '@/components/subscription/FeatureGate';
 
-type TabKey = 'daily' | 'weekly' | 'monthly' | 'products' | 'categories' | 'payments' | 'time';
+type TabKey = 'daily' | 'weekly' | 'monthly' | 'products' | 'categories' | 'payments' | 'time' | 'discounts' | 'refunds';
 
 interface Tab {
   key: TabKey;
@@ -43,6 +46,8 @@ const TABS: Tab[] = [
   { key: 'categories', label: 'Categories', icon: <Layers className="w-4 h-4" /> },
   { key: 'payments', label: 'Payments', icon: <CreditCard className="w-4 h-4" /> },
   { key: 'time', label: 'Time Analysis', icon: <Clock className="w-4 h-4" /> },
+  { key: 'discounts', label: 'Discounts', icon: <Percent className="w-4 h-4" /> },
+  { key: 'refunds', label: 'Refunds', icon: <RotateCcw className="w-4 h-4" /> },
 ];
 
 function formatZAR(value: number): string {
@@ -113,6 +118,16 @@ export default function SalesReportsPage() {
             params: { start_date: startDate, end_date: endDate },
           });
           break;
+        case 'discounts':
+          res = await apiClient.get('/reports/sales/discounts', {
+            params: { start_date: startDate, end_date: endDate },
+          });
+          break;
+        case 'refunds':
+          res = await apiClient.get('/reports/sales/refunds', {
+            params: { start_date: startDate, end_date: endDate },
+          });
+          break;
       }
       setData(res.data);
     } catch (err: any) {
@@ -126,6 +141,28 @@ export default function SalesReportsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const exportableTypes = ['products', 'categories', 'payments', 'discounts', 'refunds'];
+
+  const handleExportCSV = async () => {
+    if (!exportableTypes.includes(activeTab)) return;
+    try {
+      const res = await apiClient.get('/reports/export/csv', {
+        params: { report_type: activeTab, start_date: startDate, end_date: endDate },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${activeTab}_report_${startDate}_to_${endDate}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // silently fail export
+    }
+  };
 
   return (
     <FeatureGate feature="reports">
@@ -163,6 +200,15 @@ export default function SalesReportsPage() {
                 className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
+            {exportableTypes.includes(activeTab) && (
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -205,6 +251,8 @@ export default function SalesReportsPage() {
           {activeTab === 'categories' && <CategoriesReport data={data} />}
           {activeTab === 'payments' && <PaymentsReport data={data} />}
           {activeTab === 'time' && <TimeAnalysisReport data={data} />}
+          {activeTab === 'discounts' && <DiscountsReport data={data} />}
+          {activeTab === 'refunds' && <RefundsReport data={data} />}
         </div>
       ) : null}
     </div>
@@ -487,6 +535,167 @@ function TimeAnalysisReport({ data }: { data: any }) {
                 formatZAR(h.total_sales ?? h.sales ?? 0),
               ])}
             />
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function DiscountsReport({ data }: { data: any }) {
+  const byProduct = data.by_product ?? [];
+  const byCategory = data.by_category ?? [];
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Discounts"
+          value={formatZAR(data.total_discounts ?? 0)}
+          icon={<Percent className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Discount % of Sales"
+          value={`${data.discount_percentage ?? 0}%`}
+          icon={<TrendingUp className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Discounted Orders"
+          value={data.discounted_order_count ?? 0}
+          icon={<ShoppingCart className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Gross Sales"
+          value={formatZAR(data.gross_sales ?? 0)}
+          icon={<DollarSign className="w-5 h-5" />}
+        />
+      </div>
+      {byProduct.length > 0 && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-orange-400" />
+              Discounts by Product
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Product', 'Discount Total', 'Revenue', 'Discount %', 'Items']}
+              rows={byProduct.map((p: any) => [
+                p.product_name ?? '-',
+                formatZAR(p.discount_total ?? 0),
+                formatZAR(p.revenue ?? 0),
+                `${p.discount_percentage ?? 0}%`,
+                p.item_count ?? 0,
+              ])}
+            />
+          </CardContent>
+        </Card>
+      )}
+      {byCategory.length > 0 && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="w-5 h-5 text-yellow-400" />
+              Discounts by Category
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Category', 'Discount Total', 'Revenue', 'Discount %']}
+              rows={byCategory.map((c: any) => [
+                c.category_name ?? '-',
+                formatZAR(c.discount_total ?? 0),
+                formatZAR(c.revenue ?? 0),
+                `${c.discount_percentage ?? 0}%`,
+              ])}
+            />
+          </CardContent>
+        </Card>
+      )}
+      {byProduct.length === 0 && byCategory.length === 0 && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="py-8">
+            <p className="text-center text-gray-500">No discount data for this period</p>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function RefundsReport({ data }: { data: any }) {
+  const byProduct = data.by_product ?? [];
+  const dailyTrend = data.daily_trend ?? [];
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Refunds"
+          value={formatZAR(data.total_refunds ?? 0)}
+          icon={<RotateCcw className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Refund Count"
+          value={data.refund_count ?? 0}
+          icon={<ShoppingCart className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Refund Rate"
+          value={`${data.refund_rate ?? 0}%`}
+          icon={<TrendingUp className="w-5 h-5" />}
+        />
+        <StatCard
+          title="Gross Sales"
+          value={formatZAR(data.gross_sales ?? 0)}
+          icon={<DollarSign className="w-5 h-5" />}
+        />
+      </div>
+      {byProduct.length > 0 && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-red-400" />
+              Refunds by Product
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Product', 'Refund Total', 'Quantity', 'Refund Count', '% of Refunds']}
+              rows={byProduct.map((p: any) => [
+                p.product_name ?? '-',
+                formatZAR(p.refund_total ?? 0),
+                p.quantity ?? 0,
+                p.refund_count ?? 0,
+                `${p.percentage_of_refunds ?? 0}%`,
+              ])}
+            />
+          </CardContent>
+        </Card>
+      )}
+      {dailyTrend.length > 0 && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-red-400" />
+              Refund Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Date', 'Count', 'Amount']}
+              rows={dailyTrend.map((d: any) => [
+                d.date ?? '-',
+                d.count ?? 0,
+                formatZAR(d.amount ?? 0),
+              ])}
+            />
+          </CardContent>
+        </Card>
+      )}
+      {byProduct.length === 0 && dailyTrend.length === 0 && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="py-8">
+            <p className="text-center text-gray-500">No refund data for this period</p>
           </CardContent>
         </Card>
       )}
