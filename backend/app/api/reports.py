@@ -1112,6 +1112,139 @@ async def get_time_analysis_report(
     return service.get_time_analysis(business_id, start, end)
 
 
+@router.get("/sales/discounts")
+async def get_discount_analysis_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get discount analysis report with breakdown by product and category."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_discount_analysis(business_id, start, end)
+
+
+@router.get("/sales/refunds")
+async def get_refund_analysis_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get refund analysis report with breakdown by product and trend."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_refund_analysis(business_id, start, end)
+
+
+@router.get("/export/csv")
+async def export_report_csv(
+    report_type: str = Query(
+        ...,
+        description="Report type: products, categories, payments, discounts, refunds",
+    ),
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export sales report data as CSV."""
+    import csv
+    import io
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    if report_type == "products":
+        data = service.get_product_performance(business_id, start, end)
+        writer.writerow(["Rank", "Product", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for p in data.get("products", []):
+            writer.writerow([
+                p["rank"], p["product_name"], p["quantity_sold"],
+                p["revenue"], p["order_count"], p["revenue_percentage"],
+            ])
+    elif report_type == "categories":
+        data = service.get_category_performance(business_id, start, end)
+        writer.writerow(["Category", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for c in data.get("categories", []):
+            writer.writerow([
+                c["category_name"], c["quantity_sold"],
+                c["revenue"], c["order_count"], c["revenue_percentage"],
+            ])
+    elif report_type == "payments":
+        data = service.get_payment_breakdown(business_id, start, end)
+        writer.writerow(["Payment Method", "Count", "Amount", "Amount %", "Count %"])
+        for m in data.get("methods", []):
+            writer.writerow([
+                m["payment_method"], m["count"], m["amount"],
+                m["percentage_amount"], m["percentage_count"],
+            ])
+    elif report_type == "discounts":
+        data = service.get_discount_analysis(business_id, start, end)
+        writer.writerow(["Product", "Discount Total", "Revenue", "Discount %", "Item Count"])
+        for p in data.get("by_product", []):
+            writer.writerow([
+                p["product_name"], p["discount_total"], p["revenue"],
+                p["discount_percentage"], p["item_count"],
+            ])
+    elif report_type == "refunds":
+        data = service.get_refund_analysis(business_id, start, end)
+        writer.writerow(["Product", "Refund Total", "Quantity", "Refund Count", "% of Refunds"])
+        for p in data.get("by_product", []):
+            writer.writerow([
+                p["product_name"], p["refund_total"], p["quantity"],
+                p["refund_count"], p["percentage_of_refunds"],
+            ])
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown report type: {report_type}. Use: products, categories, payments, discounts, refunds",
+        )
+
+    csv_content = output.getvalue()
+    filename = f"{report_type}_report_{start_date}_to_{end_date}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── Staff Reports ──────────────────────────────────────────────────────────
 
 
