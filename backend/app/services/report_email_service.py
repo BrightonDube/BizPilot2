@@ -74,6 +74,8 @@ class ReportEmailService:
             </div>
             <div class="footer">
                 <p>This is an automated report from BizPilot.</p>
+                <p><a href="/reports/{report_data.business_id}">View full report in BizPilot</a></p>
+                <p><a href="/settings/report-subscriptions?unsubscribe={report_data.report_type.value}">Unsubscribe</a> from these reports.</p>
             </div>
         </body>
         </html>

@@ -33,6 +33,29 @@ from app.api.permissions import router as permissions_router
 from app.api.admin_subscriptions import router as admin_subscriptions_router
 from app.api.admin_audit_logs import router as admin_audit_logs_router
 from app.api.mobile_sync import router as mobile_sync_router
+from app.api.laybys import router as laybys_router
+from app.api.customer_accounts import router as customer_accounts_router
+from app.api.tables import router as tables_router
+from app.api.order_management import router as order_management_router
+from app.api.petty_cash import router as petty_cash_router
+from app.api.loyalty import router as loyalty_router
+from app.api.deliveries import router as deliveries_router
+from app.api.menu import router as menu_router
+from app.api.stock_takes import router as stock_takes_router
+from app.api.reorder import router as reorder_router
+from app.api.crm import router as crm_router
+from app.api.general_ledger import router as general_ledger_router
+from app.api.online_orders import router as online_orders_router
+from app.api.dashboards import router as custom_dashboards_router
+from app.api.bulk_operations import router as bulk_operations_router
+from app.api.addons import router as addons_router
+from app.api.locations import router as locations_router
+from app.api.audit import router as audit_router
+from app.api.tax import router as tax_router
+from app.api.shifts import router as shifts_router
+from app.api.cash_registers import router as cash_registers_router
+from app.api.expenses import router as expenses_router
+from app.api.gift_cards import router as gift_cards_router
 
 router = APIRouter()
 
@@ -67,6 +90,29 @@ router.include_router(permissions_router)
 router.include_router(admin_subscriptions_router)
 router.include_router(admin_audit_logs_router)
 router.include_router(mobile_sync_router)
+router.include_router(laybys_router)
+router.include_router(customer_accounts_router)
+router.include_router(tables_router)
+router.include_router(order_management_router)
+router.include_router(petty_cash_router)
+router.include_router(loyalty_router)
+router.include_router(menu_router)
+router.include_router(stock_takes_router)
+router.include_router(deliveries_router)
+router.include_router(crm_router)
+router.include_router(reorder_router)
+router.include_router(general_ledger_router)
+router.include_router(custom_dashboards_router)
+router.include_router(bulk_operations_router)
+router.include_router(online_orders_router)
+router.include_router(audit_router)
+router.include_router(locations_router)
+router.include_router(addons_router)
+router.include_router(shifts_router)
+router.include_router(tax_router)
+router.include_router(cash_registers_router)
+router.include_router(expenses_router)
+router.include_router(gift_cards_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
