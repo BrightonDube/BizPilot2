@@ -504,3 +504,107 @@ class InventoryReportService:
             "supplier_count": len(suppliers),
             "suppliers": suppliers,
         }
+
+    def get_wastage_report(
+        self, business_id, start_date: date, end_date: date
+    ) -> dict:
+        """Wastage report: items lost to waste, expired, damaged."""
+        from app.models.inventory import TransactionType
+
+        start = datetime.combine(start_date, datetime.min.time())
+        end = datetime.combine(end_date, datetime.min.time()) + timedelta(days=1)
+
+        wastage_types = [TransactionType.WASTE, TransactionType.DAMAGED, TransactionType.EXPIRED]
+
+        rows = (
+            self.db.query(
+                InventoryTransaction.product_id,
+                Product.name.label("product_name"),
+                InventoryTransaction.transaction_type,
+                func.sum(func.abs(InventoryTransaction.quantity)).label("total_qty"),
+                func.count(InventoryTransaction.id).label("incident_count"),
+            )
+            .join(Product, Product.id == InventoryTransaction.product_id)
+            .filter(
+                InventoryTransaction.business_id == str(business_id),
+                InventoryTransaction.transaction_type.in_(wastage_types),
+                InventoryTransaction.created_at >= start,
+                InventoryTransaction.created_at < end,
+                InventoryTransaction.deleted_at.is_(None),
+            )
+            .group_by(
+                InventoryTransaction.product_id,
+                Product.name,
+                InventoryTransaction.transaction_type,
+            )
+            .all()
+        )
+
+        items = []
+        total_qty = 0
+        total_value = Decimal("0")
+        for r in rows:
+            qty = float(r.total_qty or 0)
+            product = self.db.query(Product).filter(Product.id == r.product_id).first()
+            unit_cost = float(product.cost_price or 0) if product else 0
+            value = round(qty * unit_cost, 2)
+            total_qty += qty
+            total_value += Decimal(str(value))
+            items.append({
+                "product_id": str(r.product_id),
+                "product_name": r.product_name,
+                "wastage_type": r.transaction_type.value if hasattr(r.transaction_type, "value") else str(r.transaction_type),
+                "quantity": qty,
+                "incident_count": int(r.incident_count),
+                "estimated_value": value,
+            })
+
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_items": len(items),
+            "total_quantity": total_qty,
+            "total_value": round(float(total_value), 2),
+            "items": sorted(items, key=lambda x: x["estimated_value"], reverse=True),
+        }
+
+    def get_inventory_dashboard(self, business_id) -> dict:
+        """Aggregated inventory dashboard with KPIs and alerts."""
+        products = (
+            self.db.query(Product)
+            .filter(Product.business_id == str(business_id), Product.deleted_at.is_(None))
+            .all()
+        )
+
+        total_products = len(products)
+        total_value = sum(
+            float(p.cost_price or 0) * float(getattr(p, "stock_quantity", 0) or 0)
+            for p in products
+        )
+        low_stock = [
+            p for p in products
+            if hasattr(p, "reorder_level") and p.reorder_level
+            and (getattr(p, "stock_quantity", 0) or 0) <= p.reorder_level
+        ]
+        out_of_stock = [
+            p for p in products
+            if (getattr(p, "stock_quantity", 0) or 0) <= 0
+        ]
+
+        alerts = []
+        for p in low_stock:
+            alerts.append({
+                "type": "low_stock",
+                "product_id": str(p.id),
+                "product_name": p.name,
+                "current_stock": float(getattr(p, "stock_quantity", 0) or 0),
+                "reorder_level": float(p.reorder_level),
+            })
+
+        return {
+            "total_products": total_products,
+            "total_inventory_value": round(total_value, 2),
+            "low_stock_count": len(low_stock),
+            "out_of_stock_count": len(out_of_stock),
+            "alerts": alerts[:20],
+        }

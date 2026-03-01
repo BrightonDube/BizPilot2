@@ -2206,3 +2206,38 @@ async def get_supplier_performance_report(
 
     service = InventoryReportService(db)
     return service.get_supplier_performance(business_id, start, end)
+
+
+@router.get("/inventory/wastage")
+async def get_wastage_report(
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory wastage/shrinkage report."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_wastage_report(business_id, start, end)
+
+
+@router.get("/inventory/dashboard")
+async def get_inventory_dashboard(
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory dashboard with KPIs, alerts, and stock overview."""
+    service = InventoryReportService(db)
+    return service.get_inventory_dashboard(business_id)
