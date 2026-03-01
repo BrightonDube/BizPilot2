@@ -10,7 +10,7 @@ from app.models.business_user import BusinessUser, BusinessUserStatus
 from app.models.product import Product, ProductStatus, ProductCategory
 from app.models.customer import Customer, CustomerType
 from app.models.supplier import Supplier
-from app.models.order import Order, OrderStatus, PaymentStatus, OrderItem
+from app.models.order import Order, OrderStatus, PaymentStatus, OrderItem, OrderType
 from app.models.invoice import Invoice, InvoiceStatus, InvoiceItem, InvoiceType
 from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
 from app.models.product_supplier import ProductSupplier
@@ -29,7 +29,7 @@ from app.models.subscription_transaction import (
 from app.models.time_entry import TimeEntry, TimeEntryType, TimeEntryStatus
 from app.models.pos_connection import POSConnection, POSProvider, POSConnectionStatus, POSSyncLog
 from app.models.session import Session
-from app.models.notification import Notification, NotificationType, NotificationPriority
+from app.models.notification import Notification, NotificationType, NotificationChannel as NotifChannel, NotificationPreference
 from app.models.favorite_product import FavoriteProduct
 from app.models.layby_config import LaybyConfig
 from app.models.layby import Layby, LaybyStatus, PaymentFrequency
@@ -67,6 +67,98 @@ from app.models.report_subscription import (
     DeliveryStatus,
     ReportDeliveryLog,
 )
+from app.models.restaurant_table import RestaurantTable, TableStatus
+from app.models.order_status_history import OrderStatusHistory
+from app.models.petty_cash import (
+    PettyCashFund,
+    FundStatus,
+    ExpenseCategory,
+    PettyCashExpense,
+    ExpenseStatus,
+    FundReplenishment,
+)
+from app.models.loyalty import (
+    LoyaltyProgram,
+    CustomerLoyalty,
+    PointsTransaction,
+    LoyaltyTier,
+    PointsTransactionType,
+)
+from app.models.menu import (
+    MenuItem,
+    ModifierGroup,
+    Modifier,
+    MenuItemModifierGroup,
+    Recipe,
+    RecipeIngredient,
+)
+from app.models.stock_take import (
+    StockTakeSession,
+    StockTakeStatus,
+    StockCount,
+    InventoryAdjustment,
+)
+from app.models.delivery import (
+    DeliveryStatus as DeliveryTrackingStatus,
+    DeliveryZone,
+    Driver,
+    Delivery,
+)
+from app.models.reorder import (
+    ReorderRule,
+    ReorderRuleStatus,
+    PurchaseRequest,
+    PurchaseRequestItem,
+    PurchaseOrderStatus,
+)
+from app.models.general_ledger import (
+    AccountType,
+    JournalEntryStatus,
+    ChartOfAccount,
+    JournalEntry,
+    JournalLine,
+    FiscalPeriod,
+)
+from app.models.crm import (
+    InteractionType,
+    CustomerSegment,
+    CustomerSegmentMember,
+    CustomerInteraction,
+    CustomerMetrics,
+)
+from app.models.online_order import (
+    OnlineOrderStatus,
+    FulfillmentType,
+    OnlineStore,
+    OnlineOrder,
+    OnlineOrderItem,
+)
+from app.models.custom_dashboard import Dashboard, DashboardWidget
+from app.models.addon import ProductModifierGroup, SelectionType
+from app.models.audit_log import UserAuditLog, AuditAction
+from app.models.shift import Shift, ShiftStatus, LeaveRequest, LeaveType, LeaveStatus
+from app.models.location import (
+    Location,
+    LocationStock,
+    StockTransfer,
+    StockTransferItem,
+    TransferStatus as LocationTransferStatus,
+)
+from app.models.tax import TaxType, TaxRate, ProductTaxRate, CategoryTaxRate
+from app.models.cash_register import (
+    RegisterStatus,
+    CashRegister,
+    RegisterSession,
+    CashMovement,
+)
+from app.models.commission import CommissionRecord, CommissionStatus
+from app.models.report_template import ReportTemplate
+from app.models.gift_card import GiftCard, GiftCardStatus, GiftCardTransaction
+from app.models.expense import (
+    Expense,
+    ExpenseTrackingCategory,
+    ExpenseTrackingStatus,
+)
 
 __all__ = [
     "BaseModel",
@@ -96,6 +188,7 @@ __all__ = [
     # Order
     "Order",
     "OrderStatus",
+    "OrderType",
     "PaymentStatus",
     "OrderItem",
     # Invoice
@@ -136,7 +229,8 @@ __all__ = [
     # Notification
     "Notification",
     "NotificationType",
-    "NotificationPriority",
+    "NotifChannel",
+    "NotificationPreference",
     # Favorite Product
     "FavoriteProduct",
     # Layby
@@ -182,4 +276,106 @@ __all__ = [
     "DeliveryFrequency",
     "DeliveryStatus",
     "ReportDeliveryLog",
+    # Restaurant Tables
+    "RestaurantTable",
+    "TableStatus",
+    # Order Status History
+    "OrderStatusHistory",
+    # Petty Cash
+    "PettyCashFund",
+    "FundStatus",
+    "ExpenseCategory",
+    "PettyCashExpense",
+    "ExpenseStatus",
+    "FundReplenishment",
+    # Loyalty Program
+    "LoyaltyProgram",
+    "CustomerLoyalty",
+    "PointsTransaction",
+    "LoyaltyTier",
+    "PointsTransactionType",
+    # Stock Take
+    "StockTakeSession",
+    "StockTakeStatus",
+    "StockCount",
+    "InventoryAdjustment",
+    # Menu Engineering
+    "MenuItem",
+    "ModifierGroup",
+    "Modifier",
+    "MenuItemModifierGroup",
+    "Recipe",
+    "RecipeIngredient",
+    # Delivery Management
+    "DeliveryTrackingStatus",
+    "DeliveryZone",
+    "Driver",
+    "Delivery",
+    # CRM
+    "InteractionType",
+    "CustomerSegment",
+    "CustomerSegmentMember",
+    "CustomerInteraction",
+    "CustomerMetrics",
+    # Automated Reorder
+    "ReorderRule",
+    "ReorderRuleStatus",
+    "PurchaseRequest",
+    "PurchaseRequestItem",
+    "PurchaseOrderStatus",
+    # General Ledger
+    "AccountType",
+    "JournalEntryStatus",
+    "ChartOfAccount",
+    "JournalEntry",
+    "JournalLine",
+    "FiscalPeriod",
+    # Custom Dashboards
+    "Dashboard",
+    "DashboardWidget",
+    # Online Ordering
+    "OnlineOrderStatus",
+    "FulfillmentType",
+    "OnlineStore",
+    "OnlineOrder",
+    "OnlineOrderItem",
+    # User Audit Logs
+    "UserAuditLog",
+    "AuditAction",
+    # Multi-Location
+    "Location",
+    "LocationStock",
+    "StockTransfer",
+    "StockTransferItem",
+    "LocationTransferStatus",
+    # Product Addons
+    "ProductModifierGroup",
+    "SelectionType",
+    # Shift Management
+    "Shift",
+    "ShiftStatus",
+    "LeaveRequest",
+    "LeaveType",
+    "LeaveStatus",
+    # Tax Configuration
+    "TaxType",
+    "TaxRate",
+    "ProductTaxRate",
+    "CategoryTaxRate",
+    # Gift Cards
+    "GiftCard",
+    "GiftCardStatus",
+    "GiftCardTransaction",
+    # Expense Tracking
+    "Expense",
+    "ExpenseTrackingCategory",
+    "ExpenseTrackingStatus",
+    # Cash Register
+    "RegisterStatus",
+    "CashRegister",
+    "RegisterSession",
+    "CashMovement",
+    "CommissionRecord",
+    "CommissionStatus",
+    "ReportTemplate",
 ]

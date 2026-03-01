@@ -104,14 +104,14 @@ class InvoiceQueryService:
         # Query notifications for these invoices
         notifications = self.db.query(Notification).filter(
             and_(
-                Notification.reference_id.in_(invoice_ids),
-                Notification.notification_type == NotificationType.PAYMENT_OVERDUE,
-                ~Notification.is_read
+                Notification.resource_id.in_([str(i) for i in invoice_ids]),
+                Notification.notification_type == NotificationType.PAYMENT,
+                Notification.is_read.is_(False)
             )
         ).all()
         
         # Extract invoice IDs from notifications
-        existing_ids = {notif.reference_id for notif in notifications if notif.reference_id}
+        existing_ids = {notif.resource_id for notif in notifications if notif.resource_id}
         
         logger.info(f"Found {len(existing_ids)} invoices with existing notifications out of {len(invoice_ids)}")
         return existing_ids
