@@ -13,6 +13,7 @@ from app.models.time_entry import TimeEntry, TimeEntryStatus
 from app.models.department import Department
 from app.models.audit_log import UserAuditLog, AuditAction
 from app.models.order import Order, OrderDirection
+from app.models.cash_register import RegisterSession, CashMovement, CashRegister
 
 
 class StaffReportService:
@@ -665,4 +666,143 @@ class StaffReportService:
             "pages": (total + per_page - 1) // per_page if per_page > 0 else 0,
             "action_summary": action_summary,
             "entries": entries,
+        }
+
+    def get_cash_drawer_report(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+        register_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ) -> dict:
+        """Cash drawer report from register sessions and cash movements."""
+        start, end = self._parse_dates(start_date, end_date)
+
+        query = (
+            self.db.query(
+                RegisterSession.id.label("session_id"),
+                CashRegister.name.label("register_name"),
+                RegisterSession.status,
+                RegisterSession.opening_float,
+                RegisterSession.closing_float,
+                RegisterSession.expected_cash,
+                RegisterSession.actual_cash,
+                RegisterSession.cash_difference,
+                RegisterSession.total_sales,
+                RegisterSession.total_refunds,
+                RegisterSession.total_cash_payments,
+                RegisterSession.total_card_payments,
+                RegisterSession.transaction_count,
+                RegisterSession.opened_at,
+                RegisterSession.closed_at,
+                RegisterSession.notes,
+                RegisterSession.opened_by,
+                RegisterSession.closed_by,
+            )
+            .join(CashRegister, CashRegister.id == RegisterSession.register_id)
+            .filter(
+                RegisterSession.business_id == str(business_id),
+                RegisterSession.opened_at >= start,
+                RegisterSession.opened_at < end,
+            )
+        )
+
+        if register_id:
+            query = query.filter(RegisterSession.register_id == register_id)
+        if user_id:
+            query = query.filter(
+                (RegisterSession.opened_by == user_id)
+                | (RegisterSession.closed_by == user_id)
+            )
+
+        rows = query.order_by(RegisterSession.opened_at.desc()).all()
+
+        # Map user IDs to names
+        user_ids = set()
+        for r in rows:
+            if r.opened_by:
+                user_ids.add(str(r.opened_by))
+            if r.closed_by:
+                user_ids.add(str(r.closed_by))
+
+        user_map: Dict[str, str] = {}
+        if user_ids:
+            users = (
+                self.db.query(User.id, User.first_name, User.last_name)
+                .filter(User.id.in_(list(user_ids)))
+                .all()
+            )
+            for u in users:
+                name = f"{u.first_name or ''} {u.last_name or ''}".strip() or "Unknown"
+                user_map[str(u.id)] = name
+
+        sessions = []
+        total_sales = 0.0
+        total_cash_difference = 0.0
+        discrepancy_count = 0
+
+        for r in rows:
+            sales = round(float(r.total_sales or 0), 2)
+            diff = round(float(r.cash_difference or 0), 2)
+            total_sales += sales
+            total_cash_difference += diff
+            if diff != 0:
+                discrepancy_count += 1
+
+            sessions.append({
+                "session_id": str(r.session_id),
+                "register_name": r.register_name,
+                "status": r.status.value if r.status else None,
+                "opened_by": user_map.get(str(r.opened_by), "Unknown") if r.opened_by else None,
+                "closed_by": user_map.get(str(r.closed_by), "Unknown") if r.closed_by else None,
+                "opening_float": round(float(r.opening_float or 0), 2),
+                "closing_float": round(float(r.closing_float or 0), 2) if r.closing_float is not None else None,
+                "expected_cash": round(float(r.expected_cash or 0), 2) if r.expected_cash is not None else None,
+                "actual_cash": round(float(r.actual_cash or 0), 2) if r.actual_cash is not None else None,
+                "cash_difference": diff,
+                "total_sales": sales,
+                "total_refunds": round(float(r.total_refunds or 0), 2),
+                "total_cash_payments": round(float(r.total_cash_payments or 0), 2),
+                "total_card_payments": round(float(r.total_card_payments or 0), 2),
+                "transaction_count": int(r.transaction_count or 0),
+                "opened_at": r.opened_at.isoformat() if r.opened_at else None,
+                "closed_at": r.closed_at.isoformat() if r.closed_at else None,
+                "notes": r.notes,
+            })
+
+        # Cash movements summary
+        movement_rows = (
+            self.db.query(
+                CashMovement.movement_type,
+                func.count(CashMovement.id).label("count"),
+                func.coalesce(func.sum(CashMovement.amount), 0).label("total_amount"),
+            )
+            .join(RegisterSession, RegisterSession.id == CashMovement.session_id)
+            .filter(
+                CashMovement.business_id == str(business_id),
+                RegisterSession.opened_at >= start,
+                RegisterSession.opened_at < end,
+            )
+            .group_by(CashMovement.movement_type)
+            .all()
+        )
+
+        movement_summary = {
+            r.movement_type: {
+                "count": int(r.count),
+                "total_amount": round(float(r.total_amount or 0), 2),
+            }
+            for r in movement_rows
+        }
+
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_sessions": len(sessions),
+            "total_sales": round(total_sales, 2),
+            "total_cash_difference": round(total_cash_difference, 2),
+            "discrepancy_count": discrepancy_count,
+            "movement_summary": movement_summary,
+            "sessions": sessions,
         }

@@ -197,3 +197,48 @@ class StaffActivityLogReport(BaseModel):
     pages: int
     action_summary: Dict[str, int]
     entries: List[ActivityLogEntry]
+
+
+# -- Cash Drawer Report --
+
+class CashMovementSummary(BaseModel):
+    """Aggregated summary for a cash movement type."""
+
+    count: int
+    total_amount: float
+
+
+class CashDrawerSession(BaseModel):
+    """Single register session in the cash drawer report."""
+
+    session_id: str
+    register_name: str
+    status: Optional[str] = None
+    opened_by: Optional[str] = None
+    closed_by: Optional[str] = None
+    opening_float: float
+    closing_float: Optional[float] = None
+    expected_cash: Optional[float] = None
+    actual_cash: Optional[float] = None
+    cash_difference: float
+    total_sales: float
+    total_refunds: float
+    total_cash_payments: float
+    total_card_payments: float
+    transaction_count: int
+    opened_at: Optional[str] = None
+    closed_at: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class CashDrawerReport(BaseModel):
+    """Cash drawer report with register sessions and movements."""
+
+    start_date: str
+    end_date: str
+    total_sessions: int
+    total_sales: float
+    total_cash_difference: float
+    discrepancy_count: int
+    movement_summary: Dict[str, CashMovementSummary]
+    sessions: List[CashDrawerSession]

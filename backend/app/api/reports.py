@@ -46,6 +46,7 @@ from app.schemas.staff_report import (
     StaffProductivityReport,
     StaffCommissionReport,
     StaffActivityLogReport,
+    CashDrawerReport,
 )
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
@@ -1530,6 +1531,36 @@ async def get_staff_activity_log(
         resource_type=resource_type,
         page=page,
         per_page=per_page,
+    )
+
+
+@router.get("/staff/cash-drawer", response_model=CashDrawerReport)
+async def get_cash_drawer_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    register_id: Optional[str] = Query(None, description="Filter by register ID"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Cash drawer report with register sessions and cash movements."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_cash_drawer_report(
+        business_id, start, end,
+        register_id=register_id,
+        user_id=user_id,
     )
 
 
