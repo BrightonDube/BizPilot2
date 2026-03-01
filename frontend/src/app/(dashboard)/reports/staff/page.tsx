@@ -35,7 +35,7 @@ import {
 import { apiClient } from '@/lib/api';
 import { FeatureGate } from '@/components/subscription/FeatureGate';
 
-type TabKey= 'performance' | 'attendance' | 'departments' | 'productivity' | 'commissions' | 'activity';
+type TabKey= 'performance' | 'attendance' | 'departments' | 'productivity' | 'commissions' | 'activity' | 'voids' | 'team' | 'custom';
 
 interface Tab {
   key: TabKey;
@@ -50,6 +50,9 @@ const TABS: Tab[] = [
   { key: 'productivity', label: 'Productivity', icon: <BarChart3 className="w-4 h-4" /> },
   { key: 'commissions', label: 'Commissions', icon: <DollarSign className="w-4 h-4" /> },
   { key: 'activity', label: 'Activity Log', icon: <Activity className="w-4 h-4" /> },
+  { key: 'voids', label: 'Voids & Refunds', icon: <AlertTriangle className="w-4 h-4" /> },
+  { key: 'team', label: 'Team', icon: <Users className="w-4 h-4" /> },
+  { key: 'custom', label: 'Custom', icon: <FileText className="w-4 h-4" /> },
 ];
 
 function formatHours(value: number): string {
@@ -80,6 +83,7 @@ export default function StaffReportsPage() {
   const [userId, setUserId] = useState('');
   const [commissionRate, setCommissionRate] = useState('5');
   const [actionType, setActionType] = useState('');
+  const [customMetrics, setCustomMetrics] = useState<string[]>(['total_sales', 'order_count']);
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,6 +129,25 @@ export default function StaffReportsPage() {
             },
           });
           break;
+        case 'voids':
+          res = await apiClient.get('/reports/staff/voids-refunds', {
+            params: { ...dateParams, ...(userId ? { user_id: userId } : {}) },
+          });
+          break;
+        case 'team':
+          res = await apiClient.get('/reports/staff/departments', {
+            params: dateParams,
+          });
+          break;
+        case 'custom':
+          res = await apiClient.post('/reports/custom/execute', {
+            metrics: customMetrics,
+            filters: { start_date: startDate, end_date: endDate, ...(userId ? { user_id: userId } : {}) },
+            group_by: [],
+            sort_by: 'total_sales',
+            sort_direction: 'desc',
+          });
+          break;
       }
       setData(res.data);
     } catch (err: any) {
@@ -133,7 +156,7 @@ export default function StaffReportsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, startDate, endDate, userId, commissionRate, actionType]);
+  }, [activeTab, startDate, endDate, userId, commissionRate, actionType, customMetrics]);
 
   useEffect(() => {
     fetchData();
@@ -276,6 +299,9 @@ export default function StaffReportsPage() {
           {activeTab === 'productivity' && <ProductivityReport data={data} />}
           {activeTab === 'commissions' && <CommissionsReport data={data} />}
           {activeTab === 'activity' && <ActivityLogReport data={data} />}
+          {activeTab === 'voids' && <VoidsRefundsReport data={data} />}
+          {activeTab === 'team' && <TeamReport data={data} />}
+          {activeTab === 'custom' && <CustomReport data={data} metrics={customMetrics} onMetricsChange={setCustomMetrics} />}
         </div>
       ) : null}
     </div>
@@ -673,5 +699,163 @@ function DataTable({ columns, rows }: { columns: string[]; rows: any[][] }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+// --- Voids & Refunds Report ---
+
+function VoidsRefundsReport({ data }: { data: any }) {
+  const staff = data?.staff ?? [];
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Staff" value={data?.total_staff ?? 0} icon={<Users className="w-5 h-5" />} />
+        <StatCard title="Total Voids" value={data?.total_voids ?? 0} icon={<AlertTriangle className="w-5 h-5" />} />
+        <StatCard title="Total Refunds" value={data?.total_refunds ?? 0} icon={<DollarSign className="w-5 h-5" />} />
+        <StatCard title="Total Actions" value={(data?.total_voids ?? 0) + (data?.total_refunds ?? 0)} icon={<Activity className="w-5 h-5" />} />
+      </div>
+      {staff.length > 0 ? (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader><CardTitle className="text-white">Voids & Refunds by Staff</CardTitle></CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Staff', 'Email', 'Voids', 'Refunds', 'Total']}
+              rows={staff.map((s: any) => [s.staff_name, s.email ?? '-', s.void_count, s.refund_count, s.total_actions])}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="py-8"><p className="text-center text-gray-500">No void or refund data found</p></CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+// --- Team Report ---
+
+function TeamReport({ data }: { data: any }) {
+  const departments = data?.departments ?? [];
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Departments" value={data?.total_departments ?? 0} icon={<Building2 className="w-5 h-5" />} />
+        <StatCard title="Total Staff" value={data?.total_staff ?? 0} icon={<Users className="w-5 h-5" />} />
+        <StatCard title="Total Hours" value={formatHours(data?.total_hours ?? 0)} icon={<Clock className="w-5 h-5" />} />
+        <StatCard title="Avg Performance" value={formatPercent(data?.average_performance ?? 0)} icon={<Target className="w-5 h-5" />} />
+      </div>
+      {departments.length > 0 ? (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader><CardTitle className="text-white">Team Performance by Department</CardTitle></CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Department', 'Staff Count', 'Total Hours', 'Avg Hours', 'Performance Score']}
+              rows={departments.map((d: any) => [
+                d.department_name ?? 'Unassigned',
+                d.staff_count ?? 0,
+                formatHours(d.total_hours ?? 0),
+                formatHours(d.avg_hours ?? 0),
+                formatPercent(d.performance_score ?? 0),
+              ])}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="py-8"><p className="text-center text-gray-500">No team data found</p></CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+// --- Custom Report Builder ---
+
+const METRIC_OPTIONS = [
+  { key: 'total_sales', label: 'Total Sales' },
+  { key: 'order_count', label: 'Order Count' },
+  { key: 'discount_amount', label: 'Discounts' },
+  { key: 'hours_worked', label: 'Hours Worked' },
+  { key: 'void_count', label: 'Void Count' },
+  { key: 'refund_count', label: 'Refund Count' },
+  { key: 'avg_order_value', label: 'Avg Order Value' },
+];
+
+function CustomReport({ data, metrics, onMetricsChange }: { data: any; metrics: string[]; onMetricsChange: (m: string[]) => void }) {
+  const results = data?.data ?? [];
+
+  const toggleMetric = (key: string) => {
+    if (metrics.includes(key)) {
+      if (metrics.length > 1) onMetricsChange(metrics.filter((m) => m !== key));
+    } else {
+      onMetricsChange([...metrics, key]);
+    }
+  };
+
+  return (
+    <>
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader><CardTitle className="text-white">Select Metrics</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {METRIC_OPTIONS.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => toggleMetric(opt.key)}
+                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  metrics.includes(opt.key)
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Staff" value={data?.total_staff ?? 0} icon={<Users className="w-5 h-5" />} />
+        {metrics.includes('total_sales') && (
+          <StatCard title="Total Sales" value={`R ${results.reduce((sum: number, r: any) => sum + (r.total_sales ?? 0), 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`} icon={<DollarSign className="w-5 h-5" />} />
+        )}
+        {metrics.includes('hours_worked') && (
+          <StatCard title="Total Hours" value={formatHours(results.reduce((sum: number, r: any) => sum + (r.hours_worked ?? 0), 0))} icon={<Clock className="w-5 h-5" />} />
+        )}
+        {metrics.includes('order_count') && (
+          <StatCard title="Total Orders" value={results.reduce((sum: number, r: any) => sum + (r.order_count ?? 0), 0)} icon={<BarChart3 className="w-5 h-5" />} />
+        )}
+      </div>
+
+      {results.length > 0 ? (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader><CardTitle className="text-white">Custom Report Results</CardTitle></CardHeader>
+          <CardContent>
+            <DataTable
+              columns={['Staff', 'Email', ...metrics.map((m) => METRIC_OPTIONS.find((o) => o.key === m)?.label ?? m)]}
+              rows={results.map((r: any) => [
+                r.staff_name ?? '-',
+                r.email ?? '-',
+                ...metrics.map((m) => {
+                  const val = r[m];
+                  if (typeof val === 'number') {
+                    return m.includes('sales') || m.includes('discount') || m.includes('avg')
+                      ? `R ${val.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
+                      : val;
+                  }
+                  return val ?? '-';
+                }),
+              ])}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="py-8"><p className="text-center text-gray-500">No data found for selected metrics</p></CardContent>
+        </Card>
+      )}
+    </>
   );
 }
