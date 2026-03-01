@@ -394,3 +394,196 @@ async def generate_statement(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+
+# ── AR Summary & DSO ──────────────────────────────────────────────────────
+
+
+@router.get("/reports/ar-summary")
+async def ar_summary(
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get accounts-receivable summary across all accounts."""
+    biz = UUID(business_id)
+
+    accounts = (
+        db.query(CustomerAccount)
+        .filter(
+            CustomerAccount.business_id == biz,
+            CustomerAccount.deleted_at.is_(None),
+        )
+        .all()
+    )
+
+    total_balance = sum(float(a.current_balance or 0) for a in accounts)
+    total_credit = sum(float(a.credit_limit or 0) for a in accounts)
+    active = sum(1 for a in accounts if a.status == AccountStatus.ACTIVE)
+    overdue = sum(1 for a in accounts if float(a.current_balance or 0) > float(a.credit_limit or 0))
+
+    return {
+        "total_accounts": len(accounts),
+        "active_accounts": active,
+        "total_outstanding": round(total_balance, 2),
+        "total_credit_limit": round(total_credit, 2),
+        "utilization_pct": round(total_balance / total_credit * 100, 2) if total_credit > 0 else 0,
+        "overdue_accounts": overdue,
+    }
+
+
+@router.get("/reports/dso")
+async def dso_report(
+    days: int = Query(30, ge=1, le=365, description="Period in days for DSO calculation"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Calculate Days Sales Outstanding (DSO) for the business.
+
+    DSO = (Accounts Receivable / Total Credit Sales) x Number of Days
+    """
+    from sqlalchemy import func
+    from datetime import datetime, timedelta, timezone
+    from app.models.customer_account import TransactionType as AccTxnType
+
+    biz = UUID(business_id)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    ar_result = (
+        db.query(func.coalesce(func.sum(CustomerAccount.current_balance), 0))
+        .filter(CustomerAccount.business_id == biz, CustomerAccount.deleted_at.is_(None))
+        .scalar()
+    )
+    total_ar = float(ar_result or 0)
+
+    sales_result = (
+        db.query(func.coalesce(func.sum(AccountTransaction.amount), 0))
+        .join(CustomerAccount, AccountTransaction.account_id == CustomerAccount.id)
+        .filter(
+            CustomerAccount.business_id == biz,
+            AccountTransaction.transaction_type == AccTxnType.CHARGE,
+            AccountTransaction.created_at >= cutoff,
+        )
+        .scalar()
+    )
+    total_sales = float(sales_result or 0)
+
+    dso = round((total_ar / total_sales) * days, 1) if total_sales > 0 else 0
+
+    return {
+        "dso": dso,
+        "period_days": days,
+        "total_ar": round(total_ar, 2),
+        "total_credit_sales": round(total_sales, 2),
+    }
+
+
+# ── Collections ───────────────────────────────────────────────────────────
+
+
+@router.get("/{account_id}/overdue")
+async def get_overdue_details(
+    account_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get overdue details for an account using aging buckets."""
+    service = CustomerAccountService(db)
+    account = _get_account_or_404(service, account_id, business_id)
+    aging = service.calculate_aging(account)
+    return aging
+
+
+@router.post("/{account_id}/collection-activity")
+async def record_collection_activity(
+    account_id: UUID,
+    activity_type: str = Query(..., description="call, email, letter, visit, legal, promise"),
+    notes: Optional[str] = None,
+    promised_date: Optional[date] = None,
+    promised_amount: Optional[float] = None,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Record a collection activity (call, email, promise-to-pay, etc.)."""
+    from app.models.customer_account import CollectionActivity, ActivityType
+
+    service = CustomerAccountService(db)
+    _get_account_or_404(service, account_id, business_id)
+
+    try:
+        act_type = ActivityType(activity_type)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid activity type: {activity_type}")
+
+    activity = CollectionActivity(
+        account_id=account_id,
+        performed_by=current_user.id,
+        activity_type=act_type,
+        notes=notes,
+        promised_date=promised_date,
+        promised_amount=Decimal(str(promised_amount)) if promised_amount else None,
+    )
+    db.add(activity)
+    db.commit()
+    db.refresh(activity)
+
+    return {
+        "id": str(activity.id),
+        "account_id": str(activity.account_id),
+        "activity_type": activity.activity_type.value,
+        "notes": activity.notes,
+        "promised_date": activity.promised_date,
+        "promised_amount": float(activity.promised_amount) if activity.promised_amount else None,
+        "created_at": activity.created_at.isoformat() if activity.created_at else None,
+    }
+
+
+@router.post("/{account_id}/write-off")
+async def create_write_off(
+    account_id: UUID,
+    amount: float = Query(..., gt=0),
+    reason: str = Query(...),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Write off an amount from an account."""
+    from app.models.customer_account import AccountWriteOff, TransactionType as AccTxnType
+
+    service = CustomerAccountService(db)
+    account = _get_account_or_404(service, account_id, business_id)
+
+    write_off_amount = Decimal(str(amount))
+    if write_off_amount > account.current_balance:
+        raise HTTPException(status_code=400, detail="Write-off amount exceeds balance")
+
+    wo = AccountWriteOff(
+        account_id=account_id,
+        amount=write_off_amount,
+        reason=reason,
+        approved_by=current_user.id,
+    )
+    db.add(wo)
+
+    txn = AccountTransaction(
+        account_id=account_id,
+        transaction_type=AccTxnType.WRITE_OFF,
+        amount=write_off_amount,
+        description=f"Write-off: {reason}",
+        balance_after=account.current_balance - write_off_amount,
+    )
+    db.add(txn)
+
+    account.current_balance -= write_off_amount
+    db.commit()
+
+    return {
+        "id": str(wo.id),
+        "account_id": str(account_id),
+        "amount": float(write_off_amount),
+        "reason": reason,
+        "new_balance": float(account.current_balance),
+    }
