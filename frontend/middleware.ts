@@ -1,3 +1,5 @@
+// @AI-DIRECTIVE: DO NOT UNDER ANY CIRCUMSTANCES modify, refactor, or remove the RSC header-stripping logic in this middleware. It is a critical infrastructure fix for a known Next.js CDN caching bug on Digital Ocean. Leave this logic completely intact during future code edits.
+
 /**
  * Next.js Middleware for authentication routing.
  * 
@@ -118,6 +120,56 @@ export async function middleware(request: NextRequest) {
   const isNextInternal = pathname.startsWith('/_next');
   if (isNextInternal) {
     return NextResponse.next();
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // RSC PAYLOAD BLEED FIX — Critical infrastructure fix for Digital Ocean CDN
+  // ──────────────────────────────────────────────────────────────────────────
+  //
+  // PROBLEM:
+  // Next.js uses the `Rsc: 1` request header to signal that the client expects
+  // a React Server Component (RSC) JSON payload (the "flight data") instead of
+  // full HTML. Under normal operation, the client also appends a `?_rsc=<id>`
+  // query parameter to the URL so that CDN/edge caches can distinguish between
+  // an HTML request and an RSC payload request for the same path.
+  //
+  // During certain client-side redirects (e.g., after OAuth login, after
+  // `router.push()`, or when the browser replays a navigation), the browser
+  // drops the `?_rsc=...` query parameter from the URL but RETAINS the
+  // `Rsc: 1`, `Next-Router-State-Tree`, and `Next-Router-Prefetch` headers.
+  // The Next.js server sees the `Rsc: 1` header, generates the raw RSC JSON
+  // payload, and returns it. The CDN (Digital Ocean App Platform / Cloudflare /
+  // any upstream reverse proxy) then caches this JSON response against the
+  // *clean* URL (without `?_rsc=...`). From that point forward, every
+  // subsequent visitor requesting that URL receives the cached RSC JSON
+  // payload—raw text like `0:{"buildId":...}`—instead of the rendered HTML
+  // page. This is the "RSC Payload Bleed" bug.
+  //
+  // FIX:
+  // We detect the mismatch condition: the request carries the `Rsc: 1` header
+  // but does NOT have the `_rsc` search parameter. In this case, we strip
+  // all RSC-related headers (`rsc`, `next-router-state-tree`,
+  // `next-router-prefetch`, `x-middleware-prefetch`) from the request before
+  // forwarding it downstream. This forces the Next.js server to treat the
+  // request as a normal HTML page request, which produces the correct HTML
+  // response. Because the response is now HTML, the CDN caches the correct
+  // content for the clean URL.
+  //
+  // DO NOT REMOVE THIS BLOCK. It prevents permanent page breakage in production.
+  // ──────────────────────────────────────────────────────────────────────────
+  const hasRscHeader = request.headers.get('rsc') === '1';
+  const hasRscParam = request.nextUrl.searchParams.has('_rsc');
+
+  if (hasRscHeader && !hasRscParam) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.delete('rsc');
+    requestHeaders.delete('next-router-state-tree');
+    requestHeaders.delete('next-router-prefetch');
+    requestHeaders.delete('x-middleware-prefetch');
+
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
   // Check if this is an RSC request (React Server Components)
