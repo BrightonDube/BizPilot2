@@ -1253,6 +1253,125 @@ async def export_report_csv(
     )
 
 
+@router.get("/export/excel")
+async def export_report_excel(
+    report_type: str = Query(
+        ...,
+        description="Report type: products, categories, payments, discounts, refunds",
+    ),
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export sales report data as Excel (.xlsx) with styled headers."""
+    from io import BytesIO
+    from datetime import date as date_type
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    wb = Workbook()
+    ws = wb.active
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
+    header_align = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style="thin"), right=Side(style="thin"),
+        top=Side(style="thin"), bottom=Side(style="thin"),
+    )
+    alt_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
+
+    def write_headers(headers: list[str]) -> None:
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+            cell.border = thin_border
+
+    def write_row(row_num: int, values: list) -> None:
+        is_alt = row_num % 2 == 0
+        for col_idx, value in enumerate(values, 1):
+            cell = ws.cell(row=row_num, column=col_idx, value=value)
+            cell.border = thin_border
+            if is_alt:
+                cell.fill = alt_fill
+
+    if report_type == "products":
+        ws.title = "Product Performance"
+        data = service.get_product_performance(business_id, start, end)
+        write_headers(["Rank", "Product", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for i, p in enumerate(data.get("products", []), 2):
+            write_row(i, [
+                p["rank"], p["product_name"], p["quantity_sold"],
+                p["revenue"], p["order_count"], p["revenue_percentage"],
+            ])
+    elif report_type == "categories":
+        ws.title = "Category Performance"
+        data = service.get_category_performance(business_id, start, end)
+        write_headers(["Category", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for i, c in enumerate(data.get("categories", []), 2):
+            write_row(i, [
+                c["category_name"], c["quantity_sold"],
+                c["revenue"], c["order_count"], c["revenue_percentage"],
+            ])
+    elif report_type == "payments":
+        ws.title = "Payment Breakdown"
+        data = service.get_payment_breakdown(business_id, start, end)
+        write_headers(["Payment Method", "Count", "Amount", "Amount %", "Count %"])
+        for i, m in enumerate(data.get("methods", []), 2):
+            write_row(i, [
+                m["payment_method"], m["count"], m["amount"],
+                m["percentage_amount"], m["percentage_count"],
+            ])
+    elif report_type == "discounts":
+        ws.title = "Discount Analysis"
+        data = service.get_discount_analysis(business_id, start, end)
+        write_headers(["Product", "Discount Total", "Revenue", "Discount %", "Item Count"])
+        for i, p in enumerate(data.get("by_product", []), 2):
+            write_row(i, [
+                p["product_name"], p["discount_total"], p["revenue"],
+                p["discount_percentage"], p["item_count"],
+            ])
+    elif report_type == "refunds":
+        ws.title = "Refund Analysis"
+        data = service.get_refund_analysis(business_id, start, end)
+        write_headers(["Product", "Refund Total", "Quantity", "Refund Count", "% of Refunds"])
+        for i, p in enumerate(data.get("by_product", []), 2):
+            write_row(i, [
+                p["product_name"], p["refund_total"], p["quantity"],
+                p["refund_count"], p["percentage_of_refunds"],
+            ])
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown report type: {report_type}. Use: products, categories, payments, discounts, refunds",
+        )
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f"{report_type}_report_{start_date}_to_{end_date}.xlsx"
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── Staff Reports ──────────────────────────────────────────────────────────
 
 
