@@ -216,14 +216,14 @@ async def get_current_business_id(
     if not business_user:
         # Superadmins can access any business even without a BusinessUser record
         if current_user.is_superadmin:
-            first_business = (
+            oldest_business = (
                 db.query(Business)
                 .filter(Business.deleted_at.is_(None))
                 .order_by(Business.created_at.asc())
                 .first()
             )
-            if first_business:
-                return str(first_business.id)
+            if oldest_business:
+                return str(oldest_business.id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No business found for user. Please create or join a business first."
