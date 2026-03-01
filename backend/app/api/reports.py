@@ -1573,6 +1573,229 @@ async def get_cash_drawer_report(
     )
 
 
+# ── Staff Report Exports ────────────────────────────────────────────────
+
+
+STAFF_REPORT_TYPES = [
+    "performance", "attendance", "department", "productivity",
+    "commission", "voids-refunds", "discounts", "cash-drawer",
+]
+
+
+@router.get("/staff/export/csv")
+async def export_staff_report_csv(
+    report_type: str = Query(..., description="Staff report type"),
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    commission_rate: float = Query(5.0, description="Commission rate %"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export staff report as CSV."""
+    import csv
+    import io
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    if report_type not in STAFF_REPORT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown type: {report_type}. Use: {', '.join(STAFF_REPORT_TYPES)}")
+
+    service = StaffReportService(db)
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    if report_type == "performance":
+        data = service.get_performance_report(business_id, start, end)
+        writer.writerow(["Rank", "Staff", "Email", "Total Hours", "Net Hours", "Sales Count", "Sales Total"])
+        for s in data.get("staff", []):
+            writer.writerow([s["rank"], s["staff_name"], s["email"], s["total_hours"], s["net_hours"], s["sales_count"], s["sales_total"]])
+    elif report_type == "attendance":
+        data = service.get_attendance_report(business_id, start, end)
+        writer.writerow(["Staff", "Email", "Days Present", "Days Absent", "Late Count", "Total Hours", "Attendance Rate"])
+        for s in data.get("staff", []):
+            writer.writerow([s["staff_name"], s["email"], s["days_present"], s["days_absent"], s["late_count"], s["total_hours"], s["attendance_rate"]])
+    elif report_type == "commission":
+        data = service.get_commission_report(business_id, start, end, commission_rate)
+        writer.writerow(["Rank", "Staff", "Email", "Orders", "Total Sales", "Discounts", "Commission Rate", "Commission Amount"])
+        for s in data.get("staff", []):
+            writer.writerow([s["rank"], s["staff_name"], s["email"], s["order_count"], s["total_sales"], s["total_discounts"], s["commission_rate"], s["commission_amount"]])
+    elif report_type == "voids-refunds":
+        data = service.get_void_refund_report(business_id, start, end)
+        writer.writerow(["Staff", "Email", "Voids", "Refunds", "Total Actions"])
+        for s in data.get("staff", []):
+            writer.writerow([s["staff_name"], s["email"], s["void_count"], s["refund_count"], s["total_actions"]])
+    elif report_type == "discounts":
+        data = service.get_discount_report(business_id, start, end)
+        writer.writerow(["Staff", "Email", "Orders", "Total Discounts", "Total Sales", "Discount Rate %"])
+        for s in data.get("staff", []):
+            writer.writerow([s["staff_name"], s["email"], s["order_count"], s["total_discounts"], s["total_sales"], s["discount_rate"]])
+    else:
+        raise HTTPException(status_code=400, detail=f"CSV export not supported for: {report_type}")
+
+    csv_content = output.getvalue()
+    filename = f"staff_{report_type}_{start_date}_to_{end_date}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/staff/export/excel")
+async def export_staff_report_excel(
+    report_type: str = Query(..., description="Staff report type"),
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    commission_rate: float = Query(5.0, description="Commission rate %"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export staff report as styled Excel (.xlsx)."""
+    from io import BytesIO
+    from datetime import date as date_type
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    if report_type not in STAFF_REPORT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown type: {report_type}. Use: {', '.join(STAFF_REPORT_TYPES)}")
+
+    service = StaffReportService(db)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"Staff {report_type.replace('-', ' ').title()}"
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="3F51B5", end_color="3F51B5", fill_type="solid")
+    thin_border = Border(
+        left=Side(style="thin"), right=Side(style="thin"),
+        top=Side(style="thin"), bottom=Side(style="thin"),
+    )
+
+    if report_type == "performance":
+        data = service.get_performance_report(business_id, start, end)
+        headers = ["Rank", "Staff", "Email", "Total Hours", "Net Hours", "Sales Count", "Sales Total"]
+        rows = [[s["rank"], s["staff_name"], s["email"], s["total_hours"], s["net_hours"], s["sales_count"], s["sales_total"]] for s in data.get("staff", [])]
+    elif report_type == "attendance":
+        data = service.get_attendance_report(business_id, start, end)
+        headers = ["Staff", "Email", "Days Present", "Days Absent", "Late Count", "Total Hours", "Attendance Rate"]
+        rows = [[s["staff_name"], s["email"], s["days_present"], s["days_absent"], s["late_count"], s["total_hours"], s["attendance_rate"]] for s in data.get("staff", [])]
+    elif report_type == "commission":
+        data = service.get_commission_report(business_id, start, end, commission_rate)
+        headers = ["Rank", "Staff", "Email", "Orders", "Total Sales", "Discounts", "Rate", "Commission"]
+        rows = [[s["rank"], s["staff_name"], s["email"], s["order_count"], s["total_sales"], s["total_discounts"], s["commission_rate"], s["commission_amount"]] for s in data.get("staff", [])]
+    elif report_type == "voids-refunds":
+        data = service.get_void_refund_report(business_id, start, end)
+        headers = ["Staff", "Email", "Voids", "Refunds", "Total Actions"]
+        rows = [[s["staff_name"], s["email"], s["void_count"], s["refund_count"], s["total_actions"]] for s in data.get("staff", [])]
+    elif report_type == "discounts":
+        data = service.get_discount_report(business_id, start, end)
+        headers = ["Staff", "Email", "Orders", "Total Discounts", "Total Sales", "Discount Rate %"]
+        rows = [[s["staff_name"], s["email"], s["order_count"], s["total_discounts"], s["total_sales"], s["discount_rate"]] for s in data.get("staff", [])]
+    else:
+        raise HTTPException(status_code=400, detail=f"Excel export not supported for: {report_type}")
+
+    for col_idx, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx, value=h)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = thin_border
+
+    alt_fill = PatternFill(start_color="F5F5F5", end_color="F5F5F5", fill_type="solid")
+    for row_idx, row_data in enumerate(rows, 2):
+        for col_idx, val in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell.border = thin_border
+            if row_idx % 2 == 0:
+                cell.fill = alt_fill
+
+    for col in ws.columns:
+        max_len = max((len(str(cell.value or "")) for cell in col), default=10)
+        ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 40)
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    filename = f"staff_{report_type}_{start_date}_to_{end_date}.xlsx"
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/staff/export/pdf")
+async def export_staff_report_pdf(
+    report_type: str = Query(..., description="Staff report type"),
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    commission_rate: float = Query(5.0, description="Commission rate %"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export staff report as PDF."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    if report_type not in STAFF_REPORT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown type: {report_type}. Use: {', '.join(STAFF_REPORT_TYPES)}")
+
+    service = StaffReportService(db)
+    title = f"Staff {report_type.replace('-', ' ').title()} Report"
+    subtitle = f"{start_date} to {end_date}"
+
+    if report_type == "performance":
+        data = service.get_performance_report(business_id, start, end)
+        headers = ["Rank", "Staff", "Hours", "Sales", "Total"]
+        rows = [[s["rank"], s["staff_name"], s["total_hours"], s["sales_count"], s["sales_total"]] for s in data.get("staff", [])]
+    elif report_type == "attendance":
+        data = service.get_attendance_report(business_id, start, end)
+        headers = ["Staff", "Present", "Absent", "Late", "Rate"]
+        rows = [[s["staff_name"], s["days_present"], s["days_absent"], s["late_count"], s["attendance_rate"]] for s in data.get("staff", [])]
+    elif report_type == "commission":
+        data = service.get_commission_report(business_id, start, end, commission_rate)
+        headers = ["Staff", "Orders", "Sales", "Commission"]
+        rows = [[s["staff_name"], s["order_count"], s["total_sales"], s["commission_amount"]] for s in data.get("staff", [])]
+    elif report_type == "voids-refunds":
+        data = service.get_void_refund_report(business_id, start, end)
+        headers = ["Staff", "Voids", "Refunds", "Total"]
+        rows = [[s["staff_name"], s["void_count"], s["refund_count"], s["total_actions"]] for s in data.get("staff", [])]
+    elif report_type == "discounts":
+        data = service.get_discount_report(business_id, start, end)
+        headers = ["Staff", "Orders", "Discounts", "Rate %"]
+        rows = [[s["staff_name"], s["order_count"], s["total_discounts"], s["discount_rate"]] for s in data.get("staff", [])]
+    else:
+        raise HTTPException(status_code=400, detail=f"PDF export not supported for: {report_type}")
+
+    pdf_bytes = build_simple_pdf(title, subtitle, headers, rows)
+    filename = f"staff_{report_type}_{start_date}_to_{end_date}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── Void/Discount Reports ───────────────────────────────────────────────
 
 
