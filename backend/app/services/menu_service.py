@@ -279,6 +279,96 @@ class MenuService:
                 total += ing.quantity * product.cost_price
         return total
 
+    def list_recipes(self, business_id: str) -> List[Recipe]:
+        """List all recipes for a business."""
+        return (
+            self.db.query(Recipe)
+            .filter(Recipe.business_id == business_id, Recipe.deleted_at.is_(None))
+            .order_by(Recipe.name)
+            .all()
+        )
+
+    def get_recipe(self, recipe_id: str, business_id: str) -> Recipe:
+        """Get a single recipe by ID."""
+        recipe = (
+            self.db.query(Recipe)
+            .filter(
+                Recipe.id == recipe_id,
+                Recipe.business_id == business_id,
+                Recipe.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not recipe:
+            raise ValueError("Recipe not found")
+        return recipe
+
+    def update_recipe(
+        self,
+        recipe_id: str,
+        business_id: str,
+        name: Optional[str] = None,
+        yield_quantity: Optional[Decimal] = None,
+        instructions: Optional[str] = None,
+    ) -> Recipe:
+        """Update a recipe."""
+        recipe = self.get_recipe(recipe_id, business_id)
+        if name is not None:
+            recipe.name = name
+        if yield_quantity is not None:
+            recipe.yield_quantity = yield_quantity
+        if instructions is not None:
+            recipe.instructions = instructions
+        self.db.commit()
+        self.db.refresh(recipe)
+        return recipe
+
+    def delete_recipe(self, recipe_id: str, business_id: str) -> None:
+        """Soft-delete a recipe."""
+        from datetime import datetime, timezone
+        recipe = self.get_recipe(recipe_id, business_id)
+        recipe.deleted_at = datetime.now(timezone.utc)
+        self.db.commit()
+
+    def get_recipe_food_cost_pct(
+        self, recipe_id: str, business_id: str
+    ) -> Dict[str, Any]:
+        """Calculate food cost percentage for a recipe.
+
+        Food cost % = (recipe cost / selling price) * 100
+        """
+        recipe = self.get_recipe(recipe_id, business_id)
+        total_cost = self.calculate_recipe_cost(recipe_id, business_id)
+
+        selling_price = Decimal("0")
+        if recipe.menu_item_id:
+            item = (
+                self.db.query(MenuItem)
+                .filter(MenuItem.id == recipe.menu_item_id)
+                .first()
+            )
+            if item and item.price:
+                selling_price = item.price
+
+        food_cost_pct = (
+            (total_cost / selling_price * 100) if selling_price > 0 else Decimal("0")
+        )
+        cost_per_portion = (
+            (total_cost / recipe.yield_quantity)
+            if recipe.yield_quantity and recipe.yield_quantity > 0
+            else total_cost
+        )
+
+        return {
+            "recipe_id": str(recipe.id),
+            "name": recipe.name,
+            "total_cost": float(total_cost),
+            "selling_price": float(selling_price),
+            "food_cost_pct": round(float(food_cost_pct), 2),
+            "cost_per_portion": round(float(cost_per_portion), 2),
+            "yield_quantity": float(recipe.yield_quantity or 1),
+        }
+
     # ── Menu Engineering Matrix ──────────────────────────────────
 
     def get_menu_engineering_matrix(

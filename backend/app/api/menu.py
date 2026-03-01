@@ -160,6 +160,12 @@ class RecipeCostResponse(PydanticBase):
     total_cost: Decimal
 
 
+class RecipeUpdate(PydanticBase):
+    name: Optional[str] = None
+    yield_quantity: Optional[Decimal] = None
+    instructions: Optional[str] = None
+
+
 class MatrixItemResponse(PydanticBase):
     id: str
     display_name: str
@@ -437,6 +443,82 @@ async def get_recipe_cost(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     return RecipeCostResponse(recipe_id=recipe_id, total_cost=total)
+
+
+@router.get("/recipes", response_model=List[RecipeResponse])
+async def list_recipes(
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """List all recipes for the business."""
+    service = MenuService(db)
+    return service.list_recipes(business_id)
+
+
+@router.get("/recipes/{recipe_id}", response_model=RecipeResponse)
+async def get_recipe(
+    recipe_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Get a recipe by ID."""
+    service = MenuService(db)
+    try:
+        return service.get_recipe(str(recipe_id), business_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.put("/recipes/{recipe_id}", response_model=RecipeResponse)
+async def update_recipe(
+    recipe_id: UUID,
+    data: RecipeUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Update a recipe."""
+    service = MenuService(db)
+    try:
+        return service.update_recipe(
+            str(recipe_id), business_id,
+            name=data.name, yield_quantity=data.yield_quantity,
+            instructions=data.instructions,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.delete("/recipes/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recipe(
+    recipe_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Delete a recipe."""
+    service = MenuService(db)
+    try:
+        service.delete_recipe(str(recipe_id), business_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.get("/recipes/{recipe_id}/food-cost")
+async def get_recipe_food_cost(
+    recipe_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Get food cost percentage and cost per portion for a recipe."""
+    service = MenuService(db)
+    try:
+        return service.get_recipe_food_cost_pct(str(recipe_id), business_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 
 # ── Engineering Matrix ───────────────────────────────────────────
