@@ -57,6 +57,15 @@ from app.schemas.commission import (
     CommissionApproveResponse,
 )
 from app.services.commission_service import CommissionService
+from app.schemas.custom_report import (
+    ReportTemplateCreate,
+    ReportTemplateUpdate,
+    ReportTemplateResponse,
+    ReportTemplateListResponse,
+    CustomReportRequest,
+    CustomReportResponse,
+)
+from app.services.custom_report_service import CustomReportService
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -1940,6 +1949,159 @@ async def export_commission_payroll(
 
     commission_service = CommissionService(db)
     return commission_service.get_payroll_export(business_id, start, end)
+
+
+# ── Custom Report Builder ───────────────────────────────────────────────
+
+
+@router.post("/custom/execute", response_model=CustomReportResponse)
+async def execute_custom_report(
+    body: CustomReportRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Execute a custom report with selected metrics and filters."""
+    service = CustomReportService(db)
+    return service.execute_report(
+        business_id, body.metrics, body.filters,
+        body.group_by, body.sort_by, body.sort_direction,
+    )
+
+
+@router.post("/custom/templates", response_model=ReportTemplateResponse)
+async def create_report_template(
+    body: ReportTemplateCreate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Save a custom report template."""
+    service = CustomReportService(db)
+    template = service.create_template(
+        business_id=business_id, user_id=current_user.id,
+        name=body.name, description=body.description,
+        metrics=body.metrics, filters=body.filters,
+        group_by=body.group_by, sort_by=body.sort_by,
+        sort_direction=body.sort_direction,
+        is_scheduled=body.is_scheduled, schedule_cron=body.schedule_cron,
+        schedule_recipients=body.schedule_recipients,
+        is_public=body.is_public,
+    )
+    owner_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or "Unknown"
+    return ReportTemplateResponse(
+        id=template.id, name=template.name, description=template.description,
+        report_type=template.report_type, metrics=template.metrics,
+        filters=template.filters, group_by=template.group_by,
+        sort_by=template.sort_by, sort_direction=template.sort_direction,
+        is_scheduled=template.is_scheduled, schedule_cron=template.schedule_cron,
+        schedule_recipients=template.schedule_recipients,
+        is_public=template.is_public, created_by_name=owner_name,
+        created_at=template.created_at,
+    )
+
+
+@router.get("/custom/templates", response_model=ReportTemplateListResponse)
+async def list_report_templates(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """List saved report templates."""
+    service = CustomReportService(db)
+    items, total = service.list_templates(
+        business_id, user_id=current_user.id, page=page, per_page=per_page,
+    )
+    return ReportTemplateListResponse(items=items, total=total)
+
+
+@router.get("/custom/templates/{template_id}", response_model=ReportTemplateResponse)
+async def get_report_template(
+    template_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get a specific report template."""
+    service = CustomReportService(db)
+    template = service.get_template(business_id, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    owner_name = "Unknown"
+    if template.owner:
+        owner_name = f"{template.owner.first_name or ''} {template.owner.last_name or ''}".strip() or "Unknown"
+    return ReportTemplateResponse(
+        id=template.id, name=template.name, description=template.description,
+        report_type=template.report_type, metrics=template.metrics,
+        filters=template.filters, group_by=template.group_by,
+        sort_by=template.sort_by, sort_direction=template.sort_direction,
+        is_scheduled=template.is_scheduled, schedule_cron=template.schedule_cron,
+        schedule_recipients=template.schedule_recipients,
+        is_public=template.is_public, created_by_name=owner_name,
+        created_at=template.created_at,
+    )
+
+
+@router.put("/custom/templates/{template_id}", response_model=ReportTemplateResponse)
+async def update_report_template(
+    template_id: str,
+    body: ReportTemplateUpdate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Update a report template."""
+    service = CustomReportService(db)
+    template = service.get_template(business_id, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    if template.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this template")
+    updates = body.model_dump(exclude_unset=True)
+    template = service.update_template(template, **updates)
+    owner_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or "Unknown"
+    return ReportTemplateResponse(
+        id=template.id, name=template.name, description=template.description,
+        report_type=template.report_type, metrics=template.metrics,
+        filters=template.filters, group_by=template.group_by,
+        sort_by=template.sort_by, sort_direction=template.sort_direction,
+        is_scheduled=template.is_scheduled, schedule_cron=template.schedule_cron,
+        schedule_recipients=template.schedule_recipients,
+        is_public=template.is_public, created_by_name=owner_name,
+        created_at=template.created_at,
+    )
+
+
+@router.delete("/custom/templates/{template_id}")
+async def delete_report_template(
+    template_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Delete a report template."""
+    service = CustomReportService(db)
+    template = service.get_template(business_id, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    if template.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this template")
+    service.delete_template(template)
+    return {"detail": "Template deleted"}
+
+
+@router.get("/custom/metrics")
+async def list_available_metrics(
+    current_user: User = Depends(get_current_active_user),
+):
+    """List available metrics for custom report builder."""
+    from app.services.custom_report_service import AVAILABLE_METRICS, AVAILABLE_GROUP_BY
+    return {
+        "metrics": [{"key": k, "label": v} for k, v in AVAILABLE_METRICS.items()],
+        "group_by": AVAILABLE_GROUP_BY,
+    }
 
 
 @router.get("/inventory/stock-levels")

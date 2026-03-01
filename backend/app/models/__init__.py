@@ -152,6 +152,7 @@ from app.models.cash_register import (
     CashMovement,
 )
 from app.models.commission import CommissionRecord, CommissionStatus
+from app.models.report_template import ReportTemplate
 from app.models.gift_card import GiftCard, GiftCardStatus, GiftCardTransaction
 from app.models.expense import (
     Expense,
@@ -376,4 +377,5 @@ __all__ = [
     "CashMovement",
     "CommissionRecord",
     "CommissionStatus",
+    "ReportTemplate",
 ]
