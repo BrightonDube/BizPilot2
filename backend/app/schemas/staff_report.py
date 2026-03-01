@@ -242,3 +242,47 @@ class CashDrawerReport(BaseModel):
     discrepancy_count: int
     movement_summary: Dict[str, CashMovementSummary]
     sessions: List[CashDrawerSession]
+
+
+# -- Void/Refund Report --
+
+
+class VoidRefundStaffItem(BaseModel):
+    user_id: str
+    staff_name: str
+    email: Optional[str] = None
+    void_count: int = 0
+    refund_count: int = 0
+    total_actions: int = 0
+
+
+class VoidRefundReport(BaseModel):
+    start_date: str
+    end_date: str
+    total_staff: int
+    total_voids: int
+    total_refunds: int
+    staff: List[VoidRefundStaffItem]
+
+
+# -- Discount Report --
+
+
+class DiscountStaffItem(BaseModel):
+    user_id: str
+    staff_name: str
+    email: Optional[str] = None
+    order_count: int = 0
+    total_discounts: float = 0
+    total_sales: float = 0
+    discount_rate: float = 0
+
+
+class DiscountReport(BaseModel):
+    start_date: str
+    end_date: str
+    total_staff: int
+    total_discounts: float
+    total_sales: float
+    overall_discount_rate: float
+    staff: List[DiscountStaffItem]

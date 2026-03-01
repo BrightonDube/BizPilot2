@@ -47,6 +47,8 @@ from app.schemas.staff_report import (
     StaffCommissionReport,
     StaffActivityLogReport,
     CashDrawerReport,
+    VoidRefundReport,
+    DiscountReport,
 )
 from app.schemas.commission import (
     CommissionGenerateRequest,
@@ -1569,6 +1571,59 @@ async def get_cash_drawer_report(
         register_id=register_id,
         user_id=user_id,
     )
+
+
+# ── Void/Discount Reports ───────────────────────────────────────────────
+
+
+@router.get("/staff/voids-refunds", response_model=VoidRefundReport)
+async def get_void_refund_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Void and refund report showing actions by staff."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_void_refund_report(business_id, start, end, user_id=user_id)
+
+
+@router.get("/staff/discounts", response_model=DiscountReport)
+async def get_discount_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Discount report showing discounts applied by staff."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_discount_report(business_id, start, end, user_id=user_id)
 
 
 # ── Commission Approval Workflow ────────────────────────────────────────

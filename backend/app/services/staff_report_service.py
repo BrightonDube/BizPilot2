@@ -806,3 +806,152 @@ class StaffReportService:
             "movement_summary": movement_summary,
             "sessions": sessions,
         }
+
+    def get_void_refund_report(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+        user_id: Optional[str] = None,
+    ) -> dict:
+        """Report on voids and refunds attributed to staff via audit logs."""
+        start, end = self._parse_dates(start_date, end_date)
+
+        query = (
+            self.db.query(
+                UserAuditLog.user_id,
+                User.first_name,
+                User.last_name,
+                User.email,
+                UserAuditLog.action,
+                func.count(UserAuditLog.id).label("action_count"),
+            )
+            .join(User, User.id == UserAuditLog.user_id)
+            .filter(
+                UserAuditLog.business_id == str(business_id),
+                UserAuditLog.action.in_([AuditAction.VOID, AuditAction.REFUND]),
+                UserAuditLog.created_at >= start,
+                UserAuditLog.created_at < end,
+                UserAuditLog.user_id.isnot(None),
+            )
+        )
+        if user_id:
+            query = query.filter(UserAuditLog.user_id == user_id)
+
+        rows = (
+            query.group_by(
+                UserAuditLog.user_id, User.first_name, User.last_name,
+                User.email, UserAuditLog.action,
+            )
+            .order_by(func.count(UserAuditLog.id).desc())
+            .all()
+        )
+
+        staff_map: Dict[str, dict] = {}
+        for r in rows:
+            uid = str(r.user_id)
+            if uid not in staff_map:
+                name = f"{r.first_name or ''} {r.last_name or ''}".strip() or "Unknown"
+                staff_map[uid] = {
+                    "user_id": uid,
+                    "staff_name": name,
+                    "email": r.email,
+                    "void_count": 0,
+                    "refund_count": 0,
+                    "total_actions": 0,
+                }
+            action_val = r.action.value if hasattr(r.action, "value") else r.action
+            count = int(r.action_count)
+            if action_val == "void":
+                staff_map[uid]["void_count"] = count
+            elif action_val == "refund":
+                staff_map[uid]["refund_count"] = count
+            staff_map[uid]["total_actions"] += count
+
+        items = sorted(staff_map.values(), key=lambda x: x["total_actions"], reverse=True)
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_staff": len(items),
+            "total_voids": sum(i["void_count"] for i in items),
+            "total_refunds": sum(i["refund_count"] for i in items),
+            "staff": items,
+        }
+
+    def get_discount_report(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+        user_id: Optional[str] = None,
+    ) -> dict:
+        """Report on discounts applied by staff, based on orders with discount_amount > 0."""
+        start, end = self._parse_dates(start_date, end_date)
+
+        query = (
+            self.db.query(
+                UserAuditLog.user_id,
+                User.first_name,
+                User.last_name,
+                User.email,
+                func.count(func.distinct(Order.id)).label("order_count"),
+                func.coalesce(func.sum(Order.discount_amount), 0).label("total_discounts"),
+                func.coalesce(func.sum(Order.total), 0).label("total_sales"),
+            )
+            .join(User, User.id == UserAuditLog.user_id)
+            .join(
+                Order,
+                (func.cast(Order.id, String) == UserAuditLog.resource_id)
+                & (Order.business_id == str(business_id))
+                & (Order.discount_amount > 0),
+            )
+            .filter(
+                UserAuditLog.business_id == str(business_id),
+                UserAuditLog.action == AuditAction.CREATE,
+                UserAuditLog.resource_type == "order",
+                UserAuditLog.created_at >= start,
+                UserAuditLog.created_at < end,
+                UserAuditLog.user_id.isnot(None),
+            )
+        )
+        if user_id:
+            query = query.filter(UserAuditLog.user_id == user_id)
+
+        rows = (
+            query.group_by(
+                UserAuditLog.user_id, User.first_name, User.last_name, User.email,
+            )
+            .order_by(func.coalesce(func.sum(Order.discount_amount), 0).desc())
+            .all()
+        )
+
+        items = []
+        total_discounts = 0.0
+        total_sales = 0.0
+        for r in rows:
+            disc = round(float(r.total_discounts or 0), 2)
+            sales = round(float(r.total_sales or 0), 2)
+            total_discounts += disc
+            total_sales += sales
+            name = f"{r.first_name or ''} {r.last_name or ''}".strip() or "Unknown"
+            items.append({
+                "user_id": str(r.user_id),
+                "staff_name": name,
+                "email": r.email,
+                "order_count": int(r.order_count or 0),
+                "total_discounts": disc,
+                "total_sales": sales,
+                "discount_rate": round((disc / sales * 100) if sales > 0 else 0, 2),
+            })
+
+        return {
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_staff": len(items),
+            "total_discounts": round(total_discounts, 2),
+            "total_sales": round(total_sales, 2),
+            "overall_discount_rate": round(
+                (total_discounts / total_sales * 100) if total_sales > 0 else 0, 2,
+            ),
+            "staff": items,
+        }
