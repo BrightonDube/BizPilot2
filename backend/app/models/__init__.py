@@ -151,6 +151,7 @@ from app.models.cash_register import (
     RegisterSession,
     CashMovement,
 )
+from app.models.commission import CommissionRecord, CommissionStatus
 from app.models.gift_card import GiftCard, GiftCardStatus, GiftCardTransaction
 from app.models.expense import (
     Expense,
@@ -373,4 +374,6 @@ __all__ = [
     "CashRegister",
     "RegisterSession",
     "CashMovement",
+    "CommissionRecord",
+    "CommissionStatus",
 ]

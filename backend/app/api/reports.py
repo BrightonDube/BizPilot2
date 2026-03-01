@@ -48,6 +48,13 @@ from app.schemas.staff_report import (
     StaffActivityLogReport,
     CashDrawerReport,
 )
+from app.schemas.commission import (
+    CommissionGenerateRequest,
+    CommissionApproveRequest,
+    CommissionListResponse,
+    CommissionApproveResponse,
+)
+from app.services.commission_service import CommissionService
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -1562,6 +1569,99 @@ async def get_cash_drawer_report(
         register_id=register_id,
         user_id=user_id,
     )
+
+
+# ── Commission Approval Workflow ────────────────────────────────────────
+
+
+@router.post("/staff/commissions/generate", response_model=CommissionListResponse)
+async def generate_commission_records(
+    body: CommissionGenerateRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Generate commission records from sales data for a period."""
+    report_service = StaffReportService(db)
+    report = report_service.get_commission_report(
+        business_id, body.period_start, body.period_end, body.commission_rate,
+    )
+    commission_service = CommissionService(db)
+    commission_service.generate_records(
+        business_id=business_id,
+        period_start=body.period_start,
+        period_end=body.period_end,
+        commission_rate=body.commission_rate,
+        staff_data=report["staff"],
+    )
+    items, total = commission_service.list_records(business_id)
+    total_commission = sum(i["commission_amount"] for i in items)
+    total_sales = sum(i["total_sales"] for i in items)
+    return CommissionListResponse(
+        items=items, total=total,
+        total_commission=total_commission, total_sales=total_sales,
+    )
+
+
+@router.get("/staff/commissions/records", response_model=CommissionListResponse)
+async def list_commission_records(
+    status_filter: Optional[str] = Query(None, alias="status", description="Filter by status"),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """List commission records with optional status filter."""
+    commission_service = CommissionService(db)
+    items, total = commission_service.list_records(
+        business_id, status=status_filter, page=page, per_page=per_page,
+    )
+    total_commission = sum(i["commission_amount"] for i in items)
+    total_sales = sum(i["total_sales"] for i in items)
+    return CommissionListResponse(
+        items=items, total=total,
+        total_commission=total_commission, total_sales=total_sales,
+    )
+
+
+@router.post("/staff/commissions/approve", response_model=CommissionApproveResponse)
+async def approve_commission_records(
+    body: CommissionApproveRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Approve or reject commission records."""
+    commission_service = CommissionService(db)
+    if body.action == "approve":
+        count = commission_service.approve_records(
+            business_id, body.record_ids, current_user.id,
+        )
+    else:
+        count = commission_service.reject_records(
+            business_id, body.record_ids, current_user.id,
+            reason=body.rejection_reason,
+        )
+    return CommissionApproveResponse(updated_count=count, action=body.action)
+
+
+@router.get("/staff/commissions/payroll")
+async def export_commission_payroll(
+    period_start: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
+    period_end: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export approved commissions grouped by staff for payroll."""
+    from datetime import date as date_type
+
+    start = date_type.fromisoformat(period_start) if period_start else None
+    end = date_type.fromisoformat(period_end) if period_end else None
+
+    commission_service = CommissionService(db)
+    return commission_service.get_payroll_export(business_id, start, end)
 
 
 @router.get("/inventory/stock-levels")
