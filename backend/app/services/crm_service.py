@@ -318,6 +318,118 @@ class CrmService:
             .first()
         )
 
+    # ---- Auto-segment evaluation ----
+
+    def auto_update_segments(self, business_id: str) -> dict:
+        """Evaluate all auto-segments and update their membership.
+
+        For each segment with is_auto=True, evaluate all customers against
+        the segment's criteria and add/remove members accordingly.
+        Criteria is a JSON string with rules like:
+        {"min_total_spent": 1000, "min_orders": 5, "max_days_since_last_order": 90}
+        """
+        import json
+        from app.models.customer import Customer
+
+        auto_segments = (
+            self.db.query(CustomerSegment)
+            .filter(
+                CustomerSegment.business_id == business_id,
+                CustomerSegment.is_auto.is_(True),
+                CustomerSegment.deleted_at.is_(None),
+            )
+            .all()
+        )
+
+        customers = (
+            self.db.query(Customer)
+            .filter(
+                Customer.business_id == business_id,
+                Customer.deleted_at.is_(None),
+            )
+            .all()
+        )
+
+        results = {"segments_evaluated": 0, "members_added": 0, "members_removed": 0}
+
+        for segment in auto_segments:
+            criteria = {}
+            if segment.criteria:
+                try:
+                    criteria = json.loads(segment.criteria) if isinstance(segment.criteria, str) else segment.criteria
+                except (json.JSONDecodeError, TypeError):
+                    continue
+
+            current_member_ids = set(
+                mid for (mid,) in self.db.query(CustomerSegmentMember.customer_id)
+                .filter(
+                    CustomerSegmentMember.segment_id == segment.id,
+                    CustomerSegmentMember.deleted_at.is_(None),
+                )
+                .all()
+            )
+
+            matching_ids = set()
+            for customer in customers:
+                if self._customer_matches_criteria(customer, criteria):
+                    matching_ids.add(customer.id)
+
+            # Add new members
+            to_add = matching_ids - current_member_ids
+            for cid in to_add:
+                member = CustomerSegmentMember(
+                    segment_id=segment.id, customer_id=cid,
+                )
+                self.db.add(member)
+                results["members_added"] += 1
+
+            # Remove non-matching members
+            to_remove = current_member_ids - matching_ids
+            if to_remove:
+                from datetime import datetime, timezone as tz
+                now = datetime.now(tz.utc)
+                self.db.query(CustomerSegmentMember).filter(
+                    CustomerSegmentMember.segment_id == segment.id,
+                    CustomerSegmentMember.customer_id.in_(to_remove),
+                ).update({CustomerSegmentMember.deleted_at: now}, synchronize_session="fetch")
+                results["members_removed"] += len(to_remove)
+
+            results["segments_evaluated"] += 1
+
+        self.db.commit()
+        return results
+
+    @staticmethod
+    def _customer_matches_criteria(customer, criteria: dict) -> bool:
+        """Check if a customer matches segment criteria rules."""
+        if not criteria:
+            return False
+
+        min_spent = criteria.get("min_total_spent")
+        if min_spent is not None and (customer.total_spent or 0) < float(min_spent):
+            return False
+
+        max_spent = criteria.get("max_total_spent")
+        if max_spent is not None and (customer.total_spent or 0) > float(max_spent):
+            return False
+
+        min_orders = criteria.get("min_orders")
+        if min_orders is not None and (customer.total_orders or 0) < int(min_orders):
+            return False
+
+        max_days = criteria.get("max_days_since_last_order")
+        if max_days is not None:
+            if not hasattr(customer, "last_order_date") or not customer.last_order_date:
+                return False
+
+        customer_type = criteria.get("customer_type")
+        if customer_type is not None:
+            ct = customer.customer_type.value if hasattr(customer.customer_type, "value") else customer.customer_type
+            if ct != customer_type:
+                return False
+
+        return True
+
     def get_top_customers(
         self, business_id: str, limit: int = 10
     ) -> List[CustomerMetrics]:
@@ -347,3 +459,175 @@ class CrmService:
             .order_by(CustomerMetrics.days_since_last_order.desc())
             .all()
         )
+
+    # ---- Privacy compliance ----
+
+    def export_customer_data(self, business_id: str, customer_id: str, accessed_by: str) -> dict:
+        """Export all data for a customer (POPIA/GDPR data subject access request)."""
+        from app.models.customer import Customer
+        from app.models.data_access_log import CustomerDataAccessLog
+
+        customer = (
+            self.db.query(Customer)
+            .filter(Customer.id == customer_id, Customer.business_id == business_id)
+            .first()
+        )
+        if not customer:
+            return {"error": "Customer not found"}
+
+        # Log the access
+        log = CustomerDataAccessLog(
+            business_id=business_id,
+            customer_id=customer_id,
+            accessed_by=accessed_by,
+            access_type="export",
+            details="Full data export requested",
+        )
+        self.db.add(log)
+        self.db.commit()
+
+        return {
+            "customer": {
+                "id": str(customer.id),
+                "first_name": customer.first_name,
+                "last_name": customer.last_name,
+                "email": customer.email,
+                "phone": customer.phone,
+                "company_name": customer.company_name,
+                "customer_type": customer.customer_type.value if customer.customer_type else None,
+                "address_line1": customer.address_line1,
+                "address_line2": customer.address_line2,
+                "city": customer.city,
+                "state": customer.state,
+                "postal_code": customer.postal_code,
+                "country": customer.country,
+                "notes": customer.notes,
+                "tags": customer.tags,
+                "total_orders": customer.total_orders,
+                "total_spent": str(customer.total_spent) if customer.total_spent else "0",
+                "marketing_consent": customer.marketing_consent,
+                "data_processing_consent": customer.data_processing_consent,
+                "consent_updated_at": customer.consent_updated_at.isoformat() if customer.consent_updated_at else None,
+                "created_at": customer.created_at.isoformat() if customer.created_at else None,
+            },
+            "interactions": [
+                {
+                    "type": i.interaction_type.value if hasattr(i.interaction_type, "value") else i.interaction_type,
+                    "notes": i.notes,
+                    "created_at": i.created_at.isoformat() if i.created_at else None,
+                }
+                for i in self.db.query(CustomerInteraction)
+                .filter(CustomerInteraction.customer_id == customer_id)
+                .all()
+            ],
+        }
+
+    def delete_customer_data(self, business_id: str, customer_id: str, accessed_by: str) -> dict:
+        """Anonymize customer data for POPIA/GDPR right-to-erasure."""
+        from app.models.customer import Customer
+        from app.models.data_access_log import CustomerDataAccessLog
+
+        customer = (
+            self.db.query(Customer)
+            .filter(Customer.id == customer_id, Customer.business_id == business_id)
+            .first()
+        )
+        if not customer:
+            return {"error": "Customer not found"}
+
+        # Log the access before anonymizing
+        log = CustomerDataAccessLog(
+            business_id=business_id,
+            customer_id=customer_id,
+            accessed_by=accessed_by,
+            access_type="delete",
+            details="Data anonymization requested",
+        )
+        self.db.add(log)
+
+        # Anonymize PII fields
+        customer.first_name = "[REDACTED]"
+        customer.last_name = "[REDACTED]"
+        customer.email = None
+        customer.phone = None
+        customer.company_name = None
+        customer.tax_number = None
+        customer.address_line1 = None
+        customer.address_line2 = None
+        customer.city = None
+        customer.state = None
+        customer.postal_code = None
+        customer.country = None
+        customer.notes = None
+        customer.tags = []
+
+        self.db.commit()
+        return {"status": "anonymized", "customer_id": str(customer_id)}
+
+    def update_consent(
+        self, business_id: str, customer_id: str, accessed_by: str,
+        marketing_consent: Optional[bool] = None,
+        data_processing_consent: Optional[bool] = None,
+    ) -> dict:
+        """Update customer consent preferences."""
+        from app.models.customer import Customer
+        from app.models.data_access_log import CustomerDataAccessLog
+
+        customer = (
+            self.db.query(Customer)
+            .filter(Customer.id == customer_id, Customer.business_id == business_id)
+            .first()
+        )
+        if not customer:
+            return {"error": "Customer not found"}
+
+        changes = []
+        if marketing_consent is not None:
+            customer.marketing_consent = marketing_consent
+            changes.append(f"marketing_consent={marketing_consent}")
+        if data_processing_consent is not None:
+            customer.data_processing_consent = data_processing_consent
+            changes.append(f"data_processing_consent={data_processing_consent}")
+
+        customer.consent_updated_at = datetime.now(timezone.utc)
+
+        log = CustomerDataAccessLog(
+            business_id=business_id,
+            customer_id=customer_id,
+            accessed_by=accessed_by,
+            access_type="consent_update",
+            details=", ".join(changes),
+        )
+        self.db.add(log)
+        self.db.commit()
+
+        return {
+            "customer_id": str(customer_id),
+            "marketing_consent": customer.marketing_consent,
+            "data_processing_consent": customer.data_processing_consent,
+            "consent_updated_at": customer.consent_updated_at.isoformat(),
+        }
+
+    def get_access_logs(self, business_id: str, customer_id: str) -> list:
+        """Get data access audit trail for a customer."""
+        from app.models.data_access_log import CustomerDataAccessLog
+
+        logs = (
+            self.db.query(CustomerDataAccessLog)
+            .filter(
+                CustomerDataAccessLog.business_id == business_id,
+                CustomerDataAccessLog.customer_id == customer_id,
+            )
+            .order_by(CustomerDataAccessLog.created_at.desc())
+            .all()
+        )
+        return [
+            {
+                "id": str(log.id),
+                "access_type": log.access_type,
+                "accessed_by": str(log.accessed_by),
+                "details": log.details,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+            }
+            for log in logs
+        ]

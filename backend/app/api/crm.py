@@ -421,3 +421,136 @@ async def get_at_risk_customers(
         )
         for m in items
     ]
+
+
+@router.post("/segments/auto-update")
+async def auto_update_segments(
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Evaluate all auto-segments and update membership based on criteria."""
+    service = CrmService(db)
+    return service.auto_update_segments(business_id)
+
+
+# ---------- Privacy compliance ----------
+
+
+class ConsentUpdate(PydanticBase):
+    marketing_consent: Optional[bool] = None
+    data_processing_consent: Optional[bool] = None
+
+
+@router.get("/customers/{customer_id}/data-export")
+async def export_customer_data(
+    customer_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export all stored data for a customer (POPIA/GDPR data subject access)."""
+    service = CrmService(db)
+    result = service.export_customer_data(business_id, customer_id, str(current_user.id))
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@router.delete("/customers/{customer_id}/data")
+async def delete_customer_data(
+    customer_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Anonymize customer PII (POPIA/GDPR right to erasure)."""
+    service = CrmService(db)
+    result = service.delete_customer_data(business_id, customer_id, str(current_user.id))
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@router.put("/customers/{customer_id}/consent")
+async def update_customer_consent(
+    customer_id: str,
+    body: ConsentUpdate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Update customer consent preferences."""
+    service = CrmService(db)
+    result = service.update_consent(
+        business_id, customer_id, str(current_user.id),
+        marketing_consent=body.marketing_consent,
+        data_processing_consent=body.data_processing_consent,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@router.get("/customers/{customer_id}/access-logs")
+async def get_customer_access_logs(
+    customer_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get data access audit trail for a customer."""
+    service = CrmService(db)
+    return service.get_access_logs(business_id, customer_id)
+
+
+# ---------- Type-based pricing ----------
+
+# Default price multipliers by customer type
+DEFAULT_PRICE_MULTIPLIERS = {
+    "individual": 1.0,
+    "business": 0.90,  # 10% trade discount for business customers
+}
+
+
+class TypePricingRequest(PydanticBase):
+    customer_id: str
+    product_id: str
+
+
+@router.post("/type-pricing")
+async def get_type_based_price(
+    body: TypePricingRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Calculate price for a product based on customer type multiplier."""
+    from app.models.customer import Customer
+    from app.models.product import Product
+
+    customer = db.query(Customer).filter(
+        Customer.id == body.customer_id, Customer.business_id == business_id,
+    ).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    product = db.query(Product).filter(
+        Product.id == body.product_id, Product.business_id == business_id,
+    ).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    customer_type = customer.customer_type.value if hasattr(customer.customer_type, "value") else str(customer.customer_type or "individual")
+    multiplier = DEFAULT_PRICE_MULTIPLIERS.get(customer_type, 1.0)
+    base_price = float(product.selling_price or 0)
+    adjusted_price = round(base_price * multiplier, 2)
+
+    return {
+        "product_id": str(product.id),
+        "customer_id": str(customer.id),
+        "customer_type": customer_type,
+        "base_price": base_price,
+        "multiplier": multiplier,
+        "adjusted_price": adjusted_price,
+    }
