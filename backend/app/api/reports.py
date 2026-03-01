@@ -39,6 +39,14 @@ from app.schemas.report import (
     LoginHistoryReport,
     LoginHistoryItem,
 )
+from app.schemas.staff_report import (
+    StaffPerformanceReport,
+    StaffAttendanceReport,
+    DepartmentPerformanceReport,
+    StaffProductivityReport,
+    StaffCommissionReport,
+    StaffActivityLogReport,
+)
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -1248,7 +1256,7 @@ async def export_report_csv(
 # ── Staff Reports ──────────────────────────────────────────────────────────
 
 
-@router.get("/staff/performance")
+@router.get("/staff/performance", response_model=StaffPerformanceReport)
 async def get_staff_performance_report(
     start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
     end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
@@ -1272,7 +1280,7 @@ async def get_staff_performance_report(
     return service.get_performance_report(business_id, start, end)
 
 
-@router.get("/staff/attendance")
+@router.get("/staff/attendance", response_model=StaffAttendanceReport)
 async def get_staff_attendance_report(
     start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
     end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
@@ -1297,7 +1305,7 @@ async def get_staff_attendance_report(
     return service.get_attendance_report(business_id, start, end, user_id=user_id)
 
 
-@router.get("/staff/departments")
+@router.get("/staff/departments", response_model=DepartmentPerformanceReport)
 async def get_department_performance_report(
     start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
     end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
@@ -1321,7 +1329,7 @@ async def get_department_performance_report(
     return service.get_department_performance(business_id, start, end)
 
 
-@router.get("/staff/productivity")
+@router.get("/staff/productivity", response_model=StaffProductivityReport)
 async def get_staff_productivity_report(
     start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
     end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
@@ -1345,7 +1353,7 @@ async def get_staff_productivity_report(
     return service.get_productivity_report(business_id, start, end)
 
 
-@router.get("/staff/commissions")
+@router.get("/staff/commissions", response_model=StaffCommissionReport)
 async def get_staff_commission_report(
     start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
     end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
@@ -1370,7 +1378,7 @@ async def get_staff_commission_report(
     return service.get_commission_report(business_id, start, end, commission_rate)
 
 
-@router.get("/staff/activity")
+@router.get("/staff/activity", response_model=StaffActivityLogReport)
 async def get_staff_activity_log(
     start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
     end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
