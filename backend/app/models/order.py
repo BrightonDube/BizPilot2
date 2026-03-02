@@ -180,6 +180,13 @@ class OrderItem(BaseModel):
     
     # Relationship back to order
     order = relationship("Order", back_populates="items")
+    # Modifier selections captured at order time
+    item_modifiers = relationship(
+        "OrderItemModifier",
+        back_populates="order_item",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<OrderItem {self.name} x{self.quantity}>"
