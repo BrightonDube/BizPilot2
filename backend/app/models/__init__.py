@@ -93,6 +93,10 @@ from app.models.loyalty import (
     PointsTransaction,
     LoyaltyTier,
     PointsTransactionType,
+    RewardCatalogItem,
+    RewardType,
+    TierBenefit,
+    BenefitType,
 )
 from app.models.menu import (
     MenuItem,
@@ -181,6 +185,10 @@ from app.models.location import (
     StockTransfer,
     StockTransferItem,
     TransferStatus as LocationTransferStatus,
+    LocationSetting,
+    LocationPricing,
+    UserLocationAccess,
+    AccessLevel,
 )
 from app.models.tax import TaxType, TaxRate, ProductTaxRate, CategoryTaxRate
 from app.models.cash_register import (
@@ -413,6 +421,10 @@ __all__ = [
     "PointsTransaction",
     "LoyaltyTier",
     "PointsTransactionType",
+    "RewardCatalogItem",
+    "RewardType",
+    "TierBenefit",
+    "BenefitType",
     # Stock Take
     "StockTakeSession",
     "StockTakeStatus",
@@ -487,6 +499,10 @@ __all__ = [
     "StockTransfer",
     "StockTransferItem",
     "LocationTransferStatus",
+    "LocationSetting",
+    "LocationPricing",
+    "UserLocationAccess",
+    "AccessLevel",
     # Product Addons
     "ProductModifierGroup",
     "SelectionType",

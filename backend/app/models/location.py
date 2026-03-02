@@ -1,7 +1,7 @@
 """Multi-location models."""
 
 import enum
-from sqlalchemy import Column, String, Integer, Text, ForeignKey, Enum as SQLEnum, Boolean
+from sqlalchemy import Column, String, Integer, Text, ForeignKey, Enum as SQLEnum, Boolean, Numeric, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -78,3 +78,69 @@ class StockTransferItem(BaseModel):
 
     transfer = relationship("StockTransfer", back_populates="items")
     product = relationship("Product", lazy="joined")
+
+
+class LocationSetting(BaseModel):
+    """Location-specific configuration override.
+
+    Why key-value instead of typed columns?
+    Different locations may need wildly different settings (operating hours,
+    tax rates, delivery zones).  A key-value pattern avoids schema changes
+    when new settings are introduced.
+    """
+
+    __tablename__ = "location_settings"
+    __table_args__ = (
+        UniqueConstraint("location_id", "setting_key", name="uq_location_setting"),
+    )
+
+    location_id = Column(UUID(as_uuid=True), ForeignKey("locations.id"), nullable=False, index=True)
+    setting_key = Column(String(100), nullable=False)
+    setting_value = Column(Text, nullable=True)
+
+
+class LocationPricing(BaseModel):
+    """Per-location product price override.
+
+    Why location-level pricing?
+    Businesses with multiple locations often have different pricing
+    (downtown vs suburban, high-rent vs low-rent areas).  This table
+    overrides the base product price for a specific location.
+    """
+
+    __tablename__ = "location_pricing"
+    __table_args__ = (
+        UniqueConstraint("location_id", "product_id", name="uq_location_product_pricing"),
+    )
+
+    location_id = Column(UUID(as_uuid=True), ForeignKey("locations.id"), nullable=False, index=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
+    selling_price = Column(Numeric(12, 2), nullable=False)
+    cost_price = Column(Numeric(12, 2), nullable=True)
+    is_active = Column(Boolean, default=True)
+
+
+class AccessLevel(str, enum.Enum):
+    """Access levels for user-location assignments."""
+    VIEW = "view"
+    MANAGE = "manage"
+    ADMIN = "admin"
+
+
+class UserLocationAccess(BaseModel):
+    """Per-user per-location permission assignment.
+
+    Why a separate access table?
+    Business roles (from RBAC) define what a user CAN do.  This table
+    defines WHERE they can do it.  A manager might have "manage" access
+    to Location A but only "view" access to Location B.
+    """
+
+    __tablename__ = "user_location_access"
+    __table_args__ = (
+        UniqueConstraint("user_id", "location_id", name="uq_user_location_access"),
+    )
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    location_id = Column(UUID(as_uuid=True), ForeignKey("locations.id"), nullable=False, index=True)
+    access_level = Column(String(20), nullable=False, default="view")

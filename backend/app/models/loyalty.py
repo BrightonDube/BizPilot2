@@ -78,3 +78,63 @@ class PointsTransaction(BaseModel):
     order_id = Column(UUID(as_uuid=True), nullable=True)
     description = Column(Text, nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class RewardType(str, enum.Enum):
+    """Types of loyalty rewards available for redemption."""
+    DISCOUNT = "discount"
+    FREE_ITEM = "free_item"
+    VOUCHER = "voucher"
+
+
+class RewardCatalogItem(BaseModel):
+    """A redeemable loyalty reward in the catalog.
+
+    Why a catalog table?
+    Businesses need flexibility in what rewards they offer.  Hardcoding
+    reward options in the service layer limits customisation.  A catalog
+    lets each business define their own rewards with custom point costs,
+    tier restrictions, and stock limits.
+    """
+
+    __tablename__ = "reward_catalog"
+
+    business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    points_cost = Column(Integer, nullable=False)
+    reward_type = Column(String(30), nullable=False)  # See RewardType
+    reward_value = Column(Numeric(12, 2), nullable=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=True)
+    min_tier = Column(String(20), nullable=True)  # Minimum tier required to redeem
+    stock_quantity = Column(Integer, nullable=True)  # null = unlimited
+    is_active = Column(Boolean, default=True)
+
+
+class BenefitType(str, enum.Enum):
+    """Types of benefits associated with loyalty tiers."""
+    DISCOUNT = "discount"
+    BONUS_POINTS = "bonus_points"
+    FREE_DELIVERY = "free_delivery"
+    PRIORITY_SUPPORT = "priority_support"
+    EXCLUSIVE_ACCESS = "exclusive_access"
+
+
+class TierBenefit(BaseModel):
+    """A benefit/perk associated with a loyalty tier.
+
+    Why separate from LoyaltyProgram tier config?
+    LoyaltyProgram stores the threshold and multiplier for tiers.
+    TierBenefit stores the qualitative perks (free delivery for gold
+    members, exclusive access for platinum).  Separating them allows
+    each benefit to be independently toggled without schema changes.
+    """
+
+    __tablename__ = "tier_benefits"
+
+    business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
+    tier_name = Column(String(20), nullable=False)  # bronze, silver, gold, platinum
+    benefit_type = Column(String(30), nullable=False)  # See BenefitType
+    benefit_value = Column(Numeric(12, 2), nullable=True)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
