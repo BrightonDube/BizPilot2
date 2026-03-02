@@ -269,3 +269,178 @@ async def get_expense_report(
     service = PettyCashService(db)
     report = service.get_expense_report(business_id, date_from, date_to)
     return report
+
+
+# ------------------------------------------------------------------
+# Disbursement endpoints (migration 097)
+# ------------------------------------------------------------------
+
+@router.post("/funds/{fund_id}/disbursements")
+async def create_disbursement(
+    fund_id: str,
+    amount: float = Query(..., gt=0),
+    recipient_id: str = Query(...),
+    expense_id: Optional[str] = None,
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Record a cash disbursement from a fund to a recipient."""
+    from decimal import Decimal
+    service = PettyCashService(db)
+    disb = service.create_disbursement(
+        fund_id=fund_id,
+        expense_id=expense_id,
+        amount=Decimal(str(amount)),
+        recipient_id=recipient_id,
+        disbursed_by=str(current_user.id),
+        notes=notes,
+    )
+    return {"id": str(disb.id), "disbursement_number": disb.disbursement_number, "status": disb.status}
+
+
+@router.get("/funds/{fund_id}/disbursements")
+async def list_disbursements(
+    fund_id: str,
+    disbursement_status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """List disbursements for a fund."""
+    service = PettyCashService(db)
+    items, total = service.list_disbursements(fund_id, status=disbursement_status, page=page, per_page=per_page)
+    return {"items": items, "total": total, "page": page, "per_page": per_page}
+
+
+@router.patch("/disbursements/{disbursement_id}/complete")
+async def complete_disbursement(
+    disbursement_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Mark a disbursement as completed."""
+    service = PettyCashService(db)
+    disb = service.complete_disbursement(disbursement_id)
+    if not disb:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Disbursement not found or not pending")
+    return {"id": str(disb.id), "status": disb.status}
+
+
+# ------------------------------------------------------------------
+# Receipt endpoints (migration 097)
+# ------------------------------------------------------------------
+
+@router.post("/expenses/{expense_id}/receipts")
+async def add_receipt(
+    expense_id: str,
+    receipt_number: Optional[str] = None,
+    vendor_name: Optional[str] = None,
+    receipt_amount: Optional[float] = None,
+    tax_amount: Optional[float] = None,
+    image_url: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Attach a receipt to an expense."""
+    from decimal import Decimal
+    service = PettyCashService(db)
+    receipt = service.add_receipt(
+        expense_id=expense_id,
+        receipt_number=receipt_number,
+        vendor_name=vendor_name,
+        receipt_amount=Decimal(str(receipt_amount)) if receipt_amount else None,
+        tax_amount=Decimal(str(tax_amount)) if tax_amount else None,
+        image_url=image_url,
+    )
+    return {"id": str(receipt.id), "status": receipt.status}
+
+
+@router.get("/expenses/{expense_id}/receipts")
+async def list_receipts(
+    expense_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """List all receipts for an expense."""
+    service = PettyCashService(db)
+    receipts = service.list_receipts(expense_id)
+    return receipts
+
+
+@router.patch("/receipts/{receipt_id}/validate")
+async def validate_receipt(
+    receipt_id: str,
+    is_valid: bool = Query(...),
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Validate or reject a receipt."""
+    service = PettyCashService(db)
+    receipt = service.validate_receipt(receipt_id, str(current_user.id), is_valid, notes)
+    if not receipt:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Receipt not found")
+    return {"id": str(receipt.id), "status": receipt.status, "is_validated": receipt.is_validated}
+
+
+# ------------------------------------------------------------------
+# Reconciliation endpoints (migration 097)
+# ------------------------------------------------------------------
+
+@router.post("/funds/{fund_id}/reconciliations")
+async def create_reconciliation(
+    fund_id: str,
+    actual_balance: float = Query(..., ge=0),
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Create a fund reconciliation by counting actual cash on hand."""
+    from decimal import Decimal
+    service = PettyCashService(db)
+    recon = service.create_reconciliation(
+        fund_id=fund_id,
+        actual_balance=Decimal(str(actual_balance)),
+        performed_by=str(current_user.id),
+        notes=notes,
+    )
+    return {
+        "id": str(recon.id),
+        "reconciliation_number": recon.reconciliation_number,
+        "expected_balance": float(recon.expected_balance),
+        "actual_balance": float(recon.actual_balance),
+        "variance": float(recon.variance),
+        "status": recon.status,
+    }
+
+
+@router.get("/funds/{fund_id}/reconciliations")
+async def list_reconciliations(
+    fund_id: str,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """List reconciliations for a fund."""
+    service = PettyCashService(db)
+    items, total = service.list_reconciliations(fund_id, page=page, per_page=per_page)
+    return {"items": items, "total": total, "page": page, "per_page": per_page}
+
+
+@router.patch("/reconciliations/{reconciliation_id}/approve")
+async def approve_reconciliation(
+    reconciliation_id: str,
+    reason: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Approve a reconciliation variance."""
+    service = PettyCashService(db)
+    recon = service.approve_reconciliation_variance(reconciliation_id, str(current_user.id), reason)
+    if not recon:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reconciliation not found or not a discrepancy")
+    return {"id": str(recon.id), "status": recon.status}
