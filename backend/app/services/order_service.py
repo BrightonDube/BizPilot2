@@ -143,6 +143,22 @@ class OrderService:
         for item_data in data.items:
             item = self._create_order_item(order.id, item_data)
             self.db.add(item)
+            self.db.flush()  # Get item ID for modifier creation
+
+            # Create modifier records if present (Requirement 8.1)
+            if hasattr(item_data, 'modifiers') and item_data.modifiers:
+                for mod_data in item_data.modifiers:
+                    from app.models.order_item_modifier import OrderItemModifier
+                    modifier_record = OrderItemModifier(
+                        order_item_id=item.id,
+                        modifier_id=mod_data.modifier_id,
+                        modifier_name=mod_data.modifier_name,
+                        modifier_group_name=mod_data.group_name,
+                        quantity=mod_data.quantity,
+                        unit_price=Decimal(str(mod_data.unit_price)),
+                        total_price=Decimal(str(mod_data.total_price)),
+                    )
+                    self.db.add(modifier_record)
         
         # Calculate totals
         self._calculate_order_totals(order)
@@ -183,7 +199,11 @@ class OrderService:
         )
 
     def _calculate_order_totals(self, order: Order) -> None:
-        """Calculate order totals from items."""
+        """Calculate order totals from items and their modifiers.
+
+        Modifier prices are added to the item subtotal so that
+        tax and discount calculations apply to the full amount.
+        """
         items = self.db.query(OrderItem).filter(
             OrderItem.order_id == order.id,
             OrderItem.deleted_at.is_(None),
@@ -200,6 +220,11 @@ class OrderService:
             subtotal += unit_price * quantity
             tax_amount += Decimal(str(item.tax_amount or 0))
             item_discounts += Decimal(str(item.discount_amount or 0))
+
+            # Include modifier totals in the subtotal (Requirement 8.1)
+            if hasattr(item, 'item_modifiers') and item.item_modifiers:
+                for mod in item.item_modifiers:
+                    subtotal += Decimal(str(mod.total_price or 0))
         
         shipping = Decimal(str(order.shipping_amount or 0))
         order_discount = Decimal(str(order.discount_amount or 0))

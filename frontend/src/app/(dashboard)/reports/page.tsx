@@ -30,6 +30,9 @@ import {
 import { apiClient } from '@/lib/api';
 import { RevenueTrendChart } from '@/components/charts/RevenueTrendChart';
 import { OrdersTrendChart } from '@/components/charts/OrdersTrendChart';
+import { ModifierAnalytics } from '@/components/reports/ModifierAnalytics';
+import { ComboPerformance } from '@/components/reports/ComboPerformance';
+import { ModifierRanking } from '@/components/reports/ModifierRanking';
 
 // Helper function to extract filename from Content-Disposition header
 function extractFilenameFromContentDisposition(contentDisposition: string | undefined): string | null {
@@ -408,6 +411,13 @@ export default function ReportsPage() {
                 </CardContent>
               </Card>
             </Link>
+          </div>
+
+          {/* Modifier & Combo Reports */}
+          <div className="space-y-8 mt-8">
+            <ModifierAnalytics />
+            <ModifierRanking />
+            <ComboPerformance />
           </div>
         </>
       )}
