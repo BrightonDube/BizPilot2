@@ -71,6 +71,7 @@ from app.api.pms import router as pms_router
 from app.api.xero import router as xero_router
 from app.api.woocommerce import router as woocommerce_router
 from app.api.sync import router as sync_router
+from app.api.inventory_periods import router as inventory_periods_router
 
 router = APIRouter()
 
@@ -143,6 +144,7 @@ router.include_router(pms_router)
 router.include_router(xero_router)
 router.include_router(woocommerce_router)
 router.include_router(sync_router)
+router.include_router(inventory_periods_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
