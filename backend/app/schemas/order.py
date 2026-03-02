@@ -66,6 +66,26 @@ class OrderItemUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+class OrderItemModifierResponse(BaseModel):
+    """Schema for returning a modifier selection attached to an order item.
+
+    Why a separate response schema instead of reusing OrderItemModifierCreate?
+    The response needs the record's primary key and timestamps so the
+    frontend can identify and display each modifier row.
+    """
+
+    id: str
+    modifier_id: Optional[str] = None
+    modifier_name: str
+    group_name: str
+    quantity: int
+    unit_price: Decimal
+    total_price: Decimal
+    parent_modifier_id: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class OrderItemResponse(OrderItemBase):
     """Schema for order item response."""
     
@@ -77,6 +97,7 @@ class OrderItemResponse(OrderItemBase):
     line_total: float
     created_at: datetime
     updated_at: datetime
+    modifiers: List[OrderItemModifierResponse] = []
     
     model_config = {"from_attributes": True}
 
