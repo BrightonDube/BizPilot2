@@ -237,6 +237,19 @@ from app.models.tag import (
     SmartCollection,
     CollectionProduct,
 )
+from app.models.signage import (
+    SignageDisplayGroup,
+    SignageDisplay,
+    SignageContent,
+    SignagePlaylist,
+    SignagePlaylistItem,
+)
+from app.models.partner import (
+    Partner,
+    PartnerConfiguration,
+    WhiteLabelConfig,
+    PartnerUser,
+)
 
 __all__ = [
     "BaseModel",
@@ -520,4 +533,15 @@ __all__ = [
     "ProductTag",
     "SmartCollection",
     "CollectionProduct",
+    # Digital Signage
+    "SignageDisplayGroup",
+    "SignageDisplay",
+    "SignageContent",
+    "SignagePlaylist",
+    "SignagePlaylistItem",
+    # Partner Admin
+    "Partner",
+    "PartnerConfiguration",
+    "WhiteLabelConfig",
+    "PartnerUser",
 ]
