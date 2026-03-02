@@ -187,6 +187,14 @@ from app.models.staff_target import (
 from app.models.combo import ComboDeal, ComboComponent, ComboComponentType
 from app.models.order_item_modifier import OrderItemModifier
 from app.models.modifier_availability import ModifierAvailability
+from app.models.bulk_operation import (
+    BulkOperation,
+    BulkOperationItem,
+    BulkTemplate,
+    BulkOperationType,
+    OperationStatus,
+    ItemStatus,
+)
 
 __all__ = [
     "BaseModel",
@@ -438,4 +446,11 @@ __all__ = [
     "OrderItemModifier",
     # Modifier availability
     "ModifierAvailability",
+    # Bulk operations
+    "BulkOperation",
+    "BulkOperationItem",
+    "BulkTemplate",
+    "BulkOperationType",
+    "OperationStatus",
+    "ItemStatus",
 ]
