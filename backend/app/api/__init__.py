@@ -49,6 +49,8 @@ from app.api.online_orders import router as online_orders_router
 from app.api.dashboards import router as custom_dashboards_router
 from app.api.bulk_operations import router as bulk_operations_router
 from app.api.addons import router as addons_router
+from app.api.modifiers import router as modifiers_router
+from app.api.combos import router as combos_router
 from app.api.locations import router as locations_router
 from app.api.audit import router as audit_router
 from app.api.tax import router as tax_router
@@ -110,6 +112,8 @@ router.include_router(online_orders_router)
 router.include_router(audit_router)
 router.include_router(locations_router)
 router.include_router(addons_router)
+router.include_router(modifiers_router)
+router.include_router(combos_router)
 router.include_router(shifts_router)
 router.include_router(tax_router)
 router.include_router(cash_registers_router)

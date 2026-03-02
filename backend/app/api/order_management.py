@@ -8,7 +8,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel as PydanticBaseModel, ConfigDict
 
-from app.api.deps import get_sync_db, get_current_active_user, get_current_business_id
+from app.api.deps import get_current_active_user, get_current_business_id
+from app.core.database import get_sync_db
 from app.services.order_management_service import OrderManagementService
 from app.models.order import OrderStatus, OrderType
 
