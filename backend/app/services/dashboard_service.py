@@ -1,12 +1,21 @@
-"""Dashboard service for custom dashboards."""
+"""Dashboard service for custom dashboards.
+
+Provides CRUD for dashboards, widgets, templates, shares, and export
+schedules.  Also fetches real-time widget data from the underlying
+business data models (orders, products, customers).
+"""
 
 from typing import List, Optional, Tuple, Any
 from datetime import datetime, timedelta, timezone
+import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from fastapi import HTTPException, status
 
-from app.models.custom_dashboard import Dashboard, DashboardWidget
+from app.models.custom_dashboard import (
+    Dashboard, DashboardWidget, DashboardTemplate,
+    DashboardShare, DashboardExportSchedule,
+)
 from app.models.order import Order, OrderItem, OrderDirection
 from app.models.product import Product
 from app.models.customer import Customer
@@ -329,3 +338,236 @@ class DashboardService:
                 for p in products
             ]
         }
+
+    # ── Dashboard Duplication ────────────────────────────────────────────
+
+    def duplicate_dashboard(
+        self, dashboard_id: str, business_id: str, user_id: str, new_name: Optional[str] = None,
+    ) -> Dashboard:
+        """Deep-copy a dashboard including all its widgets.
+
+        Why deep-copy?  Users want to experiment with layouts without
+        altering the original.  A shallow reference would couple them.
+        """
+        source = self.get_dashboard(dashboard_id, business_id)
+        clone = Dashboard(
+            business_id=business_id,
+            user_id=user_id,
+            name=new_name or f"{source.name} (Copy)",
+            description=source.description,
+            layout=source.layout,
+            is_default=False,
+            is_shared=False,
+        )
+        self.db.add(clone)
+        self.db.flush()
+
+        for w in source.widgets:
+            if w.deleted_at is not None:
+                continue
+            self.db.add(DashboardWidget(
+                dashboard_id=clone.id,
+                widget_type=w.widget_type,
+                title=w.title,
+                config=w.config,
+                position_x=w.position_x,
+                position_y=w.position_y,
+                width=w.width,
+                height=w.height,
+            ))
+
+        self.db.commit()
+        self.db.refresh(clone)
+        return clone
+
+    # ── Templates ────────────────────────────────────────────────────────
+
+    def create_template(
+        self, business_id: str, name: str, **kwargs,
+    ) -> DashboardTemplate:
+        """Create a business-specific dashboard template."""
+        tpl = DashboardTemplate(
+            business_id=business_id,
+            name=name,
+            description=kwargs.get("description"),
+            category=kwargs.get("category"),
+            layout=kwargs.get("layout", {}),
+            widgets_config=kwargs.get("widgets_config", []),
+            thumbnail_url=kwargs.get("thumbnail_url"),
+        )
+        self.db.add(tpl)
+        self.db.commit()
+        self.db.refresh(tpl)
+        return tpl
+
+    def list_templates(
+        self, business_id: str,
+    ) -> Tuple[List[DashboardTemplate], int]:
+        """Return system templates + business-specific templates."""
+        query = self.db.query(DashboardTemplate).filter(
+            DashboardTemplate.deleted_at.is_(None),
+            or_(
+                DashboardTemplate.business_id == business_id,
+                DashboardTemplate.is_system.is_(True),
+            ),
+        )
+        total = query.count()
+        items = query.order_by(DashboardTemplate.name).all()
+        return items, total
+
+    def get_template(self, template_id: str) -> DashboardTemplate:
+        tpl = self.db.query(DashboardTemplate).filter(
+            DashboardTemplate.id == template_id,
+            DashboardTemplate.deleted_at.is_(None),
+        ).first()
+        if not tpl:
+            raise HTTPException(status_code=404, detail="Template not found")
+        return tpl
+
+    def apply_template(
+        self, template_id: str, business_id: str, user_id: str, name: Optional[str] = None,
+    ) -> Dashboard:
+        """Create a new dashboard from a template.
+
+        Why materialise rather than reference?  Once applied, the user's
+        dashboard is independent of the template — future template edits
+        must not silently change existing dashboards.
+        """
+        tpl = self.get_template(template_id)
+        import json
+        layout_str = json.dumps(tpl.layout) if isinstance(tpl.layout, dict) else str(tpl.layout)
+
+        dashboard = Dashboard(
+            business_id=business_id,
+            user_id=user_id,
+            name=name or tpl.name,
+            description=tpl.description,
+            layout=layout_str,
+        )
+        self.db.add(dashboard)
+        self.db.flush()
+
+        for wc in (tpl.widgets_config or []):
+            self.db.add(DashboardWidget(
+                dashboard_id=dashboard.id,
+                widget_type=wc.get("widget_type", "kpi_total_sales"),
+                title=wc.get("title", "Widget"),
+                config=wc.get("config"),
+                position_x=wc.get("position_x", 0),
+                position_y=wc.get("position_y", 0),
+                width=wc.get("width", 4),
+                height=wc.get("height", 3),
+            ))
+
+        self.db.commit()
+        self.db.refresh(dashboard)
+        return dashboard
+
+    def delete_template(self, template_id: str, business_id: str) -> None:
+        tpl = self.get_template(template_id)
+        if tpl.is_system:
+            raise HTTPException(status_code=403, detail="Cannot delete system templates")
+        if str(tpl.business_id) != str(business_id):
+            raise HTTPException(status_code=403, detail="Template belongs to another business")
+        tpl.soft_delete()
+        self.db.commit()
+
+    # ── Sharing ──────────────────────────────────────────────────────────
+
+    def share_dashboard(
+        self, dashboard_id: str, business_id: str, shared_with_user_id: str, permission: str = "view",
+    ) -> DashboardShare:
+        """Share a dashboard with another user."""
+        self.get_dashboard(dashboard_id, business_id)  # validate exists
+        existing = self.db.query(DashboardShare).filter(
+            DashboardShare.dashboard_id == dashboard_id,
+            DashboardShare.shared_with_user_id == shared_with_user_id,
+            DashboardShare.deleted_at.is_(None),
+        ).first()
+        if existing:
+            existing.permission = permission
+            existing.updated_at = utc_now()
+            self.db.commit()
+            self.db.refresh(existing)
+            return existing
+
+        share = DashboardShare(
+            dashboard_id=dashboard_id,
+            shared_with_user_id=shared_with_user_id,
+            permission=permission,
+        )
+        self.db.add(share)
+        self.db.commit()
+        self.db.refresh(share)
+        return share
+
+    def list_shares(self, dashboard_id: str) -> Tuple[List[DashboardShare], int]:
+        query = self.db.query(DashboardShare).filter(
+            DashboardShare.dashboard_id == dashboard_id,
+            DashboardShare.deleted_at.is_(None),
+        )
+        total = query.count()
+        items = query.all()
+        return items, total
+
+    def revoke_share(self, share_id: str) -> None:
+        share = self.db.query(DashboardShare).filter(
+            DashboardShare.id == share_id,
+            DashboardShare.deleted_at.is_(None),
+        ).first()
+        if not share:
+            raise HTTPException(status_code=404, detail="Share not found")
+        share.soft_delete()
+        self.db.commit()
+
+    # ── Export Schedules ─────────────────────────────────────────────────
+
+    def create_export_schedule(
+        self, dashboard_id: str, business_id: str, user_id: str, **kwargs,
+    ) -> DashboardExportSchedule:
+        self.get_dashboard(dashboard_id, business_id)
+        schedule = DashboardExportSchedule(
+            dashboard_id=dashboard_id,
+            user_id=user_id,
+            format=kwargs.get("format", "pdf"),
+            frequency=kwargs.get("frequency", "weekly"),
+            recipients=kwargs.get("recipients", []),
+        )
+        self.db.add(schedule)
+        self.db.commit()
+        self.db.refresh(schedule)
+        return schedule
+
+    def list_export_schedules(self, dashboard_id: str) -> Tuple[List[DashboardExportSchedule], int]:
+        query = self.db.query(DashboardExportSchedule).filter(
+            DashboardExportSchedule.dashboard_id == dashboard_id,
+            DashboardExportSchedule.deleted_at.is_(None),
+        )
+        total = query.count()
+        items = query.all()
+        return items, total
+
+    def update_export_schedule(self, schedule_id: str, **kwargs) -> DashboardExportSchedule:
+        schedule = self.db.query(DashboardExportSchedule).filter(
+            DashboardExportSchedule.id == schedule_id,
+            DashboardExportSchedule.deleted_at.is_(None),
+        ).first()
+        if not schedule:
+            raise HTTPException(status_code=404, detail="Export schedule not found")
+        for key, value in kwargs.items():
+            if value is not None and hasattr(schedule, key):
+                setattr(schedule, key, value)
+        schedule.updated_at = utc_now()
+        self.db.commit()
+        self.db.refresh(schedule)
+        return schedule
+
+    def delete_export_schedule(self, schedule_id: str) -> None:
+        schedule = self.db.query(DashboardExportSchedule).filter(
+            DashboardExportSchedule.id == schedule_id,
+            DashboardExportSchedule.deleted_at.is_(None),
+        ).first()
+        if not schedule:
+            raise HTTPException(status_code=404, detail="Export schedule not found")
+        schedule.soft_delete()
+        self.db.commit()
