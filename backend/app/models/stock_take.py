@@ -2,8 +2,9 @@
 
 import enum
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime
+from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel, utc_now
 
@@ -75,3 +76,56 @@ class InventoryAdjustment(BaseModel):
 
     def __repr__(self) -> str:
         return f"<InventoryAdjustment type={self.adjustment_type} qty={self.quantity_change}>"
+
+
+class StockTakeScope(BaseModel):
+    """Scoping record that limits a stock take session to specific entities.
+
+    Why a scope table?
+    Large businesses cannot count every product in one session.  This table
+    lets a session target only specific categories, locations, or products
+    (scope_type + scope_id).  Multiple rows per session support combined
+    scopes like "all products in categories A and B at location X".
+    """
+
+    __tablename__ = "stock_take_scope"
+
+    session_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("stock_take_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    scope_type = Column(String(20), nullable=False)  # "category", "location", "product"
+    scope_id = Column(UUID(as_uuid=True), nullable=False)
+
+    session = relationship("StockTakeSession", lazy="joined")
+
+
+class StockTakeCounter(BaseModel):
+    """Tracks which user is assigned to count in a stock take session.
+
+    Why track counters?
+    Accountability — if two staff members are assigned to count different
+    aisles, this table records who counted what.  The unique constraint
+    prevents accidental duplicate assignments.
+    """
+
+    __tablename__ = "stock_take_counters"
+    __table_args__ = (
+        UniqueConstraint("session_id", "user_id", name="uq_stock_take_counter"),
+    )
+
+    session_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("stock_take_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
+    )
+    assigned_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    session = relationship("StockTakeSession", lazy="joined")
+    user = relationship("User", lazy="joined")
