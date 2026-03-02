@@ -238,3 +238,123 @@ class AddonService:
             )
             .all()
         )
+
+    # ── Nested Modifiers ─────────────────────────────────────────
+
+    # Why a max nesting depth?
+    # Deeply nested modifiers create confusing UX and complex pricing.
+    # Two levels (modifier → sub-modifier) covers real-world use cases
+    # like "Bread → Toasting Level" without creating an unmanageable tree.
+    MAX_NESTING_DEPTH = 2
+
+    def get_nested_modifier_groups(
+        self, modifier_id: str
+    ) -> List[ModifierGroup]:
+        """Get sub-modifier groups attached to a parent modifier.
+
+        Nested modifiers are modifier groups whose parent_modifier_id
+        points to the given modifier.  For example, a "Bread" modifier
+        might have a "Toasting" sub-group.
+        """
+        return (
+            self.db.query(ModifierGroup)
+            .filter(
+                ModifierGroup.parent_modifier_id == modifier_id,
+                ModifierGroup.deleted_at.is_(None),
+            )
+            .order_by(ModifierGroup.sort_order.asc())
+            .all()
+        )
+
+    def attach_nested_modifier_group(
+        self,
+        parent_modifier_id: str,
+        group_id: str,
+    ) -> ModifierGroup:
+        """Attach a modifier group as a sub-group of a parent modifier.
+
+        Validates that the nesting depth does not exceed MAX_NESTING_DEPTH.
+
+        Args:
+            parent_modifier_id: The modifier that will own this sub-group.
+            group_id: The modifier group to attach as a nested group.
+
+        Returns:
+            The updated ModifierGroup.
+
+        Raises:
+            ValueError: If the nesting depth would exceed the limit.
+        """
+        # Verify the parent modifier exists
+        parent = (
+            self.db.query(Modifier)
+            .filter(
+                Modifier.id == parent_modifier_id,
+                Modifier.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not parent:
+            raise ValueError("Parent modifier not found")
+
+        # Check nesting depth: is the parent modifier itself inside a
+        # nested group?  Walk up the tree to count depth.
+        depth = self._get_modifier_nesting_depth(parent_modifier_id)
+        if depth >= self.MAX_NESTING_DEPTH:
+            raise ValueError(
+                f"Cannot nest beyond {self.MAX_NESTING_DEPTH} levels. "
+                f"Current depth of parent modifier: {depth}."
+            )
+
+        # Verify the group exists
+        group = (
+            self.db.query(ModifierGroup)
+            .filter(
+                ModifierGroup.id == group_id,
+                ModifierGroup.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not group:
+            raise ValueError("Modifier group not found")
+
+        # Attach the group to the parent modifier
+        group.parent_modifier_id = parent_modifier_id
+        self.db.commit()
+        self.db.refresh(group)
+        return group
+
+    def _get_modifier_nesting_depth(self, modifier_id: str) -> int:
+        """Calculate the nesting depth of a modifier.
+
+        Depth 0 = top-level modifier (no parent).
+        Depth 1 = modifier inside a nested group.
+        Depth 2 = modifier inside a nested group inside another nested group.
+
+        Walks up the parent chain: modifier → group → parent_modifier_id → group → ...
+        """
+        depth = 0
+        current_modifier_id = modifier_id
+
+        while current_modifier_id and depth <= self.MAX_NESTING_DEPTH:
+            # Find the group this modifier belongs to
+            modifier = (
+                self.db.query(Modifier)
+                .filter(Modifier.id == current_modifier_id)
+                .first()
+            )
+            if not modifier:
+                break
+
+            group = (
+                self.db.query(ModifierGroup)
+                .filter(ModifierGroup.id == modifier.group_id)
+                .first()
+            )
+            if not group or group.parent_modifier_id is None:
+                break
+
+            depth += 1
+            current_modifier_id = str(group.parent_modifier_id)
+
+        return depth

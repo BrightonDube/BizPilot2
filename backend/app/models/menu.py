@@ -77,8 +77,22 @@ class ModifierGroup(BaseModel):
     max_selections = Column(Integer, nullable=True, default=1)
     is_required = Column(Boolean, nullable=False, default=False)
     sort_order = Column(Integer, default=0)
+    # Nested modifier support: links a group to a parent modifier.
+    # When set, this group appears as sub-options under the parent modifier.
+    parent_modifier_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("modifiers.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+        index=True,
+    )
 
-    modifiers = relationship("Modifier", back_populates="group", lazy="selectin")
+    modifiers = relationship("Modifier", back_populates="group", lazy="selectin",
+                             foreign_keys="[Modifier.group_id]")
+    nested_parent = relationship(
+        "Modifier",
+        foreign_keys=[parent_modifier_id],
+        uselist=False,
+    )
     menu_items = relationship(
         "MenuItem",
         secondary="menu_item_modifier_groups",
@@ -109,7 +123,14 @@ class Modifier(BaseModel):
     is_available = Column(Boolean, nullable=False, default=True)
     sort_order = Column(Integer, default=0)
 
-    group = relationship("ModifierGroup", back_populates="modifiers")
+    group = relationship("ModifierGroup", back_populates="modifiers",
+                         foreign_keys=[group_id])
+    # Nested groups: modifier groups that appear as sub-options of this modifier
+    nested_groups = relationship(
+        "ModifierGroup",
+        foreign_keys="[ModifierGroup.parent_modifier_id]",
+        lazy="selectin",
+    )
 
 
 class MenuItemModifierGroup(BaseModel):
