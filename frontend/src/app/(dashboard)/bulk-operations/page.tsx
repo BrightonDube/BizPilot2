@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { apiClient } from '@/lib/api';
-import { Loader2, Upload, Download, DollarSign, Package, Trash2, Tag } from 'lucide-react';
+import { Loader2, Upload, Download, DollarSign, Package, Trash2, Tag, BarChart3, FileText } from 'lucide-react';
+import BulkOperationsDashboard from '@/components/bulk-operations/BulkOperationsDashboard';
+import BulkTemplatesManager from '@/components/bulk-operations/BulkTemplatesManager';
 
-type Tab = 'price' | 'stock' | 'category' | 'import-export';
+type Tab = 'price' | 'stock' | 'category' | 'import-export' | 'operations' | 'templates';
 
 interface StockAdjustment {
   product_id: string;
@@ -153,6 +155,8 @@ export default function BulkOperationsPage() {
     { key: 'stock', label: 'Stock Adjust', icon: <Package className="w-4 h-4" /> },
     { key: 'category', label: 'Category Assign', icon: <Tag className="w-4 h-4" /> },
     { key: 'import-export', label: 'Import/Export', icon: <Upload className="w-4 h-4" /> },
+    { key: 'operations', label: 'Operations', icon: <BarChart3 className="w-4 h-4" /> },
+    { key: 'templates', label: 'Templates', icon: <FileText className="w-4 h-4" /> },
   ];
 
   return (
@@ -382,6 +386,10 @@ export default function BulkOperationsPage() {
           </div>
         </div>
       )}
+
+      {activeTab === 'operations' && <BulkOperationsDashboard />}
+
+      {activeTab === 'templates' && <BulkTemplatesManager />}
     </div>
   );
 }
