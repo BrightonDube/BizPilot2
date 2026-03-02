@@ -300,3 +300,99 @@ async def reject_leave(
     if not leave:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Leave request not found")
     return _leave_to_response(leave)
+
+
+# ── PIN Authentication ───────────────────────────────────────────────────────
+
+from pydantic import BaseModel as PydanticBase
+from app.services.pin_service import PinService
+
+
+class PinSetRequest(PydanticBase):
+    user_id: str
+    pin: str
+
+
+class PinAuthRequest(PydanticBase):
+    pin: str
+
+
+class PinUserAuthRequest(PydanticBase):
+    user_id: str
+    pin: str
+
+
+@router.post("/pin/set", status_code=status.HTTP_200_OK)
+async def set_pin(
+    body: PinSetRequest,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Set or update a staff member's PIN code (4-6 digits)."""
+    service = PinService(db)
+    if not service.set_pin(body.user_id, body.pin):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid PIN format (must be 4-6 digits)")
+    return {"message": "PIN set successfully"}
+
+
+@router.post("/pin/verify")
+async def verify_pin(
+    body: PinAuthRequest,
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Authenticate a staff member by PIN for shift operations."""
+    service = PinService(db)
+    user = service.authenticate_by_pin(body.pin, business_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid PIN or account locked")
+    return {"user_id": str(user.id), "name": f"{user.first_name} {user.last_name}".strip(), "email": user.email}
+
+
+@router.post("/pin/verify-user")
+async def verify_user_pin(
+    body: PinUserAuthRequest,
+    db=Depends(get_sync_db),
+):
+    """Verify a specific user's PIN."""
+    service = PinService(db)
+    user = service.authenticate_user_by_pin(body.user_id, body.pin)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid PIN or account locked")
+    return {"user_id": str(user.id), "name": f"{user.first_name} {user.last_name}".strip()}
+
+
+@router.delete("/pin/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_pin(
+    user_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Remove a user's PIN code."""
+    service = PinService(db)
+    if not service.remove_pin(user_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+
+@router.get("/pin/{user_id}/lockout")
+async def get_lockout_status(
+    user_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Check if a user is locked out from PIN authentication."""
+    service = PinService(db)
+    return service.get_lockout_info(user_id)
+
+
+@router.post("/pin/{user_id}/unlock")
+async def manager_unlock(
+    user_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Manager unlock of a locked-out staff account."""
+    service = PinService(db)
+    if not service.manager_unlock(user_id, str(current_user.id)):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not locked out")
+    return {"message": "Account unlocked"}
