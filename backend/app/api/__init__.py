@@ -65,6 +65,8 @@ from app.api.payments import router as payments_router
 from app.api.tags import router as tags_router
 from app.api.delivery_tracking import router as delivery_tracking_router
 from app.api.customer_displays import router as customer_displays_router
+from app.api.signage import router as signage_router
+from app.api.partners import router as partners_router
 
 router = APIRouter()
 
@@ -131,6 +133,8 @@ router.include_router(payments_router)
 router.include_router(tags_router)
 router.include_router(delivery_tracking_router)
 router.include_router(customer_displays_router)
+router.include_router(signage_router)
+router.include_router(partners_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
