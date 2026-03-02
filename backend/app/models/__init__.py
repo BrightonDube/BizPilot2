@@ -137,7 +137,10 @@ from app.models.online_order import (
     OnlineOrder,
     OnlineOrderItem,
 )
-from app.models.custom_dashboard import Dashboard, DashboardWidget
+from app.models.custom_dashboard import (
+    Dashboard, DashboardWidget, DashboardTemplate,
+    DashboardShare, DashboardExportSchedule,
+)
 from app.models.addon import ProductModifierGroup, SelectionType
 from app.models.audit_log import UserAuditLog, AuditAction
 from app.models.shift import Shift, ShiftStatus, LeaveRequest, LeaveType, LeaveStatus
@@ -369,6 +372,9 @@ __all__ = [
     # Custom Dashboards
     "Dashboard",
     "DashboardWidget",
+    "DashboardTemplate",
+    "DashboardShare",
+    "DashboardExportSchedule",
     # Online Ordering
     "OnlineOrderStatus",
     "FulfillmentType",

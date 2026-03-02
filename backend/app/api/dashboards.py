@@ -1,6 +1,11 @@
-"""Custom dashboard API endpoints."""
+"""Custom dashboard API endpoints.
 
-from fastapi import APIRouter, Depends
+Provides CRUD for dashboards, widgets, templates, shares, and export
+schedules.  Each group uses its own sub-path prefix for clarity.
+"""
+
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 
 from app.core.database import get_sync_db
@@ -16,6 +21,15 @@ from app.schemas.dashboard_custom import (
     WidgetDataRequest,
     WidgetResponse,
     WidgetDataResponse,
+    DashboardTemplateCreate,
+    DashboardTemplateResponse,
+    DashboardTemplateListResponse,
+    DashboardShareCreate,
+    DashboardShareResponse,
+    DashboardShareListResponse,
+    ExportScheduleCreate,
+    ExportScheduleUpdate,
+    ExportScheduleResponse,
 )
 from app.services.dashboard_service import DashboardService
 
@@ -212,3 +226,260 @@ async def get_widget_data(
     service = DashboardService(db)
     result = service.get_widget_data(data.widget_type, data.config, business_id)
     return WidgetDataResponse(widget_type=data.widget_type, data=result)
+
+
+# ── Duplicate ────────────────────────────────────────────────────────────────
+
+@router.post("/{dashboard_id}/duplicate", response_model=DashboardResponse, status_code=201)
+async def duplicate_dashboard(
+    dashboard_id: str,
+    name: Optional[str] = Query(None, description="Name for the copy"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Duplicate a dashboard including all its widgets."""
+    service = DashboardService(db)
+    clone = service.duplicate_dashboard(dashboard_id, business_id, str(current_user.id), name)
+    return _dashboard_to_response(clone)
+
+
+# ── Templates ────────────────────────────────────────────────────────────────
+
+@router.get("/templates/list", response_model=DashboardTemplateListResponse)
+async def list_templates(
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """List system and business-specific dashboard templates."""
+    service = DashboardService(db)
+    items, total = service.list_templates(business_id)
+    return DashboardTemplateListResponse(
+        items=[
+            DashboardTemplateResponse(
+                id=str(t.id),
+                business_id=str(t.business_id) if t.business_id else None,
+                name=t.name,
+                description=t.description,
+                category=t.category,
+                layout=t.layout or {},
+                widgets_config=t.widgets_config or [],
+                thumbnail_url=t.thumbnail_url,
+                is_system=t.is_system,
+                created_at=t.created_at,
+                updated_at=t.updated_at,
+            )
+            for t in items
+        ],
+        total=total,
+    )
+
+
+@router.post("/templates", response_model=DashboardTemplateResponse, status_code=201)
+async def create_template(
+    data: DashboardTemplateCreate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Create a dashboard template."""
+    service = DashboardService(db)
+    tpl = service.create_template(business_id, **data.model_dump())
+    return DashboardTemplateResponse(
+        id=str(tpl.id),
+        business_id=str(tpl.business_id) if tpl.business_id else None,
+        name=tpl.name,
+        description=tpl.description,
+        category=tpl.category,
+        layout=tpl.layout or {},
+        widgets_config=tpl.widgets_config or [],
+        thumbnail_url=tpl.thumbnail_url,
+        is_system=tpl.is_system,
+        created_at=tpl.created_at,
+        updated_at=tpl.updated_at,
+    )
+
+
+@router.post("/templates/{template_id}/apply", response_model=DashboardResponse, status_code=201)
+async def apply_template(
+    template_id: str,
+    name: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Create a new dashboard from a template."""
+    service = DashboardService(db)
+    dashboard = service.apply_template(template_id, business_id, str(current_user.id), name)
+    return _dashboard_to_response(dashboard)
+
+
+@router.delete("/templates/{template_id}", status_code=204)
+async def delete_template(
+    template_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Delete a dashboard template (business-owned only)."""
+    service = DashboardService(db)
+    service.delete_template(template_id, business_id)
+    return Response(status_code=204)
+
+
+# ── Sharing ──────────────────────────────────────────────────────────────────
+
+@router.post("/{dashboard_id}/shares", response_model=DashboardShareResponse, status_code=201)
+async def share_dashboard(
+    dashboard_id: str,
+    data: DashboardShareCreate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Share a dashboard with another user."""
+    service = DashboardService(db)
+    share = service.share_dashboard(
+        dashboard_id, business_id, data.shared_with_user_id, data.permission,
+    )
+    return DashboardShareResponse(
+        id=str(share.id),
+        dashboard_id=str(share.dashboard_id),
+        shared_with_user_id=str(share.shared_with_user_id),
+        permission=share.permission,
+        created_at=share.created_at,
+    )
+
+
+@router.get("/{dashboard_id}/shares", response_model=DashboardShareListResponse)
+async def list_shares(
+    dashboard_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """List users a dashboard is shared with."""
+    service = DashboardService(db)
+    items, total = service.list_shares(dashboard_id)
+    return DashboardShareListResponse(
+        items=[
+            DashboardShareResponse(
+                id=str(s.id),
+                dashboard_id=str(s.dashboard_id),
+                shared_with_user_id=str(s.shared_with_user_id),
+                permission=s.permission,
+                created_at=s.created_at,
+            )
+            for s in items
+        ],
+        total=total,
+    )
+
+
+@router.delete("/shares/{share_id}", status_code=204)
+async def revoke_share(
+    share_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Revoke a dashboard share."""
+    service = DashboardService(db)
+    service.revoke_share(share_id)
+    return Response(status_code=204)
+
+
+# ── Export Schedules ─────────────────────────────────────────────────────────
+
+@router.post("/{dashboard_id}/export-schedules", response_model=ExportScheduleResponse, status_code=201)
+async def create_export_schedule(
+    dashboard_id: str,
+    data: ExportScheduleCreate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Create a recurring export schedule for a dashboard."""
+    service = DashboardService(db)
+    schedule = service.create_export_schedule(
+        dashboard_id, business_id, str(current_user.id), **data.model_dump(),
+    )
+    return ExportScheduleResponse(
+        id=str(schedule.id),
+        dashboard_id=str(schedule.dashboard_id),
+        user_id=str(schedule.user_id),
+        format=schedule.format,
+        frequency=schedule.frequency,
+        recipients=schedule.recipients,
+        is_active=schedule.is_active,
+        last_sent_at=schedule.last_sent_at,
+        next_send_at=schedule.next_send_at,
+        created_at=schedule.created_at,
+        updated_at=schedule.updated_at,
+    )
+
+
+@router.get("/{dashboard_id}/export-schedules")
+async def list_export_schedules(
+    dashboard_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """List export schedules for a dashboard."""
+    service = DashboardService(db)
+    items, total = service.list_export_schedules(dashboard_id)
+    return {
+        "items": [
+            ExportScheduleResponse(
+                id=str(s.id),
+                dashboard_id=str(s.dashboard_id),
+                user_id=str(s.user_id),
+                format=s.format,
+                frequency=s.frequency,
+                recipients=s.recipients,
+                is_active=s.is_active,
+                last_sent_at=s.last_sent_at,
+                next_send_at=s.next_send_at,
+                created_at=s.created_at,
+                updated_at=s.updated_at,
+            )
+            for s in items
+        ],
+        "total": total,
+    }
+
+
+@router.put("/export-schedules/{schedule_id}", response_model=ExportScheduleResponse)
+async def update_export_schedule(
+    schedule_id: str,
+    data: ExportScheduleUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Update an export schedule."""
+    service = DashboardService(db)
+    schedule = service.update_export_schedule(schedule_id, **data.model_dump(exclude_unset=True))
+    return ExportScheduleResponse(
+        id=str(schedule.id),
+        dashboard_id=str(schedule.dashboard_id),
+        user_id=str(schedule.user_id),
+        format=schedule.format,
+        frequency=schedule.frequency,
+        recipients=schedule.recipients,
+        is_active=schedule.is_active,
+        last_sent_at=schedule.last_sent_at,
+        next_send_at=schedule.next_send_at,
+        created_at=schedule.created_at,
+        updated_at=schedule.updated_at,
+    )
+
+
+@router.delete("/export-schedules/{schedule_id}", status_code=204)
+async def delete_export_schedule(
+    schedule_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """Delete an export schedule."""
+    service = DashboardService(db)
+    service.delete_export_schedule(schedule_id)
+    return Response(status_code=204)
