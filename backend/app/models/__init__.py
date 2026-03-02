@@ -212,6 +212,29 @@ from app.models.bulk_operation import (
     OperationStatus,
     ItemStatus,
 )
+from app.models.delivery_tracking import (
+    DriverShift,
+    DriverShiftStatus,
+    DeliveryTracking,
+    DeliveryProof,
+)
+from app.models.payment import (
+    PaymentMethod,
+    PaymentMethodType,
+    PaymentTransaction,
+    PaymentTransactionStatus,
+)
+from app.models.customer_display import (
+    CustomerDisplay,
+    DisplayConfig,
+    DisplayType,
+    DisplayStatus,
+)
+from app.models.tag import (
+    TagCategory,
+    Tag,
+    ProductTag,
+)
 
 __all__ = [
     "BaseModel",
@@ -473,4 +496,23 @@ __all__ = [
     "BulkOperationType",
     "OperationStatus",
     "ItemStatus",
+    # Delivery Tracking
+    "DriverShift",
+    "DriverShiftStatus",
+    "DeliveryTracking",
+    "DeliveryProof",
+    # Integrated Payments
+    "PaymentMethod",
+    "PaymentMethodType",
+    "PaymentTransaction",
+    "PaymentTransactionStatus",
+    # Customer Display
+    "CustomerDisplay",
+    "DisplayConfig",
+    "DisplayType",
+    "DisplayStatus",
+    # Tags & Categorization
+    "TagCategory",
+    "Tag",
+    "ProductTag",
 ]
