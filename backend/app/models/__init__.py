@@ -250,6 +250,15 @@ from app.models.partner import (
     WhiteLabelConfig,
     PartnerUser,
 )
+from app.models.pms import (
+    PMSConnection,
+    PMSGuestCache,
+    PMSCharge,
+    PMSChargeReversal,
+    PMSReconciliationSession,
+    PMSReconciliationItem,
+    PMSAuditLog,
+)
 
 __all__ = [
     "BaseModel",
@@ -544,4 +553,12 @@ __all__ = [
     "PartnerConfiguration",
     "WhiteLabelConfig",
     "PartnerUser",
+    # PMS Integration
+    "PMSConnection",
+    "PMSGuestCache",
+    "PMSCharge",
+    "PMSChargeReversal",
+    "PMSReconciliationSession",
+    "PMSReconciliationItem",
+    "PMSAuditLog",
 ]
