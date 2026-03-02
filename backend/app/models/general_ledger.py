@@ -88,3 +88,42 @@ class FiscalPeriod(BaseModel):
     is_closed = Column(Boolean, default=False)
     closed_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     closed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class GLAccountMapping(BaseModel):
+    """Maps business events to GL debit/credit accounts for auto-journaling.
+
+    Why a configurable mapping table?
+    Different businesses may want the same event type (e.g. "sale") to post
+    to different accounts.  Storing mappings in the DB (rather than hard-coding
+    in the service layer) lets each business customise their chart of accounts
+    integration without code changes.
+
+    mapping_type examples: "sale", "purchase", "payment", "refund", "expense"
+    source_id optionally narrows scope, e.g. a category UUID or payment method.
+    """
+
+    __tablename__ = "gl_account_mappings"
+
+    business_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    mapping_type = Column(String(50), nullable=False)
+    source_id = Column(String(100), nullable=True)
+    debit_account_id = Column(
+        UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=True
+    )
+    credit_account_id = Column(
+        UUID(as_uuid=True), ForeignKey("chart_of_accounts.id"), nullable=True
+    )
+
+    # Relationships
+    debit_account = relationship(
+        "ChartOfAccount", foreign_keys=[debit_account_id], lazy="joined"
+    )
+    credit_account = relationship(
+        "ChartOfAccount", foreign_keys=[credit_account_id], lazy="joined"
+    )

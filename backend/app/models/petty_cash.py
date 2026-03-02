@@ -1,8 +1,8 @@
 """Petty cash models."""
 
 import enum
-from sqlalchemy import Column, String, Numeric, Boolean, DateTime, ForeignKey, Enum as SQLEnum, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Numeric, Boolean, DateTime, ForeignKey, Enum as SQLEnum, Text, Integer, Date, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel, utc_now
@@ -88,3 +88,56 @@ class FundReplenishment(BaseModel):
 
     fund = relationship("PettyCashFund", lazy="joined")
     replenished_by = relationship("User", lazy="joined")
+
+
+class ApprovalStatus(str, enum.Enum):
+    """Expense approval decision status."""
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    DELEGATED = "delegated"
+
+
+class ApprovalPriority(str, enum.Enum):
+    """Priority levels for expense approval requests."""
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
+
+
+class ExpenseApproval(BaseModel):
+    """Multi-level expense approval record.
+
+    Why a separate table instead of columns on PettyCashExpense?
+    A request may need approvals at multiple organisational levels
+    (e.g. manager then finance).  Each row represents one approver's
+    decision for one level, with a unique constraint preventing
+    duplicate decisions at the same tier.
+    """
+
+    __tablename__ = "expense_approvals"
+
+    request_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("expense_requests.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    approver_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
+    )
+    approval_level = Column(Integer, nullable=False)
+    status = Column(String(20), nullable=False, default=ApprovalStatus.PENDING.value)
+    requested_date = Column(Date, nullable=True)
+    required_by_date = Column(Date, nullable=True)
+    approved_date = Column(DateTime(timezone=True), nullable=True)
+    disbursed_date = Column(DateTime(timezone=True), nullable=True)
+    completed_date = Column(DateTime(timezone=True), nullable=True)
+    priority = Column(String(20), nullable=False, default=ApprovalPriority.NORMAL.value)
+    tags = Column(ARRAY(Text), nullable=True)
+    attachments = Column(JSONB, nullable=True)
+    notes = Column(Text, nullable=True)
+
+    # Relationships
+    approver = relationship("User", foreign_keys=[approver_id], lazy="joined")

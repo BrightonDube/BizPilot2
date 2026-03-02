@@ -76,6 +76,9 @@ from app.models.petty_cash import (
     PettyCashExpense,
     ExpenseStatus,
     FundReplenishment,
+    ApprovalStatus,
+    ApprovalPriority,
+    ExpenseApproval,
 )
 from app.models.loyalty import (
     LoyaltyProgram,
@@ -97,6 +100,8 @@ from app.models.stock_take import (
     StockTakeStatus,
     StockCount,
     InventoryAdjustment,
+    StockTakeScope,
+    StockTakeCounter,
 )
 from app.models.delivery import (
     DeliveryStatus as DeliveryTrackingStatus,
@@ -122,7 +127,9 @@ from app.models.general_ledger import (
     JournalEntry,
     JournalLine,
     FiscalPeriod,
+    GLAccountMapping,
 )
+from app.models.inventory_report import InventoryReportConfig
 from app.models.crm import (
     InteractionType,
     CustomerSegment,
