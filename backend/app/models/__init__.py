@@ -180,6 +180,7 @@ from app.models.staff_target import (
     RewardType,
     AchievementStatus,
 )
+from app.models.combo import ComboDeal, ComboComponent, ComboComponentType
 
 __all__ = [
     "BaseModel",
@@ -423,4 +424,8 @@ __all__ = [
     "IncentiveType",
     "RewardType",
     "AchievementStatus",
+    # Combo deals
+    "ComboDeal",
+    "ComboComponent",
+    "ComboComponentType",
 ]
