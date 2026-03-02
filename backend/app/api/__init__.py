@@ -59,6 +59,7 @@ from app.api.cash_registers import router as cash_registers_router
 from app.api.expenses import router as expenses_router
 from app.api.gift_cards import router as gift_cards_router
 from app.api.quotes import router as quotes_router
+from app.api.reservations import router as reservations_router
 from app.api.staff_targets import router as staff_targets_router
 
 router = APIRouter()
@@ -121,6 +122,7 @@ router.include_router(expenses_router)
 router.include_router(gift_cards_router)
 router.include_router(quotes_router)
 router.include_router(staff_targets_router)
+router.include_router(reservations_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
