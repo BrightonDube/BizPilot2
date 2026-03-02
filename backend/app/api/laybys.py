@@ -1,5 +1,6 @@
 """Laybys API endpoints."""
 
+from datetime import date, timedelta
 from typing import Optional, List
 from uuid import UUID
 
@@ -22,6 +23,12 @@ from app.schemas.layby import (
     LaybyConfigResponse,
     LaybyConfigUpdate,
 )
+from app.schemas.layby_report import (
+    ActiveLaybyReport,
+    OverdueReport,
+    AgingReport,
+    LaybySummaryReport,
+)
 
 router = APIRouter(prefix="/laybys", tags=["Laybys"])
 
@@ -29,7 +36,7 @@ router = APIRouter(prefix="/laybys", tags=["Laybys"])
 # ── Reports (must be before /{layby_id} to avoid path conflicts) ─────────
 
 
-@router.get("/reports/active")
+@router.get("/reports/active", response_model=ActiveLaybyReport)
 async def active_laybys_report(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
@@ -46,7 +53,7 @@ async def active_laybys_report(
         )
 
 
-@router.get("/reports/overdue")
+@router.get("/reports/overdue", response_model=OverdueReport)
 async def overdue_laybys_report(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
@@ -63,7 +70,7 @@ async def overdue_laybys_report(
         )
 
 
-@router.get("/reports/aging")
+@router.get("/reports/aging", response_model=AgingReport)
 async def aging_report(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
@@ -80,16 +87,31 @@ async def aging_report(
         )
 
 
-@router.get("/reports/summary")
+@router.get("/reports/summary", response_model=LaybySummaryReport)
 async def summary_report(
+    start_date: Optional[date] = Query(None, description="Start of reporting period"),
+    end_date: Optional[date] = Query(None, description="End of reporting period"),
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     db=Depends(get_sync_db),
 ):
-    """Get laybys summary statistics."""
+    """Get laybys summary statistics for a date range.
+
+    Defaults to the last 30 days if no dates are provided.
+    """
     try:
+        # Default to last 30 days if no range specified
+        if not end_date:
+            end_date = date.today()
+        if not start_date:
+            start_date = end_date - timedelta(days=30)
+
         service = LaybyReportService(db)
-        return service.get_summary(business_id=business_id)
+        return service.get_summary(
+            business_id=business_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
