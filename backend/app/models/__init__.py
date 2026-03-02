@@ -135,6 +135,11 @@ from app.models.general_ledger import (
     JournalLine,
     FiscalPeriod,
     GLAccountMapping,
+    GLAccountBalance,
+    GLRecurringEntry,
+    GLAuditLog,
+    GLAuditAction,
+    RecurringEntryFrequency,
 )
 from app.models.inventory_report import InventoryReportConfig
 from app.models.crm import (
@@ -432,6 +437,12 @@ __all__ = [
     "JournalEntry",
     "JournalLine",
     "FiscalPeriod",
+    "GLAccountMapping",
+    "GLAccountBalance",
+    "GLRecurringEntry",
+    "GLAuditLog",
+    "GLAuditAction",
+    "RecurringEntryFrequency",
     # Custom Dashboards
     "Dashboard",
     "DashboardWidget",
