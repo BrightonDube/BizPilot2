@@ -33,9 +33,26 @@ class OrderItemBase(BaseModel):
     notes: Optional[str] = None
 
 
+class OrderItemModifierCreate(BaseModel):
+    """Schema for adding a modifier selection to an order item.
+
+    All price fields are required because they capture the price at
+    order time — the modifier's current price may differ by the time
+    someone looks at the order history.
+    """
+
+    modifier_id: Optional[str] = None
+    modifier_name: str = Field(..., min_length=1, max_length=255)
+    group_name: str = Field(..., min_length=1, max_length=255)
+    quantity: int = Field(1, ge=1)
+    unit_price: Decimal = Field(..., ge=0)
+    total_price: Decimal = Field(..., ge=0)
+
+
 class OrderItemCreate(OrderItemBase):
     """Schema for creating an order item."""
-    pass
+
+    modifiers: Optional[List[OrderItemModifierCreate]] = None
 
 
 class OrderItemUpdate(BaseModel):
@@ -49,6 +66,26 @@ class OrderItemUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+class OrderItemModifierResponse(BaseModel):
+    """Schema for returning a modifier selection attached to an order item.
+
+    Why a separate response schema instead of reusing OrderItemModifierCreate?
+    The response needs the record's primary key and timestamps so the
+    frontend can identify and display each modifier row.
+    """
+
+    id: str
+    modifier_id: Optional[str] = None
+    modifier_name: str
+    group_name: str
+    quantity: int
+    unit_price: Decimal
+    total_price: Decimal
+    parent_modifier_id: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class OrderItemResponse(OrderItemBase):
     """Schema for order item response."""
     
@@ -60,6 +97,7 @@ class OrderItemResponse(OrderItemBase):
     line_total: float
     created_at: datetime
     updated_at: datetime
+    modifiers: List[OrderItemModifierResponse] = []
     
     model_config = {"from_attributes": True}
 

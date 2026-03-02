@@ -9,6 +9,9 @@ from sqlalchemy import func
 from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id, check_feature
 from app.models.user import User
+from app.services.sales_report_service import SalesReportService
+from app.services.staff_report_service import StaffReportService
+from app.services.inventory_report_service import InventoryReportService
 from app.models.business_user import BusinessUser
 from app.models.order import Order, OrderDirection
 from app.models.customer import Customer
@@ -36,6 +39,33 @@ from app.schemas.report import (
     LoginHistoryReport,
     LoginHistoryItem,
 )
+from app.schemas.staff_report import (
+    StaffPerformanceReport,
+    StaffAttendanceReport,
+    DepartmentPerformanceReport,
+    StaffProductivityReport,
+    StaffCommissionReport,
+    StaffActivityLogReport,
+    CashDrawerReport,
+    VoidRefundReport,
+    DiscountReport,
+)
+from app.schemas.commission import (
+    CommissionGenerateRequest,
+    CommissionApproveRequest,
+    CommissionListResponse,
+    CommissionApproveResponse,
+)
+from app.services.commission_service import CommissionService
+from app.schemas.custom_report import (
+    ReportTemplateCreate,
+    ReportTemplateUpdate,
+    ReportTemplateResponse,
+    ReportTemplateListResponse,
+    CustomReportRequest,
+    CustomReportResponse,
+)
+from app.services.custom_report_service import CustomReportService
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -935,3 +965,1360 @@ async def get_login_history_report(
         unique_users=len(unique_users),
         suspicious_count=suspicious_count,
     )
+
+
+# ---------------------------------------------------------------------------
+# Sales Report Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/sales/daily")
+async def get_daily_sales_report(
+    date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format, defaults to today"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get daily sales report with hourly breakdown."""
+    from datetime import date as date_type
+
+    if date:
+        try:
+            target_date = date_type.fromisoformat(date)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date format. Use YYYY-MM-DD.",
+            )
+    else:
+        target_date = date_type.today()
+
+    service = SalesReportService(db)
+    return service.get_daily_report(business_id, target_date)
+
+
+@router.get("/sales/weekly")
+async def get_weekly_sales_report(
+    week_start: Optional[str] = Query(None, description="Monday date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get weekly sales report with daily breakdown."""
+    from datetime import date as date_type
+
+    if week_start:
+        try:
+            start = date_type.fromisoformat(week_start)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date format. Use YYYY-MM-DD.",
+            )
+    else:
+        today = date_type.today()
+        start = today - timedelta(days=today.weekday())  # Monday
+
+    service = SalesReportService(db)
+    return service.get_weekly_report(business_id, start)
+
+
+@router.get("/sales/monthly")
+async def get_monthly_sales_report(
+    year: Optional[int] = Query(None, description="Year (e.g. 2024)"),
+    month: Optional[int] = Query(None, ge=1, le=12, description="Month (1-12)"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get monthly sales report with daily breakdown."""
+    from datetime import date as date_type
+
+    today = date_type.today()
+    year = year or today.year
+    month = month or today.month
+
+    service = SalesReportService(db)
+    return service.get_monthly_report(business_id, year, month)
+
+
+@router.get("/sales/products")
+async def get_product_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get product performance report ranked by revenue."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_product_performance(business_id, start, end, limit)
+
+
+@router.get("/sales/categories")
+async def get_category_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get category performance report."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_category_performance(business_id, start, end)
+
+
+@router.get("/sales/payments")
+async def get_payment_breakdown_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get payment method breakdown report."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_payment_breakdown(business_id, start, end)
+
+
+@router.get("/sales/time-analysis")
+async def get_time_analysis_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get time-based analysis with peak hours and day-of-week breakdown."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_time_analysis(business_id, start, end)
+
+
+@router.get("/sales/discounts")
+async def get_discount_analysis_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get discount analysis report with breakdown by product and category."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_discount_analysis(business_id, start, end)
+
+
+@router.get("/sales/refunds")
+async def get_refund_analysis_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get refund analysis report with breakdown by product and trend."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    return service.get_refund_analysis(business_id, start, end)
+
+
+@router.get("/export/csv")
+async def export_report_csv(
+    report_type: str = Query(
+        ...,
+        description="Report type: products, categories, payments, discounts, refunds",
+    ),
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export sales report data as CSV."""
+    import csv
+    import io
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    if report_type == "products":
+        data = service.get_product_performance(business_id, start, end)
+        writer.writerow(["Rank", "Product", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for p in data.get("products", []):
+            writer.writerow([
+                p["rank"], p["product_name"], p["quantity_sold"],
+                p["revenue"], p["order_count"], p["revenue_percentage"],
+            ])
+    elif report_type == "categories":
+        data = service.get_category_performance(business_id, start, end)
+        writer.writerow(["Category", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for c in data.get("categories", []):
+            writer.writerow([
+                c["category_name"], c["quantity_sold"],
+                c["revenue"], c["order_count"], c["revenue_percentage"],
+            ])
+    elif report_type == "payments":
+        data = service.get_payment_breakdown(business_id, start, end)
+        writer.writerow(["Payment Method", "Count", "Amount", "Amount %", "Count %"])
+        for m in data.get("methods", []):
+            writer.writerow([
+                m["payment_method"], m["count"], m["amount"],
+                m["percentage_amount"], m["percentage_count"],
+            ])
+    elif report_type == "discounts":
+        data = service.get_discount_analysis(business_id, start, end)
+        writer.writerow(["Product", "Discount Total", "Revenue", "Discount %", "Item Count"])
+        for p in data.get("by_product", []):
+            writer.writerow([
+                p["product_name"], p["discount_total"], p["revenue"],
+                p["discount_percentage"], p["item_count"],
+            ])
+    elif report_type == "refunds":
+        data = service.get_refund_analysis(business_id, start, end)
+        writer.writerow(["Product", "Refund Total", "Quantity", "Refund Count", "% of Refunds"])
+        for p in data.get("by_product", []):
+            writer.writerow([
+                p["product_name"], p["refund_total"], p["quantity"],
+                p["refund_count"], p["percentage_of_refunds"],
+            ])
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown report type: {report_type}. Use: products, categories, payments, discounts, refunds",
+        )
+
+    csv_content = output.getvalue()
+    filename = f"{report_type}_report_{start_date}_to_{end_date}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/export/excel")
+async def export_report_excel(
+    report_type: str = Query(
+        ...,
+        description="Report type: products, categories, payments, discounts, refunds",
+    ),
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export sales report data as Excel (.xlsx) with styled headers."""
+    from io import BytesIO
+    from datetime import date as date_type
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = SalesReportService(db)
+    wb = Workbook()
+    ws = wb.active
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
+    header_align = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style="thin"), right=Side(style="thin"),
+        top=Side(style="thin"), bottom=Side(style="thin"),
+    )
+    alt_fill = PatternFill(start_color="F3F4F6", end_color="F3F4F6", fill_type="solid")
+
+    def write_headers(headers: list[str]) -> None:
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+            cell.border = thin_border
+
+    def write_row(row_num: int, values: list) -> None:
+        is_alt = row_num % 2 == 0
+        for col_idx, value in enumerate(values, 1):
+            cell = ws.cell(row=row_num, column=col_idx, value=value)
+            cell.border = thin_border
+            if is_alt:
+                cell.fill = alt_fill
+
+    if report_type == "products":
+        ws.title = "Product Performance"
+        data = service.get_product_performance(business_id, start, end)
+        write_headers(["Rank", "Product", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for i, p in enumerate(data.get("products", []), 2):
+            write_row(i, [
+                p["rank"], p["product_name"], p["quantity_sold"],
+                p["revenue"], p["order_count"], p["revenue_percentage"],
+            ])
+    elif report_type == "categories":
+        ws.title = "Category Performance"
+        data = service.get_category_performance(business_id, start, end)
+        write_headers(["Category", "Quantity Sold", "Revenue", "Order Count", "Revenue %"])
+        for i, c in enumerate(data.get("categories", []), 2):
+            write_row(i, [
+                c["category_name"], c["quantity_sold"],
+                c["revenue"], c["order_count"], c["revenue_percentage"],
+            ])
+    elif report_type == "payments":
+        ws.title = "Payment Breakdown"
+        data = service.get_payment_breakdown(business_id, start, end)
+        write_headers(["Payment Method", "Count", "Amount", "Amount %", "Count %"])
+        for i, m in enumerate(data.get("methods", []), 2):
+            write_row(i, [
+                m["payment_method"], m["count"], m["amount"],
+                m["percentage_amount"], m["percentage_count"],
+            ])
+    elif report_type == "discounts":
+        ws.title = "Discount Analysis"
+        data = service.get_discount_analysis(business_id, start, end)
+        write_headers(["Product", "Discount Total", "Revenue", "Discount %", "Item Count"])
+        for i, p in enumerate(data.get("by_product", []), 2):
+            write_row(i, [
+                p["product_name"], p["discount_total"], p["revenue"],
+                p["discount_percentage"], p["item_count"],
+            ])
+    elif report_type == "refunds":
+        ws.title = "Refund Analysis"
+        data = service.get_refund_analysis(business_id, start, end)
+        write_headers(["Product", "Refund Total", "Quantity", "Refund Count", "% of Refunds"])
+        for i, p in enumerate(data.get("by_product", []), 2):
+            write_row(i, [
+                p["product_name"], p["refund_total"], p["quantity"],
+                p["refund_count"], p["percentage_of_refunds"],
+            ])
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown report type: {report_type}. Use: products, categories, payments, discounts, refunds",
+        )
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f"{report_type}_report_{start_date}_to_{end_date}.xlsx"
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# ── Staff Reports ──────────────────────────────────────────────────────────
+
+
+@router.get("/staff/performance", response_model=StaffPerformanceReport)
+async def get_staff_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Staff performance report with hours worked and ranking."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_performance_report(business_id, start, end)
+
+
+@router.get("/staff/attendance", response_model=StaffAttendanceReport)
+async def get_staff_attendance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by specific user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Staff attendance report with daily breakdown and summaries."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_attendance_report(business_id, start, end, user_id=user_id)
+
+
+@router.get("/staff/departments", response_model=DepartmentPerformanceReport)
+async def get_department_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Department performance report with staff and hours breakdown."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_department_performance(business_id, start, end)
+
+
+@router.get("/staff/productivity", response_model=StaffProductivityReport)
+async def get_staff_productivity_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Staff productivity analysis with efficiency metrics."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_productivity_report(business_id, start, end)
+
+
+@router.get("/staff/commissions", response_model=StaffCommissionReport)
+async def get_staff_commission_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    commission_rate: float = Query(5.0, description="Commission rate percentage"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Commission report based on sales attributed to staff."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_commission_report(business_id, start, end, commission_rate)
+
+
+@router.get("/staff/activity", response_model=StaffActivityLogReport)
+async def get_staff_activity_log(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    action_type: Optional[str] = Query(None, description="Filter by action type"),
+    resource_type: Optional[str] = Query(None, description="Filter by resource type"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Activity log report from audit trail."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_activity_log(
+        business_id, start, end,
+        user_id=user_id,
+        action_type=action_type,
+        resource_type=resource_type,
+        page=page,
+        per_page=per_page,
+    )
+
+
+@router.get("/staff/cash-drawer", response_model=CashDrawerReport)
+async def get_cash_drawer_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    register_id: Optional[str] = Query(None, description="Filter by register ID"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Cash drawer report with register sessions and cash movements."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_cash_drawer_report(
+        business_id, start, end,
+        register_id=register_id,
+        user_id=user_id,
+    )
+
+
+# ── Staff Report Exports ────────────────────────────────────────────────
+
+
+STAFF_REPORT_TYPES = [
+    "performance", "attendance", "department", "productivity",
+    "commission", "voids-refunds", "discounts", "cash-drawer",
+]
+
+
+@router.get("/staff/export/csv")
+async def export_staff_report_csv(
+    report_type: str = Query(..., description="Staff report type"),
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    commission_rate: float = Query(5.0, description="Commission rate %"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export staff report as CSV."""
+    import csv
+    import io
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    if report_type not in STAFF_REPORT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown type: {report_type}. Use: {', '.join(STAFF_REPORT_TYPES)}")
+
+    service = StaffReportService(db)
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    if report_type == "performance":
+        data = service.get_performance_report(business_id, start, end)
+        writer.writerow(["Rank", "Staff", "Email", "Total Hours", "Net Hours", "Sales Count", "Sales Total"])
+        for s in data.get("staff", []):
+            writer.writerow([s["rank"], s["staff_name"], s["email"], s["total_hours"], s["net_hours"], s["sales_count"], s["sales_total"]])
+    elif report_type == "attendance":
+        data = service.get_attendance_report(business_id, start, end)
+        writer.writerow(["Staff", "Email", "Days Present", "Days Absent", "Late Count", "Total Hours", "Attendance Rate"])
+        for s in data.get("staff", []):
+            writer.writerow([s["staff_name"], s["email"], s["days_present"], s["days_absent"], s["late_count"], s["total_hours"], s["attendance_rate"]])
+    elif report_type == "commission":
+        data = service.get_commission_report(business_id, start, end, commission_rate)
+        writer.writerow(["Rank", "Staff", "Email", "Orders", "Total Sales", "Discounts", "Commission Rate", "Commission Amount"])
+        for s in data.get("staff", []):
+            writer.writerow([s["rank"], s["staff_name"], s["email"], s["order_count"], s["total_sales"], s["total_discounts"], s["commission_rate"], s["commission_amount"]])
+    elif report_type == "voids-refunds":
+        data = service.get_void_refund_report(business_id, start, end)
+        writer.writerow(["Staff", "Email", "Voids", "Refunds", "Total Actions"])
+        for s in data.get("staff", []):
+            writer.writerow([s["staff_name"], s["email"], s["void_count"], s["refund_count"], s["total_actions"]])
+    elif report_type == "discounts":
+        data = service.get_discount_report(business_id, start, end)
+        writer.writerow(["Staff", "Email", "Orders", "Total Discounts", "Total Sales", "Discount Rate %"])
+        for s in data.get("staff", []):
+            writer.writerow([s["staff_name"], s["email"], s["order_count"], s["total_discounts"], s["total_sales"], s["discount_rate"]])
+    else:
+        raise HTTPException(status_code=400, detail=f"CSV export not supported for: {report_type}")
+
+    csv_content = output.getvalue()
+    filename = f"staff_{report_type}_{start_date}_to_{end_date}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/staff/export/excel")
+async def export_staff_report_excel(
+    report_type: str = Query(..., description="Staff report type"),
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    commission_rate: float = Query(5.0, description="Commission rate %"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export staff report as styled Excel (.xlsx)."""
+    from io import BytesIO
+    from datetime import date as date_type
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    if report_type not in STAFF_REPORT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown type: {report_type}. Use: {', '.join(STAFF_REPORT_TYPES)}")
+
+    service = StaffReportService(db)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"Staff {report_type.replace('-', ' ').title()}"
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="3F51B5", end_color="3F51B5", fill_type="solid")
+    thin_border = Border(
+        left=Side(style="thin"), right=Side(style="thin"),
+        top=Side(style="thin"), bottom=Side(style="thin"),
+    )
+
+    if report_type == "performance":
+        data = service.get_performance_report(business_id, start, end)
+        headers = ["Rank", "Staff", "Email", "Total Hours", "Net Hours", "Sales Count", "Sales Total"]
+        rows = [[s["rank"], s["staff_name"], s["email"], s["total_hours"], s["net_hours"], s["sales_count"], s["sales_total"]] for s in data.get("staff", [])]
+    elif report_type == "attendance":
+        data = service.get_attendance_report(business_id, start, end)
+        headers = ["Staff", "Email", "Days Present", "Days Absent", "Late Count", "Total Hours", "Attendance Rate"]
+        rows = [[s["staff_name"], s["email"], s["days_present"], s["days_absent"], s["late_count"], s["total_hours"], s["attendance_rate"]] for s in data.get("staff", [])]
+    elif report_type == "commission":
+        data = service.get_commission_report(business_id, start, end, commission_rate)
+        headers = ["Rank", "Staff", "Email", "Orders", "Total Sales", "Discounts", "Rate", "Commission"]
+        rows = [[s["rank"], s["staff_name"], s["email"], s["order_count"], s["total_sales"], s["total_discounts"], s["commission_rate"], s["commission_amount"]] for s in data.get("staff", [])]
+    elif report_type == "voids-refunds":
+        data = service.get_void_refund_report(business_id, start, end)
+        headers = ["Staff", "Email", "Voids", "Refunds", "Total Actions"]
+        rows = [[s["staff_name"], s["email"], s["void_count"], s["refund_count"], s["total_actions"]] for s in data.get("staff", [])]
+    elif report_type == "discounts":
+        data = service.get_discount_report(business_id, start, end)
+        headers = ["Staff", "Email", "Orders", "Total Discounts", "Total Sales", "Discount Rate %"]
+        rows = [[s["staff_name"], s["email"], s["order_count"], s["total_discounts"], s["total_sales"], s["discount_rate"]] for s in data.get("staff", [])]
+    else:
+        raise HTTPException(status_code=400, detail=f"Excel export not supported for: {report_type}")
+
+    for col_idx, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx, value=h)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = thin_border
+
+    alt_fill = PatternFill(start_color="F5F5F5", end_color="F5F5F5", fill_type="solid")
+    for row_idx, row_data in enumerate(rows, 2):
+        for col_idx, val in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell.border = thin_border
+            if row_idx % 2 == 0:
+                cell.fill = alt_fill
+
+    for col in ws.columns:
+        max_len = max((len(str(cell.value or "")) for cell in col), default=10)
+        ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 40)
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    filename = f"staff_{report_type}_{start_date}_to_{end_date}.xlsx"
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/staff/export/pdf")
+async def export_staff_report_pdf(
+    report_type: str = Query(..., description="Staff report type"),
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    commission_rate: float = Query(5.0, description="Commission rate %"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export staff report as PDF."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    if report_type not in STAFF_REPORT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown type: {report_type}. Use: {', '.join(STAFF_REPORT_TYPES)}")
+
+    service = StaffReportService(db)
+    title = f"Staff {report_type.replace('-', ' ').title()} Report"
+    subtitle = f"{start_date} to {end_date}"
+
+    if report_type == "performance":
+        data = service.get_performance_report(business_id, start, end)
+        headers = ["Rank", "Staff", "Hours", "Sales", "Total"]
+        rows = [[s["rank"], s["staff_name"], s["total_hours"], s["sales_count"], s["sales_total"]] for s in data.get("staff", [])]
+    elif report_type == "attendance":
+        data = service.get_attendance_report(business_id, start, end)
+        headers = ["Staff", "Present", "Absent", "Late", "Rate"]
+        rows = [[s["staff_name"], s["days_present"], s["days_absent"], s["late_count"], s["attendance_rate"]] for s in data.get("staff", [])]
+    elif report_type == "commission":
+        data = service.get_commission_report(business_id, start, end, commission_rate)
+        headers = ["Staff", "Orders", "Sales", "Commission"]
+        rows = [[s["staff_name"], s["order_count"], s["total_sales"], s["commission_amount"]] for s in data.get("staff", [])]
+    elif report_type == "voids-refunds":
+        data = service.get_void_refund_report(business_id, start, end)
+        headers = ["Staff", "Voids", "Refunds", "Total"]
+        rows = [[s["staff_name"], s["void_count"], s["refund_count"], s["total_actions"]] for s in data.get("staff", [])]
+    elif report_type == "discounts":
+        data = service.get_discount_report(business_id, start, end)
+        headers = ["Staff", "Orders", "Discounts", "Rate %"]
+        rows = [[s["staff_name"], s["order_count"], s["total_discounts"], s["discount_rate"]] for s in data.get("staff", [])]
+    else:
+        raise HTTPException(status_code=400, detail=f"PDF export not supported for: {report_type}")
+
+    pdf_bytes = build_simple_pdf(title, subtitle, headers, rows)
+    filename = f"staff_{report_type}_{start_date}_to_{end_date}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# ── Void/Discount Reports ───────────────────────────────────────────────
+
+
+@router.get("/staff/voids-refunds", response_model=VoidRefundReport)
+async def get_void_refund_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Void and refund report showing actions by staff."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_void_refund_report(business_id, start, end, user_id=user_id)
+
+
+@router.get("/staff/discounts", response_model=DiscountReport)
+async def get_discount_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Discount report showing discounts applied by staff."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = StaffReportService(db)
+    return service.get_discount_report(business_id, start, end, user_id=user_id)
+
+
+# ── Commission Approval Workflow ────────────────────────────────────────
+
+
+@router.post("/staff/commissions/generate", response_model=CommissionListResponse)
+async def generate_commission_records(
+    body: CommissionGenerateRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Generate commission records from sales data for a period."""
+    report_service = StaffReportService(db)
+    report = report_service.get_commission_report(
+        business_id, body.period_start, body.period_end, body.commission_rate,
+    )
+    commission_service = CommissionService(db)
+    commission_service.generate_records(
+        business_id=business_id,
+        period_start=body.period_start,
+        period_end=body.period_end,
+        commission_rate=body.commission_rate,
+        staff_data=report["staff"],
+    )
+    items, total = commission_service.list_records(business_id)
+    total_commission = sum(i["commission_amount"] for i in items)
+    total_sales = sum(i["total_sales"] for i in items)
+    return CommissionListResponse(
+        items=items, total=total,
+        total_commission=total_commission, total_sales=total_sales,
+    )
+
+
+@router.get("/staff/commissions/records", response_model=CommissionListResponse)
+async def list_commission_records(
+    status_filter: Optional[str] = Query(None, alias="status", description="Filter by status"),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """List commission records with optional status filter."""
+    commission_service = CommissionService(db)
+    items, total = commission_service.list_records(
+        business_id, status=status_filter, page=page, per_page=per_page,
+    )
+    total_commission = sum(i["commission_amount"] for i in items)
+    total_sales = sum(i["total_sales"] for i in items)
+    return CommissionListResponse(
+        items=items, total=total,
+        total_commission=total_commission, total_sales=total_sales,
+    )
+
+
+@router.post("/staff/commissions/approve", response_model=CommissionApproveResponse)
+async def approve_commission_records(
+    body: CommissionApproveRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Approve or reject commission records."""
+    commission_service = CommissionService(db)
+    if body.action == "approve":
+        count = commission_service.approve_records(
+            business_id, body.record_ids, current_user.id,
+        )
+    else:
+        count = commission_service.reject_records(
+            business_id, body.record_ids, current_user.id,
+            reason=body.rejection_reason,
+        )
+    return CommissionApproveResponse(updated_count=count, action=body.action)
+
+
+@router.get("/staff/commissions/payroll")
+async def export_commission_payroll(
+    period_start: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
+    period_end: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export approved commissions grouped by staff for payroll."""
+    from datetime import date as date_type
+
+    start = date_type.fromisoformat(period_start) if period_start else None
+    end = date_type.fromisoformat(period_end) if period_end else None
+
+    commission_service = CommissionService(db)
+    return commission_service.get_payroll_export(business_id, start, end)
+
+
+# ── Custom Report Builder ───────────────────────────────────────────────
+
+
+@router.post("/custom/execute", response_model=CustomReportResponse)
+async def execute_custom_report(
+    body: CustomReportRequest,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Execute a custom report with selected metrics and filters."""
+    service = CustomReportService(db)
+    return service.execute_report(
+        business_id, body.metrics, body.filters,
+        body.group_by, body.sort_by, body.sort_direction,
+    )
+
+
+@router.post("/custom/templates", response_model=ReportTemplateResponse)
+async def create_report_template(
+    body: ReportTemplateCreate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Save a custom report template."""
+    service = CustomReportService(db)
+    template = service.create_template(
+        business_id=business_id, user_id=current_user.id,
+        name=body.name, description=body.description,
+        metrics=body.metrics, filters=body.filters,
+        group_by=body.group_by, sort_by=body.sort_by,
+        sort_direction=body.sort_direction,
+        is_scheduled=body.is_scheduled, schedule_cron=body.schedule_cron,
+        schedule_recipients=body.schedule_recipients,
+        is_public=body.is_public,
+    )
+    owner_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or "Unknown"
+    return ReportTemplateResponse(
+        id=template.id, name=template.name, description=template.description,
+        report_type=template.report_type, metrics=template.metrics,
+        filters=template.filters, group_by=template.group_by,
+        sort_by=template.sort_by, sort_direction=template.sort_direction,
+        is_scheduled=template.is_scheduled, schedule_cron=template.schedule_cron,
+        schedule_recipients=template.schedule_recipients,
+        is_public=template.is_public, created_by_name=owner_name,
+        created_at=template.created_at,
+    )
+
+
+@router.get("/custom/templates", response_model=ReportTemplateListResponse)
+async def list_report_templates(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """List saved report templates."""
+    service = CustomReportService(db)
+    items, total = service.list_templates(
+        business_id, user_id=current_user.id, page=page, per_page=per_page,
+    )
+    return ReportTemplateListResponse(items=items, total=total)
+
+
+@router.get("/custom/templates/{template_id}", response_model=ReportTemplateResponse)
+async def get_report_template(
+    template_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get a specific report template."""
+    service = CustomReportService(db)
+    template = service.get_template(business_id, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    owner_name = "Unknown"
+    if template.owner:
+        owner_name = f"{template.owner.first_name or ''} {template.owner.last_name or ''}".strip() or "Unknown"
+    return ReportTemplateResponse(
+        id=template.id, name=template.name, description=template.description,
+        report_type=template.report_type, metrics=template.metrics,
+        filters=template.filters, group_by=template.group_by,
+        sort_by=template.sort_by, sort_direction=template.sort_direction,
+        is_scheduled=template.is_scheduled, schedule_cron=template.schedule_cron,
+        schedule_recipients=template.schedule_recipients,
+        is_public=template.is_public, created_by_name=owner_name,
+        created_at=template.created_at,
+    )
+
+
+@router.put("/custom/templates/{template_id}", response_model=ReportTemplateResponse)
+async def update_report_template(
+    template_id: str,
+    body: ReportTemplateUpdate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Update a report template."""
+    service = CustomReportService(db)
+    template = service.get_template(business_id, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    if template.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this template")
+    updates = body.model_dump(exclude_unset=True)
+    template = service.update_template(template, **updates)
+    owner_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or "Unknown"
+    return ReportTemplateResponse(
+        id=template.id, name=template.name, description=template.description,
+        report_type=template.report_type, metrics=template.metrics,
+        filters=template.filters, group_by=template.group_by,
+        sort_by=template.sort_by, sort_direction=template.sort_direction,
+        is_scheduled=template.is_scheduled, schedule_cron=template.schedule_cron,
+        schedule_recipients=template.schedule_recipients,
+        is_public=template.is_public, created_by_name=owner_name,
+        created_at=template.created_at,
+    )
+
+
+@router.delete("/custom/templates/{template_id}")
+async def delete_report_template(
+    template_id: str,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Delete a report template."""
+    service = CustomReportService(db)
+    template = service.get_template(business_id, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    if template.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this template")
+    service.delete_template(template)
+    return {"detail": "Template deleted"}
+
+
+@router.get("/custom/metrics")
+async def list_available_metrics(
+    current_user: User = Depends(get_current_active_user),
+):
+    """List available metrics for custom report builder."""
+    from app.services.custom_report_service import AVAILABLE_METRICS, AVAILABLE_GROUP_BY
+    return {
+        "metrics": [{"key": k, "label": v} for k, v in AVAILABLE_METRICS.items()],
+        "group_by": AVAILABLE_GROUP_BY,
+    }
+
+
+@router.get("/inventory/stock-levels")
+async def get_stock_levels_report(
+    category_id: Optional[str] = Query(None, description="Filter by category ID"),
+    low_stock_only: bool = Query(False, description="Show only low stock items"),
+    out_of_stock_only: bool = Query(False, description="Show only out of stock items"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get current stock levels with low/out-of-stock flags."""
+    service = InventoryReportService(db)
+    return service.get_stock_levels(
+        business_id,
+        category_id=category_id,
+        low_stock_only=low_stock_only,
+        out_of_stock_only=out_of_stock_only,
+    )
+
+
+@router.get("/inventory/movements")
+async def get_stock_movements_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    product_id: Optional[str] = Query(None, description="Filter by product ID"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get stock movement report showing ins, outs, and adjustments."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_stock_movements(business_id, start, end, product_id=product_id)
+
+
+@router.get("/inventory/valuation")
+async def get_inventory_valuation_report(
+    method: str = Query("average", description="Valuation method (average)"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory valuation report grouped by category."""
+    service = InventoryReportService(db)
+    return service.get_valuation(business_id, method=method)
+
+
+@router.get("/inventory/turnover")
+async def get_inventory_turnover_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory turnover analysis with fast/slow/dead stock classification."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_turnover_analysis(business_id, start, end)
+
+
+@router.get("/inventory/supplier-performance")
+async def get_supplier_performance_report(
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD format"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get supplier performance report based on purchase orders."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_supplier_performance(business_id, start, end)
+
+
+@router.get("/inventory/wastage")
+async def get_wastage_report(
+    start_date: str = Query(..., description="Start date YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date YYYY-MM-DD"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory wastage/shrinkage report."""
+    from datetime import date as date_type
+
+    try:
+        start = date_type.fromisoformat(start_date)
+        end = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD.",
+        )
+
+    service = InventoryReportService(db)
+    return service.get_wastage_report(business_id, start, end)
+
+
+@router.get("/inventory/dashboard")
+async def get_inventory_dashboard(
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Get inventory dashboard with KPIs, alerts, and stock overview."""
+    service = InventoryReportService(db)
+    return service.get_inventory_dashboard(business_id)
+
+
+# ── Modifier & Combo Reports ──────────────────────────────────────
+# Tasks 9.1-9.4 from addons-modifiers spec (Requirement 10)
+
+from app.services.modifier_analytics_service import ModifierAnalyticsService
+
+
+@router.get("/modifiers/summary")
+async def get_modifier_summary(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """High-level modifier statistics for the dashboard."""
+    service = ModifierAnalyticsService(db)
+    return service.get_modifier_summary(business_id, start_date, end_date)
+
+
+@router.get("/modifiers/frequency")
+async def get_modifier_frequency(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    product_id: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Modifier selection frequency, ordered by popularity."""
+    service = ModifierAnalyticsService(db)
+    return service.get_modifier_selection_frequency(
+        business_id, start_date, end_date, product_id=product_id, limit=limit,
+    )
+
+
+@router.get("/modifiers/revenue")
+async def get_modifier_revenue(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Revenue generated by each modifier."""
+    service = ModifierAnalyticsService(db)
+    return service.get_modifier_revenue(business_id, start_date, end_date, limit=limit)
+
+
+@router.get("/modifiers/rankings")
+async def get_modifier_rankings(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    order_by: str = Query("popular", description="popular, unpopular, revenue, aov_impact"),
+    limit: int = Query(10, ge=1, le=50),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Ranked modifier list by popularity or revenue."""
+    service = ModifierAnalyticsService(db)
+    return service.get_modifier_rankings(
+        business_id, start_date, end_date, order_by=order_by, limit=limit,
+    )
+
+
+@router.get("/combos/performance")
+async def get_combo_performance(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Combo deal performance metrics."""
+    service = ModifierAnalyticsService(db)
+    return service.get_combo_performance(business_id, start_date, end_date, limit=limit)

@@ -20,6 +20,7 @@ from app.schemas.order import (
     OrderListResponse,
     OrderItemCreate,
     OrderItemResponse,
+    OrderItemModifierResponse,
     OrderStatusUpdate,
     PaymentRecord,
     OrderSummary,
@@ -75,7 +76,35 @@ def _order_to_response(order, items=None, customer_name: str = None) -> OrderRes
 
 
 def _item_to_response(item) -> OrderItemResponse:
-    """Convert order item to response schema."""
+    """Convert order item to response schema, including modifier selections.
+
+    Why build modifier list explicitly instead of relying on from_attributes?
+    The SQLAlchemy model stores the group name in ``modifier_group_name``
+    but the response schema uses the shorter ``group_name``.  Mapping
+    explicitly avoids a silent field mismatch.
+    """
+
+    # Build modifier response list from the eager-loaded relationship.
+    modifier_responses = []
+    if hasattr(item, "item_modifiers") and item.item_modifiers:
+        for mod in item.item_modifiers:
+            modifier_responses.append(
+                OrderItemModifierResponse(
+                    id=str(mod.id),
+                    modifier_id=str(mod.modifier_id) if mod.modifier_id else None,
+                    modifier_name=mod.modifier_name,
+                    group_name=mod.modifier_group_name,
+                    quantity=mod.quantity,
+                    unit_price=mod.unit_price,
+                    total_price=mod.total_price,
+                    parent_modifier_id=(
+                        str(mod.parent_modifier_id)
+                        if mod.parent_modifier_id
+                        else None
+                    ),
+                )
+            )
+
     return OrderItemResponse(
         id=str(item.id),
         order_id=str(item.order_id),
@@ -94,6 +123,7 @@ def _item_to_response(item) -> OrderItemResponse:
         notes=item.notes,
         created_at=item.created_at,
         updated_at=item.updated_at,
+        modifiers=modifier_responses,
     )
 
 

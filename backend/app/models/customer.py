@@ -1,6 +1,6 @@
 """Customer model for customer management."""
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Boolean, Column, DateTime, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 import enum
 
@@ -53,6 +53,11 @@ class Customer(BaseModel):
     total_orders = Column(Integer, default=0)
     total_spent = Column(Numeric(12, 2), default=0)
     average_order_value = Column(Numeric(12, 2), default=0)
+
+    # Privacy / consent
+    marketing_consent = Column(Boolean, default=False)
+    data_processing_consent = Column(Boolean, default=True)
+    consent_updated_at = Column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self) -> str:
         if self.company_name:

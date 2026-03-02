@@ -21,6 +21,17 @@ type OrderStatus =
 
 type PaymentStatus = 'pending' | 'partial' | 'paid' | 'refunded' | 'failed';
 
+interface OrderItemModifier {
+  id: string;
+  modifier_id?: string | null;
+  modifier_name: string;
+  group_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  parent_modifier_id?: string | null;
+}
+
 interface OrderItem {
   id: string;
   name: string;
@@ -34,6 +45,7 @@ interface OrderItem {
   tax_amount: number;
   total: number;
   line_total: number;
+  modifiers?: OrderItemModifier[];
 }
 
 interface OrderResponse {
@@ -396,6 +408,27 @@ export default function OrderDetailPage() {
                           {item.sku && <span className="text-xs text-gray-500">SKU: {item.sku}</span>}
                           {item.description && (
                             <span className="text-xs text-gray-500 line-clamp-2">{item.description}</span>
+                          )}
+                          {/* Modifier selections displayed below item name */}
+                          {item.modifiers && item.modifiers.length > 0 && (
+                            <div className="mt-1.5 space-y-0.5">
+                              {item.modifiers.map((mod) => (
+                                <div
+                                  key={mod.id}
+                                  className="flex items-center gap-2 text-xs text-gray-400"
+                                >
+                                  <span className="text-gray-600">+</span>
+                                  <span className="text-gray-500">{mod.group_name}:</span>
+                                  <span>
+                                    {mod.modifier_name}
+                                    {mod.quantity > 1 && ` ×${mod.quantity}`}
+                                  </span>
+                                  <span className="text-emerald-400/80">
+                                    {formatCurrency(Number(mod.total_price))}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </td>

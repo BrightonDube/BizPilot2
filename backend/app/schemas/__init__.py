@@ -78,6 +78,29 @@ from app.schemas.customer_account import (
     ReportExportRequest,
     ReportExportResponse,
 )
+from app.schemas.modifier import (
+    ModifierGroupCreate,
+    ModifierGroupUpdate,
+    ModifierGroupResponse,
+    ModifierGroupListResponse,
+    ModifierCreate,
+    ModifierUpdate,
+    ModifierResponse,
+    AssignGroupRequest,
+    ProductModifierGroupResponse,
+    ModifierAvailabilityCreate,
+    ModifierAvailabilityUpdate,
+    ModifierAvailabilityResponse,
+)
+from app.schemas.combo import (
+    ComboDealCreate,
+    ComboDealUpdate,
+    ComboDealResponse,
+    ComboDealListResponse,
+    ComboComponentCreate,
+    ComboComponentUpdate,
+    ComboComponentResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -151,4 +174,25 @@ __all__ = [
     "ARDashboard",
     "ReportExportRequest",
     "ReportExportResponse",
+    # Modifier schemas
+    "ModifierGroupCreate",
+    "ModifierGroupUpdate",
+    "ModifierGroupResponse",
+    "ModifierGroupListResponse",
+    "ModifierCreate",
+    "ModifierUpdate",
+    "ModifierResponse",
+    "AssignGroupRequest",
+    "ProductModifierGroupResponse",
+    "ModifierAvailabilityCreate",
+    "ModifierAvailabilityUpdate",
+    "ModifierAvailabilityResponse",
+    # Combo schemas
+    "ComboDealCreate",
+    "ComboDealUpdate",
+    "ComboDealResponse",
+    "ComboDealListResponse",
+    "ComboComponentCreate",
+    "ComboComponentUpdate",
+    "ComboComponentResponse",
 ]

@@ -1,6 +1,7 @@
 """Business API endpoints for business management and onboarding."""
 
 from typing import Optional, List
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, ConfigDict
@@ -431,6 +432,7 @@ class BusinessUserResponse(BaseModel):
     department: Optional[dict] = None  # Joined department data
     status: str
     is_primary: bool
+    employment_start_date: Optional[date] = None
     created_at: Optional[str] = None
 
 
@@ -457,6 +459,7 @@ class UpdateBusinessUserRequest(BaseModel):
     role_id: Optional[str] = None
     department_id: Optional[str] = None
     status: Optional[str] = None
+    employment_start_date: Optional[date] = None
 
 
 # --- Business User Management Endpoints ---

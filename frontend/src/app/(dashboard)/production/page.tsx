@@ -7,6 +7,7 @@ import { Plus, Factory, Play, CheckCircle, XCircle, Eye, Trash2 } from 'lucide-r
 import { apiClient } from '@/lib/api'
 import { Button, Card, CardContent, PageHeader, LoadingSpinner, Badge } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
+import { FeatureGate } from '@/components/subscription/FeatureGate'
 
 interface ProductionOrder {
   id: string
@@ -115,6 +116,7 @@ export default function ProductionPage() {
   }
 
   return (
+    <FeatureGate feature="production">
     <div>
       <PageHeader
         title="Production"
@@ -281,5 +283,6 @@ export default function ProductionPage() {
         </div>
       )}
     </div>
+    </FeatureGate>
   )
 }
