@@ -187,3 +187,174 @@ class AutoReorderResponse(BaseModel):
     purchase_requests_created: int
     items_reordered: int
     details: List[PurchaseRequestResponse] = []
+
+
+# --- Product Reorder Settings Schemas ---
+
+class ProductReorderSettingsCreate(BaseModel):
+    """Schema for creating/updating per-product reorder configuration.
+
+    Why separate from ReorderRule?
+    ReorderRules drive automation (trigger thresholds).
+    ProductReorderSettings store planning parameters (safety stock,
+    par level, EOQ) that inform manual and automated decisions.
+    """
+
+    product_id: str
+    reorder_point: int = Field(0, ge=0)
+    safety_stock: int = Field(0, ge=0)
+    par_level: Optional[int] = Field(None, ge=0)
+    eoq: Optional[int] = Field(None, ge=1)
+    auto_reorder: bool = False
+    preferred_supplier_id: Optional[str] = None
+
+
+class ProductReorderSettingsUpdate(BaseModel):
+    """Schema for partial update of reorder settings."""
+
+    reorder_point: Optional[int] = Field(None, ge=0)
+    safety_stock: Optional[int] = Field(None, ge=0)
+    par_level: Optional[int] = Field(None, ge=0)
+    eoq: Optional[int] = Field(None, ge=1)
+    auto_reorder: Optional[bool] = None
+    preferred_supplier_id: Optional[str] = None
+
+
+class ProductReorderSettingsResponse(BaseModel):
+    """Schema for returning per-product reorder settings."""
+
+    id: str
+    product_id: str
+    business_id: str
+    reorder_point: int
+    safety_stock: int
+    par_level: Optional[int] = None
+    eoq: Optional[int] = None
+    auto_reorder: bool
+    preferred_supplier_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# --- Goods Received Note (GRN) Schemas ---
+
+class GRNItemCreate(BaseModel):
+    """Schema for a single item within a goods received note."""
+
+    po_item_id: str
+    quantity_received: int = Field(..., ge=1)
+    variance: int = Field(0)
+    variance_reason: Optional[str] = None
+
+
+class GRNCreate(BaseModel):
+    """Schema for creating a goods received note against a purchase order."""
+
+    purchase_order_id: str
+    items: List[GRNItemCreate]
+    notes: Optional[str] = None
+
+
+class GRNItemResponse(BaseModel):
+    """Schema for returning a GRN line item."""
+
+    id: str
+    po_item_id: str
+    quantity_received: int
+    variance: int
+    variance_reason: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class GRNResponse(BaseModel):
+    """Schema for returning a goods received note."""
+
+    id: str
+    purchase_order_id: str
+    business_id: str
+    grn_number: str
+    received_by: Optional[str] = None
+    received_at: Optional[datetime] = None
+    notes: Optional[str] = None
+    items: List[GRNItemResponse] = []
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class GRNListResponse(BaseModel):
+    """Schema for paginated GRN list."""
+
+    items: List[GRNResponse]
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
+# --- Reorder Audit Log Schemas ---
+
+class ReorderAuditLogResponse(BaseModel):
+    """Schema for returning a reorder audit log entry."""
+
+    id: str
+    business_id: str
+    action: str
+    entity_type: str
+    entity_id: str
+    details: Optional[dict] = None
+    performed_by: Optional[str] = None
+    is_automated: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ReorderAuditLogListResponse(BaseModel):
+    """Schema for paginated audit log list."""
+
+    items: List[ReorderAuditLogResponse]
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
+# --- Report Schemas ---
+
+class StockoutReportItem(BaseModel):
+    """A product that experienced or is approaching a stockout."""
+
+    product_id: str
+    product_name: str
+    current_stock: int
+    days_until_stockout: Optional[int] = None
+    avg_daily_sales: Optional[float] = None
+    last_stockout_date: Optional[datetime] = None
+
+
+class InventoryTurnoverItem(BaseModel):
+    """Inventory turnover metrics for a product."""
+
+    product_id: str
+    product_name: str
+    turnover_ratio: float
+    avg_inventory: float
+    total_sold: int
+    period_days: int
+
+
+class POHistoryItem(BaseModel):
+    """Purchase order history record for reporting."""
+
+    id: str
+    reference: str
+    supplier_name: Optional[str] = None
+    status: str
+    total_amount: Decimal
+    items_count: int
+    created_at: datetime
+    received_at: Optional[datetime] = None
