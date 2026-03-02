@@ -17,6 +17,14 @@ class LaybyReportService:
     def __init__(self, db: Session):
         self.db = db
 
+    def get_active_summary(self, business_id: UUID) -> dict:
+        """Alias for get_active_laybys."""
+        return self.get_active_laybys(business_id)
+
+    def get_overdue(self, business_id: UUID) -> dict:
+        """Alias for get_overdue_laybys."""
+        return self.get_overdue_laybys(business_id)
+
     def get_active_laybys(self, business_id: UUID) -> dict:
         """Get summary of all active laybys for a business.
 

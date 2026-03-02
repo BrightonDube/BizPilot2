@@ -161,6 +161,25 @@ from app.models.expense import (
     ExpenseTrackingCategory,
     ExpenseTrackingStatus,
 )
+from app.models.staff_target import (
+    StaffTarget,
+    TargetTemplate,
+    CommissionRule,
+    CommissionTier,
+    StaffCommission,
+    CommissionDetail,
+    IncentiveProgram,
+    IncentiveAchievement,
+    PerformanceSnapshot,
+    TargetType,
+    PeriodType,
+    TargetStatus,
+    CommissionRuleType,
+    CommissionStatus as StaffCommissionStatus,
+    IncentiveType,
+    RewardType,
+    AchievementStatus,
+)
 
 __all__ = [
     "BaseModel",
@@ -386,4 +405,22 @@ __all__ = [
     "ProformaInvoice",
     "ProformaItem",
     "QuoteStatus",
+    # Staff Targets
+    "StaffTarget",
+    "TargetTemplate",
+    "CommissionRule",
+    "CommissionTier",
+    "StaffCommission",
+    "CommissionDetail",
+    "IncentiveProgram",
+    "IncentiveAchievement",
+    "PerformanceSnapshot",
+    "TargetType",
+    "PeriodType",
+    "TargetStatus",
+    "StaffCommissionStatus",
+    "CommissionRuleType",
+    "IncentiveType",
+    "RewardType",
+    "AchievementStatus",
 ]

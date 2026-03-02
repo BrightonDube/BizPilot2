@@ -69,40 +69,6 @@ class LaybyItemResponse(BaseModel):
     total_amount: Decimal
 
 
-class LaybyResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    reference_number: str
-    customer_id: UUID
-    customer_name: Optional[str] = None
-    status: str
-    subtotal: Decimal
-    tax_amount: Decimal
-    total_amount: Decimal
-    deposit_amount: Decimal
-    amount_paid: Decimal
-    balance_due: Decimal
-    payment_frequency: str
-    start_date: date
-    end_date: date
-    next_payment_date: Optional[date] = None
-    next_payment_amount: Optional[Decimal] = None
-    extension_count: int
-    notes: Optional[str] = None
-    items: List[LaybyItemResponse] = []
-    created_at: datetime
-    updated_at: datetime
-
-
-class LaybyListResponse(BaseModel):
-    items: List[LaybyResponse]
-    total: int
-    page: int
-    per_page: int
-    pages: int
-
-
 class PaymentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -125,6 +91,42 @@ class ScheduleResponse(BaseModel):
     amount_due: Decimal
     amount_paid: Decimal
     status: str
+
+
+class LaybyResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    reference_number: str
+    customer_id: UUID
+    customer_name: Optional[str] = None
+    status: str
+    subtotal: Decimal
+    tax_amount: Decimal
+    total_amount: Decimal
+    deposit_amount: Decimal
+    amount_paid: Decimal
+    balance_due: Decimal
+    payment_frequency: str
+    start_date: date
+    end_date: date
+    next_payment_date: Optional[date] = None
+    next_payment_amount: Optional[Decimal] = None
+    extension_count: int
+    notes: Optional[str] = None
+    items: List[LaybyItemResponse] = []
+    schedules: List[ScheduleResponse] = []
+    payments: List[PaymentResponse] = []
+    created_at: datetime
+    updated_at: datetime
+
+
+class LaybyListResponse(BaseModel):
+    items: List[LaybyResponse]
+    total: int
+    page: int
+    per_page: int
+    pages: int
 
 
 class LaybyConfigResponse(BaseModel):

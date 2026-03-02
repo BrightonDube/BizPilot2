@@ -706,6 +706,32 @@ class LaybyService:
             .all()
         )
 
+    def get_payments(
+        self, business_id: UUID, layby_id: UUID
+    ) -> List[LaybyPayment]:
+        """Alias for get_payment_history."""
+        return self.get_payment_history(business_id, layby_id)
+
+    def get_config(self, business_id: UUID) -> Optional[LaybyConfig]:
+        """Get layby configuration for a business (public wrapper)."""
+        return self._get_config(business_id)
+
+    def update_config(self, business_id: UUID, data) -> LaybyConfig:
+        """Update layby configuration, creating default config if absent."""
+        config = self._get_config(business_id)
+        if not config:
+            config = LaybyConfig(business_id=str(business_id))
+            self.db.add(config)
+            self.db.flush()
+
+        update_dict = data.model_dump(exclude_unset=True)
+        for key, value in update_dict.items():
+            setattr(config, key, value)
+
+        self.db.commit()
+        self.db.refresh(config)
+        return config
+
     def get_schedule(
         self, business_id: UUID, layby_id: UUID
     ) -> List[LaybySchedule]:
