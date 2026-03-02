@@ -2,7 +2,8 @@
 
 import enum
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Enum as SQLEnum, Boolean, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel, utc_now
@@ -127,3 +128,117 @@ class GLAccountMapping(BaseModel):
     credit_account = relationship(
         "ChartOfAccount", foreign_keys=[credit_account_id], lazy="joined"
     )
+
+
+class RecurringEntryFrequency(str, enum.Enum):
+    """How often a recurring journal entry should be generated."""
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    YEARLY = "yearly"
+
+
+class GLAccountBalance(BaseModel):
+    """Pre-aggregated account balance for a specific period (year/month).
+
+    Why a separate cache table instead of always aggregating journal lines?
+    Financial statements (trial balance, income statement, balance sheet) need
+    fast reads.  With thousands of journal lines per month, aggregating on the
+    fly is too slow.  This table is updated whenever a journal entry is posted
+    or voided, keeping reads O(1) per account-period.
+    """
+
+    __tablename__ = "gl_account_balances"
+
+    business_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    account_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chart_of_accounts.id"),
+        nullable=False,
+    )
+    period_year = Column(sa.Integer, nullable=False)
+    period_month = Column(sa.Integer, nullable=False)
+    opening_balance = Column(Numeric(14, 2), default=0)
+    debit_total = Column(Numeric(14, 2), default=0)
+    credit_total = Column(Numeric(14, 2), default=0)
+    closing_balance = Column(Numeric(14, 2), default=0)
+
+    # Relationships
+    account = relationship("ChartOfAccount", lazy="joined")
+
+    __table_args__ = (
+        sa.UniqueConstraint("account_id", "period_year", "period_month",
+                            name="uq_gl_account_balances_account_period"),
+    )
+
+
+class GLRecurringEntry(BaseModel):
+    """Template for automatically generated journal entries.
+
+    Why JSONB template column?
+    Recurring entries need to store a variable number of lines with different
+    accounts and amounts.  JSONB gives schema flexibility without a separate
+    junction table, and PostgreSQL can index inside it if needed later.
+    Template format: {"lines": [{"account_id": "...", "debit": 100, "credit": 0, "memo": "..."}]}
+    """
+
+    __tablename__ = "gl_recurring_entries"
+
+    business_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    frequency = Column(String(20), nullable=False)  # See RecurringEntryFrequency
+    next_date = Column(sa.Date, nullable=False)
+    end_date = Column(sa.Date, nullable=True)
+    template = Column(JSONB, nullable=False)
+    is_active = Column(Boolean, default=True)
+    last_generated_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class GLAuditAction(str, enum.Enum):
+    """Possible audit actions on GL entities."""
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+    POST = "post"
+    REVERSE = "reverse"
+    CLOSE_PERIOD = "close_period"
+
+
+class GLAuditLog(BaseModel):
+    """Immutable audit trail for all general ledger mutations.
+
+    Why separate from app-wide audit_logs?
+    Accounting regulations (GAAP/IFRS) require a dedicated, immutable audit
+    trail for financial records.  Mixing with application-level auditing
+    would make compliance exports harder and risk accidental purging.
+    """
+
+    __tablename__ = "gl_audit_log"
+
+    business_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    entity_type = Column(String(50), nullable=False)  # journal_entry, account, mapping
+    entity_id = Column(UUID(as_uuid=True), nullable=False)
+    action = Column(String(50), nullable=False)  # See GLAuditAction
+    old_value = Column(JSONB, nullable=True)
+    new_value = Column(JSONB, nullable=True)
+    performed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+
+    # Relationships
+    performer = relationship("User", foreign_keys=[performed_by], lazy="joined")

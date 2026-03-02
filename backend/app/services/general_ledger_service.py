@@ -13,6 +13,9 @@ from app.models.general_ledger import (
     JournalEntry,
     JournalEntryStatus,
     JournalLine,
+    GLAccountBalance,
+    GLRecurringEntry,
+    GLAuditLog,
 )
 
 
@@ -507,3 +510,179 @@ class GeneralLedgerService:
                 self.db.refresh(a)
 
         return created
+
+    # ------------------------------------------------------------------
+    # Recurring Entries
+    # ------------------------------------------------------------------
+
+    def list_recurring_entries(
+        self,
+        business_id: str,
+        page: int = 1,
+        per_page: int = 20,
+    ) -> Tuple[List[GLRecurringEntry], int]:
+        """List recurring journal entry templates for a business."""
+        query = (
+            self.db.query(GLRecurringEntry)
+            .filter(
+                GLRecurringEntry.business_id == business_id,
+                GLRecurringEntry.deleted_at.is_(None),
+            )
+            .order_by(GLRecurringEntry.next_date.asc())
+        )
+        total = query.count()
+        items = query.offset((page - 1) * per_page).limit(per_page).all()
+        return items, total
+
+    def create_recurring_entry(self, business_id: str, data: dict) -> GLRecurringEntry:
+        """Create a new recurring journal entry template."""
+        entry = GLRecurringEntry(business_id=business_id, **data)
+        self.db.add(entry)
+        self.db.commit()
+        self.db.refresh(entry)
+
+        # Audit trail
+        self._write_audit(business_id, "recurring_entry", str(entry.id), "create", new_value=data)
+        return entry
+
+    def update_recurring_entry(
+        self, entry_id: str, business_id: str, data: dict
+    ) -> Optional[GLRecurringEntry]:
+        """Update an existing recurring entry template."""
+        entry = (
+            self.db.query(GLRecurringEntry)
+            .filter(
+                GLRecurringEntry.id == entry_id,
+                GLRecurringEntry.business_id == business_id,
+                GLRecurringEntry.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not entry:
+            return None
+        old_value = {"name": entry.name, "frequency": entry.frequency}
+        for key, value in data.items():
+            if hasattr(entry, key):
+                setattr(entry, key, value)
+        self.db.commit()
+        self.db.refresh(entry)
+        self._write_audit(business_id, "recurring_entry", str(entry.id), "update",
+                          old_value=old_value, new_value=data)
+        return entry
+
+    def delete_recurring_entry(self, entry_id: str, business_id: str) -> bool:
+        """Soft-delete a recurring entry template."""
+        entry = (
+            self.db.query(GLRecurringEntry)
+            .filter(
+                GLRecurringEntry.id == entry_id,
+                GLRecurringEntry.business_id == business_id,
+                GLRecurringEntry.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not entry:
+            return False
+        entry.soft_delete()
+        self.db.commit()
+        self._write_audit(business_id, "recurring_entry", str(entry.id), "delete")
+        return True
+
+    # ------------------------------------------------------------------
+    # Account Balances (period cache)
+    # ------------------------------------------------------------------
+
+    def list_account_balances(
+        self,
+        business_id: str,
+        account_id: Optional[str] = None,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        page: int = 1,
+        per_page: int = 20,
+    ) -> Tuple[List[GLAccountBalance], int]:
+        """List pre-aggregated account balances, optionally filtered."""
+        query = self.db.query(GLAccountBalance).filter(
+            GLAccountBalance.business_id == business_id,
+        )
+        if account_id:
+            query = query.filter(GLAccountBalance.account_id == account_id)
+        if year:
+            query = query.filter(GLAccountBalance.period_year == year)
+        if month:
+            query = query.filter(GLAccountBalance.period_month == month)
+
+        total = query.count()
+        items = (
+            query.order_by(
+                GLAccountBalance.period_year.desc(),
+                GLAccountBalance.period_month.desc(),
+            )
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+        return items, total
+
+    # ------------------------------------------------------------------
+    # GL Audit Log
+    # ------------------------------------------------------------------
+
+    def list_audit_log(
+        self,
+        business_id: str,
+        entity_type: Optional[str] = None,
+        entity_id: Optional[str] = None,
+        page: int = 1,
+        per_page: int = 50,
+    ) -> Tuple[List[GLAuditLog], int]:
+        """List GL audit log entries with optional filtering."""
+        query = self.db.query(GLAuditLog).filter(
+            GLAuditLog.business_id == business_id,
+        )
+        if entity_type:
+            query = query.filter(GLAuditLog.entity_type == entity_type)
+        if entity_id:
+            query = query.filter(GLAuditLog.entity_id == entity_id)
+
+        total = query.count()
+        items = (
+            query.order_by(GLAuditLog.created_at.desc())
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+        return items, total
+
+    def _write_audit(
+        self,
+        business_id: str,
+        entity_type: str,
+        entity_id: str,
+        action: str,
+        old_value: Optional[dict] = None,
+        new_value: Optional[dict] = None,
+        performed_by: Optional[str] = None,
+    ) -> None:
+        """Write an immutable audit log entry for a GL mutation.
+
+        Why fire-and-forget?
+        Audit writes should never block the primary operation. If the audit
+        insert fails (unlikely), we log and continue rather than rolling
+        back the business transaction.
+        """
+        try:
+            log = GLAuditLog(
+                business_id=business_id,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                action=action,
+                old_value=old_value,
+                new_value=new_value,
+                performed_by=performed_by,
+            )
+            self.db.add(log)
+            self.db.commit()
+        except Exception:
+            # Non-critical — never fail the parent operation
+            self.db.rollback()

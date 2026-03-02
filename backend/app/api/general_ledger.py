@@ -11,6 +11,7 @@ from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
 from app.schemas.general_ledger import (
     AccountBalanceResponse,
+    AccountBalanceListResponse,
     AccountCreate,
     AccountListResponse,
     AccountResponse,
@@ -20,6 +21,12 @@ from app.schemas.general_ledger import (
     JournalEntryListResponse,
     JournalEntryResponse,
     JournalLineResponse,
+    RecurringEntryCreate,
+    RecurringEntryUpdate,
+    RecurringEntryResponse,
+    RecurringEntryListResponse,
+    GLAuditLogResponse,
+    GLAuditLogListResponse,
     TrialBalanceResponse,
 )
 from app.services.general_ledger_service import GeneralLedgerService
@@ -286,3 +293,117 @@ async def seed_accounts(
         "message": f"Seeded {len(created)} default accounts.",
         "accounts_created": len(created),
     }
+
+
+# --- Recurring Entries ---
+
+@router.get("/recurring-entries", response_model=RecurringEntryListResponse)
+async def list_recurring_entries(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """List recurring journal entry templates with pagination."""
+    service = GeneralLedgerService(db)
+    items, total = service.list_recurring_entries(business_id, page=page, per_page=per_page)
+    pages = max(1, math.ceil(total / per_page))
+    return RecurringEntryListResponse(
+        items=[RecurringEntryResponse.model_validate(i) for i in items],
+        total=total, page=page, per_page=per_page, pages=pages,
+    )
+
+
+@router.post("/recurring-entries", response_model=RecurringEntryResponse, status_code=status.HTTP_201_CREATED)
+async def create_recurring_entry(
+    payload: RecurringEntryCreate,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Create a new recurring journal entry template."""
+    service = GeneralLedgerService(db)
+    entry = service.create_recurring_entry(business_id, payload.model_dump())
+    return RecurringEntryResponse.model_validate(entry)
+
+
+@router.put("/recurring-entries/{entry_id}", response_model=RecurringEntryResponse)
+async def update_recurring_entry(
+    entry_id: str,
+    payload: RecurringEntryUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Update a recurring entry template."""
+    service = GeneralLedgerService(db)
+    entry = service.update_recurring_entry(entry_id, business_id, payload.model_dump(exclude_unset=True))
+    if not entry:
+        raise HTTPException(status_code=404, detail="Recurring entry not found.")
+    return RecurringEntryResponse.model_validate(entry)
+
+
+@router.delete("/recurring-entries/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recurring_entry(
+    entry_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Soft-delete a recurring entry template."""
+    service = GeneralLedgerService(db)
+    success = service.delete_recurring_entry(entry_id, business_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Recurring entry not found.")
+
+
+# --- GL Audit Log ---
+
+@router.get("/audit-log", response_model=GLAuditLogListResponse)
+async def list_gl_audit_log(
+    entity_type: Optional[str] = None,
+    entity_id: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """List GL audit log entries with optional filters."""
+    service = GeneralLedgerService(db)
+    items, total = service.list_audit_log(
+        business_id, entity_type=entity_type, entity_id=entity_id,
+        page=page, per_page=per_page,
+    )
+    pages = max(1, math.ceil(total / per_page))
+    return GLAuditLogListResponse(
+        items=[GLAuditLogResponse.model_validate(i) for i in items],
+        total=total, page=page, per_page=per_page, pages=pages,
+    )
+
+
+# --- Account Balances ---
+
+@router.get("/account-balances", response_model=AccountBalanceListResponse)
+async def list_account_balances(
+    account_id: Optional[str] = None,
+    year: Optional[int] = None,
+    month: Optional[int] = None,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """List pre-aggregated account balances by period."""
+    service = GeneralLedgerService(db)
+    items, total = service.list_account_balances(
+        business_id, account_id=account_id, year=year, month=month,
+        page=page, per_page=per_page,
+    )
+    pages = max(1, math.ceil(total / per_page))
+    return AccountBalanceListResponse(
+        items=[AccountBalanceResponse.model_validate(i) for i in items],
+        total=total, page=page, per_page=per_page, pages=pages,
+    )
