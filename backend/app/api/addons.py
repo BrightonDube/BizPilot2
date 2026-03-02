@@ -1,97 +1,26 @@
 """Product addons / modifier-group API endpoints."""
 
-from decimal import Decimal
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel as PydanticBase, ConfigDict
 
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.core.database import get_sync_db
 from app.models.user import User
+from app.schemas.modifier import (
+    AssignGroupRequest,
+    ModifierCreate,
+    ModifierGroupCreate,
+    ModifierGroupResponse,
+    ModifierGroupUpdate,
+    ModifierResponse,
+    ModifierUpdate,
+    ProductModifierGroupResponse,
+)
 from app.services.addon_service import AddonService
 
 router = APIRouter(prefix="/addons", tags=["Addons"])
-
-
-# ── Schemas ──────────────────────────────────────────────────────
-
-
-class ModifierGroupCreate(PydanticBase):
-    name: str
-    selection_type: str = "single"
-    is_required: bool = False
-    min_selections: int = 0
-    max_selections: Optional[int] = None
-    description: Optional[str] = None
-
-
-class ModifierGroupUpdate(PydanticBase):
-    name: Optional[str] = None
-    selection_type: Optional[str] = None
-    is_required: Optional[bool] = None
-    min_selections: Optional[int] = None
-    max_selections: Optional[int] = None
-    description: Optional[str] = None
-    sort_order: Optional[int] = None
-
-
-class ModifierResponse(PydanticBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    group_id: UUID
-    business_id: UUID
-    name: str
-    price_adjustment: Decimal
-    is_default: bool
-    is_available: bool
-    sort_order: int
-
-
-class ModifierGroupResponse(PydanticBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    business_id: UUID
-    name: str
-    description: Optional[str] = None
-    selection_type: Optional[str] = None
-    is_required: bool
-    min_selections: int
-    max_selections: Optional[int] = None
-    sort_order: int
-    modifiers: List[ModifierResponse] = []
-
-
-class ModifierCreate(PydanticBase):
-    name: str
-    price_adjustment: Decimal = Decimal("0")
-    is_default: bool = False
-    sort_order: int = 0
-
-
-class ModifierUpdate(PydanticBase):
-    name: Optional[str] = None
-    price_adjustment: Optional[Decimal] = None
-    is_default: Optional[bool] = None
-    is_available: Optional[bool] = None
-    sort_order: Optional[int] = None
-
-
-class AssignGroupRequest(PydanticBase):
-    modifier_group_id: UUID
-    sort_order: int = 0
-
-
-class ProductModifierGroupResponse(PydanticBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    product_id: UUID
-    modifier_group_id: UUID
-    sort_order: int
 
 
 # ── Modifier Group endpoints ─────────────────────────────────────
