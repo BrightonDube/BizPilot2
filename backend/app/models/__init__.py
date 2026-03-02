@@ -175,7 +175,7 @@ from app.models.cash_register import (
 from app.models.commission import CommissionRecord, CommissionStatus
 from app.models.report_template import ReportTemplate
 from app.models.data_access_log import CustomerDataAccessLog
-from app.models.proforma import ProformaInvoice, ProformaItem, QuoteStatus
+from app.models.proforma import ProformaInvoice, ProformaItem, ProformaRevision, QuoteStatus
 from app.models.gift_card import GiftCard, GiftCardStatus, GiftCardTransaction
 from app.models.expense import (
     Expense,
@@ -234,6 +234,8 @@ from app.models.tag import (
     TagCategory,
     Tag,
     ProductTag,
+    SmartCollection,
+    CollectionProduct,
 )
 
 __all__ = [
@@ -462,6 +464,7 @@ __all__ = [
     # Proforma Invoices
     "ProformaInvoice",
     "ProformaItem",
+    "ProformaRevision",
     "QuoteStatus",
     # Staff Targets
     "StaffTarget",
@@ -515,4 +518,6 @@ __all__ = [
     "TagCategory",
     "Tag",
     "ProductTag",
+    "SmartCollection",
+    "CollectionProduct",
 ]

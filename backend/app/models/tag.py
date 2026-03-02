@@ -139,3 +139,65 @@ class ProductTag(BaseModel):
     __table_args__ = (
         UniqueConstraint("product_id", "tag_id", name="uq_product_tags_product_tag"),
     )
+
+
+class SmartCollection(BaseModel):
+    """Rule-based automatic product grouping.
+
+    Why rules-based?
+    Manual product lists become stale.  Smart collections auto-refresh
+    based on criteria (tag, price range, category) so promotional
+    bundles and menu sections stay current without manual maintenance.
+    """
+
+    __tablename__ = "smart_collections"
+
+    business_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id"),
+        nullable=False,
+        index=True,
+    )
+    name = Column(String(255), nullable=False)
+    slug = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    rules = Column(JSONB, nullable=True, comment="Array of rule objects")
+    rule_logic = Column(String(10), default="and", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    auto_update = Column(Boolean, default=True, nullable=False)
+    product_count = Column(Integer, default=0, nullable=False)
+    last_refresh_at = Column(DateTime(timezone=True), nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("business_id", "slug", name="uq_smart_collections_business_slug"),
+    )
+
+
+class CollectionProduct(BaseModel):
+    """Product membership in a smart collection.
+
+    manually_included/excluded flags allow overrides to the auto-rules.
+    """
+
+    __tablename__ = "collection_products"
+
+    collection_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("smart_collections.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    product_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    manually_included = Column(Boolean, default=False, nullable=False)
+    manually_excluded = Column(Boolean, default=False, nullable=False)
+    added_at = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("collection_id", "product_id", name="uq_collection_products"),
+    )

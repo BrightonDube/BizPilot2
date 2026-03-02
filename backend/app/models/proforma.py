@@ -4,9 +4,9 @@ import enum
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Column, Date, Integer, Numeric, String, Text, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
@@ -71,3 +71,34 @@ class ProformaItem(BaseModel):
     line_total = Column(Numeric(12, 2), default=Decimal("0"))
 
     proforma = relationship("ProformaInvoice", back_populates="items")
+
+
+class ProformaRevision(BaseModel):
+    """Immutable revision snapshot of a proforma invoice.
+
+    Why snapshot instead of diffing?
+    A JSON snapshot is simpler to restore and display than computing
+    diffs.  Storage is cheap; correctness under concurrent edits is
+    expensive to guarantee with diffs alone.
+    """
+
+    __tablename__ = "proforma_invoice_revisions"
+
+    proforma_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("proforma_invoices.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    revision_number = Column(Integer, nullable=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    change_summary = Column(Text, nullable=True)
+    snapshot = Column(
+        JSONB,
+        nullable=False,
+        comment="Full JSON snapshot of proforma + items at this revision",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("proforma_id", "revision_number", name="uq_proforma_revisions_proforma_number"),
+    )
