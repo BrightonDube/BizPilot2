@@ -2,7 +2,7 @@
 
 import enum
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime, UniqueConstraint
+from sqlalchemy import Column, String, Text, Numeric, Integer, ForeignKey, Enum as SQLEnum, DateTime, UniqueConstraint, Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -129,3 +129,110 @@ class StockTakeCounter(BaseModel):
 
     session = relationship("StockTakeSession", lazy="joined")
     user = relationship("User", lazy="joined")
+
+
+class InventoryPeriodStatus(str, enum.Enum):
+    """Status lifecycle for inventory periods."""
+    OPEN = "open"
+    CLOSED = "closed"
+    REOPENED = "reopened"
+
+
+class InventoryPeriod(BaseModel):
+    """Month-end inventory period for valuation and COGS tracking.
+
+    Why a period table?
+    Month-end close is a critical accounting event.  This table provides
+    the lifecycle (open → closed → reopened) and stores aggregate values
+    so period reports don't re-scan all transactions.
+    """
+
+    __tablename__ = "inventory_periods"
+    __table_args__ = (
+        UniqueConstraint("business_id", "period_year", "period_month",
+                         name="uq_inventory_period"),
+    )
+
+    business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
+    period_year = Column(Integer, nullable=False)
+    period_month = Column(Integer, nullable=False)
+    status = Column(String(20), nullable=False, default="open")
+    opening_value = Column(Numeric(14, 2), default=0)
+    closing_value = Column(Numeric(14, 2), nullable=True)
+    cogs = Column(Numeric(14, 2), nullable=True)
+    adjustments_value = Column(Numeric(14, 2), default=0)
+    closed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
+    reopened_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    reopened_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class PeriodSnapshot(BaseModel):
+    """Frozen product-level inventory snapshot at period close.
+
+    Why snapshot instead of recalculating?
+    Once a period is closed, the quantities and costs must be immutable
+    for audit.  Snapshots guarantee COGS and valuation reports remain
+    stable even if later transactions modify current stock levels.
+    """
+
+    __tablename__ = "period_snapshots"
+    __table_args__ = (
+        UniqueConstraint("period_id", "product_id",
+                         name="uq_period_snapshot_product"),
+    )
+
+    period_id = Column(UUID(as_uuid=True), ForeignKey("inventory_periods.id"), nullable=False, index=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False, default=0)
+    unit_cost = Column(Numeric(12, 2), nullable=False, default=0)
+    total_value = Column(Numeric(14, 2), nullable=False, default=0)
+
+
+class ABCClassification(str, enum.Enum):
+    """Pareto-based ABC inventory classification."""
+    A = "A"  # ~20% of products, ~80% of value
+    B = "B"  # ~30% of products, ~15% of value
+    C = "C"  # ~50% of products, ~5% of value
+
+
+class ProductABCClassification(BaseModel):
+    """ABC classification for counting frequency optimization.
+
+    Why ABC analysis?
+    Counting every product equally is wasteful.  A-class items (high value,
+    high movement) should be counted weekly/monthly.  C-class items can be
+    counted quarterly.  This table stores the computed classification so
+    stock take scheduling can prioritize expensive/fast-moving products.
+    """
+
+    __tablename__ = "product_abc_classifications"
+    __table_args__ = (
+        UniqueConstraint("business_id", "product_id",
+                         name="uq_abc_classification_product"),
+    )
+
+    business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
+    classification = Column(String(1), nullable=False)  # A, B, C
+    annual_value = Column(Numeric(14, 2), nullable=False, default=0)
+    count_frequency_days = Column(Integer, nullable=False, default=90)
+    last_counted_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class StockCountHistory(BaseModel):
+    """Append-only recount log for blind-count auditing.
+
+    Why append-only?
+    In blind counts, counters don't see the system quantity.  Recording
+    every recount attempt (without overwriting) provides an audit trail
+    that proves the counting process was fair and unbiased.
+    """
+
+    __tablename__ = "stock_count_history"
+
+    count_id = Column(UUID(as_uuid=True), ForeignKey("stock_counts.id"), nullable=False, index=True)
+    counted_quantity = Column(Integer, nullable=False)
+    counted_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    counted_at = Column(DateTime(timezone=True), default=utc_now)
+    notes = Column(Text, nullable=True)

@@ -109,6 +109,18 @@ from app.models.stock_take import (
     InventoryAdjustment,
     StockTakeScope,
     StockTakeCounter,
+    InventoryPeriod,
+    InventoryPeriodStatus,
+    PeriodSnapshot,
+    ProductABCClassification,
+    ABCClassification,
+    StockCountHistory,
+)
+from app.models.sync_queue import (
+    SyncQueueItem,
+    SyncQueueStatus,
+    SyncQueueAction,
+    SyncMetadata,
 )
 from app.models.delivery import (
     DeliveryStatus as DeliveryTrackingStatus,
@@ -406,6 +418,17 @@ __all__ = [
     "StockTakeStatus",
     "StockCount",
     "InventoryAdjustment",
+    "InventoryPeriod",
+    "InventoryPeriodStatus",
+    "PeriodSnapshot",
+    "ProductABCClassification",
+    "ABCClassification",
+    "StockCountHistory",
+    # Sync Queue
+    "SyncQueueItem",
+    "SyncQueueStatus",
+    "SyncQueueAction",
+    "SyncMetadata",
     # Menu Engineering
     "MenuItem",
     "ModifierGroup",
