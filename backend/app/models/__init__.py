@@ -259,6 +259,8 @@ from app.models.pms import (
     PMSReconciliationItem,
     PMSAuditLog,
 )
+from app.models.xero import XeroConnection, XeroSyncLog
+from app.models.woocommerce import WooConnection, WooSyncMap
 
 __all__ = [
     "BaseModel",
@@ -561,4 +563,10 @@ __all__ = [
     "PMSReconciliationSession",
     "PMSReconciliationItem",
     "PMSAuditLog",
+    # Xero Integration
+    "XeroConnection",
+    "XeroSyncLog",
+    # WooCommerce Integration
+    "WooConnection",
+    "WooSyncMap",
 ]
