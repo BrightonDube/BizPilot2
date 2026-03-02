@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/api';
-import { Loader2, Clock, Calendar, Plus, CheckCircle, XCircle, PlayCircle, StopCircle } from 'lucide-react';
+import { Loader2, Clock, Calendar, Plus, CheckCircle, XCircle, PlayCircle, StopCircle, Banknote } from 'lucide-react';
+import CashManagementTab from './CashManagementTab';
 
-type Tab = 'schedule' | 'shifts' | 'leave';
+type Tab = 'schedule' | 'shifts' | 'leave' | 'cash';
 
 interface Shift {
   id: string;
@@ -93,9 +94,9 @@ export default function ShiftsPage() {
       </div>
 
       <div className="flex gap-2 mb-6 border-b">
-        {(['shifts', 'leave'] as const).map(t => (
+        {(['shifts', 'leave', 'cash'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 border-b-2 capitalize ${tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'}`}>
-            {t === 'leave' ? 'Leave Requests' : 'All Shifts'}
+            {t === 'leave' ? 'Leave Requests' : t === 'cash' ? 'Cash Management' : 'All Shifts'}
           </button>
         ))}
       </div>
@@ -182,6 +183,8 @@ export default function ShiftsPage() {
           {!leaves.length && <p className="text-center py-8 text-gray-400">No leave requests</p>}
         </div>
       )}
+
+      {tab === 'cash' && <CashManagementTab />}
     </div>
   );
 }
