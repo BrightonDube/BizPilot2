@@ -75,6 +75,7 @@ from app.api.inventory_periods import router as inventory_periods_router
 from app.api.rewards import router as rewards_router
 from app.api.commissions import router as commissions_router
 from app.api.inventory_reports import router as inventory_reports_router
+from app.api.extended_reports import router as extended_reports_router
 
 router = APIRouter()
 
@@ -151,6 +152,7 @@ router.include_router(inventory_periods_router)
 router.include_router(rewards_router)
 router.include_router(commissions_router)
 router.include_router(inventory_reports_router)
+router.include_router(extended_reports_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
