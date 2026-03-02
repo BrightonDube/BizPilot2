@@ -292,6 +292,12 @@ from app.models.pms import (
 )
 from app.models.xero import XeroConnection, XeroSyncLog
 from app.models.woocommerce import WooConnection, WooSyncMap
+from app.models.sage import (
+    SageConnection,
+    SageAccountMapping,
+    SageSyncLog,
+    SageSyncQueue,
+)
 
 __all__ = [
     "BaseModel",
@@ -634,4 +640,9 @@ __all__ = [
     # WooCommerce Integration
     "WooConnection",
     "WooSyncMap",
+    # Sage Integration
+    "SageConnection",
+    "SageAccountMapping",
+    "SageSyncLog",
+    "SageSyncQueue",
 ]
