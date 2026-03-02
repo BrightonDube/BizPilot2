@@ -198,6 +198,112 @@ async def expire_old_quotes(
     return {"expired_count": count}
 
 
+# ---------- Revisions ----------
+
+
+@router.post("/{quote_id}/revisions", status_code=201)
+async def create_revision(
+    quote_id: UUID,
+    change_summary: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Snapshot the current state of a quote as a new revision.
+
+    Why snapshot on demand rather than automatically?
+    Automatic snapshots on every edit would create noise.  Revisions
+    are meaningful checkpoints (e.g. before sending to customer).
+    """
+    from app.models.proforma import ProformaRevision
+    import uuid as _uuid
+
+    service = ProformaService(db)
+    quote = service.get_quote(str(quote_id), business_id)
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    # Determine next revision number
+    existing = (
+        db.query(ProformaRevision)
+        .filter(ProformaRevision.proforma_id == quote.id)
+        .count()
+    )
+    rev_number = existing + 1
+
+    # Build snapshot
+    items_data = []
+    for item in (quote.items or []):
+        items_data.append({
+            "description": item.description,
+            "quantity": str(item.quantity),
+            "unit_price": str(item.unit_price),
+            "discount_pct": str(item.discount_pct),
+            "tax_rate": str(item.tax_rate),
+            "line_total": str(item.line_total),
+        })
+
+    snapshot = {
+        "quote_number": quote.quote_number,
+        "status": quote.status.value if hasattr(quote.status, "value") else str(quote.status),
+        "subtotal": str(quote.subtotal or 0),
+        "tax_amount": str(quote.tax_amount or 0),
+        "discount_amount": str(quote.discount_amount or 0),
+        "total": str(quote.total or 0),
+        "notes": quote.notes,
+        "terms": quote.terms,
+        "items": items_data,
+    }
+
+    revision = ProformaRevision(
+        id=_uuid.uuid4(),
+        proforma_id=quote.id,
+        revision_number=rev_number,
+        created_by=current_user.id,
+        change_summary=change_summary,
+        snapshot=snapshot,
+    )
+    db.add(revision)
+    db.commit()
+    db.refresh(revision)
+
+    return {
+        "id": str(revision.id),
+        "proforma_id": str(revision.proforma_id),
+        "revision_number": revision.revision_number,
+        "change_summary": revision.change_summary,
+        "created_at": revision.created_at,
+    }
+
+
+@router.get("/{quote_id}/revisions")
+async def list_revisions(
+    quote_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+):
+    """List all revisions for a quote, ordered by revision number."""
+    from app.models.proforma import ProformaRevision
+
+    revisions = (
+        db.query(ProformaRevision)
+        .filter(ProformaRevision.proforma_id == quote_id)
+        .order_by(ProformaRevision.revision_number)
+        .all()
+    )
+    return [
+        {
+            "id": str(r.id),
+            "proforma_id": str(r.proforma_id),
+            "revision_number": r.revision_number,
+            "change_summary": r.change_summary,
+            "snapshot": r.snapshot,
+            "created_at": r.created_at,
+        }
+        for r in revisions
+    ]
+
+
 # ---------- Helpers ----------
 
 
