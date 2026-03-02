@@ -179,3 +179,21 @@ async def get_sync_metadata(
     if not meta:
         raise HTTPException(status_code=404, detail="No sync metadata found for this entity type.")
     return SyncMetadataResponse.model_validate(meta)
+
+
+# ---------------------------------------------------------------------------
+# Health check (required by offline-sync spec for connectivity detection)
+# ---------------------------------------------------------------------------
+
+@router.get("/health")
+async def sync_health_check():
+    """
+    Lightweight health check for offline clients to detect connectivity.
+
+    Why a dedicated /sync/health instead of using / or /health?
+    Offline clients need a specific endpoint that:
+    1. Returns instantly (no DB or auth overhead)
+    2. Confirms the sync subsystem is operational
+    3. Can be polled frequently without impacting other endpoints
+    """
+    return {"status": "ok", "service": "sync"}
