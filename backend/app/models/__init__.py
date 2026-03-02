@@ -181,6 +181,7 @@ from app.models.staff_target import (
     AchievementStatus,
 )
 from app.models.combo import ComboDeal, ComboComponent, ComboComponentType
+from app.models.order_item_modifier import OrderItemModifier
 
 __all__ = [
     "BaseModel",
@@ -428,4 +429,6 @@ __all__ = [
     "ComboDeal",
     "ComboComponent",
     "ComboComponentType",
+    # Order item modifiers
+    "OrderItemModifier",
 ]
