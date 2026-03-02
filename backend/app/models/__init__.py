@@ -182,6 +182,7 @@ from app.models.staff_target import (
 )
 from app.models.combo import ComboDeal, ComboComponent, ComboComponentType
 from app.models.order_item_modifier import OrderItemModifier
+from app.models.modifier_availability import ModifierAvailability
 
 __all__ = [
     "BaseModel",
@@ -431,4 +432,6 @@ __all__ = [
     "ComboComponentType",
     # Order item modifiers
     "OrderItemModifier",
+    # Modifier availability
+    "ModifierAvailability",
 ]
