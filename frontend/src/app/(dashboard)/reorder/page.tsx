@@ -8,8 +8,10 @@ import { Card } from '@/components/ui/card';
 import { PageHeader, Badge, LoadingSpinner, EmptyState } from '@/components/ui/bizpilot';
 import {
   Settings, AlertTriangle, ShoppingCart, Plus, Power, RefreshCw,
-  ChevronDown, ChevronUp, Check, Package,
+  ChevronDown, ChevronUp, Check, Package, ClipboardCheck, BarChart3,
 } from 'lucide-react';
+import { GoodsReceiving } from '@/components/reorder/GoodsReceiving';
+import { ReorderReports } from '@/components/reorder/ReorderReports';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -64,12 +66,14 @@ interface Supplier {
   name: string;
 }
 
-type TabKey = 'rules' | 'alerts' | 'requests';
+type TabKey = 'rules' | 'alerts' | 'requests' | 'receiving' | 'reports';
 
 const TABS: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
   { key: 'rules', label: 'Rules', icon: <Settings className="w-4 h-4" /> },
   { key: 'alerts', label: 'Stock Alerts', icon: <AlertTriangle className="w-4 h-4" /> },
   { key: 'requests', label: 'Purchase Requests', icon: <ShoppingCart className="w-4 h-4" /> },
+  { key: 'receiving', label: 'Receiving', icon: <ClipboardCheck className="w-4 h-4" /> },
+  { key: 'reports', label: 'Reports', icon: <BarChart3 className="w-4 h-4" /> },
 ];
 
 const PR_STATUS_COLORS: Record<string, string> = {
@@ -457,6 +461,12 @@ export default function ReorderPage() {
           )}
         </div>
       )}
+
+      {/* ── Receiving Tab ──────────────────────────────────────────────────── */}
+      {!loading && activeTab === 'receiving' && <GoodsReceiving />}
+
+      {/* ── Reports Tab ────────────────────────────────────────────────────── */}
+      {!loading && activeTab === 'reports' && <ReorderReports />}
     </div>
   );
 }
