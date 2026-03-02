@@ -141,3 +141,113 @@ class ExpenseApproval(BaseModel):
 
     # Relationships
     approver = relationship("User", foreign_keys=[approver_id], lazy="joined")
+
+
+# ---------------------------------------------------------------------------
+# New petty cash extension models (migration 097)
+# ---------------------------------------------------------------------------
+
+class DisbursementStatus(str, enum.Enum):
+    """Status of a cash disbursement."""
+    PENDING = "pending"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+class CashDisbursement(BaseModel):
+    """
+    Tracks actual cash handover from fund custodian to requester.
+
+    Why separate from ExpenseApproval?
+    Approval is a workflow step; disbursement is the physical cash event.
+    An expense can be approved but not yet disbursed (custodian absent),
+    or disbursed without formal approval (emergency petty cash).
+    """
+    __tablename__ = "cash_disbursements"
+
+    fund_id = Column(UUID(as_uuid=True), ForeignKey("petty_cash_funds.id"), nullable=False, index=True)
+    expense_id = Column(UUID(as_uuid=True), ForeignKey("petty_cash_expenses.id"), nullable=True)
+    disbursement_number = Column(String(50), unique=True, nullable=False)
+    amount = Column(Numeric(12, 2), nullable=False)
+    recipient_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    disbursed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    disbursed_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String(20), nullable=False, default=DisbursementStatus.PENDING.value)
+    notes = Column(Text, nullable=True)
+
+    # Relationships
+    fund = relationship("PettyCashFund", foreign_keys=[fund_id], lazy="joined")
+    recipient = relationship("User", foreign_keys=[recipient_id], lazy="joined")
+
+
+class ReceiptStatus(str, enum.Enum):
+    """Status of receipt validation."""
+    PENDING = "pending"
+    VALIDATED = "validated"
+    REJECTED = "rejected"
+
+
+class ExpenseReceipt(BaseModel):
+    """
+    Receipt image and OCR data for expense verification.
+
+    Why OCR data as JSONB?
+    OCR output varies by provider (extracted text, line items, confidence
+    scores). JSONB allows flexible storage without schema changes when
+    switching OCR providers.
+    """
+    __tablename__ = "expense_receipts"
+
+    expense_id = Column(UUID(as_uuid=True), ForeignKey("petty_cash_expenses.id"), nullable=False, index=True)
+    disbursement_id = Column(UUID(as_uuid=True), ForeignKey("cash_disbursements.id"), nullable=True)
+    receipt_number = Column(String(100), nullable=True)
+    vendor_name = Column(String(255), nullable=True)
+    receipt_date = Column(Date, nullable=True)
+    receipt_amount = Column(Numeric(12, 2), nullable=True)
+    tax_amount = Column(Numeric(12, 2), nullable=True)
+    image_url = Column(Text, nullable=True)
+    image_filename = Column(String(255), nullable=True)
+    ocr_data = Column(JSONB, nullable=True)
+    is_validated = Column(Boolean, nullable=False, default=False)
+    validation_notes = Column(Text, nullable=True)
+    validated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    validated_at = Column(DateTime(timezone=True), nullable=True)
+    change_returned = Column(Numeric(12, 2), nullable=True)
+    status = Column(String(20), nullable=False, default=ReceiptStatus.PENDING.value)
+    notes = Column(Text, nullable=True)
+
+
+class ReconciliationStatus(str, enum.Enum):
+    """Status of fund reconciliation."""
+    PENDING = "pending"
+    APPROVED = "approved"
+    DISCREPANCY = "discrepancy"
+
+
+class FundReconciliation(BaseModel):
+    """
+    Periodic physical count and balance verification of a petty cash fund.
+
+    Why track expected vs actual separately?
+    The expected balance is computed from transactions; the actual balance
+    is from physical counting. The variance reveals theft, miscounting,
+    or unrecorded transactions — critical for audit compliance.
+    """
+    __tablename__ = "fund_reconciliations"
+
+    fund_id = Column(UUID(as_uuid=True), ForeignKey("petty_cash_funds.id"), nullable=False, index=True)
+    reconciliation_number = Column(String(50), unique=True, nullable=False)
+    reconciliation_date = Column(Date, nullable=False)
+    expected_balance = Column(Numeric(12, 2), nullable=False)
+    actual_balance = Column(Numeric(12, 2), nullable=False)
+    variance = Column(Numeric(12, 2), nullable=False)
+    status = Column(String(20), nullable=False, default=ReconciliationStatus.PENDING.value)
+    variance_reason = Column(Text, nullable=True)
+    variance_approved_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    variance_approved_at = Column(DateTime(timezone=True), nullable=True)
+    performed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    notes = Column(Text, nullable=True)
+
+    # Relationships
+    fund = relationship("PettyCashFund", foreign_keys=[fund_id], lazy="joined")
