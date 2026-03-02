@@ -67,7 +67,14 @@ from app.models.report_subscription import (
     DeliveryStatus,
     ReportDeliveryLog,
 )
-from app.models.restaurant_table import RestaurantTable, TableStatus
+from app.models.restaurant_table import (
+    RestaurantTable,
+    TableStatus,
+    FloorPlan,
+    Section,
+    Reservation,
+    ReservationStatus,
+)
 from app.models.order_status_history import OrderStatusHistory
 from app.models.petty_cash import (
     PettyCashFund,
