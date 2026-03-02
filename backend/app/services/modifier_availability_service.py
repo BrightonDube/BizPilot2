@@ -217,6 +217,38 @@ class ModifierAvailabilityService:
         self.db.refresh(rule)
         return rule
 
+    def get_availability_rules(self, modifier_id: str) -> List[ModifierAvailability]:
+        """List all availability rules for a modifier."""
+        return (
+            self.db.query(ModifierAvailability)
+            .filter(
+                ModifierAvailability.modifier_id == modifier_id,
+                ModifierAvailability.deleted_at.is_(None),
+            )
+            .all()
+        )
+
+    def update_availability_rule(
+        self, rule_id: str, **kwargs
+    ) -> Optional[ModifierAvailability]:
+        """Update an existing availability rule.  Only provided fields change."""
+        rule = (
+            self.db.query(ModifierAvailability)
+            .filter(
+                ModifierAvailability.id == rule_id,
+                ModifierAvailability.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not rule:
+            return None
+        for field, value in kwargs.items():
+            if hasattr(rule, field):
+                setattr(rule, field, value)
+        self.db.commit()
+        self.db.refresh(rule)
+        return rule
+
     def delete_availability_rule(self, rule_id: str) -> bool:
         """Soft-delete an availability rule."""
         rule = (
@@ -234,6 +266,68 @@ class ModifierAvailabilityService:
         return True
 
     # ── Private Helpers ──────────────────────────────────────────
+
+    def is_modifier_available(
+        self,
+        modifier_id: str,
+        location_id: Optional[str] = None,
+    ) -> bool:
+        """Convenience wrapper: check availability using current time.
+
+        This is what the API endpoint calls for real-time checks.
+        """
+        return self.check_availability(
+            modifier_id=modifier_id,
+            location_id=location_id,
+        )
+
+    def eighty_six_modifier(
+        self,
+        modifier_id: str,
+        location_id: Optional[str] = None,
+    ) -> ModifierAvailability:
+        """Mark a modifier as 86'd (out of stock)."""
+        return self.set_86d_status(
+            modifier_id=modifier_id,
+            is_86d=True,
+            location_id=location_id,
+        )
+
+    def un_eighty_six_modifier(
+        self,
+        modifier_id: str,
+        location_id: Optional[str] = None,
+    ) -> int:
+        """Remove 86'd status from a modifier.
+
+        Deletes any blanket unavailability rules (no time/date filters).
+
+        Returns:
+            Number of rules removed.
+        """
+        query = self.db.query(ModifierAvailability).filter(
+            ModifierAvailability.modifier_id == modifier_id,
+            ModifierAvailability.is_available.is_(False),
+            ModifierAvailability.day_of_week.is_(None),
+            ModifierAvailability.start_time.is_(None),
+            ModifierAvailability.end_time.is_(None),
+            ModifierAvailability.start_date.is_(None),
+            ModifierAvailability.end_date.is_(None),
+            ModifierAvailability.deleted_at.is_(None),
+        )
+        if location_id:
+            query = query.filter(ModifierAvailability.location_id == location_id)
+        else:
+            query = query.filter(ModifierAvailability.location_id.is_(None))
+
+        rules = query.all()
+        count = len(rules)
+        for rule in rules:
+            rule.soft_delete()
+        self.db.commit()
+        return count
+
+    # ── Private Helpers (rule matching) ──────────────────────────
 
     @staticmethod
     def _rule_matches(
