@@ -1,7 +1,7 @@
 /**
  * BizPilot Shared Types and Contracts
  * 
- * This module contains shared TypeScript types used by both frontend and backend.
+ * This module contains shared TypeScript types used by both frontend, backend, and mobile.
  */
 
 // Export pricing configuration

@@ -206,7 +206,7 @@ export default function ProductsScreen() {
     null
   );
 
-  const { products, isLoading } = useProducts(selectedCategory ?? undefined, search);
+  const { products, loading: isLoading } = useProducts({ categoryId: selectedCategory ?? undefined, searchQuery: search });
   const { categories } = useCategories();
 
   const handleSelectProduct = useCallback((product: MobileProduct) => {

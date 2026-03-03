@@ -195,7 +195,7 @@ export default function CustomersScreen() {
     useState<MobileCustomer | null>(null);
   const [quickAddVisible, setQuickAddVisible] = useState(false);
 
-  const { customers, isLoading } = useCustomers(search);
+  const { customers, loading: isLoading } = useCustomers({ searchQuery: search });
 
   const handleSelectCustomer = useCallback((customer: MobileCustomer) => {
     setSelectedCustomer(customer);

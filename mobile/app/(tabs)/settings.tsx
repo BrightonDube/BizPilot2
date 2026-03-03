@@ -193,7 +193,7 @@ export default function SettingsScreen() {
               <Badge
                 label={syncState.status}
                 variant={
-                  syncState.status === "synced"
+                  syncState.status === "idle"
                     ? "success"
                     : syncState.status === "error"
                     ? "danger"
