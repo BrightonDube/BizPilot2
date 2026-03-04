@@ -13,10 +13,10 @@
 - [x] 2.4 Write unit tests
 
 ## Task 3: Recipe UI
-- [ ] 3.1 Create recipe list screen
-- [ ] 3.2 Create recipe form
-- [ ] 3.3 Add ingredient selector
-- [ ] 3.4 Show cost breakdown
+- [x] 3.1 Create recipe list screen
+- [x] 3.2 Create recipe form
+- [x] 3.3 Add ingredient selector
+- [x] 3.4 Show cost breakdown
 
 ## Task 4: Ingredient Tracking
 - [ ] 4.1 Track ingredient inventory
