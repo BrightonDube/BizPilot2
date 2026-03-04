@@ -1,6 +1,19 @@
 module.exports = {
   preset: "jest-expo",
   setupFiles: ["<rootDir>/jest.setup.ts"],
+  // Limit haste-map scanning to only project source dirs (avoids NTFS hang on WSL)
+  roots: [
+    "<rootDir>/__tests__",
+    "<rootDir>/services",
+    "<rootDir>/stores",
+    "<rootDir>/hooks",
+    "<rootDir>/components",
+    "<rootDir>/app",
+    "<rootDir>/utils",
+    "<rootDir>/types",
+    "<rootDir>/db",
+  ],
+  watchPathIgnorePatterns: ["<rootDir>/node_modules/"],
   transformIgnorePatterns: [
     // Transform all React Native / Expo packages that ship as ES modules.
     // @react-native-async-storage and @react-native-community/netinfo added
