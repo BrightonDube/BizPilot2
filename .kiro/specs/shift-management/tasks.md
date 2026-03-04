@@ -32,7 +32,7 @@
 - [x] 4.1 Implement recordCashDrop
 - [x] 4.2 Implement recordPaidOut
 - [x] 4.3 Implement recordPayIn
-- [ ] 4.4 Create cash movement UI
+- [x] 4.4 Create cash movement UI
 
 **Validates: Requirement 3**
 
@@ -45,23 +45,23 @@
 **Validates: Requirement 4**
 
 ## Task 6: Shift UI Components
-- [ ] 6.1 Create PIN entry screen
-- [ ] 6.2 Create shift open modal
-- [ ] 6.3 Create shift close modal
-- [ ] 6.4 Create cash count entry
-- [ ] 6.5 Create variance display
+- [x] 6.1 Create PIN entry screen
+- [x] 6.2 Create shift open modal
+- [x] 6.3 Create shift close modal
+- [x] 6.4 Create cash count entry
+- [x] 6.5 Create variance display
 
 **Validates: Requirements 1, 2, 4**
 
 ## Task 7: Cash Drawer Integration
-- [ ] 7.1 Implement drawer kick command
-- [ ] 7.2 Log drawer opens
-- [ ] 7.3 Add manual drawer open button
+- [x] 7.1 Implement drawer kick command
+- [x] 7.2 Log drawer opens
+- [x] 7.3 Add manual drawer open button
 
 **Validates: Requirement 5**
 
 ## Task 8: Float Management
-- [ ] 8.1 Configure standard float amount
+- [x] 8.1 Configure standard float amount
 - [ ] 8.2 Implement float carry-over option
 - [ ] 8.3 Add float alerts
 

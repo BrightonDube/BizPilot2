@@ -162,9 +162,9 @@
 
 ## Task 17: Documentation
 - [x] 17.1 Create `mobile/README.md` with setup instructions
-- [ ] 17.2 Document environment variable configuration
-- [ ] 17.3 Document build and deployment process
-- [ ] 17.4 Add inline code documentation
+- [x] 17.2 Document environment variable configuration
+- [x] 17.3 Document build and deployment process
+- [x] 17.4 Add inline code documentation
 
 **Validates: Requirement 12**
 
