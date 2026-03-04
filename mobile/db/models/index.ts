@@ -14,3 +14,4 @@ export { default as User } from "./User";
 export { default as SyncQueueItem } from "./SyncQueueItem";
 export { default as Setting } from "./Setting";
 export { default as AssociationRule } from "./AssociationRule";
+export { default as SuggestionMetric } from "./SuggestionMetric";

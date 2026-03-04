@@ -18,7 +18,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export const schema = appSchema({
-  version: 2,
+  version: 3,
   tables: [
     // -----------------------------------------------------------------
     // Products — the core catalog shown in the POS grid
@@ -224,6 +224,25 @@ export const schema = appSchema({
         { name: "support", type: "number" },
         { name: "lift", type: "number" },
         { name: "computed_at", type: "number" },
+        { name: "synced_at", type: "number", isOptional: true },
+      ],
+    }),
+    // -----------------------------------------------------------------
+    // suggestion_metrics — AI suggestion event log (schema version 3)
+    //
+    // Append-only event log for tracking suggestion shown/accepted/dismissed
+    // events. Used to compute acceptance rates for the analytics dashboard.
+    // Each event is a separate row for easy re-aggregation by date range.
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "suggestion_metrics",
+      columns: [
+        { name: "business_id", type: "string", isIndexed: true },
+        { name: "suggested_product_id", type: "string", isOptional: true },
+        { name: "trigger_product_ids", type: "string" },
+        { name: "event_type", type: "string", isIndexed: true },
+        { name: "confidence", type: "number" },
+        { name: "occurred_at", type: "number", isIndexed: true },
         { name: "synced_at", type: "number", isOptional: true },
       ],
     }),

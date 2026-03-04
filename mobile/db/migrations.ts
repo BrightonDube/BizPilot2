@@ -40,5 +40,22 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 3,
+      steps: [
+        createTable({
+          name: "suggestion_metrics",
+          columns: [
+            { name: "business_id", type: "string", isIndexed: true },
+            { name: "suggested_product_id", type: "string", isOptional: true },
+            { name: "trigger_product_ids", type: "string" },
+            { name: "event_type", type: "string", isIndexed: true },
+            { name: "confidence", type: "number" },
+            { name: "occurred_at", type: "number", isIndexed: true },
+            { name: "synced_at", type: "number", isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });
