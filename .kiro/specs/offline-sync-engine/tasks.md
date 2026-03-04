@@ -1,7 +1,7 @@
 # Implementation Tasks: Offline-First Sync Engine
 
 ## Task 1: Network Monitor
-- [ ] 1.1 Install `@react-native-community/netinfo`
+- [x] 1.1 Install `@react-native-community/netinfo`
 - [x] 1.2 Create NetworkMonitor class with state tracking
 - [x] 1.3 Implement connectivity change listeners
 - [x] 1.4 Add server reachability check
