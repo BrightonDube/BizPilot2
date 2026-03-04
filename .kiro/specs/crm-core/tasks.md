@@ -41,7 +41,7 @@
 - [x] 5.2 Implement phone search
 - [x] 5.3 Implement email search
 - [x] 5.4 Show recent customers
-- [ ] 5.5 Support offline search
+- [x] 5.5 Support offline search
 
 **Validates: Requirement 3**
 
