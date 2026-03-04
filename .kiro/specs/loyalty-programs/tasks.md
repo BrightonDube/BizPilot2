@@ -29,7 +29,7 @@
 **Validates: Requirement 1**
 
 ## Task 4: Points Redemption
-- [ ] 4.1 Create redemption UI at checkout
+- [x] 4.1 Create redemption UI at checkout
 - [x] 4.2 Validate sufficient balance
 - [x] 4.3 Apply points as payment
 - [x] 4.4 Write PBT for redemption validation (Property 2)
@@ -37,10 +37,10 @@
 **Validates: Requirement 3**
 
 ## Task 5: Rewards Catalog
-- [ ] 5.1 Create rewards management UI
-- [ ] 5.2 Define reward types (discount, product)
-- [ ] 5.3 Set points cost per reward
-- [ ] 5.4 Display catalog to customers
+- [x] 5.1 Create rewards management UI
+- [x] 5.2 Define reward types (discount, product)
+- [x] 5.3 Set points cost per reward
+- [x] 5.4 Display catalog to customers
 
 **Validates: Requirement 4**
 
@@ -62,9 +62,9 @@
 **Validates: Requirement 6**
 
 ## Task 8: Loyalty Card
-- [ ] 8.1 Support card number lookup
-- [ ] 8.2 Generate digital card
-- [ ] 8.3 Link card to customer
+- [x] 8.1 Support card number lookup
+- [x] 8.2 Generate digital card
+- [x] 8.3 Link card to customer
 
 **Validates: Requirement 7**
 
