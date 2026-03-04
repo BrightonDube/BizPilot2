@@ -91,6 +91,79 @@ jest.mock("@expo/vector-icons", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Mock @react-native-async-storage/async-storage — for Zustand persist
+// ---------------------------------------------------------------------------
+
+const asyncStorageData: Record<string, string> = {};
+
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(async (key: string, value: string) => {
+    asyncStorageData[key] = value;
+  }),
+  getItem: jest.fn(async (key: string) => asyncStorageData[key] ?? null),
+  removeItem: jest.fn(async (key: string) => {
+    delete asyncStorageData[key];
+  }),
+  clear: jest.fn(async () => {
+    Object.keys(asyncStorageData).forEach((k) => delete asyncStorageData[k]);
+  }),
+  getAllKeys: jest.fn(async () => Object.keys(asyncStorageData)),
+  multiGet: jest.fn(async (keys: string[]) =>
+    keys.map((k) => [k, asyncStorageData[k] ?? null])
+  ),
+  multiSet: jest.fn(async (pairs: [string, string][]) => {
+    pairs.forEach(([k, v]) => { asyncStorageData[k] = v; });
+  }),
+  multiRemove: jest.fn(async (keys: string[]) => {
+    keys.forEach((k) => { delete asyncStorageData[k]; });
+  }),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock expo-local-authentication — for biometric auth tests
+// ---------------------------------------------------------------------------
+
+jest.mock("expo-local-authentication", () => ({
+  hasHardwareAsync: jest.fn(async () => true),
+  isEnrolledAsync: jest.fn(async () => true),
+  authenticateAsync: jest.fn(async () => ({ success: true })),
+  supportedAuthenticationTypesAsync: jest.fn(async () => [2]),
+  AuthenticationType: {
+    FINGERPRINT: 1,
+    FACIAL_RECOGNITION: 2,
+  },
+  SecurityLevel: {
+    NONE: 0,
+    SECRET: 1,
+    BIOMETRIC: 2,
+  },
+}));
+
+// ---------------------------------------------------------------------------
+// Mock WatermelonDB — prevent real SQLite in test env
+// ---------------------------------------------------------------------------
+
+jest.mock("@nozbe/watermelondb", () => {
+  const actual = jest.requireActual("@nozbe/watermelondb");
+  return {
+    ...actual,
+    Database: jest.fn().mockImplementation(() => ({
+      get: jest.fn(() => ({
+        query: jest.fn(() => ({
+          fetch: jest.fn(async () => []),
+          fetchCount: jest.fn(async () => 0),
+          observe: jest.fn(() => ({ subscribe: jest.fn() })),
+        })),
+        find: jest.fn(async () => null),
+        create: jest.fn(async (builder: unknown) => ({})),
+      })),
+      write: jest.fn(async (fn: () => unknown) => fn()),
+      batch: jest.fn(async () => []),
+    })),
+  };
+});
+
+// ---------------------------------------------------------------------------
 // Silence React Native warnings in test output
 // ---------------------------------------------------------------------------
 
