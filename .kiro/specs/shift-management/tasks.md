@@ -62,30 +62,30 @@
 
 ## Task 8: Float Management
 - [x] 8.1 Configure standard float amount
-- [ ] 8.2 Implement float carry-over option
-- [ ] 8.3 Add float alerts
+- [x] 8.2 Implement float carry-over option
+- [x] 8.3 Add float alerts
 
 **Validates: Requirement 6**
 
 ## Task 9: End of Day
-- [ ] 9.1 Create EOD summary view
-- [ ] 9.2 Aggregate all shifts for day
-- [ ] 9.3 Calculate total variance
-- [ ] 9.4 Generate EOD report
+- [x] 9.1 Create EOD summary view
+- [x] 9.2 Aggregate all shifts for day
+- [x] 9.3 Calculate total variance
+- [x] 9.4 Generate EOD report
 
 **Validates: Requirement 7**
 
 ## Task 10: Shift Reports
-- [ ] 10.1 Create shift summary report
-- [ ] 10.2 Report by operator
-- [ ] 10.3 Report variances
-- [ ] 10.4 Add export functionality
+- [x] 10.1 Create shift summary report
+- [x] 10.2 Report by operator
+- [x] 10.3 Report variances
+- [x] 10.4 Add export functionality
 
 **Validates: Requirement 8**
 
 ## Task 11: Multi-User Support
-- [ ] 11.1 Implement user switching
-- [ ] 11.2 Track sales per user
+- [x] 11.1 Implement user switching
+- [x] 11.2 Track sales per user
 - [ ] 11.3 Maintain shift continuity
 
 **Validates: Requirement 9**
