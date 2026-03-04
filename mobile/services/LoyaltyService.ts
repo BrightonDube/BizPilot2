@@ -174,3 +174,61 @@ export function determineTier(
   }
   return currentTier;
 }
+
+// ---------------------------------------------------------------------------
+// Order integration (task 3.2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Calculate points earned for a completed order.
+ *
+ * Integrates LoyaltyService with the order completion flow.
+ * Call this at the end of processPayment / order confirmation to determine
+ * how many points to award before writing to the Customer record.
+ *
+ * This is a pure function so it works offline (no DB or network needed).
+ * The caller is responsible for persisting the returned pointsEarned to
+ * the Customer record via the WatermelonDB write pipeline.
+ *
+ * Why pure instead of writing to DB directly?
+ * Keeping it pure means the same function is used for:
+ * 1. Receipt display ("You earned X points!")
+ * 2. Checkout preview ("You will earn X points")
+ * 3. The actual DB update in OrderService.finalizeOrder()
+ *
+ * @param orderTotal   - The final order total (after discount, before tip)
+ * @param earnRate     - Points per currency unit. Default: DEFAULT_EARN_RATE
+ * @param tierMultiplier - Bonus multiplier from the customer's tier. Default: 1
+ */
+export function earnPointsForOrder(
+  orderTotal: number,
+  earnRate: number = DEFAULT_EARN_RATE,
+  tierMultiplier: number = 1
+): number {
+  return calculatePointsEarned(orderTotal, earnRate, tierMultiplier);
+}
+
+/**
+ * Compute the updated loyalty balance after an order is completed.
+ *
+ * Offline-safe: operates entirely on local data (task 11.3).
+ *
+ * @param existingTransactions - All historical loyalty transactions for the customer
+ * @param orderTotal           - Total value of the just-completed order
+ * @param earnRate             - Points earn rate (default: DEFAULT_EARN_RATE)
+ * @param tierMultiplier       - Tier bonus multiplier (default: 1)
+ * @returns New balance after adding the earned points
+ */
+export function applyOrderPointsEarned(
+  existingTransactions: LoyaltyTransaction[],
+  orderTotal: number,
+  earnRate: number = DEFAULT_EARN_RATE,
+  tierMultiplier: number = 1
+): number {
+  const earned = earnPointsForOrder(orderTotal, earnRate, tierMultiplier);
+  const orderTransaction: LoyaltyTransaction = {
+    type: "earned",
+    points: earned,
+  };
+  return calculateBalance([...existingTransactions, orderTransaction]);
+}
