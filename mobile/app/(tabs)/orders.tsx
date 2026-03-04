@@ -217,8 +217,8 @@ export default function OrdersScreen() {
   const [selectedOrder, setSelectedOrder] = useState<MobileOrder | null>(null);
   const [voidModalVisible, setVoidModalVisible] = useState(false);
 
-  const { orders, isLoading } = useOrders(
-    filter === "all" ? undefined : filter
+  const { orders, loading: isLoading } = useOrders(
+    filter === "all" ? undefined : { status: filter as any }
   );
 
   const filtered = useMemo(() => {

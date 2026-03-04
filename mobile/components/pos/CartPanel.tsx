@@ -133,7 +133,7 @@ const CartPanel: React.FC<CartPanelProps> = React.memo(function CartPanel({
   }, []);
 
   const handleSaveNotes = useCallback(
-    (notes: string) => {
+    (notes: string | null) => {
       if (notesModalProductId) {
         updateItemNotes(notesModalProductId, notes || null);
       }
@@ -278,7 +278,7 @@ const CartPanel: React.FC<CartPanelProps> = React.memo(function CartPanel({
         visible={notesModalProductId !== null}
         onClose={() => setNotesModalProductId(null)}
         onSave={handleSaveNotes}
-        initialNotes={notesItem?.notes ?? ""}
+        currentNotes={notesItem?.notes ?? null}
         productName={notesItem?.productName ?? ""}
       />
 
@@ -287,7 +287,8 @@ const CartPanel: React.FC<CartPanelProps> = React.memo(function CartPanel({
         visible={discountModalProductId !== null}
         onClose={() => setDiscountModalProductId(null)}
         onApply={handleSaveDiscount}
-        lineTotal={discountItemLineTotal}
+        unitPrice={discountItem?.unitPrice ?? 0}
+        quantity={discountItem?.quantity ?? 1}
         currentDiscount={discountItem?.discount ?? 0}
         productName={discountItem?.productName ?? ""}
       />
