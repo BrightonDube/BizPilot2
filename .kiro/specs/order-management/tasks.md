@@ -27,10 +27,10 @@
 **Validates: Requirement 2**
 
 ## Task 4: Table UI
-- [ ] 4.1 Create floor plan component
-- [ ] 4.2 Display table status visually
-- [ ] 4.3 Implement table selection
-- [ ] 4.4 Show table order summary
+- [x] 4.1 Create floor plan component
+- [x] 4.2 Display table status visually
+- [x] 4.3 Implement table selection
+- [x] 4.4 Show table order summary
 
 **Validates: Requirement 2**
 
@@ -43,19 +43,19 @@
 **Validates: Requirement 2**
 
 ## Task 6: Order Status Tracking
-- [ ] 6.1 Create status tracking UI
-- [ ] 6.2 Display order age/wait time
-- [ ] 6.3 Alert on long wait times
-- [ ] 6.4 Show status on POS
+- [x] 6.1 Create status tracking UI
+- [x] 6.2 Display order age/wait time
+- [x] 6.3 Alert on long wait times
+- [x] 6.4 Show status on POS
 
 **Validates: Requirement 3**
 
 ## Task 7: KDS Integration
-- [ ] 7.1 Create KDSService class
-- [ ] 7.2 Implement send to KDS
-- [ ] 7.3 Implement bump/recall
-- [ ] 7.4 Create KDS display screen
-- [ ] 7.5 Support multiple stations
+- [x] 7.1 Create KDSService class
+- [x] 7.2 Implement send to KDS
+- [x] 7.3 Implement bump/recall
+- [x] 7.4 Create KDS display screen
+- [x] 7.5 Support multiple stations
 
 **Validates: Requirement 4**
 
