@@ -125,7 +125,7 @@
 ## Task 14: Offline Support
 - [ ] 14.1 Verify all operations work offline
 - [ ] 14.2 Test order sync after reconnection
-- [ ] 14.3 Write PBT for offline persistence (Property 5)
+- [x] 14.3 Write PBT for offline persistence (Property 5)
 
 **Validates: Requirements 6.7, 7.6**
 
@@ -213,12 +213,12 @@
 **Validates: Requirement 11.4, 11.8, 11.9 (AI)**
 
 ### Task 21: Backend - Association Rule Generator
-- [ ] 21.1 Create Supabase Edge Function
-- [ ] 21.2 Implement fetchRecentOrders query
-- [ ] 21.3 Implement buildTransactionMatrix
-- [ ] 21.4 Integrate GPT-4o-mini API
-- [ ] 21.5 Implement storeAssociationRules
-- [ ] 21.6 Add error handling and logging
+- [x] 21.1 Create Supabase Edge Function
+- [x] 21.2 Implement fetchRecentOrders query
+- [x] 21.3 Implement buildTransactionMatrix
+- [x] 21.4 Integrate GPT-4o-mini API
+- [x] 21.5 Implement storeAssociationRules
+- [x] 21.6 Add error handling and logging
 
 **Validates: Requirement 11.5 (AI)**
 
@@ -226,24 +226,24 @@
 - [ ] 22.1 Create scheduled job (once per day)
 - [ ] 22.2 Trigger rule generation for each business
 - [ ] 22.3 Sync updated rules to mobile clients
-- [ ] 22.4 Implement updateRules in SmartCartAssistant
-- [ ] 22.5 Write PBT for offline availability (Property 7)
+- [x] 22.4 Implement updateRules in SmartCartAssistant
+- [x] 22.5 Write PBT for offline availability (Property 7)
 
 **Validates: Requirement 11.6, 11.7 (AI)**
 
 ### Task 23: AI Guardrails and Safety
-- [ ] 23.1 Verify read-only constraint (no auto-add)
+- [x] 23.1 Verify read-only constraint (no auto-add)
 - [ ] 23.2 Implement PII redaction in data pipeline
 - [ ] 23.3 Add subscription tier check
-- [ ] 23.4 Implement graceful fallback when cache empty
-- [ ] 23.5 Write PBT for no automatic modifications (Property 8)
+- [x] 23.4 Implement graceful fallback when cache empty
+- [x] 23.5 Write PBT for no automatic modifications (Property 8)
 
 **Validates: Requirement 11.10, AI Constraints (AI)**
 
 ### Task 24: AI Metrics and Monitoring
-- [ ] 24.1 Create SuggestionMetrics model
-- [ ] 24.2 Track suggestion shown events
-- [ ] 24.3 Track suggestion accepted events
+- [x] 24.1 Create SuggestionMetrics model
+- [x] 24.2 Track suggestion shown events
+- [x] 24.3 Track suggestion accepted events
 - [ ] 24.4 Create acceptance rate report
 - [ ] 24.5 Add cost monitoring dashboard
 
