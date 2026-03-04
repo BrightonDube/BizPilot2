@@ -63,10 +63,10 @@
 **Validates: Requirement 5**
 
 ## Task 7: Split Payments
-- [ ] 7.1 Create split payment UI
-- [ ] 7.2 Implement multi-tender tracking
-- [ ] 7.3 Calculate remaining balance
-- [ ] 7.4 Handle partial payments
+- [x] 7.1 Create split payment UI
+- [x] 7.2 Implement multi-tender tracking
+- [x] 7.3 Calculate remaining balance
+- [x] 7.4 Handle partial payments
 - [x] 7.5 Write PBT for payment total (Property 1)
 
 **Validates: Requirement 6**
