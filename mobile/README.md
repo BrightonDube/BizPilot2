@@ -103,7 +103,108 @@ pnpm mobile:lint
 All currency formatting uses **ZAR (South African Rand)** with the `en-ZA` locale. The default VAT rate is 15%.
 
 ## Environment Variables
+<!-- Task 17.2: Environment variable configuration documentation -->
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `EXPO_PUBLIC_API_URL` | Backend API base URL | `http://localhost:8000` |
+All environment variables must be prefixed with `EXPO_PUBLIC_` to be embedded at build time and accessible in the app. Variables **without** this prefix are build-time only (e.g., EAS secrets).
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `.env` | Local development defaults (not committed) |
+| `.env.production` | Production overrides (not committed) |
+| `eas.json` | EAS Build profile variables (committed) |
+
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp mobile/.env.example mobile/.env
+```
+
+### Variable Reference
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `EXPO_PUBLIC_API_URL` | ✅ | Backend API base URL | `https://api.bizpilot.co.za` |
+| `EXPO_PUBLIC_APP_ENV` | ✅ | Environment name (`development`, `staging`, `production`) | `production` |
+| `EXPO_PUBLIC_SENTRY_DSN` | ⚠️ | Sentry error tracking DSN | `https://abc@o123.ingest.sentry.io/456` |
+| `EXPO_PUBLIC_SNAPSCAN_BASE_URL` | ⚠️ | SnapScan API base URL | `https://pos.snapscan.io/merchant/api/v1` |
+| `EXPO_PUBLIC_YOCO_SDK_KEY` | ⚠️ | Yoco SDK publishable key | `pk_live_abc123` |
+| `EXPO_PUBLIC_SYNC_INTERVAL_MS` | ❌ | Background sync interval in ms | `30000` (30s) |
+| `EXPO_PUBLIC_PIN_LOCKOUT_ATTEMPTS` | ❌ | Max PIN attempts before lockout | `3` |
+| `EAS_SECRET_SNAPSCAN_API_KEY` | 🔒 | SnapScan secret API key (EAS secret, never exposed) | — |
+| `EAS_SECRET_YOCO_SECRET_KEY` | 🔒 | Yoco secret key (EAS secret, never exposed) | — |
+
+**Legend:** ✅ Required · ⚠️ Required in production · ❌ Optional · 🔒 EAS Build secret only
+
+### Accessing Variables in Code
+
+```typescript
+// ✅ Correct — available at runtime
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+// ❌ Wrong — variables without EXPO_PUBLIC_ are NOT available at runtime
+const secret = process.env.EAS_SECRET_SNAPSCAN_API_KEY; // undefined in app
+```
+
+## Build & Deployment
+<!-- Task 17.3: Build and deployment process documentation -->
+
+BizPilot Mobile uses **EAS Build** (Expo Application Services) for cloud builds. This eliminates the need for local Xcode/Android Studio setup for CI/CD.
+
+### Prerequisites
+
+```bash
+npm install -g eas-cli
+eas login
+```
+
+### Build Profiles (eas.json)
+
+| Profile | Platform | Purpose | Command |
+|---------|----------|---------|---------|
+| `development` | Android + iOS | Internal dev build with Expo DevTools | `eas build --profile development` |
+| `preview` | Android APK + iOS Simulator | QA testing without App Store | `eas build --profile preview` |
+| `production` | Android AAB + iOS IPA | Store submission | `eas build --profile production` |
+
+### Local Development
+
+```bash
+# Start Metro bundler + Expo dev server
+cd mobile && npx expo start
+
+# Open in Expo Go (scan QR code)
+# OR press 'a' for Android emulator, 'i' for iOS simulator
+
+# Run tests
+npx jest --testPathPattern=mobile
+
+# TypeScript check (no emit)
+npx tsc --noEmit
+```
+
+### CI/CD Pipeline
+
+1. **Push to `dev` branch** → GitHub Actions runs `npx jest` + `npx tsc --noEmit`
+2. **PR merged to `main`** → EAS Build triggered for `preview` profile
+3. **Tag `v*` pushed** → EAS Build triggered for `production` profile + submit to stores
+
+### OTA Updates
+
+Use **EAS Update** for JavaScript-only changes (no native code changes):
+
+```bash
+# Publish to all users on the current production release channel
+eas update --branch production --message "Fix cart calculation bug"
+```
+
+OTA updates deploy within minutes. Native code changes (new npm packages with native modules, `app.json` changes) require a full EAS Build.
+
+### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Metro bundler hangs on WSL | Set `roots` in `jest.config.js` to limit NTFS scan |
+| WatermelonDB migration error | Run `db.unsafeResetDatabase()` on dev device, then re-seed |
+| Expo Go QR not scanning | Ensure phone and dev machine are on the same network |
+| EAS build fails on iOS | Check `eas.json` `ios.bundleIdentifier` matches App Store Connect |
