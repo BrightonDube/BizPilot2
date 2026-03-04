@@ -55,7 +55,7 @@
 - [x] 6.3 Implement create/update/delete push operations
 - [x] 6.4 Handle remote_id updates for new records
 - [x] 6.5 Implement retry with exponential backoff
-- [ ] 6.6 Write unit tests for push operations
+- [x] 6.6 Write unit tests for push operations
 
 **Validates: Requirement 4**
 
@@ -65,7 +65,7 @@
 - [x] 7.3 Implement pagination for large datasets
 - [x] 7.4 Apply remote changes to local database
 - [x] 7.5 Integrate conflict resolver
-- [ ] 7.6 Write unit tests for pull operations
+- [x] 7.6 Write unit tests for pull operations
 
 **Validates: Requirement 5**
 
