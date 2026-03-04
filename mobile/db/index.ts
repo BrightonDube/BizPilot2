@@ -24,6 +24,7 @@ import {
   User,
   SyncQueueItem,
   Setting,
+  AssociationRule,
 } from "./models";
 
 /**
@@ -60,5 +61,6 @@ export const database = new Database({
     User,
     SyncQueueItem,
     Setting,
+    AssociationRule,
   ],
 });
