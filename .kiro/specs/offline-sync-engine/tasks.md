@@ -75,7 +75,7 @@
 - [x] 8.3 Implement full sync flow (push then pull)
 - [x] 8.4 Add sync state management
 - [x] 8.5 Implement entity-specific sync
-- [ ] 8.6 Write integration tests for full sync
+- [x] 8.6 Write integration tests for full sync
 - [x] 8.7 Write PBT for sync idempotency (Property 1)
 
 **Validates: Requirements 4, 5, 6**
@@ -117,11 +117,11 @@
 **Validates: Requirement 9**
 
 ## Task 13: Data Integrity
-- [ ] 13.1 Implement database transactions for sync
-- [ ] 13.2 Implement rollback on partial failures
-- [ ] 13.3 Add data validation before applying changes
-- [ ] 13.4 Handle schema version mismatches
-- [ ] 13.5 Write PBT for transaction atomicity (Property 5)
+- [x] 13.1 Implement database transactions for sync
+- [x] 13.2 Implement rollback on partial failures
+- [x] 13.3 Add data validation before applying changes
+- [x] 13.4 Handle schema version mismatches
+- [x] 13.5 Write PBT for transaction atomicity (Property 5)
 
 **Validates: Requirement 10**
 
