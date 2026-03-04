@@ -26,6 +26,8 @@ import type { CartItem, MobileProduct } from "@/types";
 import type { Database } from "@nozbe/watermelondb";
 import { Q } from "@nozbe/watermelondb";
 import type AssociationRuleModel from "@/db/models/AssociationRule";
+import type SuggestionMetricModel from "@/db/models/SuggestionMetric";
+import type { SuggestionEventType } from "@/db/models/SuggestionMetric";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -287,4 +289,92 @@ export function createEmptyMetrics(): SuggestionMetrics {
 export function getAcceptanceRate(metrics: SuggestionMetrics): number {
   if (metrics.totalShown === 0) return 0;
   return metrics.totalAccepted / metrics.totalShown;
+}
+
+// ---------------------------------------------------------------------------
+// Suggestion event tracking (Task 24.2–24.3)
+// ---------------------------------------------------------------------------
+
+/**
+ * Record a suggestion event to the local database.
+ *
+ * Why append-only event rows instead of updating a counter?
+ * Event sourcing is safer in a POS: there are no race conditions,
+ * crashes can't corrupt aggregate counts, and we can re-derive
+ * metrics for any time window (e.g., "acceptance rate last 7 days").
+ *
+ * @param database - WatermelonDB instance
+ * @param businessId - Current business ID
+ * @param eventType - "shown" | "accepted" | "dismissed"
+ * @param suggestedProductId - The product ID that was suggested
+ * @param triggerProductIds - Comma-separated IDs of cart items that triggered the suggestion
+ * @param confidence - The confidence score of the association rule used
+ */
+export async function trackSuggestionEvent(
+  database: Database,
+  businessId: string,
+  eventType: SuggestionEventType,
+  suggestedProductId: string | null,
+  triggerProductIds: string[],
+  confidence: number
+): Promise<void> {
+  try {
+    await database.write(async () => {
+      await database
+        .get<SuggestionMetricModel>("suggestion_metrics")
+        .create((record) => {
+          record.businessId = businessId;
+          record.suggestedProductId = suggestedProductId;
+          record.triggerProductIds = triggerProductIds.join(",");
+          record.eventType = eventType;
+          record.confidence = confidence;
+          record.occurredAt = Date.now();
+          record.syncedAt = null;
+        });
+    });
+  } catch (error) {
+    // Non-critical — metrics tracking failure must never disrupt a sale
+    console.warn("[SmartCartAssistant] Failed to track suggestion event:", error);
+  }
+}
+
+/**
+ * Get suggestion metrics aggregated for a business.
+ *
+ * Returns counts for shown/accepted/dismissed events.
+ * For large datasets, pass a `sinceMs` timestamp to limit the query.
+ *
+ * @param database - WatermelonDB instance
+ * @param businessId - Business to aggregate for
+ * @param sinceMs - Optional: only include events after this timestamp
+ */
+export async function getAggregatedMetrics(
+  database: Database,
+  businessId: string,
+  sinceMs?: number
+): Promise<SuggestionMetrics> {
+  try {
+    const conditions = [Q.where("business_id", businessId)];
+    if (sinceMs !== undefined) {
+      conditions.push(Q.where("occurred_at", Q.gte(sinceMs)));
+    }
+
+    const events = await database
+      .get<SuggestionMetricModel>("suggestion_metrics")
+      .query(...conditions)
+      .fetch();
+
+    return events.reduce(
+      (acc, event) => {
+        if (event.eventType === "shown") acc.totalShown += 1;
+        else if (event.eventType === "accepted") acc.totalAccepted += 1;
+        else if (event.eventType === "dismissed") acc.totalDismissed += 1;
+        return acc;
+      },
+      createEmptyMetrics()
+    );
+  } catch {
+    // Graceful fallback — return empty metrics rather than crashing
+    return createEmptyMetrics();
+  }
 }

@@ -25,6 +25,7 @@ import {
   SyncQueueItem,
   Setting,
   AssociationRule,
+  SuggestionMetric,
 } from "./models";
 
 /**
@@ -62,5 +63,6 @@ export const database = new Database({
     SyncQueueItem,
     Setting,
     AssociationRule,
+    SuggestionMetric,
   ],
 });
