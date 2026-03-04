@@ -55,9 +55,9 @@
 
 ## Task 7: Points Expiry
 - [x] 7.1 Implement expiry tracking
-- [ ] 7.2 Create expiry notification job
+- [x] 7.2 Create expiry notification job
 - [x] 7.3 Implement auto-expiry
-- [ ] 7.4 Report expired points
+- [x] 7.4 Report expired points
 
 **Validates: Requirement 6**
 
