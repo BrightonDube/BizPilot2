@@ -23,6 +23,9 @@
  */
 
 import type { CartItem, MobileProduct } from "@/types";
+import type { Database } from "@nozbe/watermelondb";
+import { Q } from "@nozbe/watermelondb";
+import type AssociationRuleModel from "@/db/models/AssociationRule";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -164,44 +167,94 @@ export function getSuggestions(
 }
 
 /**
- * Load cached association rules.
+ * Load cached association rules from WatermelonDB for a given business.
  *
- * In the real implementation, this queries WatermelonDB.
- * For now, it returns an empty array — rules will populate
- * once the server-side generation pipeline is built.
+ * Queries the local association_rules table — no network call.
+ * Runs in O(n_rules) time, typically < 5ms for a few thousand rules.
  *
- * TODO: Replace with WatermelonDB query:
- *   const rules = await database
- *     .get<AssociationRuleModel>('association_rules')
- *     .query(Q.where('business_id', businessId))
- *     .fetch();
+ * @param database - The WatermelonDB database instance
+ * @param businessId - The business to load rules for
+ * @returns Array of AssociationRule plain objects, ready for getSuggestions()
  */
-export function loadCachedRules(_businessId: string): AssociationRule[] {
-  // Placeholder — returns empty until WatermelonDB integration
-  return [];
+export async function loadCachedRules(
+  database: Database,
+  businessId: string
+): Promise<AssociationRule[]> {
+  try {
+    const records = await database
+      .get<AssociationRuleModel>("association_rules")
+      .query(Q.where("business_id", businessId))
+      .fetch();
+
+    return records.map((record) => ({
+      id: record.id,
+      antecedentProductId: record.antecedentProductId,
+      consequentProductId: record.consequentProductId,
+      confidence: record.confidence,
+      support: record.support,
+      lift: record.lift,
+      computedAt: record.computedAt,
+    }));
+  } catch (error) {
+    // Graceful fallback: if the table doesn't exist yet (pre-migration)
+    // or any other error, return empty — no suggestions shown.
+    console.warn("[SmartCartAssistant] Failed to load cached rules:", error);
+    return [];
+  }
 }
 
 /**
  * Update local rules cache with new rules from the server.
  * Called during sync when new rules are available.
  *
- * TODO: Replace with WatermelonDB batch write:
- *   await database.write(async () => {
- *     const rulesCollection = database.get('association_rules');
- *     const batch = rules.map(rule =>
- *       rulesCollection.prepareCreate(record => {
- *         record._raw.id = rule.id;
- *         ...
- *       })
- *     );
- *     await database.batch(...batch);
- *   });
+ * Uses WatermelonDB batch write for performance.
+ * Deletes old rules for the business and replaces with fresh ones.
+ *
+ * @param database - The WatermelonDB database instance
+ * @param businessId - The business whose rules are being updated
+ * @param rules - New rules from the server
  */
-export function updateRulesCache(
-  _businessId: string,
-  _rules: AssociationRule[]
-): void {
-  // Placeholder — no-op until WatermelonDB integration
+export async function updateRulesCache(
+  database: Database,
+  businessId: string,
+  rules: AssociationRule[]
+): Promise<void> {
+  try {
+    const rulesCollection =
+      database.get<AssociationRuleModel>("association_rules");
+
+    // Fetch existing rules for this business to delete them
+    const existingRules = await rulesCollection
+      .query(Q.where("business_id", businessId))
+      .fetch();
+
+    const now = Date.now();
+
+    await database.write(async () => {
+      const deletes = existingRules.map((r) => r.prepareDestroyPermanently());
+
+      const creates = rules.map((rule) =>
+        rulesCollection.prepareCreate((record) => {
+          record._raw.id = rule.id;
+          record.remoteId = rule.id;
+          record.businessId = businessId;
+          record.antecedentProductId = rule.antecedentProductId;
+          record.consequentProductId = rule.consequentProductId;
+          record.confidence = rule.confidence;
+          record.support = rule.support;
+          record.lift = rule.lift;
+          record.computedAt = rule.computedAt;
+          record.syncedAt = now;
+        })
+      );
+
+      await database.batch(...deletes, ...creates);
+    });
+  } catch (error) {
+    console.error("[SmartCartAssistant] Failed to update rules cache:", error);
+    // Don't rethrow — a failed cache update is not fatal.
+    // Old rules remain; suggestions just won't reflect the latest data.
+  }
 }
 
 /**
