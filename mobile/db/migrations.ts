@@ -85,5 +85,29 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+
+    // v4 → v5: Add payments table for split payment support
+    {
+      toVersion: 5,
+      steps: [
+        createTable({
+          name: "payments",
+          columns: [
+            { name: "remote_id", type: "string", isOptional: true },
+            { name: "order_id", type: "string", isIndexed: true },
+            { name: "payment_method", type: "string", isIndexed: true },
+            { name: "amount", type: "number" },
+            { name: "cash_tendered", type: "number", isOptional: true },
+            { name: "status", type: "string", isIndexed: true },
+            { name: "reference", type: "string", isOptional: true },
+            { name: "processed_at", type: "number", isOptional: true },
+            { name: "is_dirty", type: "boolean" },
+            { name: "synced_at", type: "number", isOptional: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+      ],
+    },
   ],
 });

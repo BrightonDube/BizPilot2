@@ -17,3 +17,4 @@ export { default as AssociationRule } from "./AssociationRule";
 export { default as SuggestionMetric } from "./SuggestionMetric";
 export { BulkOperation } from "./BulkOperation";
 export type { BulkOperationType, BulkOperationStatus } from "./BulkOperation";
+export { default as Payment } from "./Payment";

@@ -27,6 +27,7 @@ import {
   AssociationRule,
   SuggestionMetric,
   BulkOperation,
+  Payment,
 } from "./models";
 
 /**
@@ -66,5 +67,6 @@ export const database = new Database({
     AssociationRule,
     SuggestionMetric,
     BulkOperation,
+    Payment,
   ],
 });
