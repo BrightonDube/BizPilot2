@@ -55,10 +55,10 @@
 **Validates: Requirement 4**
 
 ## Task 6: EFT Payments
-- [ ] 6.1 Create EFT payment flow
-- [ ] 6.2 Implement reference capture
-- [ ] 6.3 Create pending payment status
-- [ ] 6.4 Implement manual confirmation
+- [x] 6.1 Create EFT payment flow
+- [x] 6.2 Implement reference capture
+- [x] 6.3 Create pending payment status
+- [x] 6.4 Implement manual confirmation
 
 **Validates: Requirement 5**
 
@@ -72,19 +72,19 @@
 **Validates: Requirement 6**
 
 ## Task 8: Refunds
-- [ ] 8.1 Create refund flow
-- [ ] 8.2 Implement partial refunds
-- [ ] 8.3 Route refund to original method
-- [ ] 8.4 Add manager authorization
+- [x] 8.1 Create refund flow
+- [x] 8.2 Implement partial refunds
+- [x] 8.3 Route refund to original method
+- [x] 8.4 Add manager authorization
 - [x] 8.5 Write PBT for refund limit (Property 2)
 
 **Validates: Requirement 7**
 
 ## Task 9: Cash Management
-- [ ] 9.1 Create cash drawer tracking
-- [ ] 9.2 Implement cash drops
-- [ ] 9.3 Implement paid-outs
-- [ ] 9.4 Calculate expected cash
+- [x] 9.1 Create cash drawer tracking
+- [x] 9.2 Implement cash drops
+- [x] 9.3 Implement paid-outs
+- [x] 9.4 Calculate expected cash
 
 **Validates: Requirement 8**
 

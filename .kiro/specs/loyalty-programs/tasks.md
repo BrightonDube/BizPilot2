@@ -23,8 +23,8 @@
 ## Task 3: Points Earning
 - [x] 3.1 Configure earn rate settings
 - [x] 3.2 Integrate with order completion
-- [ ] 3.3 Support product-specific rates
-- [ ] 3.4 Show points earned on receipt
+- [x] 3.3 Support product-specific rates
+- [x] 3.4 Show points earned on receipt
 
 **Validates: Requirement 1**
 
@@ -77,9 +77,9 @@
 **Validates: Requirement 8**
 
 ## Task 10: Promotions
-- [ ] 10.1 Implement bonus points promotions
-- [ ] 10.2 Support double points days
-- [ ] 10.3 Support sign-up bonus
+- [x] 10.1 Implement bonus points promotions
+- [x] 10.2 Support double points days
+- [x] 10.3 Support sign-up bonus
 
 **Validates: Requirement 9**
 
