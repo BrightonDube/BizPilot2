@@ -134,11 +134,11 @@
 **Validates: Requirements 5, 9**
 
 ## Task 15: Backend Sync Endpoints
-- [ ] 15.1 Create `/sync/{entity}` POST endpoint for push
-- [ ] 15.2 Create `/sync/{entity}` GET endpoint for pull (with since param)
-- [ ] 15.3 Add batch support to endpoints
-- [ ] 15.4 Add conflict detection on server
-- [ ] 15.5 Write API tests for sync endpoints
+- [x] 15.1 Create `/sync/{entity}` POST endpoint for push
+- [x] 15.2 Create `/sync/{entity}` GET endpoint for pull (with since param)
+- [x] 15.3 Add batch support to endpoints
+- [x] 15.4 Add conflict detection on server
+- [x] 15.5 Write API tests for sync endpoints
 
 **Validates: Requirements 4, 5**
 
