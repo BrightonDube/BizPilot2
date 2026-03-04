@@ -126,7 +126,7 @@
 
 ## Task 13: Error Handling & Logging
 - [x] 13.1 Create global ErrorBoundary component
-- [ ] 13.2 Set up Sentry for error logging (or similar)
+- [x] 13.2 Set up Sentry for error logging (or similar)
 - [x] 13.3 Create user-friendly error display components
 - [x] 13.4 Implement error recovery utilities
 - [x] 13.5 Add action logging for debugging
@@ -135,9 +135,9 @@
 
 ## Task 14: Performance Optimization
 - [x] 14.1 Configure FlashList for virtualized lists
-- [ ] 14.2 Set up image caching with `expo-image`
-- [ ] 14.3 Implement lazy loading for screens
-- [ ] 14.4 Add app state handling (background/foreground)
+- [x] 14.2 Set up image caching with `expo-image`
+- [x] 14.3 Implement lazy loading for screens
+- [x] 14.4 Add app state handling (background/foreground)
 - [ ] 14.5 Profile and optimize startup time
 
 **Validates: Requirement 11**
