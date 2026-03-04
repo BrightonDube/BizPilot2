@@ -18,7 +18,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export const schema = appSchema({
-  version: 3,
+  version: 4,
   tables: [
     // -----------------------------------------------------------------
     // Products — the core catalog shown in the POS grid
@@ -244,6 +244,37 @@ export const schema = appSchema({
         { name: "confidence", type: "number" },
         { name: "occurred_at", type: "number", isIndexed: true },
         { name: "synced_at", type: "number", isOptional: true },
+      ],
+    }),
+    // -----------------------------------------------------------------
+    // bulk_operations — locally queued bulk operation jobs (schema version 4)
+    //
+    // Why local storage for bulk operations?
+    // Staff may set up a bulk price change while offline (e.g. in a warehouse
+    // with no Wi-Fi). The operation is queued locally and submitted when the
+    // device reconnects. Progress is updated via server-sent events or polling.
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "bulk_operations",
+      columns: [
+        { name: "remote_id", type: "string", isOptional: true },
+        { name: "business_id", type: "string", isIndexed: true },
+        { name: "operation_type", type: "string", isIndexed: true },
+        { name: "status", type: "string", isIndexed: true },
+        { name: "title", type: "string" },
+        { name: "description", type: "string", isOptional: true },
+        { name: "total_records", type: "number" },
+        { name: "processed_records", type: "number" },
+        { name: "successful_records", type: "number" },
+        { name: "failed_records", type: "number" },
+        { name: "params_json", type: "string" },
+        { name: "errors_json", type: "string", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "started_at", type: "number", isOptional: true },
+        { name: "completed_at", type: "number", isOptional: true },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
       ],
     }),
   ],

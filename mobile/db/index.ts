@@ -26,6 +26,7 @@ import {
   Setting,
   AssociationRule,
   SuggestionMetric,
+  BulkOperation,
 } from "./models";
 
 /**
@@ -64,5 +65,6 @@ export const database = new Database({
     Setting,
     AssociationRule,
     SuggestionMetric,
+    BulkOperation,
   ],
 });
