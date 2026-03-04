@@ -177,14 +177,16 @@ export function isInSegment(
 }
 
 // ---------------------------------------------------------------------------
-// Customer search
+// Customer search (offline-capable — task 5.5)
 // ---------------------------------------------------------------------------
 
 /**
  * Filter customers by a free-text query against name, email, and phone.
- * Case-insensitive, trims whitespace.
+ * Works entirely from a local array — no network required.
  *
- * @param customers - Full customer list to search
+ * Covers CRM Requirement 3.1, 3.2, 3.3 (name/phone/email) and 3.6 (offline).
+ *
+ * @param customers - Full customer list (loaded from WatermelonDB, works offline)
  * @param query     - Search string (empty → return all)
  */
 export function searchCustomers(
@@ -200,3 +202,78 @@ export function searchCustomers(
       (c.phone?.includes(q) ?? false)
   );
 }
+
+/**
+ * Look up a customer by loyalty card barcode or card number.
+ * Returns null when no match is found (card not in local DB yet).
+ *
+ * Covers CRM Requirement 3.5 (barcode/card lookup) + 3.6 (offline).
+ *
+ * Why pure function?
+ * The caller (POS barcode scanner screen) passes the local WatermelonDB
+ * customer array — this avoids any async DB query on the hot path and
+ * makes the lookup testable without DB access.
+ *
+ * @param customers       Local customer list
+ * @param cardNumber      Scanned barcode or typed card number
+ */
+export function lookupCustomerByCard(
+  customers: MobileCustomer[],
+  cardNumber: string
+): MobileCustomer | null {
+  const normalized = cardNumber.trim().toUpperCase();
+  if (!normalized) return null;
+
+  // Check notes field for card number prefix "CARD:" (stored by loyalty enrollment)
+  // Falls back to phone match for QR-code-based loyalty (some retailers use phone as card #)
+  const match = customers.find(
+    (c) =>
+      c.notes?.includes(`CARD:${normalized}`) ||
+      c.phone?.replace(/\D/g, "") === normalized.replace(/\D/g, "")
+  );
+  return match ?? null;
+}
+
+/**
+ * Return the N most recently visited customers, sorted by updatedAt desc.
+ *
+ * Covers CRM Requirement 3.4 (show recent customers).
+ *
+ * @param customers  Local customer list
+ * @param limit      Max number of recent customers to return (default 10)
+ */
+export function getRecentCustomers(
+  customers: MobileCustomer[],
+  limit = 10
+): MobileCustomer[] {
+  return [...customers]
+    .filter((c) => c.visitCount > 0)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, Math.max(1, limit));
+}
+
+/**
+ * Multi-field offline search combining free-text and card lookup.
+ * Used by the CustomerSearch component to handle all search scenarios
+ * in a single call — the component doesn't need to know which method
+ * is being used.
+ *
+ * Returns up to `limit` results.
+ */
+export function offlineCustomerSearch(
+  customers: MobileCustomer[],
+  query: string,
+  limit = 20
+): MobileCustomer[] {
+  const q = query.trim();
+  if (!q) return getRecentCustomers(customers, limit);
+
+  // If looks like a card number (all digits/uppercase), try card lookup first
+  if (/^[A-Z0-9\-]{6,20}$/.test(q.toUpperCase())) {
+    const byCard = lookupCustomerByCard(customers, q);
+    if (byCard) return [byCard];
+  }
+
+  return searchCustomers(customers, q).slice(0, limit);
+}
+
