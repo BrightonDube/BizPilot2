@@ -22,7 +22,7 @@
 
 ## Task 3: Points Earning
 - [x] 3.1 Configure earn rate settings
-- [ ] 3.2 Integrate with order completion
+- [x] 3.2 Integrate with order completion
 - [ ] 3.3 Support product-specific rates
 - [ ] 3.4 Show points earned on receipt
 
@@ -84,9 +84,9 @@
 **Validates: Requirement 9**
 
 ## Task 11: Integration
-- [ ] 11.1 Integrate with POS checkout
+- [x] 11.1 Integrate with POS checkout
 - [x] 11.2 Sync with customer profiles
-- [ ] 11.3 Support offline operation
+- [x] 11.3 Support offline operation
 
 **Validates: Requirement 10**
 

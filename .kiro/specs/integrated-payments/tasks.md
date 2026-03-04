@@ -20,7 +20,7 @@
 ## Task 2: Cash Payments
 - [x] 2.1 Implement cash payment processing
 - [x] 2.2 Create change calculation logic
-- [ ] 2.3 Add quick amount buttons
+- [x] 2.3 Add quick amount buttons
 - [x] 2.4 Write PBT for change accuracy (Property 3)
 
 **Validates: Requirement 1**
@@ -67,7 +67,7 @@
 - [ ] 7.2 Implement multi-tender tracking
 - [ ] 7.3 Calculate remaining balance
 - [ ] 7.4 Handle partial payments
-- [ ] 7.5 Write PBT for payment total (Property 1)
+- [x] 7.5 Write PBT for payment total (Property 1)
 
 **Validates: Requirement 6**
 
@@ -76,7 +76,7 @@
 - [ ] 8.2 Implement partial refunds
 - [ ] 8.3 Route refund to original method
 - [ ] 8.4 Add manager authorization
-- [ ] 8.5 Write PBT for refund limit (Property 2)
+- [x] 8.5 Write PBT for refund limit (Property 2)
 
 **Validates: Requirement 7**
 
