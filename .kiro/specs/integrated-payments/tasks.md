@@ -26,22 +26,22 @@
 **Validates: Requirement 1**
 
 ## Task 3: Yoco Integration
-- [ ] 3.1 Install Yoco React Native SDK
-- [ ] 3.2 Create YocoService class
-- [ ] 3.3 Implement card payment flow
-- [ ] 3.4 Handle payment callbacks
-- [ ] 3.5 Implement refund via Yoco
-- [ ] 3.6 Write integration tests
+- [x] 3.1 Install Yoco React Native SDK
+- [x] 3.2 Create YocoService class
+- [x] 3.3 Implement card payment flow
+- [x] 3.4 Handle payment callbacks
+- [x] 3.5 Implement refund via Yoco
+- [x] 3.6 Write integration tests
 
 **Validates: Requirement 2**
 
 ## Task 4: SnapScan Integration
-- [ ] 4.1 Create SnapScanService class
-- [ ] 4.2 Implement QR code generation
-- [ ] 4.3 Create QR display component
-- [ ] 4.4 Implement payment polling
-- [ ] 4.5 Handle timeout and cancellation
-- [ ] 4.6 Write integration tests
+- [x] 4.1 Create SnapScanService class
+- [x] 4.2 Implement QR code generation
+- [x] 4.3 Create QR display component
+- [x] 4.4 Implement payment polling
+- [x] 4.5 Handle timeout and cancellation
+- [x] 4.6 Write integration tests
 
 **Validates: Requirement 3**
 
