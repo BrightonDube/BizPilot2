@@ -226,3 +226,52 @@ export async function getTotalPaidForOrder(orderId: string): Promise<number> {
     .filter((p) => p.status === "completed")
     .reduce((sum, p) => sum + p.amount, 0);
 }
+
+// ---------------------------------------------------------------------------
+// Refund validation (Property 2)
+// ---------------------------------------------------------------------------
+
+export interface RefundValidationResult {
+  valid: boolean;
+  /** Reason for rejection, or null when valid */
+  error: string | null;
+  /** Maximum refundable amount */
+  maxRefund: number;
+}
+
+/**
+ * Validate a refund request before processing.
+ *
+ * Property 2: A refund amount SHALL NOT exceed the total paid for the order.
+ * This is a pure function so it can be called synchronously during UI
+ * validation without waiting for DB reads.
+ *
+ * @param refundAmount - The amount the operator wants to refund
+ * @param totalPaid    - The total successfully paid for the order
+ * @param alreadyRefunded - Any amounts already refunded against this order
+ */
+export function validateRefundAmount(
+  refundAmount: number,
+  totalPaid: number,
+  alreadyRefunded = 0
+): RefundValidationResult {
+  const maxRefund = Math.round((totalPaid - alreadyRefunded) * 100) / 100;
+
+  if (refundAmount <= 0) {
+    return {
+      valid: false,
+      error: "Refund amount must be greater than zero",
+      maxRefund,
+    };
+  }
+
+  if (refundAmount > maxRefund) {
+    return {
+      valid: false,
+      error: `Refund of ${refundAmount.toFixed(2)} exceeds maximum refundable amount of ${maxRefund.toFixed(2)}`,
+      maxRefund,
+    };
+  }
+
+  return { valid: true, error: null, maxRefund };
+}
