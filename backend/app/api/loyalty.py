@@ -255,3 +255,48 @@ async def get_top_members(
     service = LoyaltyService(db)
     members = service.get_top_members(business_id, limit)
     return [_loyalty_to_response(m) for m in members]
+
+
+# ---------------------------------------------------------------------------
+# Task 7.2: Expiry notification preview endpoint
+# ---------------------------------------------------------------------------
+
+@router.get("/expiring-soon")
+async def get_expiring_soon(
+    warning_days: int = Query(7, ge=1, le=90, description="Days ahead to look for expiring points"),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Preview customers with points expiring within warning_days.
+
+    Task 7.2: Used by the expiry notification job and the admin UI to
+    see who will receive expiry reminder emails.
+
+    Returns a list of {customer_id, points, expires_at, days_remaining}.
+    """
+    service = LoyaltyService(db)
+    expiring = service.get_points_expiring_soon(business_id, warning_days=warning_days)
+    return {"warning_days": warning_days, "count": len(expiring), "items": expiring}
+
+
+# ---------------------------------------------------------------------------
+# Task 7.4: Expired points report endpoint
+# ---------------------------------------------------------------------------
+
+@router.get("/reports/expired-points")
+async def get_expired_points_report(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=200),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Report of all expired points transactions for this business.
+
+    Task 7.4: Returns paginated expired-points history with grand total.
+    Useful for the business owner to see loyalty liability that has been
+    written off via expiry.
+    """
+    service = LoyaltyService(db)
+    return service.get_expired_points_report(business_id, page=page, per_page=per_page)

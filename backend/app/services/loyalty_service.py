@@ -370,3 +370,141 @@ class LoyaltyService:
         )
 
         return members, total
+
+    # ------------------------------------------------------------------
+    # Task 7.2: Expiry notification job
+    # ------------------------------------------------------------------
+
+    def get_points_expiring_soon(
+        self,
+        business_id: str,
+        warning_days: int = 7,
+    ) -> list[dict]:
+        """Return customers with points expiring within warning_days.
+
+        Task 7.2: Used by the expiry notification job to send email/push
+        reminders before points expire. The job runs nightly (via the
+        scheduler) and calls this to build the notification list.
+
+        Why return dicts instead of ORM objects?
+        The notification job serialises these to JSON for the email queue.
+        Returning plain dicts avoids lazy-loading issues outside the session.
+
+        Args:
+            business_id: Target business.
+            warning_days: How many days ahead to look (default: 7).
+
+        Returns:
+            List of dicts: customer_id, points, expires_at, days_remaining.
+        """
+        now = utc_now()
+        cutoff = now + timedelta(days=warning_days)
+
+        expiring = (
+            self.db.query(PointsTransaction)
+            .filter(
+                PointsTransaction.business_id == business_id,
+                PointsTransaction.transaction_type == PointsTransactionType.EARN,
+                PointsTransaction.expires_at.isnot(None),
+                PointsTransaction.expires_at > now,      # not yet expired
+                PointsTransaction.expires_at <= cutoff,  # expires within window
+                PointsTransaction.deleted_at.is_(None),
+            )
+            .all()
+        )
+
+        result: list[dict] = []
+        for tx in expiring:
+            days_remaining = (tx.expires_at - now).days
+            result.append(
+                {
+                    "customer_id": str(tx.customer_id),
+                    "points": tx.points,
+                    "expires_at": tx.expires_at.isoformat(),
+                    "days_remaining": days_remaining,
+                    "transaction_id": str(tx.id),
+                }
+            )
+
+        # Sort by soonest expiry first so notification emails are prioritised
+        result.sort(key=lambda x: x["expires_at"])
+        return result
+
+    # ------------------------------------------------------------------
+    # Task 7.4: Report expired points
+    # ------------------------------------------------------------------
+
+    def get_expired_points_report(
+        self,
+        business_id: str,
+        page: int = 1,
+        per_page: int = 50,
+    ) -> dict:
+        """Generate a report of all expired points for a business.
+
+        Task 7.4: Returns paginated expired-points transactions with:
+        - Per-customer totals
+        - Grand total of expired points
+        - Transaction-level detail for the requested page
+
+        Why a dict return (not a Pydantic model)?
+        This is a reporting method — callers (the API endpoint) will wrap
+        it in their own response schema. Keeping it as a plain dict makes
+        the service reusable from different contexts (API, exports, etc.).
+
+        Args:
+            business_id: Target business.
+            page: Pagination page (1-indexed).
+            per_page: Records per page.
+
+        Returns:
+            Dict with keys: transactions, total_records, total_expired_points,
+            page, per_page, pages.
+        """
+        import math
+
+        query = self.db.query(PointsTransaction).filter(
+            PointsTransaction.business_id == business_id,
+            PointsTransaction.transaction_type == PointsTransactionType.EXPIRE,
+            PointsTransaction.deleted_at.is_(None),
+        )
+
+        total_records = query.count()
+        pages = max(1, math.ceil(total_records / per_page))
+        offset = (page - 1) * per_page
+
+        transactions = (
+            query.order_by(PointsTransaction.created_at.desc())
+            .offset(offset)
+            .limit(per_page)
+            .all()
+        )
+
+        # Grand total of expired points (absolute value — EXPIRE rows store negative points)
+        total_result = (
+            self.db.query(func.sum(PointsTransaction.points)).filter(
+                PointsTransaction.business_id == business_id,
+                PointsTransaction.transaction_type == PointsTransactionType.EXPIRE,
+                PointsTransaction.deleted_at.is_(None),
+            ).scalar()
+        )
+        total_expired = abs(int(total_result or 0))
+
+        return {
+            "transactions": [
+                {
+                    "id": str(tx.id),
+                    "customer_id": str(tx.customer_id),
+                    "points_expired": abs(tx.points),
+                    "balance_after": tx.balance_after,
+                    "description": tx.description,
+                    "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                }
+                for tx in transactions
+            ],
+            "total_records": total_records,
+            "total_expired_points": total_expired,
+            "page": page,
+            "per_page": per_page,
+            "pages": pages,
+        }
