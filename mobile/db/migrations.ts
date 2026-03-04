@@ -57,5 +57,33 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 4,
+      steps: [
+        createTable({
+          name: "bulk_operations",
+          columns: [
+            { name: "remote_id", type: "string", isOptional: true },
+            { name: "business_id", type: "string", isIndexed: true },
+            { name: "operation_type", type: "string", isIndexed: true },
+            { name: "status", type: "string", isIndexed: true },
+            { name: "title", type: "string" },
+            { name: "description", type: "string", isOptional: true },
+            { name: "total_records", type: "number" },
+            { name: "processed_records", type: "number" },
+            { name: "successful_records", type: "number" },
+            { name: "failed_records", type: "number" },
+            { name: "params_json", type: "string" },
+            { name: "errors_json", type: "string", isOptional: true },
+            { name: "is_dirty", type: "boolean" },
+            { name: "synced_at", type: "number", isOptional: true },
+            { name: "started_at", type: "number", isOptional: true },
+            { name: "completed_at", type: "number", isOptional: true },
+            { name: "created_at", type: "number" },
+            { name: "updated_at", type: "number" },
+          ],
+        }),
+      ],
+    },
   ],
 });
