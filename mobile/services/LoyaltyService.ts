@@ -232,3 +232,190 @@ export function applyOrderPointsEarned(
   };
   return calculateBalance([...existingTransactions, orderTransaction]);
 }
+
+// ---------------------------------------------------------------------------
+// Product-specific earn rates (task 3.3)
+// ---------------------------------------------------------------------------
+
+/**
+ * A product or category can override the default earn rate.
+ * Attach to products in the catalogue; falls back to the default rate.
+ */
+export interface ProductEarnRate {
+  productId: string;
+  earnRate: number;
+}
+
+/**
+ * Calculate points for a single order line item, respecting product-specific rates.
+ *
+ * Why per-line instead of per-order?
+ * Different SKUs can have different earn rates (e.g., cigarettes earn 0 points;
+ * premium products earn 3× points). Summing at line level is the only
+ * correct approach.
+ *
+ * @param lineTotal   - Item price × quantity for this line
+ * @param productId   - ID of the product (for rate lookup)
+ * @param rateOverrides - Array of product-specific earn rates
+ * @param defaultRate  - Fallback earn rate
+ * @param tierMultiplier - Bonus multiplier from the customer's tier
+ */
+export function calculateLinePoints(
+  lineTotal: number,
+  productId: string,
+  rateOverrides: ProductEarnRate[] = [],
+  defaultRate: number = DEFAULT_EARN_RATE,
+  tierMultiplier: number = 1
+): number {
+  const override = rateOverrides.find((r) => r.productId === productId);
+  const rate = override !== undefined ? override.earnRate : defaultRate;
+  return calculatePointsEarned(lineTotal, rate, tierMultiplier);
+}
+
+/**
+ * Calculate total points earned across a multi-line order, respecting
+ * product-specific earn rates (task 3.3).
+ */
+export interface OrderLine {
+  productId: string;
+  lineTotal: number;
+}
+
+export function calculateOrderPointsWithRates(
+  lines: OrderLine[],
+  rateOverrides: ProductEarnRate[] = [],
+  defaultRate: number = DEFAULT_EARN_RATE,
+  tierMultiplier: number = 1
+): number {
+  return lines.reduce((sum, line) => {
+    return sum + calculateLinePoints(
+      line.lineTotal,
+      line.productId,
+      rateOverrides,
+      defaultRate,
+      tierMultiplier
+    );
+  }, 0);
+}
+
+// ---------------------------------------------------------------------------
+// Receipt points display helper (task 3.4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the points summary string shown on a receipt.
+ *
+ * Returns a human-readable string like:
+ *   "You earned 125 points! New balance: 830 points."
+ *
+ * This is a pure string formatter — call it in the receipt rendering
+ * component to display points earned.
+ */
+export function formatReceiptPointsSummary(
+  pointsEarned: number,
+  newBalance: number
+): string {
+  if (pointsEarned <= 0) {
+    return `Your points balance: ${newBalance} points.`;
+  }
+  return `You earned ${pointsEarned} points! New balance: ${newBalance} points.`;
+}
+
+// ---------------------------------------------------------------------------
+// Bonus promotions (tasks 10.1, 10.2, 10.3)
+// ---------------------------------------------------------------------------
+
+/**
+ * A promotion that multiplies points earned for a specific period.
+ * Used for double-points days, sign-up bonuses, and category promotions.
+ *
+ * Why a multiplier instead of a flat bonus?
+ * Multiplicative promotions scale naturally with order size.
+ * Flat bonuses can be applied on top via type="flat" promotions.
+ */
+export interface LoyaltyPromotion {
+  id: string;
+  type: "multiplier" | "flat" | "signup_bonus";
+  /** For "multiplier": points = base × value. For "flat": points += value. */
+  value: number;
+  /** ISO start date (inclusive). Null means always active. */
+  startsAt: string | null;
+  /** ISO end date (inclusive). Null means no expiry. */
+  endsAt: string | null;
+  /** Optional: only apply to specific product IDs */
+  productIds?: string[];
+}
+
+/**
+ * Check whether a promotion is currently active for a given date.
+ *
+ * @param promotion - The promotion to evaluate
+ * @param now       - Current timestamp (ISO string). Defaults to Date.now().
+ */
+export function isPromotionActive(
+  promotion: LoyaltyPromotion,
+  now: string = new Date().toISOString()
+): boolean {
+  const ts = new Date(now).getTime();
+  if (promotion.startsAt !== null) {
+    const start = new Date(promotion.startsAt);
+    start.setHours(0, 0, 0, 0);
+    if (ts < start.getTime()) return false;
+  }
+  if (promotion.endsAt !== null) {
+    const end = new Date(promotion.endsAt);
+    end.setHours(23, 59, 59, 999);
+    if (ts > end.getTime()) return false;
+  }
+  return true;
+}
+
+/**
+ * Apply active promotions to a base points amount.
+ *
+ * Processing order:
+ * 1. Multipliers are composed multiplicatively (2× then 3× = 6×).
+ * 2. Flat bonuses are added after all multipliers have been applied.
+ * 3. signup_bonus promotions are handled separately by applySignupBonus().
+ *
+ * @param basePoints  - Points before promotions
+ * @param promotions  - All promotions to evaluate
+ * @param now         - ISO timestamp for active check
+ */
+export function applyActivePromotions(
+  basePoints: number,
+  promotions: LoyaltyPromotion[],
+  now: string = new Date().toISOString()
+): number {
+  const active = promotions.filter(
+    (p) => isPromotionActive(p, now) && p.type !== "signup_bonus"
+  );
+
+  let multiplier = 1;
+  let flatBonus = 0;
+
+  for (const promo of active) {
+    if (promo.type === "multiplier") {
+      multiplier *= promo.value;
+    } else if (promo.type === "flat") {
+      flatBonus += promo.value;
+    }
+  }
+
+  return Math.max(0, Math.floor(basePoints * multiplier) + flatBonus);
+}
+
+/**
+ * Calculate the sign-up bonus for a new customer (task 10.3).
+ *
+ * Returns the total sign-up bonus points from all active signup_bonus promotions.
+ * Summed (not multiplied) because a customer can only sign up once.
+ */
+export function calculateSignupBonus(
+  promotions: LoyaltyPromotion[],
+  now: string = new Date().toISOString()
+): number {
+  return promotions
+    .filter((p) => p.type === "signup_bonus" && isPromotionActive(p, now))
+    .reduce((sum, p) => sum + p.value, 0);
+}
