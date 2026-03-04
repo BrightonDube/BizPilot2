@@ -18,7 +18,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export const schema = appSchema({
-  version: 4,
+  version: 5,
   tables: [
     // -----------------------------------------------------------------
     // Products — the core catalog shown in the POS grid
@@ -273,6 +273,35 @@ export const schema = appSchema({
         { name: "synced_at", type: "number", isOptional: true },
         { name: "started_at", type: "number", isOptional: true },
         { name: "completed_at", type: "number", isOptional: true },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Payments — individual payment lines against an order
+    // Supports split payments (one order may have multiple payment rows)
+    // Schema version 5
+    //
+    // Why local payments table?
+    // When processing a payment offline (e.g., cash sale with no internet),
+    // we still need to record the payment locally and then sync to the server
+    // when reconnected. This ensures the order is marked paid and change
+    // is calculated correctly even without a server round-trip.
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "payments",
+      columns: [
+        { name: "remote_id", type: "string", isOptional: true },
+        { name: "order_id", type: "string", isIndexed: true },
+        { name: "payment_method", type: "string", isIndexed: true },
+        { name: "amount", type: "number" },
+        { name: "cash_tendered", type: "number", isOptional: true },
+        { name: "status", type: "string", isIndexed: true },
+        { name: "reference", type: "string", isOptional: true },
+        { name: "processed_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+        { name: "synced_at", type: "number", isOptional: true },
         { name: "created_at", type: "number" },
         { name: "updated_at", type: "number" },
       ],
