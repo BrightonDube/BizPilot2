@@ -121,9 +121,9 @@
 
 ## Task 13: Frontend - Account Management
 - [x] 13.1 Create account list page
-- [ ] 13.2 Create account detail page
-- [ ] 13.3 Create account creation form
-- [ ] 13.4 Create transaction history view
+- [x] 13.2 Create account detail page
+- [x] 13.3 Create account creation form
+- [x] 13.4 Create transaction history view
 - [x] 13.5 Create balance display component
 
 **Validates: Requirements 1, 3**
