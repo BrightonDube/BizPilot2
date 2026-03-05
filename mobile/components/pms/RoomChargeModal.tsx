@@ -1,57 +1,79 @@
 /**
  * BizPilot Mobile POS — RoomChargeModal Component
  *
- * Modal for posting a charge to a guest's room folio.
- * Shows the guest info, charge amount, and authorization step.
+ * Confirmation modal for posting a POS order to a hotel guest's room folio.
+ * Shows guest info, order summary, PMS connection status, and handles
+ * authorization requirements (signature / PIN) based on charge amount.
  *
- * Why require explicit authorization?
- * Hotels need proof of guest consent for room charges.
- * Without it, chargebacks and billing disputes increase.
- * The authorization step captures a PIN or signature.
+ * Why separate from GuestSearchModal?
+ * Single-responsibility: GuestSearchModal picks the guest, this modal
+ * confirms and posts the charge. Keeps each component focused and testable.
  */
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Alert,
   ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { Modal, Button } from "@/components/ui";
 import { formatCurrency } from "@/utils/formatters";
-import { useRoomCharge } from "@/hooks/useRoomCharge";
-import type { PMSGuest } from "@/types/pms";
+import type {
+  GuestProfile,
+  PMSConnectionStatus,
+  RoomChargeRequest,
+} from "@/services/pms/PMSService";
+import {
+  calculateGuestAvailableCredit,
+  formatChargeDescription,
+  getConnectionStatusColor,
+  requiresAuthorization,
+} from "@/services/pms/PMSService";
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Amount above which guest authorization is required. */
+const AUTH_THRESHOLD = 500;
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
-export interface RoomChargeModalProps {
-  /** Whether the modal is visible */
+interface RoomChargeModalProps {
   visible: boolean;
-  /** Called when the modal should close */
+  guest: GuestProfile;
+  orderTotal: number;
+  orderItems: Array<{ name: string; quantity: number; price: number }>;
+  connectionStatus: PMSConnectionStatus;
+  onConfirmCharge: (request: RoomChargeRequest) => void;
   onClose: () => void;
-  /** Guest to charge */
-  guest: PMSGuest | null;
-  /** Amount to charge */
-  amount: number;
-  /** Charge description */
-  description: string;
-  /** Related POS order ID */
-  orderId: string | null;
-  /** Called when charge is successfully posted or queued */
-  onChargeComplete: (result: { queued: boolean }) => void;
+  isPosting?: boolean;
 }
 
 // ---------------------------------------------------------------------------
-// Authorization step type
+// Helpers
 // ---------------------------------------------------------------------------
 
-type AuthStep = "review" | "authorize" | "processing" | "complete";
+function connectionLabel(status: PMSConnectionStatus): string {
+  switch (status) {
+    case "connected":
+      return "PMS Connected";
+    case "disconnected":
+      return "PMS Offline";
+    case "error":
+      return "PMS Error";
+    case "syncing":
+      return "Syncing…";
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -60,392 +82,494 @@ type AuthStep = "review" | "authorize" | "processing" | "complete";
 const RoomChargeModal: React.FC<RoomChargeModalProps> = React.memo(
   function RoomChargeModal({
     visible,
-    onClose,
     guest,
-    amount,
-    description,
-    orderId,
-    onChargeComplete,
+    orderTotal,
+    orderItems,
+    connectionStatus,
+    onConfirmCharge,
+    onClose,
+    isPosting = false,
   }) {
-    const [step, setStep] = useState<AuthStep>("review");
-    const [pinInput, setPinInput] = useState("");
-    const { postCharge, loading } = useRoomCharge();
+    const [pin, setPin] = useState("");
 
-    // Reset state when modal opens/closes
+    const authType = useMemo(
+      () => requiresAuthorization(orderTotal, AUTH_THRESHOLD),
+      [orderTotal]
+    );
+
+    const availableCredit = useMemo(
+      () => calculateGuestAvailableCredit(guest),
+      [guest]
+    );
+
+    const isOffline = connectionStatus === "disconnected";
+    const exceedsCredit = orderTotal > availableCredit;
+
+    // -- Handlers -------------------------------------------------------------
+
+    const handleConfirm = useCallback(() => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      const request: RoomChargeRequest = {
+        orderId: `pos-${Date.now()}`,
+        roomNumber: guest.roomNumber,
+        guestId: guest.id,
+        amount: orderTotal,
+        description: formatChargeDescription(orderItems),
+        items: orderItems,
+        authorizationType: authType,
+      };
+
+      onConfirmCharge(request);
+    }, [guest, orderTotal, orderItems, authType, onConfirmCharge]);
+
     const handleClose = useCallback(() => {
-      setStep("review");
-      setPinInput("");
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setPin("");
       onClose();
     }, [onClose]);
 
-    // Check if amount exceeds limit
-    const exceedsLimit = useMemo(() => {
-      if (!guest) return false;
-      return (
-        guest.transactionChargeLimit !== null &&
-        amount > guest.transactionChargeLimit
-      );
-    }, [guest, amount]);
-
-    const handleProceedToAuth = useCallback(() => {
-      if (exceedsLimit) {
-        Alert.alert(
-          "Limit Exceeded",
-          `This charge exceeds the per-transaction limit of ${formatCurrency(guest!.transactionChargeLimit!)}.`,
-          [{ text: "OK" }]
-        );
-        return;
-      }
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setStep("authorize");
-    }, [exceedsLimit, guest]);
-
-    const handlePinDigit = useCallback(
-      (digit: string) => {
-        if (pinInput.length >= 4) return;
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        const newPin = pinInput + digit;
-        setPinInput(newPin);
-
-        // Auto-submit when 4 digits entered
-        if (newPin.length === 4) {
-          handleSubmitCharge("pin");
-        }
-      },
-      [pinInput]
-    );
-
-    const handlePinBackspace = useCallback(() => {
-      setPinInput((prev) => prev.slice(0, -1));
-    }, []);
-
-    const handleSubmitCharge = useCallback(
-      async (authType: "pin" | "bypass") => {
-        if (!guest) return;
-
-        setStep("processing");
-
-        const result = await postCharge({
-          guest,
-          amount,
-          description,
-          orderId,
-          authorizationType: authType,
-        });
-
-        if (result.success || result.queued) {
-          setStep("complete");
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-          // Auto-close after showing success
-          setTimeout(() => {
-            onChargeComplete({ queued: result.queued });
-            handleClose();
-          }, 1500);
-        } else {
-          Alert.alert("Charge Failed", result.error ?? "Unknown error");
-          setStep("review");
-          setPinInput("");
-        }
-      },
-      [guest, amount, description, orderId, postCharge, onChargeComplete, handleClose]
-    );
-
-    if (!guest) return null;
+    // -- Render ---------------------------------------------------------------
 
     return (
-      <Modal visible={visible} onClose={handleClose} title="Room Charge">
-        {/* Guest info header */}
-        <View style={styles.guestHeader}>
-          <View style={styles.guestHeaderLeft}>
-            <Ionicons name="bed-outline" size={24} color="#3b82f6" />
-            <View>
-              <Text style={styles.guestName}>{guest.name}</Text>
-              <Text style={styles.guestRoom}>Room {guest.roomNumber}</Text>
+      <Modal
+        testID="room-charge-modal"
+        visible={visible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={handleClose}
+      >
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Room Charge</Text>
+            <Pressable
+              testID="room-charge-cancel-btn"
+              onPress={handleClose}
+              hitSlop={12}
+            >
+              <Ionicons name="close" size={28} color="#f3f4f6" />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Guest info */}
+            <View testID="room-charge-guest-info" style={styles.section}>
+              <View style={styles.guestRow}>
+                <View style={styles.roomBadge}>
+                  <Ionicons name="bed-outline" size={18} color="#93c5fd" />
+                  <Text style={styles.roomNumber}>{guest.roomNumber}</Text>
+                </View>
+
+                <Text style={styles.guestName} numberOfLines={1}>
+                  {guest.guestName}
+                </Text>
+
+                {guest.vipStatus && (
+                  <View style={styles.vipBadge}>
+                    <Ionicons name="star" size={12} color="#fbbf24" />
+                    <Text style={styles.vipText}>VIP</Text>
+                  </View>
+                )}
+              </View>
+
+              <Text style={styles.creditText}>
+                Available credit:{" "}
+                <Text
+                  style={[
+                    styles.creditAmount,
+                    exceedsCredit && styles.creditExceeded,
+                  ]}
+                >
+                  {formatCurrency(availableCredit)}
+                </Text>
+              </Text>
             </View>
-          </View>
-          <View style={styles.chargeAmount}>
-            <Text style={styles.chargeAmountLabel}>Charge</Text>
-            <Text style={styles.chargeAmountValue}>
-              {formatCurrency(amount)}
-            </Text>
-          </View>
-        </View>
 
-        {/* Step: Review */}
-        {step === "review" && (
-          <View style={styles.stepContainer}>
-            <Text style={styles.descriptionLabel}>Description</Text>
-            <Text style={styles.descriptionText}>{description}</Text>
+            {/* Connection status */}
+            <View testID="room-charge-connection" style={styles.statusRow}>
+              <View
+                style={[
+                  styles.statusDot,
+                  {
+                    backgroundColor: getConnectionStatusColor(connectionStatus),
+                  },
+                ]}
+              />
+              <Text style={styles.statusLabel}>
+                {connectionLabel(connectionStatus)}
+              </Text>
+            </View>
 
-            {guest.transactionChargeLimit !== null && (
-              <View style={styles.limitInfo}>
-                <Ionicons name="information-circle-outline" size={16} color="#6b7280" />
-                <Text style={styles.limitText}>
-                  Per-transaction limit: {formatCurrency(guest.transactionChargeLimit)}
+            {/* Order summary */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Order Summary</Text>
+
+              {orderItems.map((item, idx) => (
+                <View key={idx} style={styles.itemRow}>
+                  <Text style={styles.itemName} numberOfLines={1}>
+                    {item.quantity}× {item.name}
+                  </Text>
+                  <Text style={styles.itemPrice}>
+                    {formatCurrency(item.quantity * item.price)}
+                  </Text>
+                </View>
+              ))}
+
+              <View style={styles.divider} />
+
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Total</Text>
+                <Text testID="room-charge-total" style={styles.totalAmount}>
+                  {formatCurrency(orderTotal)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Authorization section */}
+            {authType !== "none" && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>
+                  {authType === "signature"
+                    ? "Guest Signature"
+                    : "Guest PIN Verification"}
+                </Text>
+
+                {authType === "signature" ? (
+                  <View style={styles.signaturePlaceholder}>
+                    <Ionicons
+                      name="pencil-outline"
+                      size={24}
+                      color="#6b7280"
+                    />
+                    <Text style={styles.signatureText}>Signature capture</Text>
+                  </View>
+                ) : (
+                  <TextInput
+                    style={styles.pinInput}
+                    placeholder="Enter guest PIN"
+                    placeholderTextColor="#6b7280"
+                    value={pin}
+                    onChangeText={setPin}
+                    keyboardType="number-pad"
+                    secureTextEntry
+                    maxLength={6}
+                  />
+                )}
+              </View>
+            )}
+
+            {/* Offline warning */}
+            {isOffline && (
+              <View
+                testID="room-charge-offline-warning"
+                style={styles.offlineWarning}
+              >
+                <Ionicons name="cloud-offline-outline" size={20} color="#f59e0b" />
+                <Text style={styles.offlineText}>
+                  Charge will be queued and posted when connection is restored
                 </Text>
               </View>
             )}
 
-            <View style={styles.actionButtons}>
-              <Button
-                label="Proceed to Authorization"
-                onPress={handleProceedToAuth}
-                size="lg"
-                disabled={exceedsLimit}
-              />
-              <Button
-                label="Cancel"
-                onPress={handleClose}
-                variant="secondary"
-                size="sm"
-              />
-            </View>
-          </View>
-        )}
+            {/* Exceeds credit warning */}
+            {exceedsCredit && (
+              <View style={styles.offlineWarning}>
+                <Ionicons name="alert-circle-outline" size={20} color="#ef4444" />
+                <Text style={[styles.offlineText, { color: "#ef4444" }]}>
+                  Order total exceeds available credit
+                </Text>
+              </View>
+            )}
+          </ScrollView>
 
-        {/* Step: Authorize (PIN entry) */}
-        {step === "authorize" && (
-          <View style={styles.stepContainer}>
-            <Text style={styles.authTitle}>Guest Authorization</Text>
-            <Text style={styles.authSubtitle}>
-              Ask the guest to enter their PIN
-            </Text>
-
-            {/* PIN dots */}
-            <View style={styles.pinDots}>
-              {[0, 1, 2, 3].map((i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.pinDot,
-                    i < pinInput.length && styles.pinDotFilled,
+          {/* Action buttons */}
+          <View style={styles.footer}>
+            {isPosting ? (
+              <View testID="room-charge-posting" style={styles.postingRow}>
+                <ActivityIndicator size="small" color="#3b82f6" />
+                <Text style={styles.postingText}>Posting to room…</Text>
+              </View>
+            ) : (
+              <View style={styles.buttonRow}>
+                <Pressable
+                  testID="room-charge-confirm-btn"
+                  style={({ pressed }) => [
+                    styles.confirmButton,
+                    pressed && styles.confirmButtonPressed,
+                    exceedsCredit && styles.buttonDisabled,
                   ]}
-                />
-              ))}
-            </View>
-
-            {/* Numpad */}
-            <View style={styles.numpad}>
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map(
-                (key) => {
-                  if (key === "") return <View key="empty" style={styles.numpadKey} />;
-                  if (key === "⌫") {
-                    return (
-                      <Pressable
-                        key="backspace"
-                        onPress={handlePinBackspace}
-                        style={({ pressed }) => [
-                          styles.numpadKey,
-                          pressed && styles.numpadKeyPressed,
-                        ]}
-                      >
-                        <Ionicons name="backspace-outline" size={24} color="#ffffff" />
-                      </Pressable>
-                    );
-                  }
-                  return (
-                    <Pressable
-                      key={key}
-                      onPress={() => handlePinDigit(key)}
-                      style={({ pressed }) => [
-                        styles.numpadKey,
-                        pressed && styles.numpadKeyPressed,
-                      ]}
-                    >
-                      <Text style={styles.numpadKeyText}>{key}</Text>
-                    </Pressable>
-                  );
-                }
-              )}
-            </View>
-
-            <Pressable
-              onPress={() => handleSubmitCharge("bypass")}
-              style={styles.bypassLink}
-            >
-              <Text style={styles.bypassText}>Bypass authorization (manager)</Text>
-            </Pressable>
+                  onPress={handleConfirm}
+                  disabled={exceedsCredit || isPosting}
+                >
+                  <Ionicons name="checkmark-circle" size={20} color="#ffffff" />
+                  <Text style={styles.confirmText}>
+                    {isOffline ? "Queue Charge" : "Post to Room"}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
-        )}
-
-        {/* Step: Processing */}
-        {step === "processing" && (
-          <View style={styles.processingContainer}>
-            <ActivityIndicator size="large" color="#3b82f6" />
-            <Text style={styles.processingText}>Posting charge to PMS...</Text>
-          </View>
-        )}
-
-        {/* Step: Complete */}
-        {step === "complete" && (
-          <View style={styles.completeContainer}>
-            <Ionicons name="checkmark-circle" size={64} color="#22c55e" />
-            <Text style={styles.completeText}>Charge Posted</Text>
-            <Text style={styles.completeSubtext}>
-              {formatCurrency(amount)} charged to Room {guest.roomNumber}
-            </Text>
-          </View>
-        )}
+        </View>
       </Modal>
     );
   }
 );
+
+export default RoomChargeModal;
 
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-  guestHeader: {
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+
+  // Header
+  header: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#1f2937",
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 16,
+    backgroundColor: "#1e293b",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
-  guestHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  guestName: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  guestRoom: {
-    color: "#9ca3af",
-    fontSize: 13,
-  },
-  chargeAmount: {
-    alignItems: "flex-end",
-  },
-  chargeAmountLabel: {
-    color: "#6b7280",
-    fontSize: 11,
-    textTransform: "uppercase",
-  },
-  chargeAmountValue: {
-    color: "#3b82f6",
+  title: {
+    color: "#f3f4f6",
     fontSize: 20,
     fontWeight: "700",
   },
-  stepContainer: {
-    gap: 12,
+
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 32,
   },
-  descriptionLabel: {
+
+  // Sections
+  section: {
+    backgroundColor: "#1f2937",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#4b5563",
+    padding: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
     color: "#9ca3af",
-    fontSize: 12,
-    textTransform: "uppercase",
+    fontSize: 13,
     fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 10,
   },
-  descriptionText: {
-    color: "#ffffff",
-    fontSize: 15,
-  },
-  limitInfo: {
+
+  // Guest info
+  guestRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    padding: 10,
-    backgroundColor: "#1f2937",
-    borderRadius: 6,
-  },
-  limitText: {
-    color: "#6b7280",
-    fontSize: 13,
-  },
-  actionButtons: {
     gap: 8,
-    marginTop: 8,
-  },
-  authTitle: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  authSubtitle: {
-    color: "#9ca3af",
-    fontSize: 14,
-    textAlign: "center",
     marginBottom: 8,
   },
-  pinDots: {
+  roomBadge: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    marginVertical: 16,
-  },
-  pinDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "#4b5563",
-  },
-  pinDotFilled: {
-    backgroundColor: "#3b82f6",
-    borderColor: "#3b82f6",
-  },
-  numpad: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 8,
-  },
-  numpadKey: {
-    width: 72,
-    height: 56,
-    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#374151",
+    backgroundColor: "#1e3a5f",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 8,
+    gap: 4,
   },
-  numpadKeyPressed: {
-    backgroundColor: "#4b5563",
+  roomNumber: {
+    color: "#93c5fd",
+    fontSize: 20,
+    fontWeight: "800",
   },
-  numpadKeyText: {
-    color: "#ffffff",
-    fontSize: 22,
+  guestName: {
+    flex: 1,
+    color: "#f3f4f6",
+    fontSize: 17,
     fontWeight: "600",
   },
-  bypassLink: {
-    alignSelf: "center",
-    paddingVertical: 8,
-    marginTop: 8,
-  },
-  bypassText: {
-    color: "#6b7280",
-    fontSize: 13,
-    textDecorationLine: "underline",
-  },
-  processingContainer: {
+  vipBadge: {
+    flexDirection: "row",
     alignItems: "center",
-    padding: 40,
-    gap: 16,
+    backgroundColor: "#422006",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    gap: 3,
   },
-  processingText: {
-    color: "#9ca3af",
-    fontSize: 16,
-  },
-  completeContainer: {
-    alignItems: "center",
-    padding: 32,
-    gap: 8,
-  },
-  completeText: {
-    color: "#22c55e",
-    fontSize: 22,
+  vipText: {
+    color: "#fbbf24",
+    fontSize: 11,
     fontWeight: "700",
   },
-  completeSubtext: {
+  creditText: {
     color: "#9ca3af",
     fontSize: 14,
   },
-});
+  creditAmount: {
+    color: "#22c55e",
+    fontWeight: "700",
+  },
+  creditExceeded: {
+    color: "#ef4444",
+  },
 
-export default RoomChargeModal;
+  // Connection status
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  statusLabel: {
+    color: "#9ca3af",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  // Order items
+  itemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  itemName: {
+    flex: 1,
+    color: "#f3f4f6",
+    fontSize: 15,
+  },
+  itemPrice: {
+    color: "#f3f4f6",
+    fontSize: 15,
+    fontWeight: "600",
+    marginLeft: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#4b5563",
+    marginVertical: 10,
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  totalLabel: {
+    color: "#f3f4f6",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  totalAmount: {
+    color: "#3b82f6",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+
+  // Authorization — signature
+  signaturePlaceholder: {
+    height: 120,
+    backgroundColor: "#374151",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#4b5563",
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  signatureText: {
+    color: "#6b7280",
+    fontSize: 14,
+  },
+
+  // Authorization — PIN
+  pinInput: {
+    backgroundColor: "#374151",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#4b5563",
+    color: "#f3f4f6",
+    fontSize: 22,
+    fontWeight: "700",
+    textAlign: "center",
+    paddingVertical: 14,
+    letterSpacing: 8,
+  },
+
+  // Offline warning
+  offlineWarning: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#422006",
+    borderRadius: 10,
+    padding: 12,
+    gap: 10,
+    marginBottom: 12,
+  },
+  offlineText: {
+    flex: 1,
+    color: "#f59e0b",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  // Footer
+  footer: {
+    backgroundColor: "#1e293b",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  confirmButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#3b82f6",
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  confirmButtonPressed: {
+    backgroundColor: "#2563eb",
+    transform: [{ scale: 0.98 }],
+  },
+  buttonDisabled: {
+    opacity: 0.4,
+  },
+  confirmText: {
+    color: "#ffffff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  postingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+  },
+  postingText: {
+    color: "#3b82f6",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+});
