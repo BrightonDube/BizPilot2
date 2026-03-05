@@ -131,8 +131,8 @@
 ## Task 14: Frontend - Payments & Charges
 - [x] 14.1 Create charge to account modal
 - [x] 14.2 Create payment entry form
-- [ ] 14.3 Create payment receipt view
-- [ ] 14.4 Integrate with POS checkout
+- [x] 14.3 Create payment receipt view
+- [x] 14.4 Integrate with POS checkout
 
 **Validates: Requirements 2, 4**
 
@@ -145,9 +145,9 @@
 **Validates: Requirements 5, 6, 7**
 
 ## Task 16: Property-Based Tests
-- [ ] 16.1 Write PBT for balance accuracy (Property 1)
-- [ ] 16.2 Write PBT for credit limit enforcement (Property 2)
-- [ ] 16.3 Write PBT for payment allocation order (Property 3)
+- [x] 16.1 Write PBT for balance accuracy (Property 1)
+- [x] 16.2 Write PBT for credit limit enforcement (Property 2)
+- [x] 16.3 Write PBT for payment allocation order (Property 3)
 - [ ] 16.4 Write PBT for statement accuracy (Property 4)
 
 **Validates: Correctness Properties 1-4**
