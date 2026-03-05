@@ -19,26 +19,26 @@
 - [x] 3.4 Show cost breakdown
 
 ## Task 4: Ingredient Tracking
-- [ ] 4.1 Track ingredient inventory
-- [ ] 4.2 Deduct on sale
-- [ ] 4.3 Alert on low stock
-- [ ] 4.4 Support substitutions
+- [x] 4.1 Track ingredient inventory
+- [x] 4.2 Deduct on sale
+- [x] 4.3 Alert on low stock
+- [x] 4.4 Support substitutions
 
 ## Task 5: Costing
 - [x] 5.1 Calculate recipe cost
 - [x] 5.2 Calculate food cost %
-- [ ] 5.3 Update on price changes
-- [ ] 5.4 Alert on high cost
+- [x] 5.3 Update on price changes
+- [x] 5.4 Alert on high cost
 
 ## Task 6: Yield Management
 - [x] 6.1 Track recipe yield
-- [ ] 6.2 Support waste factors
+- [x] 6.2 Support waste factors
 - [x] 6.3 Calculate cost per portion
 
 ## Task 7: Nutritional Info
-- [ ] 7.1 Add nutritional fields
-- [ ] 7.2 Track allergens
-- [ ] 7.3 Display on menu
+- [x] 7.1 Add nutritional fields
+- [x] 7.2 Track allergens
+- [x] 7.3 Display on menu
 
 ## Task 8: Database Migration and Seeding
 - [ ] 8.1 Run all Alembic migrations locally
