@@ -61,7 +61,7 @@
 - [ ] 9.4 Implement export button
 
 ### Task 10: User Activity Report Tab
-- [ ] 10.1 Create UserActivityTab component
+- [x] 10.1 Create UserActivityTab component
 - [ ] 10.2 Fetch and display user activity data
 - [ ] 10.3 Add user and date range filtering
 - [ ] 10.4 Show active sessions indicator
@@ -69,7 +69,7 @@
 - [ ] 10.6 Add admin-only access control
 
 ### Task 11: Login History Report Tab
-- [ ] 11.1 Create LoginHistoryTab component
+- [x] 11.1 Create LoginHistoryTab component
 - [ ] 11.2 Fetch and display login history data
 - [ ] 11.3 Add user and date range filtering
 - [ ] 11.4 Highlight suspicious activity
@@ -77,9 +77,9 @@
 - [ ] 11.6 Add admin-only access control
 
 ### Task 12: Shared Components
-- [ ] 12.1 Create DateRangePicker component
-- [ ] 12.2 Create UserFilter component
-- [ ] 12.3 Create ExportButton component with PDF/Excel options
+- [x] 12.1 Create DateRangePicker component
+- [x] 12.2 Create UserFilter component
+- [x] 12.3 Create ExportButton component with PDF/Excel options
 - [ ] 12.4 Create ReportTable component with sorting
 - [ ] 12.5 Create ReportCard component for summary stats
 

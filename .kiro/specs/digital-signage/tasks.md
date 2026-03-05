@@ -429,7 +429,7 @@ This implementation plan covers the digital signage system for BizPilot, includi
     - Search and filter by tags
     - _Requirements: 2.4, 2.5_
   
-  - [ ] 17.2 Create MediaUploader component
+  - [x] 17.2 Create MediaUploader component
     - Create `frontend/src/components/signage/MediaUploader.tsx`
     - Drag-and-drop upload
     - Progress indicator
@@ -470,7 +470,7 @@ This implementation plan covers the digital signage system for BizPilot, includi
     - List menu boards with previews
     - _Requirements: 4.1_
   
-  - [ ] 19.2 Create MenuBoardEditor component
+  - [x] 19.2 Create MenuBoardEditor component
     - Create `frontend/src/components/signage/MenuBoardEditor.tsx`
     - Template selection
     - Category selection
@@ -504,7 +504,7 @@ This implementation plan covers the digital signage system for BizPilot, includi
     - List schedules with status
     - _Requirements: 6.1_
   
-  - [ ] 20.4 Create ScheduleCalendar component
+  - [x] 20.4 Create ScheduleCalendar component
     - Create `frontend/src/components/signage/ScheduleCalendar.tsx`
     - Calendar view of schedules
     - Time slot visualization
@@ -526,7 +526,7 @@ This implementation plan covers the digital signage system for BizPilot, includi
     - Filter by status
     - _Requirements: 7.1_
   
-  - [ ] 21.2 Create CampaignTimeline component
+  - [x] 21.2 Create CampaignTimeline component
     - Create `frontend/src/components/signage/CampaignTimeline.tsx`
     - Timeline visualization of campaigns
     - Conflict indicators
@@ -546,7 +546,7 @@ This implementation plan covers the digital signage system for BizPilot, includi
     - Overview metrics (impressions, uptime, performance)
     - _Requirements: 12.1, 12.2, 12.3_
   
-  - [ ] 22.2 Create AnalyticsCharts component
+  - [x] 22.2 Create AnalyticsCharts component
     - Create `frontend/src/components/signage/AnalyticsCharts.tsx`
     - Impressions over time chart
     - Content performance chart

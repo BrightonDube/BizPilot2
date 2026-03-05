@@ -69,8 +69,8 @@
 
 ## Task 9: Combo Meals
 - [ ] 9.1 Create combo item type
-- [ ] 9.2 Define combo components
-- [ ] 9.3 Support component choices
+- [x] 9.2 Define combo components
+- [x] 9.3 Support component choices
 - [ ] 9.4 Calculate combo pricing
 
 **Validates: Requirement 7**
