@@ -87,7 +87,7 @@
 ## Task 11: Tab Management
 - [x] 11.1 Implement open tab
 - [x] 11.2 Support adding to tab
-- [ ] 11.3 Alert on old tabs
+- [x] 11.3 Alert on old tabs
 - [x] 11.4 Require tab close before payment
 
 **Validates: Requirement 8**
@@ -96,7 +96,7 @@
 - [x] 12.1 Capture delivery address
 - [x] 12.2 Assign driver
 - [x] 12.3 Track delivery status
-- [ ] 12.4 Calculate delivery fee
+- [x] 12.4 Calculate delivery fee
 
 **Validates: Requirement 9**
 
