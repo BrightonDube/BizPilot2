@@ -19,8 +19,8 @@
 **Validates: Requirement 1**
 
 ## Task 3: Modifier Groups
-- [ ] 3.1 Create modifier group management UI
-- [ ] 3.2 Implement required/optional logic
+- [x] 3.1 Create modifier group management UI
+- [x] 3.2 Implement required/optional logic
 - [ ] 3.3 Implement min/max selection rules
 - [ ] 3.4 Write PBT for modifier validation (Property 2)
 
@@ -35,7 +35,7 @@
 **Validates: Requirement 2**
 
 ## Task 5: Portion Sizes
-- [ ] 5.1 Create portion management UI
+- [x] 5.1 Create portion management UI
 - [ ] 5.2 Set price per portion
 - [ ] 5.3 Link recipe per portion
 - [ ] 5.4 Display portion selector
@@ -44,7 +44,7 @@
 
 ## Task 6: Recipe Management
 - [ ] 6.1 Create RecipeService class
-- [ ] 6.2 Create recipe management UI
+- [x] 6.2 Create recipe management UI
 - [ ] 6.3 Link ingredients to recipes
 - [ ] 6.4 Calculate recipe cost
 - [ ] 6.5 Write PBT for food cost (Property 3)

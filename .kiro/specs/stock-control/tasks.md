@@ -35,16 +35,16 @@
 **Validates: Requirement 3**
 
 ## Task 5: Stock Adjustments
-- [ ] 5.1 Create adjustment UI
-- [ ] 5.2 Implement positive/negative adjustments
-- [ ] 5.3 Require adjustment reason
+- [x] 5.1 Create adjustment UI
+- [x] 5.2 Implement positive/negative adjustments
+- [x] 5.3 Require adjustment reason
 - [ ] 5.4 Add bulk adjustment support
 - [ ] 5.5 Write PBT for audit trail (Property 2)
 
 **Validates: Requirement 4**
 
 ## Task 6: Stock Receiving
-- [ ] 6.1 Create receiving UI
+- [x] 6.1 Create receiving UI
 - [ ] 6.2 Implement receive without PO
 - [ ] 6.3 Record supplier and cost
 - [ ] 6.4 Update stock on receive
@@ -52,7 +52,7 @@
 **Validates: Requirement 5**
 
 ## Task 7: Waste Reporting
-- [ ] 7.1 Create waste entry UI
+- [x] 7.1 Create waste entry UI
 - [ ] 7.2 Implement waste categories
 - [ ] 7.3 Deduct stock on waste
 - [ ] 7.4 Create waste reports
@@ -78,7 +78,7 @@
 
 ## Task 10: Stock Take
 - [ ] 10.1 Create StockTakeService
-- [ ] 10.2 Create stock take UI
+- [x] 10.2 Create stock take UI
 - [ ] 10.3 Implement count entry
 - [ ] 10.4 Calculate variances
 - [ ] 10.5 Implement approval workflow

@@ -40,7 +40,7 @@
 
 ## Task 5: Widget Service
 - [ ] 5.1 Implement widget CRUD
-- [ ] 5.2 Implement widget library
+- [x] 5.2 Implement widget library
 - [ ] 5.3 Implement widget data fetching
 - [ ] 5.4 Implement widget configuration validation
 - [ ] 5.5 Write unit tests for widget service
