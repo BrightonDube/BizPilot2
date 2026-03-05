@@ -114,14 +114,14 @@
 ## Task 13: Customer App - Menu
 - [ ] 13.1 Create menu page layout
 - [ ] 13.2 Create category navigation
-- [ ] 13.3 Create product card component
+- [x] 13.3 Create product card component
 - [ ] 13.4 Create product detail modal
 - [ ] 13.5 Create search and filter UI
 
 **Validates: Requirement 1**
 
 ## Task 14: Customer App - Cart & Checkout
-- [ ] 14.1 Create cart component
+- [x] 14.1 Create cart component
 - [ ] 14.2 Create modifier selection UI
 - [ ] 14.3 Create checkout flow
 - [ ] 14.4 Create address entry form

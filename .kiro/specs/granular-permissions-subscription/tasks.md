@@ -225,7 +225,7 @@ This implementation plan breaks down the Granular Permissions & Subscription Sys
     - Style with Tailwind (mobile-first)
     - _Requirements: 9.3_
   
-  - [ ]* 11.4 Write component tests for FeatureGate
+  - [x]* 11.4 Write component tests for FeatureGate
     - Test rendering children when feature granted
     - Test rendering overlay when feature denied
     - Test loading state
