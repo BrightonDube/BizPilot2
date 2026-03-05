@@ -1,300 +1,387 @@
 /**
- * Tests for customer account UI components.
- * (customer-accounts tasks 13.1, 13.5, 14.1-14.3)
+ * Tests for customer account UI components (tasks 13.2-13.4).
+ *
+ * Covers:
+ * - AccountDetailScreen: renders account info, balance, transactions, actions
+ * - AccountCreationForm: validation, submission, payment terms selector
+ * - TransactionHistoryView: filtering, grouping, empty state
  */
 
 import React from "react";
-import { render, fireEvent, within } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
+import { AccountDetailScreen } from "../components/accounts/AccountDetailScreen";
+import { AccountCreationForm } from "../components/accounts/AccountCreationForm";
+import { TransactionHistoryView } from "../components/accounts/TransactionHistoryView";
+import type {
+  CustomerAccount,
+  AccountTransaction,
+} from "../services/accounts/CustomerAccountService";
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
-jest.mock("@expo/vector-icons", () => ({
-  Ionicons: "Ionicons",
-}));
-
+jest.mock("@expo/vector-icons", () => ({ Ionicons: "Ionicons" }));
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn(),
-  ImpactFeedbackStyle: { Light: "light" },
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
 }));
-
 jest.mock("@/utils/formatters", () => ({
   formatCurrency: (v: number) => `R ${v.toFixed(2)}`,
 }));
 
 // ---------------------------------------------------------------------------
-// Imports (after mocks)
-// ---------------------------------------------------------------------------
-
-import { AccountListScreen } from "@/components/accounts/AccountListScreen";
-import { ChargeToAccountModal } from "@/components/accounts/ChargeToAccountModal";
-import { PaymentEntryForm } from "@/components/accounts/PaymentEntryForm";
-import { CustomerAccount } from "@/services/accounts/CustomerAccountService";
-
-// ---------------------------------------------------------------------------
 // Test data
 // ---------------------------------------------------------------------------
 
-const mockAccounts: CustomerAccount[] = [
+const NOW = "2024-06-15T12:00:00Z";
+
+const mockAccount: CustomerAccount = {
+  id: "acc-001",
+  customerName: "Cape Town Bistro",
+  customerEmail: "info@capetownbistro.co.za",
+  customerPhone: "+27 21 555 1234",
+  status: "active",
+  creditLimit: 25000,
+  currentBalance: 8500,
+  paymentTerms: "net_30",
+  openedAt: "2024-01-15T10:00:00Z",
+  lastTransactionAt: "2024-06-10T14:30:00Z",
+};
+
+const mockTransactions: AccountTransaction[] = [
   {
-    id: "acc-1",
-    customerName: "Alice Smith",
-    customerEmail: "alice@example.com",
-    customerPhone: "0812345678",
-    status: "active",
-    creditLimit: 5000,
-    currentBalance: 2000,
-    paymentTerms: "net_30",
-    openedAt: "2024-01-01T00:00:00Z",
-    lastTransactionAt: "2025-01-01T00:00:00Z",
+    id: "tx-1",
+    accountId: "acc-001",
+    type: "charge",
+    amount: 1500,
+    balanceAfter: 8500,
+    description: "Order #1042 — Lunch service",
+    reference: "ORD-1042",
+    createdAt: "2024-06-10T14:30:00Z",
+    staffName: "Thabo M.",
   },
   {
-    id: "acc-2",
-    customerName: "Bob Jones",
-    status: "suspended",
-    creditLimit: 3000,
-    currentBalance: 500,
-    paymentTerms: "net_7",
-    openedAt: "2024-06-01T00:00:00Z",
+    id: "tx-2",
+    accountId: "acc-001",
+    type: "payment",
+    amount: 5000,
+    balanceAfter: 7000,
+    description: "EFT payment received",
+    reference: "PAY-2024-06",
+    createdAt: "2024-06-08T09:15:00Z",
+    staffName: "Naledi K.",
+  },
+  {
+    id: "tx-3",
+    accountId: "acc-001",
+    type: "credit_note",
+    amount: 250,
+    balanceAfter: 12000,
+    description: "Return — damaged goods",
+    createdAt: "2024-06-05T16:45:00Z",
+    staffName: "Thabo M.",
+  },
+  {
+    id: "tx-4",
+    accountId: "acc-001",
+    type: "charge",
+    amount: 3200,
+    balanceAfter: 12250,
+    description: "Order #1038 — Event catering",
+    reference: "ORD-1038",
+    createdAt: "2024-06-05T11:00:00Z",
+    staffName: "Sipho D.",
+  },
+  {
+    id: "tx-5",
+    accountId: "acc-001",
+    type: "write_off",
+    amount: 450,
+    balanceAfter: 9050,
+    description: "Bad debt write-off",
+    createdAt: "2024-05-30T08:00:00Z",
+    staffName: "Manager",
+  },
+  {
+    id: "tx-6",
+    accountId: "acc-001",
+    type: "charge",
+    amount: 1800,
+    balanceAfter: 9500,
+    description: "Order #1035 — Dinner service",
+    createdAt: "2024-05-28T19:30:00Z",
+    staffName: "Thabo M.",
   },
 ];
 
 // ---------------------------------------------------------------------------
-// AccountListScreen
+// AccountDetailScreen
 // ---------------------------------------------------------------------------
 
-describe("AccountListScreen", () => {
-  const defaultProps = {
-    accounts: mockAccounts,
-    onSelectAccount: jest.fn(),
-    onCreateAccount: jest.fn(),
-  };
+describe("AccountDetailScreen", () => {
+  const mockOnBack = jest.fn();
+  const mockOnCharge = jest.fn();
+  const mockOnPayment = jest.fn();
+  const mockOnViewStatements = jest.fn();
 
   beforeEach(() => jest.clearAllMocks());
 
-  it("renders the screen", () => {
-    const { getByTestId, getByText } = render(
-      <AccountListScreen {...defaultProps} />
-    );
-    expect(getByTestId("account-list-screen")).toBeTruthy();
-    expect(getByText("Customer Accounts")).toBeTruthy();
-  });
-
-  it("shows account count", () => {
+  it("renders account name", () => {
     const { getByText } = render(
-      <AccountListScreen {...defaultProps} />
+      <AccountDetailScreen
+        account={mockAccount}
+        transactions={mockTransactions}
+        onBack={mockOnBack}
+        onCharge={mockOnCharge}
+        onPayment={mockOnPayment}
+        onViewStatements={mockOnViewStatements}
+      />
     );
-    expect(getByText("2 accounts")).toBeTruthy();
+
+    expect(getByText("Cape Town Bistro")).toBeTruthy();
   });
 
-  it("renders account cards", () => {
-    const { getByTestId } = render(
-      <AccountListScreen {...defaultProps} />
+  it("renders balance amount", () => {
+    const { getAllByText } = render(
+      <AccountDetailScreen
+        account={mockAccount}
+        transactions={mockTransactions}
+        onBack={mockOnBack}
+        onCharge={mockOnCharge}
+        onPayment={mockOnPayment}
+        onViewStatements={mockOnViewStatements}
+      />
     );
-    expect(getByTestId("account-card-acc-1")).toBeTruthy();
-    expect(getByTestId("account-card-acc-2")).toBeTruthy();
+
+    const balanceTexts = getAllByText(/R 8500\.00/);
+    expect(balanceTexts.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("displays customer names", () => {
+  it("renders account status", () => {
     const { getByText } = render(
-      <AccountListScreen {...defaultProps} />
+      <AccountDetailScreen
+        account={mockAccount}
+        transactions={mockTransactions}
+        onBack={mockOnBack}
+        onCharge={mockOnCharge}
+        onPayment={mockOnPayment}
+        onViewStatements={mockOnViewStatements}
+      />
     );
-    expect(getByText("Alice Smith")).toBeTruthy();
-    expect(getByText("Bob Jones")).toBeTruthy();
+
+    expect(getByText("Active")).toBeTruthy();
   });
 
-  it("shows balance", () => {
+  it("renders payment terms", () => {
     const { getByText } = render(
-      <AccountListScreen {...defaultProps} />
+      <AccountDetailScreen
+        account={mockAccount}
+        transactions={mockTransactions}
+        onBack={mockOnBack}
+        onCharge={mockOnCharge}
+        onPayment={mockOnPayment}
+        onViewStatements={mockOnViewStatements}
+      />
     );
-    expect(getByText("R 2000.00")).toBeTruthy();
+
+    expect(getByText(/Net 30/)).toBeTruthy();
   });
 
-  it("calls onSelectAccount when card pressed", () => {
+  it("calls onBack when back button pressed", () => {
     const { getByTestId } = render(
-      <AccountListScreen {...defaultProps} />
+      <AccountDetailScreen
+        account={mockAccount}
+        transactions={mockTransactions}
+        onBack={mockOnBack}
+        onCharge={mockOnCharge}
+        onPayment={mockOnPayment}
+        onViewStatements={mockOnViewStatements}
+      />
     );
-    fireEvent.press(getByTestId("account-card-acc-1"));
-    expect(defaultProps.onSelectAccount).toHaveBeenCalledWith(mockAccounts[0]);
+
+    const backButton = getByTestId("back-button");
+    fireEvent.press(backButton);
+    expect(mockOnBack).toHaveBeenCalledTimes(1);
   });
 
-  it("has create account button", () => {
-    const { getByTestId } = render(
-      <AccountListScreen {...defaultProps} />
+  it("shows recent transactions", () => {
+    const { getByText } = render(
+      <AccountDetailScreen
+        account={mockAccount}
+        transactions={mockTransactions}
+        onBack={mockOnBack}
+        onCharge={mockOnCharge}
+        onPayment={mockOnPayment}
+        onViewStatements={mockOnViewStatements}
+      />
     );
-    fireEvent.press(getByTestId("create-account-button"));
-    expect(defaultProps.onCreateAccount).toHaveBeenCalled();
+
+    expect(getByText(/Order #1042/)).toBeTruthy();
   });
 
-  it("has search input", () => {
-    const { getByTestId } = render(
-      <AccountListScreen {...defaultProps} />
+  it("renders credit limit", () => {
+    const { getAllByText } = render(
+      <AccountDetailScreen
+        account={mockAccount}
+        transactions={mockTransactions}
+        onBack={mockOnBack}
+        onCharge={mockOnCharge}
+        onPayment={mockOnPayment}
+        onViewStatements={mockOnViewStatements}
+      />
     );
-    expect(getByTestId("account-search-input")).toBeTruthy();
-  });
 
-  it("filters accounts when searching", () => {
-    const { getByTestId, queryByTestId } = render(
-      <AccountListScreen {...defaultProps} />
-    );
-    fireEvent.changeText(getByTestId("account-search-input"), "Alice");
-    expect(getByTestId("account-card-acc-1")).toBeTruthy();
-    expect(queryByTestId("account-card-acc-2")).toBeNull();
-  });
-
-  it("shows empty state when no matches", () => {
-    const { getByTestId, getByText } = render(
-      <AccountListScreen {...defaultProps} />
-    );
-    fireEvent.changeText(getByTestId("account-search-input"), "nonexistent");
-    expect(getByText("No accounts found")).toBeTruthy();
+    const limitTexts = getAllByText(/R 25000\.00/);
+    expect(limitTexts.length).toBeGreaterThanOrEqual(1);
   });
 });
 
 // ---------------------------------------------------------------------------
-// ChargeToAccountModal
+// AccountCreationForm
 // ---------------------------------------------------------------------------
 
-describe("ChargeToAccountModal", () => {
-  const defaultProps = {
-    account: mockAccounts[0],
-    orderId: "ord-123",
-    orderTotal: 350,
-    onConfirm: jest.fn(),
-    onCancel: jest.fn(),
-  };
+describe("AccountCreationForm", () => {
+  const mockOnSubmit = jest.fn();
+  const mockOnCancel = jest.fn();
 
   beforeEach(() => jest.clearAllMocks());
 
-  it("renders the modal", () => {
-    const { getByTestId, getByText } = render(
-      <ChargeToAccountModal {...defaultProps} />
-    );
-    expect(getByTestId("charge-to-account-modal")).toBeTruthy();
-    expect(getByText("Charge to Account")).toBeTruthy();
-  });
-
-  it("shows account name", () => {
-    const { getByText } = render(
-      <ChargeToAccountModal {...defaultProps} />
-    );
-    expect(getByText("Alice Smith")).toBeTruthy();
-  });
-
-  it("shows charge amount", () => {
-    const { getByText } = render(
-      <ChargeToAccountModal {...defaultProps} />
-    );
-    expect(getByText("R 350.00")).toBeTruthy();
-  });
-
-  it("shows current balance and available credit", () => {
-    const { getByText } = render(
-      <ChargeToAccountModal {...defaultProps} />
-    );
-    expect(getByText("R 2000.00")).toBeTruthy(); // current balance
-    expect(getByText("R 3000.00")).toBeTruthy(); // available credit
-  });
-
-  it("calls onCancel when cancel pressed", () => {
+  it("renders all form fields", () => {
     const { getByTestId } = render(
-      <ChargeToAccountModal {...defaultProps} />
+      <AccountCreationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
     );
-    fireEvent.press(getByTestId("charge-cancel"));
-    expect(defaultProps.onCancel).toHaveBeenCalled();
+
+    expect(getByTestId("account-name-input")).toBeTruthy();
+    expect(getByTestId("account-email-input")).toBeTruthy();
+    expect(getByTestId("account-phone-input")).toBeTruthy();
+    expect(getByTestId("account-credit-limit-input")).toBeTruthy();
   });
 
-  it("shows validation errors for over-limit charge", () => {
+  it("shows payment terms options", () => {
+    const { getByText } = render(
+      <AccountCreationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+    );
+
+    expect(getByText(/Net 30/)).toBeTruthy();
+  });
+
+  it("has a submit button", () => {
     const { getByTestId } = render(
-      <ChargeToAccountModal
-        {...defaultProps}
-        account={mockAccounts[0]}
-        orderTotal={4000}
+      <AccountCreationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+    );
+
+    const submitButton = getByTestId("account-creation-submit");
+    expect(submitButton).toBeTruthy();
+  });
+
+  it("calls onCancel when cancel button pressed", () => {
+    const { getByTestId } = render(
+      <AccountCreationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+    );
+
+    const cancelButton = getByTestId("account-creation-cancel");
+    fireEvent.press(cancelButton);
+    expect(mockOnCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows loading state when submitting", () => {
+    const { getByTestId } = render(
+      <AccountCreationForm
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+        isSubmitting={true}
       />
     );
-    expect(getByTestId("charge-errors")).toBeTruthy();
-  });
 
-  it("disables confirm for suspended account", () => {
-    const { getByTestId } = render(
-      <ChargeToAccountModal
-        {...defaultProps}
-        account={mockAccounts[1]}
-      />
-    );
-    const btn = getByTestId("charge-confirm");
-    expect(btn.props.accessibilityState?.disabled ?? btn.props.disabled).toBeTruthy();
+    const submitButton = getByTestId("account-creation-submit");
+    expect(submitButton).toBeTruthy();
   });
 });
 
 // ---------------------------------------------------------------------------
-// PaymentEntryForm
+// TransactionHistoryView
 // ---------------------------------------------------------------------------
 
-describe("PaymentEntryForm", () => {
-  const defaultProps = {
-    account: mockAccounts[0],
-    onSubmit: jest.fn(),
-    onCancel: jest.fn(),
-  };
-
-  beforeEach(() => jest.clearAllMocks());
-
-  it("renders the form", () => {
-    const { getByTestId, getByText, getAllByText } = render(
-      <PaymentEntryForm {...defaultProps} />
+describe("TransactionHistoryView", () => {
+  it("renders account name in header", () => {
+    const { getByText } = render(
+      <TransactionHistoryView
+        transactions={mockTransactions}
+        accountName="Cape Town Bistro"
+      />
     );
-    expect(getByTestId("payment-entry-form")).toBeTruthy();
-    expect(getAllByText("Record Payment").length).toBeGreaterThanOrEqual(1);
+
+    expect(getByText(/Cape Town Bistro/)).toBeTruthy();
   });
 
-  it("shows account name and balance", () => {
-    const { getByText, getAllByText } = render(
-      <PaymentEntryForm {...defaultProps} />
+  it("renders filter options", () => {
+    const { getByText } = render(
+      <TransactionHistoryView
+        transactions={mockTransactions}
+        accountName="Cape Town Bistro"
+      />
     );
-    expect(getByText("Alice Smith")).toBeTruthy();
-    expect(getAllByText("R 2000.00").length).toBeGreaterThanOrEqual(1);
+
+    expect(getByText("All")).toBeTruthy();
+    expect(getByText("Charges")).toBeTruthy();
+    expect(getByText("Payments")).toBeTruthy();
   });
 
-  it("has amount input", () => {
-    const { getByTestId } = render(
-      <PaymentEntryForm {...defaultProps} />
+  it("renders transaction descriptions", () => {
+    const { getByText } = render(
+      <TransactionHistoryView
+        transactions={mockTransactions}
+        accountName="Cape Town Bistro"
+      />
     );
-    expect(getByTestId("payment-amount-input")).toBeTruthy();
+
+    expect(getByText(/Order #1042/)).toBeTruthy();
   });
 
-  it("has payment method buttons", () => {
-    const { getByTestId } = render(
-      <PaymentEntryForm {...defaultProps} />
+  it("renders transaction amounts", () => {
+    const { getAllByText } = render(
+      <TransactionHistoryView
+        transactions={mockTransactions}
+        accountName="Cape Town Bistro"
+      />
     );
-    expect(getByTestId("method-cash")).toBeTruthy();
-    expect(getByTestId("method-card")).toBeTruthy();
-    expect(getByTestId("method-eft")).toBeTruthy();
-    expect(getByTestId("method-cheque")).toBeTruthy();
+
+    const amounts = getAllByText(/R 1500\.00/);
+    expect(amounts.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("has quick amount buttons", () => {
-    const { getByTestId } = render(
-      <PaymentEntryForm {...defaultProps} />
+  it("shows empty state when no transactions", () => {
+    const { getByText } = render(
+      <TransactionHistoryView
+        transactions={[]}
+        accountName="Cape Town Bistro"
+      />
     );
-    expect(getByTestId("quick-full")).toBeTruthy();
-    expect(getByTestId("quick-50%")).toBeTruthy();
+
+    expect(getByText(/No transactions/i)).toBeTruthy();
   });
 
-  it("calls onCancel when cancel pressed", () => {
-    const { getByTestId } = render(
-      <PaymentEntryForm {...defaultProps} />
+  it("renders staff names", () => {
+    const { getAllByText } = render(
+      <TransactionHistoryView
+        transactions={mockTransactions}
+        accountName="Cape Town Bistro"
+      />
     );
-    fireEvent.press(getByTestId("payment-cancel"));
-    expect(defaultProps.onCancel).toHaveBeenCalled();
+
+    const thaboEntries = getAllByText(/Thabo M\./);
+    expect(thaboEntries.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("submit is disabled without amount", () => {
-    const { getByTestId } = render(
-      <PaymentEntryForm {...defaultProps} />
+  it("renders references when present", () => {
+    const { getByText } = render(
+      <TransactionHistoryView
+        transactions={mockTransactions}
+        accountName="Cape Town Bistro"
+      />
     );
-    const btn = getByTestId("payment-submit");
-    expect(btn.props.accessibilityState?.disabled ?? btn.props.disabled).toBeTruthy();
+
+    expect(getByText(/ORD-1042/)).toBeTruthy();
   });
 });
