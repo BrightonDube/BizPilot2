@@ -70,9 +70,9 @@
 ## Task 9: Order Modifications
 - [x] 9.1 Implement add items to order
 - [x] 9.2 Implement remove items
-- [ ] 9.3 Require manager approval
-- [ ] 9.4 Track modifications
-- [ ] 9.5 Reprint modified items
+- [x] 9.3 Require manager approval
+- [x] 9.4 Track modifications
+- [x] 9.5 Reprint modified items
 
 **Validates: Requirement 6**
 
