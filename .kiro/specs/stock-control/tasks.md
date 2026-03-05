@@ -27,10 +27,10 @@
 
 ## Task 4: Barcode Scanning
 - [ ] 4.1 Install expo-barcode-scanner
-- [ ] 4.2 Create BarcodeService class
-- [ ] 4.3 Create barcode scanner component
-- [ ] 4.4 Implement product lookup by barcode
-- [ ] 4.5 Support external scanner input
+- [x] 4.2 Create BarcodeService class
+- [x] 4.3 Create barcode scanner component
+- [x] 4.4 Implement product lookup by barcode
+- [x] 4.5 Support external scanner input
 
 **Validates: Requirement 3**
 

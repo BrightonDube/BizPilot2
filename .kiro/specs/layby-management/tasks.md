@@ -364,7 +364,7 @@ This implementation plan covers the complete layby management system for BizPilo
     - Data table with sorting, filtering, pagination
     - _Requirements: 8.1-8.8_
   
-  - [ ] 20.2 Create LaybyForm component in `frontend/src/components/laybys/LaybyForm.tsx`
+  - [x] 20.2 Create LaybyForm component in `frontend/src/components/laybys/LaybyForm.tsx`
     - Create/edit layby form
     - _Requirements: 1.1-1.8_
   
@@ -376,15 +376,15 @@ This implementation plan covers the complete layby management system for BizPilo
     - Cancellation with fee preview
     - _Requirements: 5.1-5.8_
   
-  - [ ] 20.5 Create CollectionModal component in `frontend/src/components/laybys/CollectionModal.tsx`
+  - [x] 20.5 Create CollectionModal component in `frontend/src/components/laybys/CollectionModal.tsx`
     - Collection confirmation dialog
     - _Requirements: 4.1-4.7_
   
-  - [ ] 20.6 Create LaybyReports component in `frontend/src/components/laybys/LaybyReports.tsx`
+  - [x] 20.6 Create LaybyReports component in `frontend/src/components/laybys/LaybyReports.tsx`
     - Report display and export
     - _Requirements: 8.1-8.8_
   
-  - [ ] 20.7 Create LaybyConfigForm component in `frontend/src/components/laybys/LaybyConfigForm.tsx`
+  - [x] 20.7 Create LaybyConfigForm component in `frontend/src/components/laybys/LaybyConfigForm.tsx`
     - Configuration settings form
     - _Requirements: 12.1-12.8_
 
