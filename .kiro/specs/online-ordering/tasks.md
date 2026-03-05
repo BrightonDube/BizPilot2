@@ -122,7 +122,7 @@
 
 ## Task 14: Customer App - Cart & Checkout
 - [x] 14.1 Create cart component
-- [ ] 14.2 Create modifier selection UI
+- [x] 14.2 Create modifier selection UI
 - [ ] 14.3 Create checkout flow
 - [ ] 14.4 Create address entry form
 - [ ] 14.5 Create time slot picker
@@ -149,7 +149,7 @@
 ## Task 17: Admin UI - Orders
 - [ ] 17.1 Create online orders list
 - [ ] 17.2 Create order detail view
-- [ ] 17.3 Create status update UI
+- [x] 17.3 Create status update UI
 - [ ] 17.4 Create order notifications
 
 **Validates: Requirement 8**
