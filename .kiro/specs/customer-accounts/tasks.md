@@ -137,10 +137,10 @@
 **Validates: Requirements 2, 4**
 
 ## Task 15: Frontend - Statements & Reports
-- [ ] 15.1 Create statement view/download
-- [ ] 15.2 Create aging report dashboard
-- [ ] 15.3 Create AR summary dashboard
-- [ ] 15.4 Create collections queue view
+- [x] 15.1 Create statement view/download
+- [x] 15.2 Create aging report dashboard
+- [x] 15.3 Create AR summary dashboard
+- [x] 15.4 Create collections queue view
 
 **Validates: Requirements 5, 6, 7**
 
@@ -148,7 +148,7 @@
 - [x] 16.1 Write PBT for balance accuracy (Property 1)
 - [x] 16.2 Write PBT for credit limit enforcement (Property 2)
 - [x] 16.3 Write PBT for payment allocation order (Property 3)
-- [ ] 16.4 Write PBT for statement accuracy (Property 4)
+- [x] 16.4 Write PBT for statement accuracy (Property 4)
 
 **Validates: Correctness Properties 1-4**
 
