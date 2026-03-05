@@ -77,10 +77,10 @@
 **Validates: Requirement 6**
 
 ## Task 10: Course Management
-- [ ] 10.1 Add course support to orders
-- [ ] 10.2 Implement fire by course
-- [ ] 10.3 Display course on tickets
-- [ ] 10.4 Support default course per item
+- [x] 10.1 Add course support to orders
+- [x] 10.2 Implement fire by course
+- [x] 10.3 Display course on tickets
+- [x] 10.4 Support default course per item
 
 **Validates: Requirement 7**
 
@@ -101,10 +101,10 @@
 **Validates: Requirement 9**
 
 ## Task 13: Order History
-- [ ] 13.1 Create order history screen
-- [ ] 13.2 Implement search and filter
-- [ ] 13.3 Show order details
-- [ ] 13.4 Support reprint and refund
+- [x] 13.1 Create order history screen
+- [x] 13.2 Implement search and filter
+- [x] 13.3 Show order details
+- [x] 13.4 Support reprint and refund
 
 **Validates: Requirement 10**
 
