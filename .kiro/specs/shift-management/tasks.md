@@ -86,13 +86,13 @@
 ## Task 11: Multi-User Support
 - [x] 11.1 Implement user switching
 - [x] 11.2 Track sales per user
-- [ ] 11.3 Maintain shift continuity
+- [x] 11.3 Maintain shift continuity
 
 **Validates: Requirement 9**
 
 ## Task 12: Permissions
-- [ ] 12.1 Add shift permissions to roles
-- [ ] 12.2 Enforce permission checks
-- [ ] 12.3 Log permission overrides
+- [x] 12.1 Add shift permissions to roles
+- [x] 12.2 Enforce permission checks
+- [x] 12.3 Log permission overrides
 
 **Validates: Requirement 10**
