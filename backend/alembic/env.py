@@ -31,11 +31,11 @@ else:
     logger.info(f"Loaded environment from {default_env_path}")
 
 # Alembic runs in CI/automation contexts where SECRET_KEY may be unset.
-# The application Settings validates SECRET_KEY on import, but migrations
-# don't require JWT functionality. Provide a safe default to allow env.py
-# to import app modules.
+# The application Settings validates SECRET_KEY on import (≥32 chars, not weak),
+# but migrations don't require JWT functionality. Provide a migration-only
+# fallback that passes validation to allow env.py to import app modules.
 if not os.getenv("SECRET_KEY"):
-    os.environ["SECRET_KEY"] = "0123456789abcdef"
+    os.environ["SECRET_KEY"] = "alembic-migration-only-fallback-key-not-for-prod-use"
     logger.debug("Using default SECRET_KEY for migration context")
 
 from app.core.database import Base  # noqa: E402
