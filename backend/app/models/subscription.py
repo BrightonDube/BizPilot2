@@ -31,14 +31,19 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.models.base import BaseModel, JSONType
+from app.core.database import Base
 
 
-class TierFeature(BaseModel):
+class TierFeature(Base):
     """
     Subscription tier definitions with feature flags and limits.
     
-    Defines the four subscription tiers (Demo, Pilot Core, Pilot Pro, Enterprise)
-    with their feature flags, device limits, user limits, and pricing.
+    Why inherit from Base instead of BaseModel?
+    The tier_features table uses tier_name as its natural primary key,
+    not a UUID id column.  BaseModel adds an `id` UUID column that
+    doesn't exist in the DB, causing UndefinedColumnError at runtime.
+    Since this model defines its own created_at/updated_at/deleted_at,
+    inheriting from Base directly is the correct approach.
     
     Validates: Requirements 16.1
     - 16.1: Store tier configuration in database
