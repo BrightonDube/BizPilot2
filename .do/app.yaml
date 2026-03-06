@@ -22,9 +22,12 @@ services:
     instance_size_slug: apps-s-1vcpu-0.5gb  # Starter tier (~$5/mo, covered by credits)
     
     # Health check configuration
+    # WHY 60s initial_delay: On the 0.5GB starter instance, gunicorn workers
+    # need time to import all modules + run startup_event (Redis, scheduler).
+    # 30s was too tight and caused deployment failures.
     health_check:
-      http_path: /api/health
-      initial_delay_seconds: 30
+      http_path: /health/liveness
+      initial_delay_seconds: 60
       period_seconds: 30
       timeout_seconds: 10
       success_threshold: 1
