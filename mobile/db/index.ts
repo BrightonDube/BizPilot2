@@ -31,6 +31,12 @@ import {
   PMSCharge,
   PMSGuest,
   PMSAuditLog,
+  PettyCashFund,
+  PettyCashExpense,
+  ExpenseCategory,
+  TagCategory,
+  Tag,
+  ProductTag,
 } from "./models";
 
 /**
@@ -74,5 +80,11 @@ export const database = new Database({
     PMSCharge,
     PMSGuest,
     PMSAuditLog,
+    PettyCashFund,
+    PettyCashExpense,
+    ExpenseCategory,
+    TagCategory,
+    Tag,
+    ProductTag,
   ],
 });

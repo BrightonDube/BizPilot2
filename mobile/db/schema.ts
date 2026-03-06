@@ -18,7 +18,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export const schema = appSchema({
-  version: 6,
+  version: 7,
   tables: [
     // -----------------------------------------------------------------
     // Products — the core catalog shown in the POS grid
@@ -385,6 +385,145 @@ export const schema = appSchema({
         { name: "details_json", type: "string" },
         { name: "created_at", type: "number", isIndexed: true },
         { name: "synced_at", type: "number", isOptional: true },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Petty Cash Funds — cash floats for daily operations
+    // Schema version 7
+    //
+    // Why persist petty cash locally?
+    // Staff managing cash floats (e.g. at a bar or kitchen) need to
+    // record expenses immediately. If the network is down, the expense
+    // must still be recorded and synced later.
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "petty_cash_funds",
+      columns: [
+        { name: "remote_id", type: "string", isIndexed: true },
+        { name: "business_id", type: "string", isIndexed: true },
+        { name: "name", type: "string" },
+        { name: "initial_amount", type: "number" },
+        { name: "current_balance", type: "number" },
+        { name: "custodian_id", type: "string", isIndexed: true },
+        { name: "status", type: "string", isIndexed: true },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Petty Cash Expenses — individual expense records against a fund
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "petty_cash_expenses",
+      columns: [
+        { name: "remote_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "fund_id", type: "string", isIndexed: true },
+        { name: "business_id", type: "string", isIndexed: true },
+        { name: "category_id", type: "string", isIndexed: true },
+        { name: "requested_by_id", type: "string" },
+        { name: "approved_by_id", type: "string", isOptional: true },
+        { name: "amount", type: "number" },
+        { name: "description", type: "string" },
+        { name: "vendor", type: "string", isOptional: true },
+        { name: "receipt_number", type: "string", isOptional: true },
+        { name: "receipt_image_url", type: "string", isOptional: true },
+        { name: "expense_date", type: "number" },
+        { name: "status", type: "string", isIndexed: true },
+        { name: "rejection_reason", type: "string", isOptional: true },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Expense Categories — classification for petty cash expenses
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "expense_categories",
+      columns: [
+        { name: "remote_id", type: "string", isIndexed: true },
+        { name: "business_id", type: "string", isIndexed: true },
+        { name: "name", type: "string" },
+        { name: "description", type: "string", isOptional: true },
+        { name: "gl_account_code", type: "string", isOptional: true },
+        { name: "is_active", type: "boolean" },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Tag Categories — groups for organising tags (e.g. "Dietary", "Size")
+    // Schema version 7
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "tag_categories",
+      columns: [
+        { name: "remote_id", type: "string", isIndexed: true },
+        { name: "business_id", type: "string", isIndexed: true },
+        { name: "name", type: "string" },
+        { name: "slug", type: "string", isIndexed: true },
+        { name: "description", type: "string", isOptional: true },
+        { name: "color", type: "string", isOptional: true },
+        { name: "icon", type: "string", isOptional: true },
+        { name: "sort_order", type: "number" },
+        { name: "is_active", type: "boolean" },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Tags — individual tags within a category (e.g. "Vegan", "Gluten-Free")
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "tags",
+      columns: [
+        { name: "remote_id", type: "string", isIndexed: true },
+        { name: "business_id", type: "string", isIndexed: true },
+        { name: "category_id", type: "string", isIndexed: true },
+        { name: "parent_tag_id", type: "string", isOptional: true },
+        { name: "name", type: "string", isIndexed: true },
+        { name: "slug", type: "string", isIndexed: true },
+        { name: "description", type: "string", isOptional: true },
+        { name: "color", type: "string", isOptional: true },
+        { name: "hierarchy_level", type: "number" },
+        { name: "hierarchy_path", type: "string", isOptional: true },
+        { name: "usage_count", type: "number" },
+        { name: "is_system_tag", type: "boolean" },
+        { name: "is_active", type: "boolean" },
+        { name: "auto_apply_rules", type: "string", isOptional: true },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Product Tags — many-to-many link between products and tags
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "product_tags",
+      columns: [
+        { name: "remote_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "product_id", type: "string", isIndexed: true },
+        { name: "tag_id", type: "string", isIndexed: true },
+        { name: "assigned_by", type: "string" },
+        { name: "assigned_at", type: "number" },
+        { name: "assignment_source", type: "string" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
       ],
     }),
   ],
