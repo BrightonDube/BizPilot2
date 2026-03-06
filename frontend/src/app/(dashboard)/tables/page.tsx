@@ -130,7 +130,7 @@ export default function TablesPage() {
         {table.has_active_order && (
           <div className="text-xs bg-white/60 rounded p-1 mt-1">
             <div className="font-medium">{table.order_number}</div>
-            <div>R {table.order_total?.toFixed(2)} • {table.order_item_count} items</div>
+            <div>R {Number(table.order_total || 0).toFixed(2)} • {table.order_item_count} items</div>
           </div>
         )}
         {table.status === 'available' && (
