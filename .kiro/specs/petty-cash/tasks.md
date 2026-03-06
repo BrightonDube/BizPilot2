@@ -248,7 +248,7 @@
 - [x] 25.2 Implement offline fund operations
 - [x] 25.3 Implement offline request creation
 - [x] 25.4 Implement offline receipt capture
-- [ ] 25.5 Implement sync functionality
+- [x] 25.5 Implement sync functionality
 - [x] 25.6 Implement conflict resolution
 - [x] 25.7 Create mobile petty cash components
 
