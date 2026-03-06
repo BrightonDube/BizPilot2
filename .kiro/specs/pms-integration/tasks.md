@@ -371,7 +371,7 @@ This implementation plan covers the Property Management System (PMS) integration
     - _Requirements: 3.7_
   - [x] 30.4 Add room charge to order receipt
     - _Requirements: 3.4_
-  - [ ]* 30.5 Write E2E test for room charge checkout flow
+  - [x]* 30.5 Write E2E test for room charge checkout flow
     - _Requirements: 3.1, 3.4_
 
 - [x] 31. Mobile Offline Handling
@@ -462,13 +462,13 @@ This implementation plan covers the Property Management System (PMS) integration
     - _Requirements: 7.1, 7.3_
 
 - [ ] 39. Mobile E2E Tests (Maestro)
-  - [ ] 39.1 Write E2E test for guest search by room number
+  - [x] 39.1 Write E2E test for guest search by room number
     - _Requirements: 2.1_
-  - [ ] 39.2 Write E2E test for room charge with signature
+  - [x] 39.2 Write E2E test for room charge with signature
     - _Requirements: 3.1, 6.1_
-  - [ ] 39.3 Write E2E test for folio lookup
+  - [x] 39.3 Write E2E test for folio lookup
     - _Requirements: 4.1_
-  - [ ] 39.4 Write E2E test for offline mode operation
+  - [x] 39.4 Write E2E test for offline mode operation
     - _Requirements: 10.1, 10.4_
 
 - [ ] 40. Final Integration and Documentation

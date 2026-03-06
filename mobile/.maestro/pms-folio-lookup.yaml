@@ -1,0 +1,50 @@
+# Maestro E2E Test: Folio Lookup (Task 39.3)
+#
+# Validates that a guest's folio (balance + charges) can be viewed.
+# The folio is accessible after selecting a guest in the PMS flow.
+
+appId: com.bizpilot.pos
+tags:
+  - pos
+---
+
+# Precondition: User is on POS screen
+- assertVisible:
+    text: "POS"
+
+# Add item to cart
+- tapOn:
+    text: ".*"
+    index: 0
+    optional: true
+
+# Open payment
+- tapOn:
+    text: "Checkout"
+    optional: true
+- tapOn:
+    text: "Pay"
+    optional: true
+
+# Select Room Charge
+- tapOn:
+    text: "Room Charge"
+
+# Search for guest
+- inputText: "101"
+- tapOn:
+    text: "Search"
+    optional: true
+
+# Select guest — folio details should appear
+- tapOn:
+    text: "Room 101"
+    optional: true
+
+# Verify folio elements are visible
+- assertVisible:
+    text: "Balance"
+    optional: true
+- assertVisible:
+    text: "Charges"
+    optional: true

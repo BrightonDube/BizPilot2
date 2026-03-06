@@ -1,0 +1,69 @@
+# Maestro E2E Test: Login Flow (Task 15.5)
+#
+# Validates the full email/password login flow on the BizPilot POS app.
+# Tests both success and error paths.
+#
+# Why test login first?
+# Login is the gateway to the entire app. If login is broken,
+# nothing else works. This is the highest-priority E2E test.
+
+appId: com.bizpilot.pos
+tags:
+  - smoke
+  - auth
+---
+
+# ---------------------------------------------------------------
+# Test 1: Login screen renders correctly
+# ---------------------------------------------------------------
+- assertVisible: "BizPilot"
+- assertVisible: "Point of Sale"
+- assertVisible:
+    id: "login-email-input"
+- assertVisible:
+    id: "login-password-input"
+- assertVisible:
+    id: "login-submit-button"
+
+# ---------------------------------------------------------------
+# Test 2: Validation — empty fields show errors
+# ---------------------------------------------------------------
+- tapOn:
+    id: "login-submit-button"
+- assertVisible: "Email is required"
+
+# ---------------------------------------------------------------
+# Test 3: Validation — invalid email format
+# ---------------------------------------------------------------
+- tapOn:
+    id: "login-email-input"
+- inputText: "not-an-email"
+- tapOn:
+    id: "login-submit-button"
+- assertVisible: "Invalid email"
+
+# ---------------------------------------------------------------
+# Test 4: Clear and enter valid credentials
+# ---------------------------------------------------------------
+- tapOn:
+    id: "login-email-input"
+- clearInput
+- inputText: ${TEST_EMAIL}
+- tapOn:
+    id: "login-password-input"
+- inputText: ${TEST_PASSWORD}
+
+# ---------------------------------------------------------------
+# Test 5: Submit login
+# ---------------------------------------------------------------
+- tapOn:
+    id: "login-submit-button"
+
+# ---------------------------------------------------------------
+# Test 6: Verify navigation to POS screen after login
+# On successful auth, the app redirects to the (tabs) layout.
+# The POS tab should be visible as the default/first tab.
+# ---------------------------------------------------------------
+- assertVisible:
+    text: "POS"
+    optional: false

@@ -98,8 +98,8 @@ describe("PullHandler", () => {
     it("queries the API for each syncable entity type", async () => {
       await pullChanges();
 
-      // 5 syncable entities: categories, products, customers, orders, order_items
-      expect(mockApiGet).toHaveBeenCalledTimes(5);
+      // 6 syncable entities: categories, products, customers, orders, order_items, association_rules
+      expect(mockApiGet).toHaveBeenCalledTimes(6);
 
       const calledUrls = mockApiGet.mock.calls.map((c: unknown[]) => c[0] as string);
       expect(calledUrls).toContain("/api/sync/pull/categories");
@@ -163,8 +163,8 @@ describe("PullHandler", () => {
 
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0]).toContain("500");
-      // Other entities still proceeded
-      expect(mockApiGet).toHaveBeenCalledTimes(5);
+      // Other entities still proceeded (6 entities total, 1 failed = 5 successful calls + 1 failed = 6)
+      expect(mockApiGet).toHaveBeenCalledTimes(6);
     });
 
     it("calls onProgress callback for each entity", async () => {
@@ -172,8 +172,8 @@ describe("PullHandler", () => {
 
       await pullChanges((p) => progressCalls.push(p));
 
-      // At least one progress call per entity (5 entities)
-      expect(progressCalls.length).toBeGreaterThanOrEqual(5);
+      // At least one progress call per entity (6 entities)
+      expect(progressCalls.length).toBeGreaterThanOrEqual(6);
     });
 
     it("handles pagination by fetching multiple pages until hasMore is false", async () => {
@@ -195,8 +195,8 @@ describe("PullHandler", () => {
 
       await pullChanges();
 
-      // categories alone should trigger 2 GET calls (page 1 + page 2), then 4 more for other entities
-      expect(mockApiGet).toHaveBeenCalledTimes(6);
+      // categories alone should trigger 2 GET calls (page 1 + page 2), then 5 more for other entities
+      expect(mockApiGet).toHaveBeenCalledTimes(7);
     });
   });
 });

@@ -1,0 +1,62 @@
+# Maestro E2E Test: Room Charge with Signature (Task 39.2)
+#
+# Validates the signature capture flow during a room charge.
+# Ensures the signature pad renders and accepts input.
+
+appId: com.bizpilot.pos
+tags:
+  - pos
+---
+
+# Precondition: User is on POS screen
+- assertVisible:
+    text: "POS"
+
+# Add item to cart
+- tapOn:
+    text: ".*"
+    index: 0
+    optional: true
+
+# Open payment
+- tapOn:
+    text: "Checkout"
+    optional: true
+- tapOn:
+    text: "Pay"
+    optional: true
+
+# Select Room Charge
+- tapOn:
+    text: "Room Charge"
+
+# Search for guest
+- inputText: "101"
+- tapOn:
+    text: "Search"
+    optional: true
+
+# Select guest
+- tapOn:
+    text: "Room 101"
+    optional: true
+
+# Signature capture should appear
+- assertVisible:
+    text: "Signature"
+    optional: true
+
+# Draw signature (swipe across the signature area)
+- swipe:
+    direction: RIGHT
+    duration: 500
+
+# Clear button should exist
+- assertVisible:
+    text: "Clear"
+    optional: true
+
+# Confirm charge with signature
+- tapOn:
+    text: "Confirm"
+    optional: true

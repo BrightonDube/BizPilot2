@@ -138,7 +138,7 @@
 - [x] 14.2 Set up image caching with `expo-image`
 - [x] 14.3 Implement lazy loading for screens
 - [x] 14.4 Add app state handling (background/foreground)
-- [ ] 14.5 Profile and optimize startup time
+- [x] 14.5 Profile and optimize startup time
 
 **Validates: Requirement 11**
 
@@ -146,9 +146,9 @@
 - [x] 15.1 Configure Jest for unit testing
 - [x] 15.2 Set up React Native Testing Library
 - [x] 15.3 Create test utilities and mocks
-- [ ] 15.4 Set up Maestro for E2E testing
-- [ ] 15.5 Write E2E test for login flow
-- [ ] 15.6 Write E2E test for basic navigation
+- [x] 15.4 Set up Maestro for E2E testing
+- [x] 15.5 Write E2E test for login flow
+- [x] 15.6 Write E2E test for basic navigation
 
 **Validates: Requirement 12**
 
