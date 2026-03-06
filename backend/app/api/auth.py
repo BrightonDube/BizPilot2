@@ -488,6 +488,7 @@ async def reset_password(request: Request, data: PasswordResetConfirm, db=Depend
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_profile(
     current_user: User = Depends(get_current_active_user),
+    db=Depends(get_db),
     response: Response = None,
 ):
     """Get current user profile."""
@@ -497,10 +498,21 @@ async def get_current_user_profile(
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     
-    # Get current tier name if available
+    # WHY explicit query instead of current_user.current_tier:
+    # The User object comes from an async session. Accessing .current_tier
+    # triggers SQLAlchemy lazy loading which requires a sync greenlet context.
+    # In async FastAPI endpoints this raises MissingGreenlet. We query the
+    # tier name explicitly using the async db session instead.
     current_tier_name = None
-    if current_user.current_tier:
-        current_tier_name = current_user.current_tier.name
+    if current_user.current_tier_id:
+        from app.models.subscription_tier import SubscriptionTier
+        from sqlalchemy import select
+        result = await db.execute(
+            select(SubscriptionTier.name).filter(
+                SubscriptionTier.id == current_user.current_tier_id
+            )
+        )
+        current_tier_name = result.scalar_one_or_none()
     
     return UserResponse(
         id=str(current_user.id),

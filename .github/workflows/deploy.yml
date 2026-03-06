@@ -1,3 +1,17 @@
+# DigitalOcean App Platform Deployment
+#
+# WHY not using doctl to push the spec:
+# `doctl apps update --spec` CLOBBERS all SECRET-type env vars, resetting
+# them to empty/default values. Instead, we rely on DO's native
+# deploy_on_push (configured in .do/app.yaml) and only use this workflow
+# for post-deploy verification.
+#
+# The deploy flow is:
+# 1. Push to main triggers DO deploy_on_push automatically
+# 2. DO runs the pre-deploy migration job (release-migrate)
+# 3. DO deploys the api and web services
+# 4. This workflow waits and then runs smoke tests
+
 name: Deploy
 
 on:
@@ -6,40 +20,86 @@ on:
   workflow_dispatch:
 
 env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+  APP_ID: ${{ secrets.DIGITALOCEAN_APP_ID }}
 
 jobs:
-  deploy:
-    name: Deploy to Vercel
+  # Gate: only deploy if CI passes
+  ci-check:
+    name: Wait for CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for CI workflows
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-regexp: "Backend CI|Migration Safety Check|Frontend CI"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 15
+
+  smoke-test:
+    name: Post-Deploy Smoke Test
+    needs: ci-check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Wait for DigitalOcean deployment
+        run: |
+          echo "Waiting 5 minutes for DO deploy_on_push to complete..."
+          sleep 300
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+      - name: Install doctl
+        if: env.DIGITALOCEAN_ACCESS_TOKEN != ''
+        uses: digitalocean/action-doctl@v2
         with:
-          node-version: 20
-          cache: "pnpm"
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
+      - name: Check deployment status
+        if: env.DIGITALOCEAN_ACCESS_TOKEN != ''
+        run: |
+          DEPLOY_INFO=$(doctl apps list-deployments "$APP_ID" --format Phase,Progress --no-header 2>/dev/null | head -1)
+          echo "Latest deployment: $DEPLOY_INFO"
+          PHASE=$(echo "$DEPLOY_INFO" | awk '{print $1}')
+          if [ "$PHASE" = "ERROR" ]; then
+            echo "::error::Deployment failed! Check DigitalOcean dashboard for details."
+            doctl apps logs "$APP_ID" api --type=deploy --tail 50 2>/dev/null || true
+            exit 1
+          fi
+          echo "Deployment phase: $PHASE"
 
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: frontend
+      - name: Smoke test - API health
+        run: |
+          echo "Testing API health endpoint..."
+          for i in 1 2 3 4 5; do
+            HTTP_CODE=$(curl -s -o /tmp/health_response.json -w "%{http_code}" \
+              https://bizpilotpro.app/api/health 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ API health check passed (HTTP $HTTP_CODE)"
+              cat /tmp/health_response.json
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $HTTP_CODE, retrying in 30s..."
+            sleep 30
+          done
+          echo "::error::API health check failed after 5 attempts"
+          cat /tmp/health_response.json 2>/dev/null || true
+          exit 1
 
-      - name: Build Project
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: frontend
+      - name: Smoke test - Frontend
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://bizpilotpro.app/ 2>/dev/null)
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Frontend serving (HTTP $HTTP_CODE)"
+          else
+            echo "::warning::Frontend returned HTTP $HTTP_CODE"
+          fi
 
-      - name: Deploy to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: frontend
+      - name: Smoke test - API docs
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://bizpilotpro.app/api/docs 2>/dev/null)
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ API docs accessible (HTTP $HTTP_CODE)"
+          else
+            echo "::warning::API docs returned HTTP $HTTP_CODE"
+          fi

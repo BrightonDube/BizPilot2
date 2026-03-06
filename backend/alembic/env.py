@@ -177,6 +177,16 @@ def convert_async_url_to_sync(url: str) -> str:
 # Override sqlalchemy.url with environment variable if set
 database_url = os.getenv("DATABASE_URL")
 if database_url:
+    # WHY validate early: A clobbered DATABASE_URL (e.g. empty string from
+    # a bad doctl spec push) causes a cryptic SQLAlchemy parse error deep in
+    # the stack. Fail fast with a clear message instead.
+    if len(database_url) < 10 or "://" not in database_url:
+        raise RuntimeError(
+            f"DATABASE_URL appears invalid (length={len(database_url)}). "
+            "Check that secrets are properly set in DigitalOcean dashboard. "
+            "Do NOT use `doctl apps update --spec` with a local app.yaml — "
+            "it clobbers SECRET-type env vars."
+        )
     database_url = convert_async_url_to_sync(database_url)
     config.set_main_option("sqlalchemy.url", database_url)
     logger.debug("Using database URL from DATABASE_URL environment variable")
