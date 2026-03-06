@@ -13,7 +13,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '100_fix_subscription_model_columns'
+revision = '100_fix_sub_model_cols'
 down_revision = '099_fix_subscription_deleted_at'
 branch_labels = None
 depends_on = None
