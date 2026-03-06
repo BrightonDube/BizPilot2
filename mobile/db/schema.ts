@@ -18,7 +18,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export const schema = appSchema({
-  version: 5,
+  version: 6,
   tables: [
     // -----------------------------------------------------------------
     // Products — the core catalog shown in the POS grid
@@ -304,6 +304,87 @@ export const schema = appSchema({
         { name: "synced_at", type: "number", isOptional: true },
         { name: "created_at", type: "number" },
         { name: "updated_at", type: "number" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // PMS Charges — room charges posted or pending posting to PMS
+    // Schema version 6
+    //
+    // Why persist charges locally?
+    // Offline charges must survive app restarts. Zustand state is
+    // volatile — WatermelonDB ensures queued charges persist across
+    // crashes, background kills, and device reboots.
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "pms_charges",
+      columns: [
+        { name: "remote_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "guest_id", type: "string", isIndexed: true },
+        { name: "room_number", type: "string", isIndexed: true },
+        { name: "guest_name", type: "string" },
+        { name: "amount", type: "number" },
+        { name: "description", type: "string" },
+        { name: "terminal_id", type: "string" },
+        { name: "operator_id", type: "string" },
+        { name: "status", type: "string", isIndexed: true },
+        { name: "pms_reference", type: "string", isOptional: true },
+        { name: "authorization_type", type: "string", isOptional: true },
+        { name: "signature_data", type: "string", isOptional: true },
+        { name: "order_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "attempts", type: "number" },
+        { name: "last_error", type: "string", isOptional: true },
+        { name: "posted_at", type: "number", isOptional: true },
+        { name: "created_at", type: "number", isIndexed: true },
+        { name: "synced_at", type: "number", isOptional: true },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // PMS Guests — cached guest profiles for offline search
+    //
+    // Why cache guests locally?
+    // When the PMS connection drops, staff still need to search for
+    // guests they recently looked up. This table caches the last N
+    // guest profiles for offline access. Entries are TTL-based.
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "pms_guests",
+      columns: [
+        { name: "remote_id", type: "string", isIndexed: true },
+        { name: "name", type: "string", isIndexed: true },
+        { name: "room_number", type: "string", isIndexed: true },
+        { name: "check_in_date", type: "number" },
+        { name: "check_out_date", type: "number" },
+        { name: "folio_number", type: "string" },
+        { name: "vip_level", type: "number" },
+        { name: "is_active", type: "boolean" },
+        { name: "can_charge", type: "boolean" },
+        { name: "daily_charge_limit", type: "number", isOptional: true },
+        { name: "transaction_charge_limit", type: "number", isOptional: true },
+        { name: "confirmation_number", type: "string", isOptional: true },
+        { name: "fetched_at", type: "number", isIndexed: true },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // PMS Audit Logs — immutable audit trail of PMS actions
+    //
+    // Why a separate audit table instead of syncing to server immediately?
+    // Regulatory compliance (POPIA, GDPR) requires that every charge
+    // action is logged locally BEFORE attempting the server round-trip.
+    // If the network fails, we still have an unbroken local audit trail.
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "pms_audit_logs",
+      columns: [
+        { name: "action", type: "string", isIndexed: true },
+        { name: "charge_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "guest_id", type: "string", isOptional: true },
+        { name: "operator_id", type: "string" },
+        { name: "details_json", type: "string" },
+        { name: "created_at", type: "number", isIndexed: true },
+        { name: "synced_at", type: "number", isOptional: true },
       ],
     }),
   ],
