@@ -272,6 +272,41 @@ export function isRuleCacheStale(rules: AssociationRule[]): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Cache invalidation (Task 22.3 — sync rules to mobile)
+// ---------------------------------------------------------------------------
+
+/**
+ * Monotonically increasing version counter for cache invalidation.
+ *
+ * Why a version counter instead of an EventEmitter?
+ * React hooks can cheaply compare `rulesCacheVersion !== lastVersion`
+ * on each render to decide whether to reload rules from WatermelonDB.
+ * This avoids the complexity of subscription management while keeping
+ * the SmartCartAssistant service free of React dependencies.
+ */
+let _rulesCacheVersion = 0;
+
+/**
+ * Signal that the local association rules have been updated during sync.
+ *
+ * Call this after the pull handler applies new association_rules records.
+ * Consumers (e.g., useSuggestions hook) check `getRulesCacheVersion()` and
+ * reload from WatermelonDB when it changes.
+ */
+export function invalidateRulesCache(): void {
+  _rulesCacheVersion++;
+}
+
+/**
+ * Get the current rules cache version.
+ * Consumers compare this against their last-loaded version to decide
+ * whether to call `loadCachedRules()` again.
+ */
+export function getRulesCacheVersion(): number {
+  return _rulesCacheVersion;
+}
+
+// ---------------------------------------------------------------------------
 // Metrics tracking
 // ---------------------------------------------------------------------------
 

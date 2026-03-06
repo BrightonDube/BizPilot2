@@ -23,6 +23,16 @@ import { SYNC_BATCH_SIZE } from "@/utils/constants";
 import { logger } from "@/utils/logger";
 import { retryWithBackoff, isRetryableError } from "@/utils/errorRecovery";
 
+/**
+ * Post-pull hooks — entity-specific logic that runs after a pull cycle.
+ *
+ * Why here and not in SyncService?
+ * These hooks need to know which entities were updated. The PullHandler
+ * already tracks per-entity pull counts, making it the natural place
+ * to trigger entity-specific side-effects.
+ */
+import { invalidateRulesCache } from "../SmartCartAssistant";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -69,6 +79,7 @@ const SYNCABLE_ENTITIES = [
   "customers",
   "orders",
   "order_items",
+  "association_rules",
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -133,6 +144,9 @@ export async function pullChanges(
     conflicts: result.conflicts,
     perEntity: result.perEntity,
   });
+
+  // Post-pull hooks: notify services whose data changed during sync
+  await runPostPullHooks(result.perEntity);
 
   return result;
 }
@@ -366,6 +380,37 @@ function applyDataToRecord(
     } catch {
       // Field doesn't exist on the model — skip silently.
       // This handles cases where the server has newer schema than the app.
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Post-pull hooks
+// ---------------------------------------------------------------------------
+
+/**
+ * Run entity-specific side-effects after a pull cycle.
+ *
+ * When association_rules are updated during sync, the SmartCartAssistant
+ * needs to reload its in-memory rules so suggestions reflect fresh data.
+ * This fulfills task 22.3: "Sync updated rules to mobile clients."
+ */
+async function runPostPullHooks(
+  perEntity: Record<string, number>
+): Promise<void> {
+  // If association rules were pulled, invalidate the in-memory cache
+  // so SmartCartAssistant reloads from WatermelonDB on next request.
+  if ((perEntity["association_rules"] ?? 0) > 0) {
+    try {
+      invalidateRulesCache();
+      logger.info("sync", "Association rules cache invalidated after pull", {
+        rulesUpdated: perEntity["association_rules"],
+      });
+    } catch (error) {
+      // Non-fatal: suggestions will use stale rules until next getSuggestions()
+      logger.warn("sync", "Failed to invalidate rules cache", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 }
