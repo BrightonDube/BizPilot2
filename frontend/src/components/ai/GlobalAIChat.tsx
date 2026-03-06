@@ -202,15 +202,20 @@ export function GlobalAIChat() {
           conversationLength: messages.length + 2
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       let errorMessage = 'Unable to process that right now. Please try again.';
       
-      // Provide context-specific error messages
+      // Extract server error detail when available (e.g., "AI is not configured")
+      const axiosError = error as { response?: { status?: number; data?: { detail?: string } } };
+      const serverDetail = axiosError?.response?.data?.detail;
+
       if (aiContext === 'marketing') {
-        errorMessage = 'Sorry, I\'m having trouble right now. For immediate help, please contact our sales team at sales@bizpilot.co.za or try our free Pilot Solo tier.';
+        errorMessage = serverDetail || 'Sorry, I\'m having trouble right now. For immediate help, please contact our sales team at sales@bizpilot.co.za or try our free Pilot Solo tier.';
         guestSession.trackAnalytics('message_error', {
           error: error instanceof Error ? error.message : 'Unknown error'
         });
+      } else if (serverDetail) {
+        errorMessage = serverDetail;
       }
       
       const assistantMessage: ChatMessage = {
