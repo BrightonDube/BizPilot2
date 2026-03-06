@@ -18,3 +18,6 @@ export { default as SuggestionMetric } from "./SuggestionMetric";
 export { BulkOperation } from "./BulkOperation";
 export type { BulkOperationType, BulkOperationStatus } from "./BulkOperation";
 export { default as Payment } from "./Payment";
+export { default as PMSCharge } from "./PMSCharge";
+export { default as PMSGuest } from "./PMSGuest";
+export { default as PMSAuditLog } from "./PMSAuditLog";

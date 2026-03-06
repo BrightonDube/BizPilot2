@@ -28,6 +28,9 @@ import {
   SuggestionMetric,
   BulkOperation,
   Payment,
+  PMSCharge,
+  PMSGuest,
+  PMSAuditLog,
 } from "./models";
 
 /**
@@ -68,5 +71,8 @@ export const database = new Database({
     SuggestionMetric,
     BulkOperation,
     Payment,
+    PMSCharge,
+    PMSGuest,
+    PMSAuditLog,
   ],
 });
