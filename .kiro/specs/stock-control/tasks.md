@@ -26,7 +26,7 @@
 **Validates: Requirement 2**
 
 ## Task 4: Barcode Scanning
-- [ ] 4.1 Install expo-barcode-scanner
+- [x] 4.1 Install expo-barcode-scanner
 - [x] 4.2 Create BarcodeService class
 - [x] 4.3 Create barcode scanner component
 - [x] 4.4 Implement product lookup by barcode
