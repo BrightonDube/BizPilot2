@@ -8,6 +8,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 revision: str = "063_commission_records"
 down_revision: Union[str, None] = "062_cash_registers"
@@ -16,9 +17,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    commissionstatus = sa.Enum(
+    # WHY create_type=False: We manually create the enum below, so we must prevent
+    # SQLAlchemy's create_table from auto-creating it again (which would error).
+    commissionstatus = postgresql.ENUM(
         "pending", "approved", "rejected", "paid",
         name="commissionstatus",
+        create_type=False,
     )
     commissionstatus.create(op.get_bind(), checkfirst=True)
 
