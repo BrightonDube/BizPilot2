@@ -478,7 +478,7 @@ This implementation plan covers the Property Management System (PMS) integration
     - _Requirements: 7.1, 7.2, 7.3_
   - [ ] 40.3 Create API documentation for PMS endpoints
     - _Requirements: All_
-  - [ ] 40.4 Update mobile README with PMS integration setup
+  - [x] 40.4 Update mobile README with PMS integration setup
     - _Requirements: All_
 
 - [ ] 41. Final Checkpoint - All Tests Pass
