@@ -18,9 +18,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    giftcardstatus_enum = sa.Enum(
+    # WHY create_type=False: We manually create the enum below, so we must prevent
+    # SQLAlchemy's create_table from auto-creating it again (which would error).
+    giftcardstatus_enum = postgresql.ENUM(
         'active', 'redeemed', 'expired', 'cancelled',
         name='giftcardstatus',
+        create_type=False,
     )
     giftcardstatus_enum.create(op.get_bind(), checkfirst=True)
 
