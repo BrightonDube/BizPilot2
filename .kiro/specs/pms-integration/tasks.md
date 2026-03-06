@@ -342,7 +342,7 @@ This implementation plan covers the Property Management System (PMS) integration
   - [x]* 27.5 Write unit tests for PMS hooks
     - _Requirements: 2.1, 3.1, 4.1_
 
-- [ ] 28. Mobile UI Components
+- [x] 28. Mobile UI Components
   - [x] 28.1 Create GuestSearchModal component with room/name search
     - _Requirements: 2.1, 2.2, 2.6_
   - [x] 28.2 Create RoomChargeModal component with amount entry and authorization
@@ -358,11 +358,11 @@ This implementation plan covers the Property Management System (PMS) integration
   - [x]* 28.7 Write component tests for PMS UI components
     - _Requirements: 2.1, 3.1, 4.2_
 
-- [ ] 29. Checkpoint - Mobile Core Complete
+- [x] 29. Checkpoint - Mobile Core Complete
   - Ensure all tests pass, ask the user if questions arise.
 
 
-- [ ] 30. Mobile POS Integration
+- [x] 30. Mobile POS Integration
   - [x] 30.1 Add "Room Charge" payment option to payment modal
     - _Requirements: 3.1_
   - [x] 30.2 Integrate guest search into checkout flow
@@ -385,7 +385,7 @@ This implementation plan covers the Property Management System (PMS) integration
     - _Requirements: 10.6_
   - [x] 31.5 Implement duplicate charge prevention in queue
     - _Requirements: 10.8_
-  - [ ]* 31.6 Write E2E test for offline charge queuing and sync
+  - [x]* 31.6 Write E2E test for offline charge queuing and sync
     - _Requirements: 10.1, 10.3_
 
 - [ ] 32. Frontend Admin UI - Connection Management
@@ -461,7 +461,7 @@ This implementation plan covers the Property Management System (PMS) integration
   - [ ] 38.4 Write integration tests for multi-property scenarios
     - _Requirements: 7.1, 7.3_
 
-- [ ] 39. Mobile E2E Tests (Maestro)
+- [x] 39. Mobile E2E Tests (Maestro)
   - [x] 39.1 Write E2E test for guest search by room number
     - _Requirements: 2.1_
   - [x] 39.2 Write E2E test for room charge with signature
