@@ -13,7 +13,6 @@ import { MobileNav } from './MobileNav';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui';
 import { apiClient } from '@/lib/api';
-import { GlobalAIChat } from '@/components/ai/GlobalAIChat';
 import { AuthInitializer } from '@/components/auth/AuthInitializer';
 import { SessionInactivityManager } from '@/components/auth/SessionInactivityManager';
 import { FeatureGate, RequireAdmin } from '@/components/subscription/FeatureGate';
@@ -140,8 +139,6 @@ function AppLayoutInner({
 
       {/* Mobile Navigation */}
       <MobileNav />
-
-      <GlobalAIChat />
     </div>
   );
 }

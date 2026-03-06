@@ -195,22 +195,24 @@ class ProductionService:
         if actual_cost is not None:
             order.actual_cost = actual_cost
         else:
-            # Calculate actual cost from items
+            # Calculate actual cost from items — default unit_cost to 0 if None
             order.actual_cost = sum(
-                (item.quantity_used or item.quantity_required) * item.unit_cost
+                (item.quantity_used or item.quantity_required or Decimal(0)) * (item.unit_cost or Decimal(0))
                 for item in order.items
             )
 
         # Deduct ingredients from inventory
         for item in order.items:
             if item.source_product_id:
-                self._deduct_inventory(
-                    business_id=str(order.business_id),
-                    product_id=str(item.source_product_id),
-                    quantity=int(item.quantity_required),
-                    reference_id=str(order.id),
-                    notes=f"Used in production order {order.order_number}",
-                )
+                qty = int(item.quantity_required) if item.quantity_required else 0
+                if qty > 0:
+                    self._deduct_inventory(
+                        business_id=str(order.business_id),
+                        product_id=str(item.source_product_id),
+                        quantity=qty,
+                        reference_id=str(order.id),
+                        notes=f"Used in production order {order.order_number}",
+                    )
                 item.quantity_used = item.quantity_required
 
         # Add manufactured product to inventory
@@ -263,6 +265,7 @@ class ProductionService:
         # Also update product quantity
         product = self.db.query(Product).filter(
             Product.id == product_id,
+            Product.business_id == business_id,
             Product.deleted_at.is_(None),
         ).first()
         if product:
@@ -305,6 +308,7 @@ class ProductionService:
         # Also update product quantity
         product = self.db.query(Product).filter(
             Product.id == product_id,
+            Product.business_id == business_id,
             Product.deleted_at.is_(None),
         ).first()
         if product:
