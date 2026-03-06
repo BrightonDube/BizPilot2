@@ -195,7 +195,7 @@ This implementation plan breaks down the Granular Permissions & Subscription Sys
     - Include permissions in sync response payload
     - _Requirements: 7.3, 7.4, 7.5_
   
-  - [ ]* 10.2 Write integration test for sync endpoint
+  - [x]* 10.2 Write integration test for sync endpoint
     - Test device registration on sync
     - Test permissions included in response
     - Test device limit rejection
@@ -405,11 +405,11 @@ This implementation plan breaks down the Granular Permissions & Subscription Sys
     - Test SuperAdmin creates override → user gains/loses access
     - _Requirements: 2.1, 2.4, 6.3, 6.4_
   
-  - [ ]* 19.3 Write E2E test for mobile device flow
+  - [x]* 19.3 Write E2E test for mobile device flow
     - Test device registration → sync → offline access → sync again
     - _Requirements: 3.1, 7.3, 13.1, 13.2, 13.3_
   
-  - [ ]* 19.4 Write E2E test for device limit flow
+  - [x]* 19.4 Write E2E test for device limit flow
     - Test limit reached → rejection → inactive cleanup → new device succeeds
     - _Requirements: 3.1, 3.2, 3.3, 14.3_
   
