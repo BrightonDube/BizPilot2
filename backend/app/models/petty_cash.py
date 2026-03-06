@@ -120,7 +120,7 @@ class ExpenseApproval(BaseModel):
 
     request_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("expense_requests.id", ondelete="CASCADE"),
+        ForeignKey("petty_cash_expenses.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
