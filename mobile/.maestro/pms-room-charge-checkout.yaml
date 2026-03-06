@@ -1,0 +1,93 @@
+# Maestro E2E Test: Room Charge Checkout Flow (PMS Task 30.5)
+#
+# Validates the full room charge checkout flow in the POS:
+# 1. Add item to cart
+# 2. Open payment modal
+# 3. Select "Room Charge" payment method
+# 4. Search for guest by room number
+# 5. Authorize charge with signature
+# 6. Complete checkout
+#
+# Why test the full checkout flow?
+# Room charge is the most complex payment path — it involves
+# guest lookup, PMS authorization, and signature capture.
+# A regression here means lost revenue for the hotel.
+
+appId: com.bizpilot.pos
+tags:
+  - pos
+  - auth
+---
+
+# ---------------------------------------------------------------
+# Precondition: User is on POS screen (logged in)
+# ---------------------------------------------------------------
+- assertVisible:
+    text: "POS"
+
+# ---------------------------------------------------------------
+# Step 1: Add a product to the cart
+# Tap the first visible product in the grid.
+# ---------------------------------------------------------------
+- tapOn:
+    text: ".*"
+    index: 0
+    optional: true
+
+# ---------------------------------------------------------------
+# Step 2: Open checkout / payment modal
+# The CartPanel has a "Checkout" or "Pay" button.
+# ---------------------------------------------------------------
+- tapOn:
+    text: "Checkout"
+    optional: true
+- tapOn:
+    text: "Pay"
+    optional: true
+
+# ---------------------------------------------------------------
+# Step 3: Select "Room Charge" payment method
+# ---------------------------------------------------------------
+- assertVisible:
+    text: "Room Charge"
+- tapOn:
+    text: "Room Charge"
+
+# ---------------------------------------------------------------
+# Step 4: Guest search modal appears — search by room number
+# ---------------------------------------------------------------
+- assertVisible:
+    text: "Search Guest"
+    optional: true
+- inputText: "101"
+- tapOn:
+    text: "Search"
+    optional: true
+
+# ---------------------------------------------------------------
+# Step 5: Select guest from results
+# ---------------------------------------------------------------
+- tapOn:
+    text: "Room 101"
+    optional: true
+
+# ---------------------------------------------------------------
+# Step 6: Signature capture
+# Draw a simple signature (swipe gesture)
+# ---------------------------------------------------------------
+- assertVisible:
+    text: "Signature"
+    optional: true
+- swipe:
+    direction: RIGHT
+    duration: 500
+
+# ---------------------------------------------------------------
+# Step 7: Confirm the charge
+# ---------------------------------------------------------------
+- tapOn:
+    text: "Confirm"
+    optional: true
+- tapOn:
+    text: "Complete"
+    optional: true

@@ -1,0 +1,34 @@
+# Maestro E2E Testing Configuration for BizPilot POS
+#
+# Why Maestro over Detox?
+# - Maestro uses a simple YAML-based syntax that is easy to read and maintain
+# - Works across iOS, Android, and React Native without native build dependencies
+# - Declarative flow definitions reduce test flakiness
+# - Built-in retry logic and auto-wait for element visibility
+#
+# Prerequisites:
+# 1. Install Maestro CLI: curl -Ls "https://get.maestro.mobile.dev" | bash
+# 2. Run the dev server: npx expo start
+# 3. Build a dev client: npx expo run:ios (or run:android)
+# 4. Run tests: maestro test .maestro/
+
+# App configuration
+appId: com.bizpilot.pos
+
+# Default flow settings
+flows:
+  # Global timeout for each step (seconds)
+  timeout: 30000
+
+# Environment variables for test data
+env:
+  TEST_EMAIL: "test@bizpilot.co.za"
+  TEST_PASSWORD: "TestPassword123!"
+  TEST_PIN: "1234"
+
+# Tags for organizing test suites
+tags:
+  smoke: "Quick sanity checks"
+  auth: "Authentication flows"
+  navigation: "Tab and screen navigation"
+  pos: "Point of sale operations"

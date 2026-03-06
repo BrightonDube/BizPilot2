@@ -1,0 +1,61 @@
+# Maestro E2E Test: Basic Navigation (Task 15.6)
+#
+# Validates that all main tabs are accessible and render correctly.
+# Assumes the user is already logged in (run after login-flow.yaml).
+#
+# Why test navigation separately?
+# Tab navigation is the backbone of the POS app. Each tab must
+# be reachable and display its core content. This catches routing
+# and layout regressions early.
+
+appId: com.bizpilot.pos
+tags:
+  - smoke
+  - navigation
+---
+
+# ---------------------------------------------------------------
+# Precondition: User is on the POS (index) tab after login
+# ---------------------------------------------------------------
+- assertVisible:
+    text: "POS"
+
+# ---------------------------------------------------------------
+# Navigate to Orders tab
+# ---------------------------------------------------------------
+- tapOn:
+    text: "Orders"
+- assertVisible:
+    text: "Orders"
+
+# ---------------------------------------------------------------
+# Navigate to Products tab
+# ---------------------------------------------------------------
+- tapOn:
+    text: "Products"
+- assertVisible:
+    text: "Products"
+
+# ---------------------------------------------------------------
+# Navigate to Customers tab
+# ---------------------------------------------------------------
+- tapOn:
+    text: "Customers"
+- assertVisible:
+    text: "Customers"
+
+# ---------------------------------------------------------------
+# Navigate to Settings tab
+# ---------------------------------------------------------------
+- tapOn:
+    text: "Settings"
+- assertVisible:
+    text: "Settings"
+
+# ---------------------------------------------------------------
+# Navigate back to POS tab to confirm round-trip works
+# ---------------------------------------------------------------
+- tapOn:
+    text: "POS"
+- assertVisible:
+    text: "POS"

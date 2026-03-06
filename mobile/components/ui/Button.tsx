@@ -47,6 +47,8 @@ interface PosButtonProps {
   icon?: React.ReactNode;
   /** Additional styles for the container */
   style?: ViewStyle;
+  /** Test ID for E2E testing (Maestro) */
+  testID?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -80,6 +82,7 @@ const PosButton: React.FC<PosButtonProps> = React.memo(function PosButton({
   haptic = true,
   icon,
   style,
+  testID,
 }) {
   const variantStyle = VARIANT_STYLES[variant];
   const sizeStyle = SIZE_STYLES[size];
@@ -117,6 +120,7 @@ const PosButton: React.FC<PosButtonProps> = React.memo(function PosButton({
 
   return (
     <Pressable
+      testID={testID}
       onPress={handlePress}
       disabled={isDisabled}
       style={({ pressed }) => [

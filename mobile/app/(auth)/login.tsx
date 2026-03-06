@@ -132,6 +132,7 @@ export default function LoginScreen() {
 
             {/* Email input */}
             <Input
+              testID="login-email-input"
               label="Email"
               placeholder="you@business.co.za"
               value={email}
@@ -146,6 +147,7 @@ export default function LoginScreen() {
 
             {/* Password input */}
             <Input
+              testID="login-password-input"
               ref={passwordRef}
               label="Password"
               placeholder="Enter your password"
@@ -161,6 +163,7 @@ export default function LoginScreen() {
             {/* Login button */}
             <View style={{ marginTop: 8 }}>
               <Button
+                testID="login-submit-button"
                 label="Sign In"
                 onPress={handleLogin}
                 loading={loading}
