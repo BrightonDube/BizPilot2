@@ -44,7 +44,7 @@
 
 ## Task 5: Count Entry Service
 - [x] 5.1 Implement count entry with validation
-- [ ] 5.2 Implement barcode lookup for counting
+- [x] 5.2 Implement barcode lookup for counting
 - [ ] 5.3 Implement bulk count import from CSV
 - [ ] 5.4 Implement count history tracking
 - [ ] 5.5 Implement recount functionality
@@ -123,7 +123,7 @@
 - [ ] 13.2 Create stock take creation wizard
 - [ ] 13.3 Create count sheet view (printable)
 - [x] 13.4 Create mobile count entry interface
-- [ ] 13.5 Create barcode scanning integration
+- [x] 13.5 Create barcode scanning integration
 
 **Validates: Requirements 1, 2**
 
