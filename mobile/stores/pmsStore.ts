@@ -8,9 +8,17 @@
  * PMS integration is a separate feature domain. Mixing PMS state
  * into the sync store would couple two independent concerns.
  * Hotels that don't use PMS integration never load this store.
+ *
+ * Why persist the charge queue?
+ * If the app crashes while charges are queued offline, losing them
+ * means unbilled room charges. We persist the queue and processing
+ * state to AsyncStorage via Zustand's persist middleware so charges
+ * survive app restarts, crashes, and background kills.
  */
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import type {
   PMSGuest,
   PMSFolio,
@@ -90,8 +98,10 @@ const initialState: PMSState = {
 // Store
 // ---------------------------------------------------------------------------
 
-export const usePMSStore = create<PMSState & PMSActions>((set, get) => ({
-  ...initialState,
+export const usePMSStore = create<PMSState & PMSActions>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
   setConnectionStatus: (status) => set({ connectionStatus: status }),
 
@@ -135,4 +145,20 @@ export const usePMSStore = create<PMSState & PMSActions>((set, get) => ({
     const state = get();
     return state.isEnabled && state.connectionStatus === "connected";
   },
-}));
+    }),
+    {
+      name: "bizpilot-pms",
+      storage: createJSONStorage(() => AsyncStorage),
+      /**
+       * Only persist the charge queue and enabled flag.
+       * Connection status and current guest/folio are ephemeral —
+       * they're refreshed on app launch from the PMS API.
+       * The charge queue is the only state that MUST survive restarts.
+       */
+      partialize: (state) => ({
+        chargeQueue: state.chargeQueue,
+        isEnabled: state.isEnabled,
+      }),
+    }
+  )
+);
