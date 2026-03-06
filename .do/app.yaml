@@ -1,6 +1,20 @@
 # DigitalOcean App Platform Specification
 # Deploy: doctl apps create --spec .do/app.yaml
 # Docs: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+#
+# ┌──────────────────────────────────────────────────────────────────────┐
+# │ ⚠️  WARNING: DO NOT use `doctl apps update --spec .do/app.yaml`     │
+# │                                                                      │
+# │ This WILL CLOBBER all SECRET-type env vars (DATABASE_URL, SECRET_KEY,│
+# │ etc.) because this file does not contain their actual values.        │
+# │                                                                      │
+# │ To update non-secret config: edit secrets in DO Dashboard first,     │
+# │ then run `doctl apps spec get <app-id> > /tmp/spec.yaml`, apply     │
+# │ your changes to /tmp/spec.yaml, then push with                      │
+# │ `doctl apps update <app-id> --spec /tmp/spec.yaml`.                 │
+# │                                                                      │
+# │ Or simply push code to main — deploy_on_push handles the rest.      │
+# └──────────────────────────────────────────────────────────────────────┘
 
 name: bizpilot
 region: blr

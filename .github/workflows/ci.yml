@@ -88,6 +88,9 @@ jobs:
       - name: Validate Alembic revision id lengths
         run: python scripts/check_alembic_revision_lengths.py
 
+      - name: Lint migrations (enum patterns, FK refs, single head)
+        run: python scripts/lint_migrations.py
+
       - name: Run alembic upgrade head against Postgres
         env:
           DATABASE_URL: postgresql://bizpilot:bizpilot@localhost:5432/bizpilot
