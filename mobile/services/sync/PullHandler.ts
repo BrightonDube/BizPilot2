@@ -80,6 +80,12 @@ const SYNCABLE_ENTITIES = [
   "orders",
   "order_items",
   "association_rules",
+  "expense_categories",
+  "petty_cash_funds",
+  "petty_cash_expenses",
+  "tag_categories",
+  "tags",
+  "product_tags",
 ] as const;
 
 // ---------------------------------------------------------------------------

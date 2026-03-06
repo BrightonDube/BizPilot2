@@ -49,6 +49,14 @@ const ENTITY_STRATEGIES: Record<string, ConflictStrategy> = {
   customers: "client-wins",
   users: "server-wins",
   settings: "last-write-wins",
+  // Petty cash: financial data must be authoritative from the server
+  petty_cash_funds: "server-wins",
+  petty_cash_expenses: "server-wins",
+  expense_categories: "server-wins",
+  // Tags: low-risk metadata — most recent edit wins
+  tag_categories: "last-write-wins",
+  tags: "last-write-wins",
+  product_tags: "last-write-wins",
 };
 
 const DEFAULT_STRATEGY: ConflictStrategy = "last-write-wins";
