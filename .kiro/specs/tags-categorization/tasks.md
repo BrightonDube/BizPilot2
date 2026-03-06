@@ -135,7 +135,7 @@
 - [ ] 11.2 Implement tag-based stock reporting
 - [ ] 11.3 Implement tag-based pricing rules
 - [ ] 11.4 Implement purchase order integration
-- [ ] 11.5 Implement barcode scanning integration
+- [x] 11.5 Implement barcode scanning integration
 - [ ] 11.6 Implement cost analysis integration
 - [ ] 11.7 Write unit tests for integrations
 
@@ -260,7 +260,7 @@
 - [ ] 25.5 Implement sync functionality with conflict resolution
 - [x] 25.6 Implement mobile tag search and filtering
 - [x] 25.7 Create mobile tag management components
-- [ ] 25.8 Implement barcode scanning for tagging
+- [x] 25.8 Implement barcode scanning for tagging
 
 **Validates: Requirement 9**
 
