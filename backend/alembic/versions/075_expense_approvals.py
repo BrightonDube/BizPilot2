@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.create_table(
         "expense_approvals",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("request_id", UUID(as_uuid=True), sa.ForeignKey("expense_requests.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("request_id", UUID(as_uuid=True), sa.ForeignKey("petty_cash_expenses.id", ondelete="CASCADE"), nullable=False),
         sa.Column("approver_id", UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
         sa.Column("approval_level", sa.Integer, nullable=False),
         sa.Column("status", sa.String(20), nullable=False, server_default="pending"),
