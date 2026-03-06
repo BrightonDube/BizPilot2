@@ -308,7 +308,7 @@ This implementation plan covers the Property Management System (PMS) integration
     - _Requirements: 2.1, 3.1, 4.1_
   - [ ] 25.2 Create GuestCacheService for local guest profile caching
     - _Requirements: 2.4, 2.8_
-  - [ ] 25.3 Create ChargeQueueService for offline charge queuing
+  - [x] 25.3 Create ChargeQueueService for offline charge queuing
     - _Requirements: 10.1, 10.3_
   - [ ] 25.4 Implement queue processing on connectivity restore
     - _Requirements: 10.3_
