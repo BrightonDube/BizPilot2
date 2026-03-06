@@ -293,44 +293,44 @@ This implementation plan covers the Property Management System (PMS) integration
 - [ ] 23. Checkpoint - Backend Complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 24. Mobile WatermelonDB Schema
-  - [ ] 24.1 Add PMS tables to WatermelonDB schema (pms_charges, pms_guests, pms_audit_logs)
+- [x] 24. Mobile WatermelonDB Schema
+  - [x] 24.1 Add PMS tables to WatermelonDB schema (pms_charges, pms_guests, pms_audit_logs)
     - _Requirements: 10.2_
-  - [ ] 24.2 Create WatermelonDB model classes for PMS entities
+  - [x] 24.2 Create WatermelonDB model classes for PMS entities
     - _Requirements: 10.2_
-  - [ ] 24.3 Create database migration for PMS tables
+  - [x] 24.3 Create database migration for PMS tables
     - _Requirements: 10.2_
-  - [ ]* 24.4 Write unit tests for PMS model operations
+  - [x]* 24.4 Write unit tests for PMS model operations
     - _Requirements: 10.2_
 
-- [ ] 25. Mobile PMS Service Layer
+- [x] 25. Mobile PMS Service Layer
   - [ ] 25.1 Create PMSService TypeScript class for API communication
     - _Requirements: 2.1, 3.1, 4.1_
-  - [ ] 25.2 Create GuestCacheService for local guest profile caching
+  - [x] 25.2 Create GuestCacheService for local guest profile caching
     - _Requirements: 2.4, 2.8_
   - [x] 25.3 Create ChargeQueueService for offline charge queuing
     - _Requirements: 10.1, 10.3_
-  - [ ] 25.4 Implement queue processing on connectivity restore
+  - [x] 25.4 Implement queue processing on connectivity restore
     - _Requirements: 10.3_
-  - [ ] 25.5 Implement queue size and age limits
+  - [x] 25.5 Implement queue size and age limits
     - _Requirements: 10.7_
-  - [ ]* 25.6 Write property test for offline queue persistence
+  - [x]* 25.6 Write property test for offline queue persistence
     - **Property 13: Offline Queue Persistence**
     - **Validates: Requirements 10.2**
-  - [ ]* 25.7 Write property test for queue processing order
+  - [x]* 25.7 Write property test for queue processing order
     - **Property 14: Offline Queue Processing Order**
     - **Validates: Requirements 10.3**
 
 
-- [ ] 26. Mobile PMS Zustand Store
+- [x] 26. Mobile PMS Zustand Store
   - [x] 26.1 Create pmsStore with connection status, current guest, and queue state
     - _Requirements: 10.4_
-  - [ ] 26.2 Implement store persistence for offline state
+  - [x] 26.2 Implement store persistence for offline state
     - _Requirements: 10.2_
-  - [ ]* 26.3 Write unit tests for store actions and selectors
+  - [x]* 26.3 Write unit tests for store actions and selectors
     - _Requirements: 10.4_
 
-- [ ] 27. Mobile PMS Hooks
+- [x] 27. Mobile PMS Hooks
   - [x] 27.1 Create usePMSConnection hook for connection status monitoring
     - _Requirements: 1.9, 10.4_
   - [x] 27.2 Create useGuestSearch hook with room/name search
@@ -339,7 +339,7 @@ This implementation plan covers the Property Management System (PMS) integration
     - _Requirements: 3.1, 3.3_
   - [x] 27.4 Create useFolio hook for folio lookup
     - _Requirements: 4.1, 4.6_
-  - [ ]* 27.5 Write unit tests for PMS hooks
+  - [x]* 27.5 Write unit tests for PMS hooks
     - _Requirements: 2.1, 3.1, 4.1_
 
 - [ ] 28. Mobile UI Components
@@ -374,16 +374,16 @@ This implementation plan covers the Property Management System (PMS) integration
   - [ ]* 30.5 Write E2E test for room charge checkout flow
     - _Requirements: 3.1, 3.4_
 
-- [ ] 31. Mobile Offline Handling
-  - [ ] 31.1 Implement offline mode detection and indicator display
+- [x] 31. Mobile Offline Handling
+  - [x] 31.1 Implement offline mode detection and indicator display
     - _Requirements: 10.4_
-  - [ ] 31.2 Implement charge queuing when offline
+  - [x] 31.2 Implement charge queuing when offline
     - _Requirements: 10.1_
-  - [ ] 31.3 Implement automatic queue processing on reconnection
+  - [x] 31.3 Implement automatic queue processing on reconnection
     - _Requirements: 10.3_
-  - [ ] 31.4 Implement failed charge flagging for manual review
+  - [x] 31.4 Implement failed charge flagging for manual review
     - _Requirements: 10.6_
-  - [ ] 31.5 Implement duplicate charge prevention in queue
+  - [x] 31.5 Implement duplicate charge prevention in queue
     - _Requirements: 10.8_
   - [ ]* 31.6 Write E2E test for offline charge queuing and sync
     - _Requirements: 10.1, 10.3_
