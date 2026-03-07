@@ -365,7 +365,6 @@ async def test_ai_chat_returns_fallback_when_not_configured(monkeypatch):
 
     import fastapi
 
-    monkeypatch.setattr(ai.settings, "OPENAI_API_KEY", "")
     monkeypatch.setattr(ai.settings, "GROQ_API_KEY", "")
 
     req = ai.ChatRequest(message="hello", conversation_id="c1")

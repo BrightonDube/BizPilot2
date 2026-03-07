@@ -51,7 +51,6 @@ class TestAIAPI:
 
         # Force unconfigured state
         monkeypatch.setattr(config_mod.settings, "GROQ_API_KEY", None, raising=False)
-        monkeypatch.setattr(config_mod.settings, "OPENAI_API_KEY", None, raising=False)
 
         try:
             resp = client.post("/api/v1/ai/chat", json={"message": "hi"}, headers={"Authorization": "Bearer dummy"})

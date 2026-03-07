@@ -437,16 +437,34 @@ async def create_inventory_item(
 ):
     """Create a new inventory item."""
     service = InventoryService(db)
+
+    # Validate product exists and belongs to the business
+    product = db.query(Product).filter(
+        Product.id == data.product_id,
+        Product.business_id == business_id,
+        Product.deleted_at.is_(None),
+    ).first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Product not found or does not belong to this business.",
+        )
     
     # Check if product already has inventory
     existing = service.get_inventory_by_product(data.product_id, business_id)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inventory item already exists for this product",
+            detail="Inventory item already exists for this product.",
         )
     
-    item = service.create_inventory_item(business_id, data)
+    try:
+        item = service.create_inventory_item(business_id, data)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to create inventory item: {str(e)}",
+        )
     return _item_to_response(item, db)
 
 
