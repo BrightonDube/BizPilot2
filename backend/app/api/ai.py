@@ -294,11 +294,10 @@ async def chat(
     - Financial reporting questions
     """
     # If AI isn't configured, return a clear client error.
-    # The frontend can handle this by showing a setup/config message.
-    if not settings.OPENAI_API_KEY and not settings.GROQ_API_KEY:
+    if not settings.GROQ_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="AI is not configured. Set GROQ_API_KEY (recommended) or OPENAI_API_KEY on the backend.",
+            detail="AI is not configured. Set GROQ_API_KEY on the backend.",
         )
 
     svc = AIService(db)

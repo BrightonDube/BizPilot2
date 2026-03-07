@@ -104,7 +104,13 @@ export default function NewInventoryPage() {
       router.push('/inventory')
     } catch (err: unknown) {
       console.error('Failed to create inventory item:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create inventory item'
+      let errorMessage = 'Failed to create inventory item'
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { detail?: string } } }
+        errorMessage = axiosErr.response?.data?.detail || errorMessage
+      } else if (err instanceof Error) {
+        errorMessage = err.message
+      }
       setError(errorMessage)
     } finally {
       setIsSaving(false)
