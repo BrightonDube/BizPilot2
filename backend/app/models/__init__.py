@@ -206,7 +206,7 @@ from app.models.cash_register import (
 from app.models.commission import CommissionRecord, CommissionStatus
 from app.models.report_template import ReportTemplate
 from app.models.data_access_log import CustomerDataAccessLog
-from app.models.proforma import ProformaInvoice, ProformaItem, ProformaRevision, QuoteStatus
+from app.models.proforma import ProformaInvoice, ProformaItem, ProformaRevision, ProformaApproval, ProformaAudit, QuoteStatus
 from app.models.gift_card import GiftCard, GiftCardStatus, GiftCardTransaction
 from app.models.expense import (
     Expense,
@@ -560,6 +560,8 @@ __all__ = [
     "ProformaInvoice",
     "ProformaItem",
     "ProformaRevision",
+    "ProformaApproval",
+    "ProformaAudit",
     "QuoteStatus",
     # Staff Targets
     "StaffTarget",
