@@ -1,6 +1,6 @@
-"""Add timezone column to business_time_settings and change day_end_time default
+"""Add timezone to business_time_settings
 
-Revision ID: 101_add_timezone_to_time_settings
+Revision ID: 101_bts_timezone
 Revises: 100_fix_sub_model_cols
 Create Date: 2026-03-08 09:00:00.000000
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "101_add_timezone_to_time_settings"
+revision: str = "101_bts_timezone"
 down_revision: Union[str, None] = "100_fix_sub_model_cols"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
