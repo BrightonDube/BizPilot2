@@ -1,6 +1,6 @@
 """Time tracking service for managing employee time entries and payroll."""
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from decimal import Decimal
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
@@ -49,7 +49,7 @@ class TimeTrackingService:
         entry = TimeEntry(
             business_id=business_id,
             user_id=user_id,
-            clock_in=datetime.now(),
+            clock_in=datetime.now(timezone.utc),
             status=TimeEntryStatus.ACTIVE,
             device_id=device_id,
             location=location
@@ -74,7 +74,7 @@ class TimeTrackingService:
         if not active_entry:
             raise ValueError("No active time entry found")
         
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         active_entry.clock_out = now
         active_entry.status = TimeEntryStatus.COMPLETED
         
@@ -101,7 +101,7 @@ class TimeTrackingService:
         if active_entry.break_start:
             raise ValueError("Break already started")
         
-        active_entry.break_start = datetime.now()
+        active_entry.break_start = datetime.now(timezone.utc)
         self.db.commit()
         self.db.refresh(active_entry)
         return active_entry
@@ -118,7 +118,7 @@ class TimeTrackingService:
         if active_entry.break_end:
             raise ValueError("Break already ended")
         
-        active_entry.break_end = datetime.now()
+        active_entry.break_end = datetime.now(timezone.utc)
         self._calculate_break_duration(active_entry)
         self.db.commit()
         self.db.refresh(active_entry)
@@ -203,7 +203,7 @@ class TimeTrackingService:
             user = bu.user
             entries = self.get_user_time_entries(business_id, str(user.id), start_date, end_date)
             
-            total_hours = sum(entry.net_hours or Decimal("0") for entry in entries)
+            total_hours = sum(entry.hours_worked or Decimal("0") for entry in entries)
             break_hours = sum(entry.break_duration or Decimal("0") for entry in entries)
             entry_count = len([e for e in entries if e.clock_out])  # Only completed entries
             
@@ -213,20 +213,26 @@ class TimeTrackingService:
                 "email": user.email,
                 "total_hours": float(total_hours),
                 "break_hours": float(break_hours),
-                "net_hours": float(total_hours),  # Already calculated as net
+                "net_hours": float(total_hours - break_hours),
                 "entries": entry_count,
                 "entries_data": entries
             })
         
         return report
 
-    def run_day_end_process(self, business_id: str) -> Dict[str, int]:
-        """Run day-end process to auto clock-out employees."""
-        settings = self.get_or_create_business_settings(business_id)
-        current_time = datetime.now().time()
+    def run_day_end_process(self, business_id: str, force: bool = False) -> Dict[str, int]:
+        """Run day-end process to auto clock-out employees.
         
-        if not settings.should_auto_clock_out(current_time):
-            return {"auto_clocked_out": 0, "message": "Not yet time for day-end process"}
+        Args:
+            business_id: The business to process
+            force: If True, skip the time check (used by scheduled job)
+        """
+        settings = self.get_or_create_business_settings(business_id)
+        
+        if not force:
+            current_time = datetime.now(timezone.utc).time()
+            if not settings.should_auto_clock_out(current_time):
+                return {"auto_clocked_out": 0, "message": "Not yet time for day-end process"}
         
         # Find all active entries
         active_entries = self.db.query(TimeEntry).filter(
@@ -325,7 +331,7 @@ class TimeTrackingService:
         if not entry.clock_in:
             return Decimal("0")
         
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         total_seconds = (now - entry.clock_in).total_seconds()
         
         # Subtract break time if on break

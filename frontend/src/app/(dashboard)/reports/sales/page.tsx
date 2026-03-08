@@ -490,7 +490,7 @@ function PaymentsReport({ data }: { data: any }) {
               m.method ?? m.payment_method ?? m.name ?? '-',
               m.transaction_count ?? m.count ?? 0,
               formatZAR(m.total_amount ?? m.amount ?? 0),
-              m.percentage != null ? `${m.percentage.toFixed(1)}%` : '-',
+              m.percentage_amount != null ? `${m.percentage_amount.toFixed(1)}%` : '-',
             ])}
           />
         )}

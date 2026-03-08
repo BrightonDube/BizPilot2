@@ -395,6 +395,15 @@ async def startup_event():
             name='Demo Expiry Check'
         )
 
+        # Register auto clock-out job (daily at 3 AM UTC = 5 AM SAST)
+        scheduler_manager.add_job(
+            auto_clock_out_job,
+            trigger='cron',
+            cron_expression='0 3 * * *',
+            job_id='auto_clock_out',
+            name='Auto Clock-Out Day End'
+        )
+
         # Start scheduler
         scheduler_manager.start()
         

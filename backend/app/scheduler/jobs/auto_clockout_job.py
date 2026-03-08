@@ -68,7 +68,7 @@ def auto_clock_out_job() -> AutoClockOutResult:
         for business in businesses:
             try:
                 businesses_processed += 1
-                result = time_tracking_service.run_day_end_process(str(business.id))
+                result = time_tracking_service.run_day_end_process(str(business.id), force=True)
                 
                 clocked_out_count = result.get("auto_clocked_out", 0)
                 if clocked_out_count > 0:

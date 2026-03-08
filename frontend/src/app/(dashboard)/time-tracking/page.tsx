@@ -147,7 +147,12 @@ export default function TimeTrackingPage() {
     }
 
     const updateElapsed = () => {
-      const start = new Date(clockStatus.clock_in!).getTime();
+      // Ensure UTC interpretation - append Z if no timezone info present
+      let clockInStr = clockStatus.clock_in!;
+      if (!clockInStr.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(clockInStr)) {
+        clockInStr += 'Z';
+      }
+      const start = new Date(clockInStr).getTime();
       const now = Date.now();
       const diff = Math.floor((now - start) / 1000);
       const hours = Math.floor(diff / 3600);
