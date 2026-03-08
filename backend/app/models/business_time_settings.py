@@ -18,7 +18,7 @@ class BusinessTimeSettings(BaseModel):
     
     # Day-end processing
     day_end_time = Column(Time, nullable=False, default=time(23, 59))  # When to auto clock-out employees
-    auto_clock_out_penalty_hours = Column(Numeric(4, 2), default=Decimal("5.00"))  # Penalty hours for not clocking out
+    auto_clock_out_penalty_hours = Column(Numeric(4, 2), default=Decimal("4.00"))  # Penalty hours for not clocking out
     
     # Work hour settings
     standard_work_hours = Column(Numeric(4, 2), default=Decimal("8.00"))  # Standard work day hours

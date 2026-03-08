@@ -1104,7 +1104,13 @@ async def get_payment_breakdown_report(
         )
 
     service = SalesReportService(db)
-    return service.get_payment_breakdown(business_id, start, end)
+    try:
+        return service.get_payment_breakdown(business_id, start, end)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating payment breakdown report: {str(e)}",
+        )
 
 
 @router.get("/sales/time-analysis")
