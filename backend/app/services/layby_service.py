@@ -14,6 +14,7 @@ from app.models.layby_item import LaybyItem
 from app.models.layby_payment import LaybyPayment, PaymentType, PaymentStatus
 from app.models.layby_schedule import LaybySchedule, ScheduleStatus
 from app.models.layby_audit import LaybyAudit
+from app.services.layby_stock_service import LaybyStockService
 
 
 class LaybyService:
@@ -21,6 +22,7 @@ class LaybyService:
 
     def __init__(self, db: Session):
         self.db = db
+        self.stock_service = LaybyStockService(db)
 
     # ------------------------------------------------------------------
     # Helpers
@@ -247,6 +249,19 @@ class LaybyService:
             )
             self.db.add(li)
 
+        # Reserve stock for layby items (Req 9.1, 9.5)
+        try:
+            self.stock_service.reserve_stock(
+                layby_id=layby.id,
+                items=items,
+                business_id=business_id,
+                location_id=location_id,
+            )
+        except ValueError:
+            # Insufficient stock — let the error propagate after rollback
+            self.db.rollback()
+            raise
+
         # Create deposit payment record
         deposit_payment = LaybyPayment(
             layby_id=layby.id,
@@ -466,6 +481,96 @@ class LaybyService:
         self.db.refresh(payment)
         return payment
 
+    def refund_payment(
+        self,
+        business_id: UUID,
+        layby_id: UUID,
+        payment_id: UUID,
+        reason: str,
+        refunded_by: UUID,
+        refund_amount: Decimal = None,
+    ) -> LaybyPayment:
+        """Refund a specific layby payment (full or partial).
+
+        Args:
+            business_id: The business UUID.
+            layby_id: The layby UUID.
+            payment_id: The payment to refund.
+            reason: Reason for the refund.
+            refunded_by: User processing the refund.
+            refund_amount: Amount to refund; ``None`` for full refund.
+
+        Returns:
+            The updated LaybyPayment with refund details.
+
+        Raises:
+            ValueError: If payment cannot be refunded.
+        """
+        layby = self.get_layby(business_id, layby_id)
+        if not layby:
+            raise ValueError("Layby not found.")
+
+        payment = (
+            self.db.query(LaybyPayment)
+            .filter(
+                LaybyPayment.id == str(payment_id),
+                LaybyPayment.layby_id == str(layby_id),
+            )
+            .first()
+        )
+        if not payment:
+            raise ValueError("Payment not found.")
+
+        if payment.is_refunded:
+            raise ValueError("This payment has already been refunded.")
+
+        if payment.status != PaymentStatus.COMPLETED:
+            raise ValueError("Only completed payments can be refunded.")
+
+        max_refundable = payment.amount - (payment.refund_amount or Decimal("0.00"))
+        actual_refund = refund_amount if refund_amount else max_refundable
+
+        if actual_refund <= Decimal("0.00"):
+            raise ValueError("Refund amount must be greater than zero.")
+        if actual_refund > max_refundable:
+            raise ValueError(
+                f"Refund amount (R{actual_refund:.2f}) exceeds "
+                f"refundable amount (R{max_refundable:.2f})."
+            )
+
+        old_status = payment.status.value
+        now = datetime.now(timezone.utc)
+
+        # Update payment record
+        payment.refund_amount = (payment.refund_amount or Decimal("0.00")) + actual_refund
+        payment.refund_reason = reason
+        payment.refunded_at = now
+        payment.refunded_by = refunded_by
+        if payment.refund_amount >= payment.amount:
+            payment.status = PaymentStatus.REFUNDED
+
+        # Update layby totals
+        layby.amount_paid -= actual_refund
+        layby.balance_due += actual_refund
+
+        # If layby was READY_FOR_COLLECTION and now has balance, revert to ACTIVE
+        if layby.status == LaybyStatus.READY_FOR_COLLECTION and layby.balance_due > Decimal("0.00"):
+            layby.status = LaybyStatus.ACTIVE
+
+        # Audit
+        self._create_audit(
+            layby_id=layby.id,
+            action="refund",
+            performed_by=refunded_by,
+            old_value={"payment_status": old_status, "amount_paid": str(layby.amount_paid + actual_refund)},
+            new_value={"payment_status": payment.status.value, "amount_paid": str(layby.amount_paid)},
+            details=f"Refund of R{actual_refund:.2f} on payment {payment_id}: {reason}",
+        )
+
+        self.db.commit()
+        self.db.refresh(payment)
+        return payment
+
     def cancel_layby(
         self,
         business_id: UUID,
@@ -537,6 +642,9 @@ class LaybyService:
         layby.next_payment_date = None
         layby.next_payment_amount = None
 
+        # Release reserved stock back to available inventory (Req 9.2)
+        self.stock_service.release_stock(layby_id, business_id)
+
         # Audit
         self._create_audit(
             layby_id=layby.id,
@@ -576,6 +684,9 @@ class LaybyService:
         layby.status = LaybyStatus.COMPLETED
         layby.collected_at = datetime.now(timezone.utc)
         layby.collected_by = collected_by
+
+        # Remove collected stock from inventory (Req 9.3)
+        self.stock_service.collect_stock(layby_id, business_id, user_id=collected_by)
 
         self._create_audit(
             layby_id=layby.id,
