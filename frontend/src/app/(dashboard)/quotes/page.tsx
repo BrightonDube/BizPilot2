@@ -4,11 +4,8 @@
  * Proforma Invoices (Quotes) Management Page
  *
  * Lists all quotes with status badges, totals, and action buttons.
- * Supports creating new quotes, approving, rejecting, and converting to invoices.
- *
- * Why "quotes" URL instead of "proforma-invoices"?
- * The API endpoint is /quotes and the shorter URL is more user-friendly
- * in the browser address bar.  The page title clarifies the formal term.
+ * Supports creating, editing, duplicating, sending, approving, rejecting,
+ * cancelling, extending validity, and converting quotes to invoices.
  */
 
 import { useEffect, useState, useCallback } from 'react'
@@ -22,6 +19,12 @@ import {
   Eye,
   X,
   Trash2,
+  Copy,
+  Send,
+  Clock,
+  Ban,
+  BarChart3,
+  Link as LinkIcon,
 } from 'lucide-react'
 
 import { apiClient } from '@/lib/api'
@@ -37,10 +40,24 @@ import {
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
+interface QuoteItem {
+  id: string
+  proforma_id: string
+  product_id: string | null
+  description: string
+  quantity: number
+  unit_price: number
+  discount_pct: number
+  tax_rate: number
+  line_total: number
+  is_converted: boolean
+}
+
 interface Quote {
   id: string
   business_id: string
   customer_id: string | null
+  created_by: string | null
   quote_number: string
   status: string
   issue_date: string | null
@@ -49,11 +66,22 @@ interface Quote {
   subtotal: number
   tax_amount: number
   discount_amount: number
+  discount_pct: number
   total: number
   notes: string | null
   terms: string | null
+  approval_token: string | null
+  approved_at: string | null
+  approved_by_name: string | null
+  rejection_reason: string | null
+  rejected_at: string | null
+  viewed_at: string | null
+  cancellation_reason: string | null
+  cancelled_at: string | null
   converted_invoice_id: string | null
+  converted_at: string | null
   created_at: string
+  items?: QuoteItem[]
 }
 
 interface QuoteListResponse {
@@ -88,6 +116,8 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelled',
 }
 
+const fmt = (n: number) => new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(n)
+
 /* ── Component ─────────────────────────────────────────────────────── */
 
 export default function QuotesPage() {
@@ -104,6 +134,7 @@ export default function QuotesPage() {
   const [formNotes, setFormNotes] = useState('')
   const [formTerms, setFormTerms] = useState('')
   const [formValidity, setFormValidity] = useState('30')
+  const [formDiscount, setFormDiscount] = useState('0')
   const [formItems, setFormItems] = useState([
     { description: '', quantity: '1', unit_price: '', tax_rate: '15', discount_pct: '0' },
   ])
@@ -111,6 +142,7 @@ export default function QuotesPage() {
 
   /* ── Detail view state ────────────────────────────────────────── */
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   /* ── Fetch quotes ─────────────────────────────────────────────── */
 
@@ -119,6 +151,7 @@ export default function QuotesPage() {
       setIsLoading(true)
       const params = new URLSearchParams({ page: String(page), per_page: '20' })
       if (statusFilter) params.append('status', statusFilter)
+      if (search) params.append('search', search)
       const res = await apiClient.get<QuoteListResponse>(`/quotes?${params}`)
       setQuotes(res.data.items)
       setTotalPages(res.data.pages)
@@ -128,11 +161,22 @@ export default function QuotesPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [page, statusFilter])
+  }, [page, statusFilter, search])
 
   useEffect(() => {
     fetchQuotes()
   }, [fetchQuotes])
+
+  /* ── Fetch single quote detail ────────────────────────────────── */
+
+  const fetchQuoteDetail = async (id: string) => {
+    try {
+      const res = await apiClient.get<Quote>(`/quotes/${id}`)
+      setSelectedQuote(res.data)
+    } catch (err) {
+      console.error('Failed to load quote detail:', err)
+    }
+  }
 
   /* ── Actions ──────────────────────────────────────────────────── */
 
@@ -144,6 +188,7 @@ export default function QuotesPage() {
         validity_days: parseInt(formValidity) || 30,
         notes: formNotes || null,
         terms: formTerms || null,
+        discount_pct: parseFloat(formDiscount) || 0,
         items: formItems
           .filter((i) => i.description.trim())
           .map((i) => ({
@@ -155,9 +200,7 @@ export default function QuotesPage() {
           })),
       })
       setShowForm(false)
-      setFormItems([{ description: '', quantity: '1', unit_price: '', tax_rate: '15', discount_pct: '0' }])
-      setFormNotes('')
-      setFormTerms('')
+      resetForm()
       fetchQuotes()
     } catch (err) {
       console.error('Failed to create quote:', err)
@@ -166,36 +209,66 @@ export default function QuotesPage() {
     }
   }
 
-  const handleApprove = async (id: string) => {
+  const resetForm = () => {
+    setFormItems([{ description: '', quantity: '1', unit_price: '', tax_rate: '15', discount_pct: '0' }])
+    setFormNotes('')
+    setFormTerms('')
+    setFormValidity('30')
+    setFormDiscount('0')
+  }
+
+  const handleAction = async (action: string, id: string, body?: object) => {
+    setActionLoading(action)
     try {
-      await apiClient.patch(`/quotes/${id}/approve`)
+      if (action === 'approve') await apiClient.patch(`/quotes/${id}/approve`, body)
+      else if (action === 'reject') await apiClient.patch(`/quotes/${id}/reject`, body)
+      else if (action === 'send') await apiClient.patch(`/quotes/${id}/send`)
+      else if (action === 'cancel') await apiClient.patch(`/quotes/${id}/cancel`, body)
+      else if (action === 'extend') await apiClient.patch(`/quotes/${id}/extend`, body)
+      else if (action === 'convert') await apiClient.post(`/quotes/${id}/convert`)
+      else if (action === 'duplicate') await apiClient.post(`/quotes/${id}/duplicate`)
       fetchQuotes()
       setSelectedQuote(null)
     } catch (err) {
-      console.error('Failed to approve:', err)
+      console.error(`Failed to ${action}:`, err)
+    } finally {
+      setActionLoading(null)
     }
   }
 
+  const handleDuplicate = (id: string) => handleAction('duplicate', id)
+
+  const handleSend = (id: string) => handleAction('send', id)
+
+  const handleApprove = (id: string) => handleAction('approve', id)
+
   const handleReject = async (id: string) => {
-    if (!confirm('Reject this quote?')) return
-    try {
-      await apiClient.patch(`/quotes/${id}/reject`)
-      fetchQuotes()
-      setSelectedQuote(null)
-    } catch (err) {
-      console.error('Failed to reject:', err)
-    }
+    const reason = prompt('Reason for rejection (optional):')
+    await handleAction('reject', id, { reason })
+  }
+
+  const handleCancel = async (id: string) => {
+    const reason = prompt('Reason for cancellation:')
+    if (!reason) return
+    await handleAction('cancel', id, { reason })
+  }
+
+  const handleExtend = async (id: string) => {
+    const days = prompt('Number of days to extend:')
+    if (!days || isNaN(Number(days))) return
+    await handleAction('extend', id, { additional_days: parseInt(days) })
   }
 
   const handleConvert = async (id: string) => {
     if (!confirm('Convert this quote to an invoice? This cannot be undone.')) return
-    try {
-      await apiClient.post(`/quotes/${id}/convert`)
-      fetchQuotes()
-      setSelectedQuote(null)
-    } catch (err) {
-      console.error('Failed to convert:', err)
-    }
+    await handleAction('convert', id)
+  }
+
+  const copyShareableLink = (token: string | null) => {
+    if (!token) return
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    navigator.clipboard.writeText(`${baseUrl}/quotes/public/${token}`)
+    alert('Shareable link copied to clipboard!')
   }
 
   /* ── Add / remove line items ──────────────────────────────────── */
@@ -219,13 +292,7 @@ export default function QuotesPage() {
 
   /* ── Filter ───────────────────────────────────────────────────── */
 
-  const filtered = search
-    ? quotes.filter(
-        (q) =>
-          q.quote_number.toLowerCase().includes(search.toLowerCase()) ||
-          (q.notes && q.notes.toLowerCase().includes(search.toLowerCase()))
-      )
-    : quotes
+  const filtered = quotes
 
   /* ── Render ───────────────────────────────────────────────────── */
 
@@ -243,10 +310,16 @@ export default function QuotesPage() {
         title="Proforma Invoices"
         description="Create and manage quotes for customers"
         actions={
-          <Button variant="gradient" onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Quote
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => window.location.href = '/quotes/reports'}>
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Reports
+            </Button>
+            <Button variant="gradient" onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Quote
+            </Button>
+          </div>
         }
       />
 
@@ -263,7 +336,7 @@ export default function QuotesPage() {
           <Input
             placeholder="Search quotes..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="pl-10"
           />
         </div>
@@ -356,7 +429,7 @@ export default function QuotesPage() {
             </div>
 
             {/* Metadata */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Validity (days)</label>
                 <Input
@@ -364,6 +437,15 @@ export default function QuotesPage() {
                   value={formValidity}
                   onChange={(e) => setFormValidity(e.target.value)}
                   min="1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Quote Discount %</label>
+                <Input
+                  type="number"
+                  value={formDiscount}
+                  onChange={(e) => setFormDiscount(e.target.value)}
+                  min="0" max="100"
                 />
               </div>
               <div>
@@ -417,59 +499,161 @@ export default function QuotesPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+            {/* Financials */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 text-sm">
               <div>
                 <span className="text-gray-400">Subtotal</span>
-                <p className="text-white font-medium">R {Number(selectedQuote.subtotal).toFixed(2)}</p>
+                <p className="text-white font-medium">{fmt(Number(selectedQuote.subtotal))}</p>
               </div>
               <div>
                 <span className="text-gray-400">Tax</span>
-                <p className="text-white font-medium">R {Number(selectedQuote.tax_amount).toFixed(2)}</p>
+                <p className="text-white font-medium">{fmt(Number(selectedQuote.tax_amount))}</p>
               </div>
               <div>
                 <span className="text-gray-400">Discount</span>
-                <p className="text-white font-medium">R {Number(selectedQuote.discount_amount).toFixed(2)}</p>
+                <p className="text-white font-medium">{fmt(Number(selectedQuote.discount_amount))}</p>
+              </div>
+              <div>
+                <span className="text-gray-400">Discount %</span>
+                <p className="text-white font-medium">{Number(selectedQuote.discount_pct || 0)}%</p>
               </div>
               <div>
                 <span className="text-gray-400">Total</span>
-                <p className="text-white text-lg font-bold">R {Number(selectedQuote.total).toFixed(2)}</p>
+                <p className="text-white text-lg font-bold">{fmt(Number(selectedQuote.total))}</p>
               </div>
             </div>
 
+            {/* Dates & Status Info */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+              <div>
+                <span className="text-gray-400">Issued</span>
+                <p className="text-white">{selectedQuote.issue_date || '—'}</p>
+              </div>
+              <div>
+                <span className="text-gray-400">Expires</span>
+                <p className="text-white">{selectedQuote.expiry_date || '—'}</p>
+              </div>
+              <div>
+                <span className="text-gray-400">Validity</span>
+                <p className="text-white">{selectedQuote.validity_days} days</p>
+              </div>
+              {selectedQuote.viewed_at && (
+                <div>
+                  <span className="text-gray-400">Viewed</span>
+                  <p className="text-indigo-300">{new Date(selectedQuote.viewed_at).toLocaleDateString()}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Approval/Rejection details */}
+            {selectedQuote.approved_by_name && (
+              <p className="text-sm text-green-400 mb-2">
+                ✓ Approved by {selectedQuote.approved_by_name} on {new Date(selectedQuote.approved_at!).toLocaleDateString()}
+              </p>
+            )}
+            {selectedQuote.rejection_reason && (
+              <p className="text-sm text-red-400 mb-2">
+                ✗ Rejected: {selectedQuote.rejection_reason}
+              </p>
+            )}
+            {selectedQuote.cancellation_reason && (
+              <p className="text-sm text-gray-400 mb-2">
+                Cancelled: {selectedQuote.cancellation_reason}
+              </p>
+            )}
             {selectedQuote.notes && (
               <p className="text-sm text-gray-400 mb-2">
                 <strong>Notes:</strong> {selectedQuote.notes}
               </p>
             )}
 
-            <div className="flex gap-2 pt-4 border-t border-gray-700">
+            {/* Line items */}
+            {selectedQuote.items && selectedQuote.items.length > 0 && (
+              <div className="mb-4 mt-4">
+                <h4 className="text-sm font-medium text-gray-400 mb-2">Line Items</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-500 border-b border-gray-700">
+                        <th className="pb-2">Description</th>
+                        <th className="pb-2 text-right">Qty</th>
+                        <th className="pb-2 text-right">Price</th>
+                        <th className="pb-2 text-right">Disc %</th>
+                        <th className="pb-2 text-right">Tax %</th>
+                        <th className="pb-2 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedQuote.items.map((item) => (
+                        <tr key={item.id} className="border-b border-gray-800">
+                          <td className="py-2 text-white">{item.description}</td>
+                          <td className="py-2 text-right text-gray-300">{item.quantity}</td>
+                          <td className="py-2 text-right text-gray-300">{fmt(item.unit_price)}</td>
+                          <td className="py-2 text-right text-gray-300">{item.discount_pct}%</td>
+                          <td className="py-2 text-right text-gray-300">{item.tax_rate}%</td>
+                          <td className="py-2 text-right text-white font-medium">{fmt(item.line_total)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-700">
+              {/* Send */}
+              {selectedQuote.status === 'draft' && (
+                <Button variant="outline" size="sm" onClick={() => handleSend(selectedQuote.id)}
+                  disabled={!!actionLoading} className="text-blue-400 border-blue-400/50">
+                  <Send className="h-4 w-4 mr-1" /> Send
+                </Button>
+              )}
+              {/* Approve */}
               {['draft', 'sent', 'viewed'].includes(selectedQuote.status) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleApprove(selectedQuote.id)}
-                  className="text-green-400 border-green-400/50"
-                >
+                <Button variant="outline" size="sm" onClick={() => handleApprove(selectedQuote.id)}
+                  disabled={!!actionLoading} className="text-green-400 border-green-400/50">
                   <CheckCircle className="h-4 w-4 mr-1" /> Approve
                 </Button>
               )}
+              {/* Reject */}
               {['draft', 'sent', 'viewed'].includes(selectedQuote.status) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleReject(selectedQuote.id)}
-                  className="text-red-400 border-red-400/50"
-                >
+                <Button variant="outline" size="sm" onClick={() => handleReject(selectedQuote.id)}
+                  disabled={!!actionLoading} className="text-red-400 border-red-400/50">
                   <XCircle className="h-4 w-4 mr-1" /> Reject
                 </Button>
               )}
+              {/* Convert */}
               {selectedQuote.status === 'approved' && (
-                <Button
-                  variant="gradient"
-                  size="sm"
-                  onClick={() => handleConvert(selectedQuote.id)}
-                >
+                <Button variant="gradient" size="sm" onClick={() => handleConvert(selectedQuote.id)}
+                  disabled={!!actionLoading}>
                   <ArrowRightCircle className="h-4 w-4 mr-1" /> Convert to Invoice
+                </Button>
+              )}
+              {/* Duplicate */}
+              <Button variant="outline" size="sm" onClick={() => handleDuplicate(selectedQuote.id)}
+                disabled={!!actionLoading} className="text-gray-300">
+                <Copy className="h-4 w-4 mr-1" /> Duplicate
+              </Button>
+              {/* Extend validity */}
+              {['draft', 'sent', 'viewed', 'expired'].includes(selectedQuote.status) && (
+                <Button variant="outline" size="sm" onClick={() => handleExtend(selectedQuote.id)}
+                  disabled={!!actionLoading} className="text-yellow-400 border-yellow-400/50">
+                  <Clock className="h-4 w-4 mr-1" /> Extend
+                </Button>
+              )}
+              {/* Cancel */}
+              {!['converted', 'cancelled'].includes(selectedQuote.status) && (
+                <Button variant="outline" size="sm" onClick={() => handleCancel(selectedQuote.id)}
+                  disabled={!!actionLoading} className="text-red-400 border-red-400/50">
+                  <Ban className="h-4 w-4 mr-1" /> Cancel
+                </Button>
+              )}
+              {/* Shareable link */}
+              {selectedQuote.approval_token && (
+                <Button variant="outline" size="sm" onClick={() => copyShareableLink(selectedQuote.approval_token)}
+                  className="text-purple-400 border-purple-400/50">
+                  <LinkIcon className="h-4 w-4 mr-1" /> Copy Link
                 </Button>
               )}
             </div>
@@ -498,7 +682,7 @@ export default function QuotesPage() {
             <Card
               key={q.id}
               className="hover:border-gray-600 transition-colors cursor-pointer"
-              onClick={() => setSelectedQuote(q)}
+              onClick={() => fetchQuoteDetail(q.id)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -519,10 +703,10 @@ export default function QuotesPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-white font-bold text-lg">
-                      R {Number(q.total).toFixed(2)}
+                      {fmt(Number(q.total))}
                     </p>
                     <p className="text-xs text-gray-400">
-                      excl. R {Number(q.tax_amount).toFixed(2)} tax
+                      excl. {fmt(Number(q.tax_amount))} tax
                     </p>
                   </div>
                 </div>
