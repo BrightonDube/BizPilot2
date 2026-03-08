@@ -650,7 +650,7 @@ export default function TimeTrackingPage() {
                             <td className="py-3 px-4 text-sm text-gray-300">{item.email}</td>
                             <td className="py-3 px-4 text-sm text-white">{item.total_hours.toFixed(2)}</td>
                             <td className="py-3 px-4 text-sm text-gray-300">{item.total_break_hours.toFixed(2)}</td>
-                            <td className="py-3 px-4 text-sm text-green-400 font-medium">{(item.total_hours - item.total_break_hours).toFixed(2)}</td>
+                            <td className="py-3 px-4 text-sm text-green-400 font-medium">{item.total_hours.toFixed(2)}</td>
                             <td className="py-3 px-4 text-sm text-gray-300">{item.entries_count}</td>
                           </tr>
                         ))

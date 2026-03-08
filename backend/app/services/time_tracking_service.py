@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
+from zoneinfo import ZoneInfo
 
 from app.models.time_entry import TimeEntry, TimeEntryStatus
 from app.models.business_time_settings import BusinessTimeSettings
@@ -203,7 +204,7 @@ class TimeTrackingService:
             user = bu.user
             entries = self.get_user_time_entries(business_id, str(user.id), start_date, end_date)
             
-            total_hours = sum(entry.hours_worked or Decimal("0") for entry in entries)
+            total_hours = sum(entry.net_hours or Decimal("0") for entry in entries)
             break_hours = sum(entry.break_duration or Decimal("0") for entry in entries)
             entry_count = len([e for e in entries if e.clock_out])  # Only completed entries
             
@@ -213,7 +214,7 @@ class TimeTrackingService:
                 "email": user.email,
                 "total_hours": float(total_hours),
                 "break_hours": float(break_hours),
-                "net_hours": float(total_hours - break_hours),
+                "net_hours": float(total_hours),
                 "entries": entry_count,
                 "entries_data": entries
             })
@@ -230,8 +231,10 @@ class TimeTrackingService:
         settings = self.get_or_create_business_settings(business_id)
         
         if not force:
-            current_time = datetime.now(timezone.utc).time()
-            if not settings.should_auto_clock_out(current_time):
+            # Convert current UTC time to the business's local timezone
+            biz_tz = ZoneInfo(settings.timezone or "Africa/Johannesburg")
+            local_time = datetime.now(timezone.utc).astimezone(biz_tz).time()
+            if not settings.should_auto_clock_out(local_time):
                 return {"auto_clocked_out": 0, "message": "Not yet time for day-end process"}
         
         # Find all active entries
