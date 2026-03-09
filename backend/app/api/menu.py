@@ -533,3 +533,41 @@ async def get_matrix(
     """Get menu engineering matrix (Stars / Puzzles / Plowhorses / Dogs)."""
     service = MenuService(db)
     return service.get_menu_engineering_matrix(business_id)
+
+
+# ── Menu Reports ─────────────────────────────────────────────────
+
+
+@router.get("/reports/item-sales")
+async def item_sales_report(
+    days: int = Query(30, ge=1, le=365, description="Rolling period in days"),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Item-level sales report: quantity sold, revenue, order count."""
+    service = MenuService(db)
+    return service.get_item_sales_report(business_id, days=days)
+
+
+@router.get("/reports/profitability")
+async def profitability_report(
+    days: int = Query(30, ge=1, le=365, description="Rolling period in days"),
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Per-item profitability: revenue, cost, profit, margin %."""
+    service = MenuService(db)
+    return service.get_profitability_report(business_id, days=days)
+
+
+@router.get("/reports/modifier-popularity")
+async def modifier_popularity_report(
+    current_user: User = Depends(get_current_active_user),
+    db=Depends(get_sync_db),
+    business_id: str = Depends(get_current_business_id),
+):
+    """Modifier group and individual modifier configuration report."""
+    service = MenuService(db)
+    return service.get_modifier_popularity_report(business_id)
