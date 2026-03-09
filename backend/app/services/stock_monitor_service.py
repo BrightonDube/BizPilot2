@@ -59,7 +59,7 @@ class StockMonitorService:
             .filter(
                 Product.business_id == str(business_id),
                 Product.deleted_at.is_(None),
-                Product.stock_quantity <= ProductReorderSettings.reorder_point,
+                Product.quantity <= ProductReorderSettings.reorder_point,
             )
         )
 
@@ -71,7 +71,7 @@ class StockMonitorService:
             results.append({
                 "product_id": str(product.id),
                 "product_name": product.name,
-                "current_stock": product.stock_quantity or 0,
+                "current_stock": product.quantity or 0,
                 "reorder_point": settings.reorder_point,
                 "safety_stock": settings.safety_stock,
                 "auto_reorder": settings.auto_reorder,
@@ -150,7 +150,7 @@ class StockMonitorService:
             )
             if not product:
                 return None
-            current_stock = product.stock_quantity or 0
+            current_stock = product.quantity or 0
 
         velocity = self.calculate_sales_velocity(
             product_id, business_id, lookback_days=lookback_days
