@@ -10,7 +10,7 @@ floor plan logic.
 
 import math
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple, List
 
 from sqlalchemy import and_
@@ -252,7 +252,7 @@ class ReservationService:
 
     def get_upcoming(self, business_id: str, hours: int = 24) -> List[Reservation]:
         """Get confirmed reservations within the next N hours."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         cutoff = now + timedelta(hours=hours)
         return (
             self.db.query(Reservation)
