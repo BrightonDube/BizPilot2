@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for CI workflows
-        uses: lewagon/wait-on-check-action@v1.3.4
+        uses: lewagon/wait-on-check-action@v1.5.0
         with:
           ref: ${{ github.sha }}
           check-regexp: "Backend CI|Migration Safety Check|Frontend CI"
