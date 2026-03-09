@@ -1,6 +1,6 @@
 """Product-Supplier association model for managing product-supplier relationships."""
 
-from sqlalchemy import Column, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, Column, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.models.base import BaseModel
@@ -17,6 +17,7 @@ class ProductSupplier(BaseModel):
 
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False, index=True)
     supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=False, index=True)
+    is_primary = Column(Boolean, default=False, nullable=False, server_default="false")
 
     def __repr__(self) -> str:
         return f"<ProductSupplier product={self.product_id} supplier={self.supplier_id}>"
