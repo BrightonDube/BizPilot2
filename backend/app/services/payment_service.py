@@ -9,11 +9,11 @@ out of API endpoints and makes them testable in isolation.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 
 from app.models.payment import (
@@ -212,3 +212,228 @@ class PaymentService:
             .all()
         )
         return items, total
+
+    # -----------------------------------------------------------------------
+    # Payment Reports
+    # -----------------------------------------------------------------------
+
+    def get_payment_summary(
+        self,
+        business_id: uuid.UUID,
+        *,
+        days: int = 30,
+    ) -> Dict[str, Any]:
+        """Generate a payment summary report for the given period.
+
+        Returns total revenue, tip total, refund total, transaction counts,
+        average transaction amount, and success rate.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        base_q = self.db.query(PaymentTransaction).filter(
+            PaymentTransaction.business_id == business_id,
+            PaymentTransaction.created_at >= cutoff,
+        )
+
+        total_txns = base_q.count()
+
+        completed_q = base_q.filter(
+            PaymentTransaction.status == PaymentTransactionStatus.COMPLETED.value
+        )
+        completed_count = completed_q.count()
+        completed_agg = completed_q.with_entities(
+            func.coalesce(func.sum(PaymentTransaction.amount), 0),
+            func.coalesce(func.sum(PaymentTransaction.tip_amount), 0),
+        ).first()
+
+        total_revenue = float(completed_agg[0]) if completed_agg else 0.0
+        total_tips = float(completed_agg[1]) if completed_agg else 0.0
+
+        refund_agg = base_q.filter(
+            PaymentTransaction.status == PaymentTransactionStatus.REFUNDED.value
+        ).with_entities(
+            func.count(PaymentTransaction.id),
+            func.coalesce(func.sum(PaymentTransaction.amount), 0),
+        ).first()
+
+        refund_count = refund_agg[0] if refund_agg else 0
+        refund_total = float(refund_agg[1]) if refund_agg else 0.0
+
+        failed_count = base_q.filter(
+            PaymentTransaction.status == PaymentTransactionStatus.FAILED.value
+        ).count()
+
+        avg_amount = (total_revenue / completed_count) if completed_count > 0 else 0.0
+        success_rate = (
+            round(completed_count / total_txns * 100, 1) if total_txns > 0 else 0.0
+        )
+
+        return {
+            "period_days": days,
+            "total_transactions": total_txns,
+            "completed_count": completed_count,
+            "failed_count": failed_count,
+            "refund_count": refund_count,
+            "total_revenue": round(total_revenue, 2),
+            "total_tips": round(total_tips, 2),
+            "refund_total": round(refund_total, 2),
+            "net_revenue": round(total_revenue - refund_total, 2),
+            "avg_transaction_amount": round(avg_amount, 2),
+            "success_rate_pct": success_rate,
+        }
+
+    def get_report_by_method(
+        self,
+        business_id: uuid.UUID,
+        *,
+        days: int = 30,
+    ) -> List[Dict[str, Any]]:
+        """Break down payment totals by payment method type.
+
+        Joins PaymentTransaction → PaymentMethod to group by method_type.
+        Returns count, total, avg, and success rate per method.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        rows = (
+            self.db.query(
+                PaymentMethod.method_type,
+                PaymentMethod.name,
+                func.count(PaymentTransaction.id).label("txn_count"),
+                func.coalesce(func.sum(PaymentTransaction.amount), 0).label(
+                    "total_amount"
+                ),
+                func.coalesce(func.sum(PaymentTransaction.tip_amount), 0).label(
+                    "total_tips"
+                ),
+                func.sum(
+                    case(
+                        (
+                            PaymentTransaction.status
+                            == PaymentTransactionStatus.COMPLETED.value,
+                            1,
+                        ),
+                        else_=0,
+                    )
+                ).label("completed_count"),
+            )
+            .join(
+                PaymentMethod,
+                PaymentTransaction.payment_method_id == PaymentMethod.id,
+            )
+            .filter(
+                PaymentTransaction.business_id == business_id,
+                PaymentTransaction.created_at >= cutoff,
+            )
+            .group_by(PaymentMethod.method_type, PaymentMethod.name)
+            .order_by(func.sum(PaymentTransaction.amount).desc())
+            .all()
+        )
+
+        results = []
+        for row in rows:
+            count = row.txn_count or 0
+            total = float(row.total_amount or 0)
+            completed = row.completed_count or 0
+            results.append({
+                "method_type": row.method_type,
+                "method_name": row.name,
+                "transaction_count": count,
+                "total_amount": round(total, 2),
+                "total_tips": round(float(row.total_tips or 0), 2),
+                "avg_amount": round(total / count, 2) if count > 0 else 0.0,
+                "success_rate_pct": (
+                    round(completed / count * 100, 1) if count > 0 else 0.0
+                ),
+            })
+        return results
+
+    def get_transactions_for_export(
+        self,
+        business_id: uuid.UUID,
+        *,
+        days: int = 30,
+        method_type: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Return transaction data formatted for CSV/JSON export.
+
+        Gateway responses are excluded and gateway references are masked
+        for security.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        query = (
+            self.db.query(PaymentTransaction)
+            .outerjoin(
+                PaymentMethod,
+                PaymentTransaction.payment_method_id == PaymentMethod.id,
+            )
+            .filter(
+                PaymentTransaction.business_id == business_id,
+                PaymentTransaction.created_at >= cutoff,
+            )
+        )
+
+        if method_type:
+            query = query.filter(PaymentMethod.method_type == method_type)
+        if status:
+            query = query.filter(PaymentTransaction.status == status)
+
+        query = query.order_by(PaymentTransaction.created_at.desc())
+        transactions = query.all()
+
+        return [
+            {
+                "id": str(txn.id),
+                "order_id": str(txn.order_id),
+                "amount": float(txn.amount),
+                "tip_amount": float(txn.tip_amount),
+                "status": txn.status,
+                "gateway_reference": self.mask_reference(txn.gateway_reference),
+                "processed_at": (
+                    txn.processed_at.isoformat() if txn.processed_at else None
+                ),
+                "created_at": txn.created_at.isoformat(),
+            }
+            for txn in transactions
+        ]
+
+    # -----------------------------------------------------------------------
+    # Security Helpers
+    # -----------------------------------------------------------------------
+
+    @staticmethod
+    def mask_reference(ref: Optional[str]) -> Optional[str]:
+        """Mask a gateway reference, showing only the last 4 characters.
+
+        Prevents full reference exposure in exports and logs while
+        keeping enough info for reconciliation lookups.
+        """
+        if not ref or len(ref) <= 4:
+            return ref
+        return "*" * (len(ref) - 4) + ref[-4:]
+
+    @staticmethod
+    def mask_gateway_response(response: Optional[dict]) -> Optional[dict]:
+        """Strip sensitive fields from a gateway response payload.
+
+        Removes card numbers, tokens, and secrets while preserving
+        status codes, messages, and timestamps for debugging.
+        """
+        if not response:
+            return None
+
+        sensitive_keys = {
+            "card_number", "pan", "token", "secret", "password",
+            "cvv", "cvc", "pin", "account_number",
+        }
+        masked = {}
+        for key, value in response.items():
+            if key.lower() in sensitive_keys:
+                masked[key] = "***REDACTED***"
+            elif isinstance(value, dict):
+                masked[key] = PaymentService.mask_gateway_response(value)
+            else:
+                masked[key] = value
+        return masked

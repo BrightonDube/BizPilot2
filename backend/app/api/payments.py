@@ -2,13 +2,17 @@
 
 Provides CRUD for payment methods and transaction management (create,
 complete, refund, list) scoped to the current business.
+Includes payment report endpoints and CSV export.
 """
 
+import csv
+import io
 import math
 from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_current_business_id
@@ -195,3 +199,92 @@ def refund_transaction(
             detail="Refund failed. Transaction not found or amount exceeds original.",
         )
     return refund
+
+
+# ---------------------------------------------------------------------------
+# Payment Reports
+# ---------------------------------------------------------------------------
+
+
+@router.get("/reports/summary")
+def payment_summary_report(
+    days: int = Query(30, ge=1, le=365, description="Report period in days"),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_sync_db),
+    _user=Depends(get_current_active_user),
+):
+    """Get a payment summary for the given period.
+
+    Returns total revenue, tips, refunds, transaction counts,
+    average amount, and success rate.
+    """
+    svc = PaymentService(db)
+    return svc.get_payment_summary(business_id, days=days)
+
+
+@router.get("/reports/by-method")
+def payment_report_by_method(
+    days: int = Query(30, ge=1, le=365, description="Report period in days"),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_sync_db),
+    _user=Depends(get_current_active_user),
+):
+    """Break down payment totals by payment method type.
+
+    Returns count, total, average, and success rate per method.
+    """
+    svc = PaymentService(db)
+    return svc.get_report_by_method(business_id, days=days)
+
+
+@router.get("/reports/export/csv")
+def export_transactions_csv(
+    days: int = Query(30, ge=1, le=365),
+    method_type: Optional[str] = Query(None, description="Filter by method type"),
+    status: Optional[str] = Query(None, description="Filter by transaction status"),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_sync_db),
+    _user=Depends(get_current_active_user),
+):
+    """Export payment transactions as a CSV file.
+
+    Gateway references are masked for security. Gateway response
+    payloads are excluded entirely from exports.
+    """
+    svc = PaymentService(db)
+    rows = svc.get_transactions_for_export(
+        business_id, days=days, method_type=method_type, status=status
+    )
+
+    output = io.StringIO()
+    if rows:
+        writer = csv.DictWriter(output, fieldnames=rows[0].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+    else:
+        writer = csv.writer(output)
+        writer.writerow(["id", "order_id", "amount", "tip_amount", "status",
+                         "gateway_reference", "processed_at", "created_at"])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=payment_transactions.csv"},
+    )
+
+
+@router.get("/reports/export/json")
+def export_transactions_json(
+    days: int = Query(30, ge=1, le=365),
+    method_type: Optional[str] = Query(None, description="Filter by method type"),
+    status: Optional[str] = Query(None, description="Filter by transaction status"),
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_sync_db),
+    _user=Depends(get_current_active_user),
+):
+    """Export payment transactions as JSON with masked sensitive data."""
+    svc = PaymentService(db)
+    return svc.get_transactions_for_export(
+        business_id, days=days, method_type=method_type, status=status
+    )
