@@ -368,7 +368,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Detailed Reports Links */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/reports/sales" className="group">
               <Card className="bg-gray-800/50 border-gray-700 hover:border-blue-500/50 transition-colors">
                 <CardContent className="flex items-center justify-between p-4">
@@ -408,6 +408,20 @@ export default function ReportsPage() {
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-purple-400 transition-colors" />
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/reports/extended" className="group">
+              <Card className="bg-gray-800/50 border-gray-700 hover:border-orange-500/50 transition-colors">
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="w-5 h-5 text-orange-400" />
+                    <div>
+                      <p className="font-medium text-white">Extended Reports</p>
+                      <p className="text-xs text-gray-400">COGS, margins, user activity, audit</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-orange-400 transition-colors" />
                 </CardContent>
               </Card>
             </Link>
