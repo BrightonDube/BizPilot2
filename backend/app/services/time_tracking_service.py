@@ -204,17 +204,18 @@ class TimeTrackingService:
             user = bu.user
             entries = self.get_user_time_entries(business_id, str(user.id), start_date, end_date)
             
-            total_hours = sum(entry.net_hours or Decimal("0") for entry in entries)
+            gross_hours = sum(entry.hours_worked or Decimal("0") for entry in entries)
             break_hours = sum(entry.break_duration or Decimal("0") for entry in entries)
+            net_hours = sum(entry.net_hours or Decimal("0") for entry in entries)
             entry_count = len([e for e in entries if e.clock_out])  # Only completed entries
             
             report.append({
                 "user_id": str(user.id),
                 "employee": f"{user.first_name} {user.last_name}",
                 "email": user.email,
-                "total_hours": float(total_hours),
+                "total_hours": float(gross_hours),
                 "break_hours": float(break_hours),
-                "net_hours": float(total_hours),
+                "net_hours": float(net_hours),
                 "entries": entry_count,
                 "entries_data": entries
             })
