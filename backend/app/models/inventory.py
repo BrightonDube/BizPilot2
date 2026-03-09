@@ -20,6 +20,7 @@ class TransactionType(str, enum.Enum):
     WASTE = "waste"
     DAMAGED = "damaged"
     EXPIRED = "expired"
+    PRODUCTION = "production"
 
 
 class InventoryItem(BaseModel):
