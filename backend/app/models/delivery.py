@@ -12,7 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     Enum as SQLEnum,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from app.models.base import BaseModel
 
@@ -30,7 +30,13 @@ class DeliveryStatus(str, enum.Enum):
 
 
 class DeliveryZone(BaseModel):
-    """Delivery zone with fee and time estimates."""
+    """Delivery zone with configurable fee and geographic boundaries.
+
+    Supports three zone types:
+    - **polygon**: GeoJSON-style boundary coordinates
+    - **radius**: Center point + radius in kilometres
+    - **postcode**: List of postcode strings
+    """
 
     __tablename__ = "delivery_zones"
 
@@ -39,7 +45,23 @@ class DeliveryZone(BaseModel):
     )
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    delivery_fee = Column(Numeric(12, 2), nullable=False)
+
+    # Zone geography
+    zone_type = Column(String(20), default="flat")  # flat | polygon | radius | postcode
+    boundary = Column(JSONB, nullable=True)  # GeoJSON polygon coordinates
+    center_lat = Column(Numeric(10, 7), nullable=True)
+    center_lng = Column(Numeric(10, 7), nullable=True)
+    radius_km = Column(Numeric(8, 2), nullable=True)
+    postcodes = Column(JSONB, nullable=True)  # ["2000", "2001", ...]
+
+    # Fee configuration
+    delivery_fee = Column(Numeric(12, 2), nullable=False)  # Base / flat fee
+    fee_type = Column(String(20), default="flat")  # flat | distance | order_value | combined
+    fee_per_km = Column(Numeric(8, 2), default=0)
+    min_order_amount = Column(Numeric(12, 2), default=0)
+    free_delivery_threshold = Column(Numeric(12, 2), nullable=True)
+    max_distance_km = Column(Numeric(8, 2), nullable=True)
+
     estimated_minutes = Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
@@ -59,6 +81,12 @@ class Driver(BaseModel):
     license_plate = Column(String(20), nullable=True)
     is_available = Column(Boolean, default=True, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+
+    # Real-time location
+    current_lat = Column(Numeric(10, 7), nullable=True)
+    current_lng = Column(Numeric(10, 7), nullable=True)
+    last_location_at = Column(DateTime(timezone=True), nullable=True)
+    max_concurrent = Column(Integer, default=5)
 
 
 class Delivery(BaseModel):
