@@ -16,7 +16,6 @@ import {
   Search,
   Tags,
   FolderOpen,
-  Edit,
   Trash2,
   ChevronRight,
 } from 'lucide-react';
@@ -122,9 +121,11 @@ export default function TagsPageClient() {
   }, [tagPage, selectedCategory, search]);
 
   useEffect(() => {
-    Promise.all([fetchCategories(), fetchTags()]).finally(() =>
-      setLoading(false)
-    );
+    Promise.resolve().then(() => {
+      Promise.all([fetchCategories(), fetchTags()]).finally(() =>
+        setLoading(false)
+      );
+    });
   }, [fetchCategories, fetchTags]);
 
   // Create category

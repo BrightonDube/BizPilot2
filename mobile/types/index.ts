@@ -69,7 +69,9 @@ export type OrderStatus =
   | "pending"
   | "completed"
   | "cancelled"
-  | "refunded";
+  | "refunded"
+  | "partial"
+  | "voided";
 
 export type PaymentStatus = "pending" | "paid" | "partial" | "refunded";
 

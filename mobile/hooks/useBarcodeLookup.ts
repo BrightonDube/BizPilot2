@@ -13,9 +13,10 @@
 
 import { useState, useCallback } from "react";
 import {
-  lookupProductByBarcode,
-  detectFormat,
+  lookupProduct,
+  detectBarcodeFormat,
   validateBarcode,
+  processScan,
   type BarcodeProduct,
   type BarcodeScanResult,
   type BarcodeFormat,
@@ -104,10 +105,9 @@ export function useBarcodeLookup(options: UseBarcodeLookupOptions) {
       setState((prev) => ({ ...prev, isProcessing: true, error: null }));
 
       try {
-        const format = detectFormat(rawBarcode);
-        const validation = validateBarcode(rawBarcode);
+        const result = processScan(rawBarcode, products);
 
-        if (!validation.isValid) {
+        if (!result.isValid) {
           setState((prev) => ({
             ...prev,
             isProcessing: false,
@@ -116,11 +116,9 @@ export function useBarcodeLookup(options: UseBarcodeLookupOptions) {
           return;
         }
 
-        const result = lookupProductByBarcode(rawBarcode, products);
-
         const scan: RecentScan = {
           barcode: rawBarcode,
-          format,
+          format: result.format,
           product: result.product,
           timestamp: Date.now(),
           found: result.product !== null,
