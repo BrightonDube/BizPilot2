@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { PageHeader, Badge, LoadingSpinner, EmptyState } from '@/components/ui/bizpilot';
+import { PageHeader, LoadingSpinner, EmptyState } from '@/components/ui/bizpilot';
 import {
   Settings, AlertTriangle, ShoppingCart, Plus, Power, RefreshCw,
   ChevronDown, ChevronUp, Check, Package, ClipboardCheck, BarChart3,
@@ -148,9 +148,11 @@ export default function ReorderPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'rules') fetchRules();
-    else if (activeTab === 'alerts') fetchAlerts();
-    else if (activeTab === 'requests') fetchPurchaseRequests();
+    Promise.resolve().then(() => {
+      if (activeTab === 'rules') fetchRules();
+      else if (activeTab === 'alerts') fetchAlerts();
+      else if (activeTab === 'requests') fetchPurchaseRequests();
+    });
   }, [activeTab, fetchRules, fetchAlerts, fetchPurchaseRequests]);
 
   const handleAddRule = async () => {

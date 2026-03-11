@@ -33,8 +33,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [messageDismissed, setMessageDismissed] = useState(false);
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
-  // Track whether the form is actively submitting to prevent useGuestOnly race
-  const isSubmitting = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load session expired message on client-side only (useEffect)
   // This prevents hydration mismatch
@@ -64,14 +63,14 @@ function LoginForm() {
 
   // Redirect if already authenticated (but skip if form is submitting to prevent race)
   // 🔒 HARD NAVIGATION — useGuestOnly uses window.location.href internally
-  useGuestOnly('/dashboard', isSubmitting.current);
+  useGuestOnly('/dashboard', isSubmitting);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     // Clear session expired message on new login attempt
     setMessageDismissed(true);
     // Mark as submitting to prevent useGuestOnly from racing with our redirect
-    isSubmitting.current = true;
+    setIsSubmitting(true);
     try {
       await login(email, password);
       const next = searchParams.get('next');
@@ -81,7 +80,7 @@ function LoginForm() {
       window.location.href = target;
     } catch {
       // Error is handled by the store
-      isSubmitting.current = false;
+      setIsSubmitting(false);
     }
   };
 

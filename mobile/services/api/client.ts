@@ -152,4 +152,5 @@ export async function withRetry<T>(
   throw lastError;
 }
 
+export { apiClient };
 export default apiClient;

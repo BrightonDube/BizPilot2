@@ -146,10 +146,13 @@ export default function CRMPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'overview') fetchOverview();
-    else if (activeTab === 'segments') fetchSegments();
-    else if (activeTab === 'interactions') fetchInteractions();
-    else if (activeTab === 'follow-ups') fetchFollowUps();
+    // Avoid synchronous state updates during effect execution to prevent cascading renders
+    Promise.resolve().then(() => {
+      if (activeTab === 'overview') fetchOverview();
+      else if (activeTab === 'segments') fetchSegments();
+      else if (activeTab === 'interactions') fetchInteractions();
+      else if (activeTab === 'follow-ups') fetchFollowUps();
+    });
   }, [activeTab, fetchOverview, fetchSegments, fetchInteractions, fetchFollowUps]);
 
   const handleAddSegment = async () => {
