@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from app.api.agents import router as agents_router
 from app.api.auth import router as auth_router
 from app.api.oauth import router as oauth_router
 from app.api.business import router as business_router
@@ -81,6 +82,9 @@ from app.api.sage import router as sage_router
 from app.api.collections import router as collections_router
 
 router = APIRouter()
+
+# Agent system router (auth-protected via check_feature in each endpoint)
+router.include_router(agents_router)
 
 # Include auth routes
 router.include_router(auth_router)
