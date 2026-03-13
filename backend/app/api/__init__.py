@@ -77,6 +77,7 @@ from app.api.commissions import router as commissions_router
 from app.api.inventory_reports import router as inventory_reports_router
 from app.api.extended_reports import router as extended_reports_router
 from app.api.sage import router as sage_router
+from app.api.pdf import router as pdf_router
 from app.api.collections import router as collections_router
 
 router = APIRouter()
@@ -157,6 +158,7 @@ router.include_router(inventory_reports_router)
 router.include_router(extended_reports_router)
 router.include_router(sage_router)
 router.include_router(collections_router)
+router.include_router(pdf_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 
