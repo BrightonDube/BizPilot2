@@ -11,14 +11,11 @@ recorded locally with status tracking — actual PMS API calls will be
 added when adapter implementations are complete.
 """
 
-import math
-import uuid
 from datetime import datetime, timezone, date
 from decimal import Decimal
 from typing import Optional, Tuple, List
 from uuid import UUID
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.pms import (

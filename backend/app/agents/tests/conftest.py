@@ -6,10 +6,9 @@ All fixtures mock external dependencies (Groq, Redis, DB) so tests are
 deterministic and never hit live services.
 """
 
-import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 
 # ---------------------------------------------------------------------------

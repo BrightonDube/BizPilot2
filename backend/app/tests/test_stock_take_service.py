@@ -2,16 +2,14 @@
 import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 
-from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.inventory import InventoryItem
 from app.models.stock_take import (
-    InventoryAdjustment,
     StockCount,
     StockTakeSession,
     StockTakeStatus,
@@ -105,7 +103,7 @@ class TestGenerateReference:
 class TestCreateSession:
     def test_creates_draft_session(self):
         svc, db = _svc()
-        result = svc.create_session(BIZ, USER, notes="test notes")
+        svc.create_session(BIZ, USER, notes="test notes")
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -301,7 +299,7 @@ class TestRecordCount:
             return _chain(first=mock_cnt)
         db.query.side_effect = side_effect
 
-        result = svc.record_count(SESS_ID, PROD_ID, BIZ, 55, USER)
+        svc.record_count(SESS_ID, PROD_ID, BIZ, 55, USER)
         assert mock_cnt.counted_quantity == 55
         assert mock_cnt.variance == 5
         # variance_value not set when unit_cost is None
@@ -518,7 +516,7 @@ class TestCancelSession:
         mock_sess = _mock_session(status=StockTakeStatus.IN_PROGRESS)
         db.query.return_value = _chain(first=mock_sess)
 
-        result = svc.cancel_session(SESS_ID, BIZ)
+        svc.cancel_session(SESS_ID, BIZ)
         assert mock_sess.status == StockTakeStatus.CANCELLED
 
     def test_raises_if_session_not_found(self):

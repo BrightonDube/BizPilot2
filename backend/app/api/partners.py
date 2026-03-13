@@ -18,7 +18,6 @@ from app.schemas.partner import (
     PartnerUpdate,
     PartnerResponse,
     PartnerListResponse,
-    PartnerConfigurationCreate,
     PartnerConfigurationUpdate,
     PartnerConfigurationResponse,
     WhiteLabelConfigCreate,

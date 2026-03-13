@@ -39,14 +39,22 @@ class AgentLogger:
     @staticmethod
     def tool_call(agent_name: str, tool_name: str, arguments: dict) -> None:
         """Log that an agent is about to call a tool."""
-        # Sanitize arguments — never log raw user data or large objects
-        safe_args = {k: str(v)[:200] for k, v in arguments.items()}
+        # Sanitize arguments — redact sensitive fields, truncate others
+        SENSITIVE_KEYS = {
+            "password", "api_key", "token", "secret", "ssn", 
+            "credit_card", "authorization", "pin"
+        }
+        safe_args = {
+            k: "[REDACTED]" if k.lower() in SENSITIVE_KEYS else str(v)[:200]
+            for k, v in arguments.items()
+        }
         _logger.info(
-            "AGENT[%s] -> TOOL[%s]",
+            "AGENT[%s] -> TOOL[%s] args=%s",
             agent_name,
             tool_name,
-            extra={"agent_data": {"arguments": safe_args}},
+            safe_args,
         )
+
 
     @staticmethod
     def tool_result(agent_name: str, tool_name: str, result: Any) -> None:

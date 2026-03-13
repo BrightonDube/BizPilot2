@@ -12,9 +12,8 @@ import enum
 
 from sqlalchemy import Column, String, Text, Integer, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
 
-from app.models.base import BaseModel, utc_now
+from app.models.base import BaseModel
 
 
 class SyncQueueStatus(str, enum.Enum):

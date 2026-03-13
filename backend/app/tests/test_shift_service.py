@@ -86,7 +86,7 @@ class TestCreateShift:
     def test_creates_shift_with_all_fields(self):
         svc, db = _svc()
 
-        result = svc.create_shift(
+        svc.create_shift(
             business_id=BIZ,
             user_id=USER,
             shift_date=date(2025, 6, 15),
@@ -378,7 +378,7 @@ class TestCreateLeaveRequest:
     def test_creates_leave_request(self):
         svc, db = _svc()
 
-        result = svc.create_leave_request(
+        svc.create_leave_request(
             business_id=BIZ,
             user_id=USER,
             leave_type=LeaveType.SICK,

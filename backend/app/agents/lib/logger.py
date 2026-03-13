@@ -6,7 +6,6 @@ Wraps standard logging to provide consistent formatting for tool calls and reaso
 """
 
 import logging
-import json
 from typing import Any, Optional
 
 # Use the existing app logger name or a specialized one for agents

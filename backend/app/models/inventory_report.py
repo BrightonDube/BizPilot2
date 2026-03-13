@@ -6,7 +6,7 @@ Persisting configurations avoids repetitive setup and enables scheduled
 report emails to reference a stored configuration by ID.
 """
 
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 

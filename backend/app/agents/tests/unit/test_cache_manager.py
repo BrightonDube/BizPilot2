@@ -8,9 +8,7 @@ Tests that:
 - Cross-user session isolation is enforced
 """
 
-import json
 import pytest
-from unittest.mock import patch
 
 from app.agents.lib.cache_manager import (
     get_cached_prompt,

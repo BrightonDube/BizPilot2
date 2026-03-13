@@ -17,16 +17,16 @@ handle. Therefore we do NOT try to create actual DB tables. Instead:
 3. This isolates route + schema validation from DB layer concerns.
 """
 
+import os
 import uuid
 from datetime import datetime, timezone, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
-import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 
+from app.main import app
 from app.api.deps import get_current_active_user, get_current_business_id, get_db
 
 
@@ -66,8 +66,6 @@ def make_mock_db():
 def override_get_db_noop():
     yield make_mock_db()
 
-
-from app.main import app
 
 app.dependency_overrides[get_db] = override_get_db_noop
 app.dependency_overrides[get_current_active_user] = override_get_current_user

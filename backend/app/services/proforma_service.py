@@ -4,7 +4,6 @@ Handles creation, management, approval workflows, duplication,
 conversion, validity tracking, and auditing for proforma invoices.
 """
 
-import uuid as _uuid
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import List, Optional, Tuple
@@ -17,7 +16,6 @@ from app.models.proforma import (
     ProformaAudit,
     ProformaInvoice,
     ProformaItem,
-    ProformaRevision,
     QuoteStatus,
 )
 

@@ -12,11 +12,10 @@ Extracting it also makes it reusable from other entry points
 (e.g., automatic revision on approval/conversion).
 """
 
-from datetime import datetime, timezone
 from typing import Optional, List, Tuple
 from uuid import UUID
 
-from sqlalchemy import func, desc
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.proforma import ProformaInvoiceRevision

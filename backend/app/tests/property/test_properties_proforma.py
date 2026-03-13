@@ -3,12 +3,10 @@
 Tests quote numbering, total calculations, status transitions, and expiry logic.
 """
 
-import uuid
 from decimal import Decimal
 from datetime import datetime, timedelta
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 

@@ -17,7 +17,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.menu import Modifier, ModifierGroup
+from app.models.menu import Modifier
 from app.models.modifier_availability import ModifierAvailability
 
 

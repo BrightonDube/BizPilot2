@@ -5,32 +5,26 @@ Thin wrappers around OrderService for agent tool calls.
 No business logic lives here — only input/output transformation.
 """
 
-from typing import Any, Dict, List, Optional
+import asyncio
+from typing import Any, Dict, List
 
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.services.ai_service import AIService
 from app.services.order_service import OrderService
-
-
-def _get_business_id(db: Session, user: User) -> Optional[str]:
-    """Resolve the business_id for a user. Returns None if not found."""
-    ai_svc = AIService(db)
-    business = ai_svc._get_business_for_user(user.id)
-    return str(business.id) if business else None
+from app.agents.tools.common import get_business_id_for_user
 
 
 async def get_orders(
     db: Session, user: User, limit: int = 20
 ) -> Dict[str, Any]:
     """Return a list of recent purchase orders."""
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
     svc = OrderService(db)
-    orders = svc.get_orders(business_id=business_id, limit=limit)
+    orders = await asyncio.to_thread(svc.get_orders, business_id=business_id, limit=limit)
 
     return {
         "orders": [
@@ -50,16 +44,16 @@ async def get_order(
     db: Session, user: User, order_number: str
 ) -> Dict[str, Any]:
     """Return full details of a single order by order number."""
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
     svc = OrderService(db)
-    order = svc.get_order_by_number(order_number, business_id)
+    order = await asyncio.to_thread(svc.get_order_by_number, order_number, business_id)
     if not order:
         return {"error": f"Order {order_number} not found"}
 
-    items = svc.get_order_items(str(order.id))
+    items = await asyncio.to_thread(svc.get_order_items, str(order.id))
     return {
         "id": str(order.id),
         "order_number": order.order_number,
@@ -81,14 +75,14 @@ async def create_order_draft(
     Create a draft order — not submitted, not sent to supplier.
     Returns the draft details for user review.
     """
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
     # Resolve supplier
     from app.services.supplier_service import SupplierService
     sup_svc = SupplierService(db)
-    suppliers = sup_svc.get_suppliers(business_id=business_id)
+    suppliers = await asyncio.to_thread(sup_svc.get_suppliers, business_id=business_id)
     supplier = next(
         (s for s in suppliers if supplier_name.lower() in s.name.lower()), None
     )
@@ -120,7 +114,7 @@ async def create_order_draft(
     )
 
     svc = OrderService(db)
-    order = svc.create_order(business_id=business_id, data=order_data)
+    order = await asyncio.to_thread(svc.create_order, business_id=business_id, data=order_data)
 
     return {
         "draft_created": True,
@@ -140,17 +134,17 @@ async def submit_order_draft(
     Submit a previously created draft order.
     This is a HITL tool — must only be called after explicit user approval.
     """
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
     svc = OrderService(db)
-    order = svc.get_order(order_id, business_id)
+    order = await asyncio.to_thread(svc.get_order, order_id, business_id)
     if not order:
         return {"error": f"Order {order_id} not found"}
 
     from app.models.order import OrderStatus
-    updated = svc.update_order_status(order, OrderStatus.SUBMITTED)
+    updated = await asyncio.to_thread(svc.update_order_status, order, OrderStatus.SUBMITTED)
 
     return {
         "submitted": True,
@@ -165,7 +159,7 @@ async def update_order_status(
     db: Session, user: User, order_id: str, status: str
 ) -> Dict[str, Any]:
     """Update the status of a purchase order. HITL — requires approval."""
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
@@ -177,11 +171,11 @@ async def update_order_status(
         return {"error": f"Invalid status '{status}'"}
 
     svc = OrderService(db)
-    order = svc.get_order(order_id, business_id)
+    order = await asyncio.to_thread(svc.get_order, order_id, business_id)
     if not order:
         return {"error": f"Order {order_id} not found"}
 
-    updated = svc.update_order_status(order, new_status)
+    updated = await asyncio.to_thread(svc.update_order_status, order, new_status)
     return {
         "updated": True,
         "order_number": updated.order_number,

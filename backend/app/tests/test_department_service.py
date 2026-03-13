@@ -228,7 +228,7 @@ class TestCreateDepartment:
             _chain(first=None),        # _exists_by_name → no duplicate
         ])
 
-        result = svc.create_department(BIZ_ID, data, USER_ID)
+        svc.create_department(BIZ_ID, data, USER_ID)
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -249,7 +249,7 @@ class TestCreateDepartment:
             _chain(first=None),        # _exists_by_name
         ])
 
-        result = svc.create_department(BIZ_ID, data, USER_ID)
+        svc.create_department(BIZ_ID, data, USER_ID)
         db.add.assert_called_once()
 
     def test_duplicate_name_raises_400(self, svc, db):

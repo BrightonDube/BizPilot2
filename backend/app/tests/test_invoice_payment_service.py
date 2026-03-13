@@ -16,8 +16,6 @@ from app.services.invoice_payment_service import (
     InvoicePaymentService,
     calculate_gateway_fees,
     PAYSTACK_FEE_CAP,
-    PAYSTACK_FEE_FLAT,
-    PAYSTACK_FEE_PERCENT,
 )
 from app.services.paystack_service import PaystackTransaction
 

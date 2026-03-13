@@ -7,13 +7,13 @@ import os
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 
-from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.inventory import InventoryItem
 from app.models.stock_reservation import StockReservation
 from app.services.layby_stock_service import LaybyStockService
 

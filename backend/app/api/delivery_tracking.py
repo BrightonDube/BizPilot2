@@ -15,7 +15,6 @@ from app.api.deps import get_current_active_user
 from app.core.database import get_sync_db
 from app.schemas.delivery_tracking import (
     DriverShiftCreate,
-    DriverShiftUpdate,
     DriverShiftResponse,
     DriverShiftListResponse,
     DeliveryTrackingCreate,

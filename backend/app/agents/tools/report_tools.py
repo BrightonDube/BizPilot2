@@ -5,22 +5,14 @@ Thin wrapper for PDF report generation.
 This is a HITL tool — only called after explicit user approval.
 """
 
-import os
-import uuid
+import asyncio
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.services.ai_service import AIService
-from app.services.sales_report_service import SalesReportService
-
-
-def _get_business_id(db: Session, user: User) -> Optional[str]:
-    ai_svc = AIService(db)
-    business = ai_svc._get_business_for_user(user.id)
-    return str(business.id) if business else None
+from app.agents.tools.common import get_business_id_for_user
 
 
 async def generate_pdf_report(
@@ -36,7 +28,7 @@ async def generate_pdf_report(
 
     Supported report_type values: daily_sales | monthly_summary | inventory
     """
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
@@ -56,11 +48,11 @@ async def generate_pdf_report(
     # Use the existing report generator service if available
     try:
         from app.services.report_generator_service import ReportGeneratorService
-        from app.models.report_subscription import ReportType
 
         svc = ReportGeneratorService(db)
         report_type_enum = _map_report_type(report_type)
-        report_data = svc.generate_report_data(
+        await asyncio.to_thread(
+            svc.generate_report_data,
             business_id=business_id,
             report_type=report_type_enum,
             period_start=start_dt,

@@ -10,15 +10,11 @@ circular imports with the entity models they reference.
 """
 
 import enum
-import uuid
-from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Enum,
     ForeignKey,
     Integer,
     String,

@@ -15,7 +15,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -264,7 +264,7 @@ class TestCreateProductionOrder:
             product_id=str(product.id),
             quantity_to_produce=5,
         )
-        result = svc.create_production_order(BIZ, data, user_id=USR)
+        svc.create_production_order(BIZ, data, user_id=USR)
         db.add.assert_called()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -297,7 +297,7 @@ class TestCreateProductionOrder:
         added_objects = []
         db.add.side_effect = lambda obj: added_objects.append(obj)
 
-        result = svc.create_production_order(BIZ, data, user_id=USR)
+        svc.create_production_order(BIZ, data, user_id=USR)
         # Per-unit cost: (10*2) + (5*3) = 35; times 4 = 140
         order_obj = added_objects[0]
         assert order_obj.estimated_cost == Decimal("140")
@@ -414,7 +414,7 @@ class TestUpdateProductionOrder:
         svc, db = _svc()
         order = _mock_order(notes="old notes")
         data = ProductionOrderUpdate(notes="new notes")
-        result = svc.update_production_order(order, data)
+        svc.update_production_order(order, data)
         assert order.notes == "new notes"
         db.commit.assert_called_once()
         db.refresh.assert_called_once_with(order)
@@ -441,7 +441,7 @@ class TestStartProduction:
         """Can start production from DRAFT status."""
         svc, db = _svc()
         order = _mock_order(status=ProductionStatus.DRAFT)
-        result = svc.start_production(order)
+        svc.start_production(order)
         assert order.status == ProductionStatus.IN_PROGRESS
         assert order.started_at is not None
         db.commit.assert_called_once()
@@ -450,7 +450,7 @@ class TestStartProduction:
         """Can start production from PENDING status."""
         svc, db = _svc()
         order = _mock_order(status=ProductionStatus.PENDING)
-        result = svc.start_production(order)
+        svc.start_production(order)
         assert order.status == ProductionStatus.IN_PROGRESS
 
     def test_start_from_in_progress_raises(self):
@@ -487,7 +487,7 @@ class TestCompleteProduction:
         )
         db.query.return_value = _chain()
 
-        result = svc.complete_production(order, quantity_produced=8)
+        svc.complete_production(order, quantity_produced=8)
         assert order.status == ProductionStatus.COMPLETED
         assert order.quantity_produced == 8
         assert order.completed_at is not None
@@ -626,7 +626,7 @@ class TestCancelProduction:
         """Can cancel a DRAFT order."""
         svc, db = _svc()
         order = _mock_order(status=ProductionStatus.DRAFT)
-        result = svc.cancel_production(order)
+        svc.cancel_production(order)
         assert order.status == ProductionStatus.CANCELLED
         db.commit.assert_called_once()
 
@@ -634,7 +634,7 @@ class TestCancelProduction:
         """Can cancel an IN_PROGRESS order."""
         svc, db = _svc()
         order = _mock_order(status=ProductionStatus.IN_PROGRESS)
-        result = svc.cancel_production(order)
+        svc.cancel_production(order)
         assert order.status == ProductionStatus.CANCELLED
 
     def test_cancel_completed_raises(self):

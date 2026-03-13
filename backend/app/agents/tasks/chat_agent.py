@@ -30,12 +30,12 @@ def _detect_agent(message: str) -> str:
     Falls back to 'chat_agent' for general questions.
     """
     lower = message.lower()
+    if any(sig in lower for sig in _DECISION_SIGNALS):
+        return "decision_agent"
     if any(sig in lower for sig in _ORDER_SIGNALS):
         return "order_agent"
     if any(sig in lower for sig in _REPORT_SIGNALS):
         return "report_agent"
-    if any(sig in lower for sig in _DECISION_SIGNALS):
-        return "decision_agent"
     if any(sig in lower for sig in _OPERATIONS_SIGNALS):
         return "operations_agent"
     return "chat_agent"

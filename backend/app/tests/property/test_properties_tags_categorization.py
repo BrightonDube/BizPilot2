@@ -7,7 +7,7 @@ associations, and smart collection rule evaluation.
 Feature: Tags & Categorization
 """
 
-from hypothesis import given, settings, HealthCheck, assume
+from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st
 
 

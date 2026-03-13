@@ -13,7 +13,7 @@ Why these tables?
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 
 revision = "094_month_end_extensions"
 down_revision = "093_gl_extensions"

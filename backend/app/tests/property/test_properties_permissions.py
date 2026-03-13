@@ -14,14 +14,13 @@ Feature: Granular Permissions & Subscription
 """
 
 from datetime import datetime, timezone, timedelta
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st
 
 from app.services.permission_service import PermissionService
-from app.models.subscription import FeatureOverride
 
 
 # ── Constants ────────────────────────────────────────────────────────────────

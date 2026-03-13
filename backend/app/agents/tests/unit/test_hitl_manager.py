@@ -8,7 +8,6 @@ Tests that:
 """
 
 import pytest
-from unittest.mock import patch, AsyncMock
 
 from app.agents.lib.hitl_manager import (
     pause_for_approval,

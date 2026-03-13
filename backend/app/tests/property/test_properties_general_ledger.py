@@ -5,10 +5,8 @@ account balances behave correctly, and trial balance always balances.
 """
 
 from decimal import Decimal
-from unittest.mock import MagicMock
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 
@@ -64,7 +62,6 @@ class TestGeneralLedgerProperties:
         Convention: assets/expenses are normally debit, liabilities/equity/revenue credit.
         """
         expected_debit_types = {"asset", "expense"}
-        expected_credit_types = {"liability", "equity", "revenue"}
 
         if account_type in expected_debit_types:
             conventional = "debit"

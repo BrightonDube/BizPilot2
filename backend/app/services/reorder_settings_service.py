@@ -9,20 +9,14 @@ This service manages the *configuration* that informs those decisions.
 Separating them keeps each service focused and testable.
 """
 
-import math
-from datetime import datetime
-from decimal import Decimal
 from typing import List, Optional, Tuple
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from app.models.product import Product
 from app.models.reorder import ProductReorderSettings, ReorderAuditLog
 from app.schemas.reorder import (
     ProductReorderSettingsCreate,
-    ProductReorderSettingsUpdate,
 )
 
 

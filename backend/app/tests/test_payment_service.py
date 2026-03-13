@@ -11,13 +11,12 @@ Tests cover:
 
 import os
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import pytest
 
 from app.services.payment_service import PaymentService
 from app.models.payment import PaymentTransactionStatus
@@ -160,7 +159,7 @@ class TestTransactions:
         txn = _mock_txn(amount=Decimal("100.00"))
         db.query.return_value.filter.return_value.first.return_value = txn
 
-        result = svc.refund_transaction(txn.id, Decimal("50.00"))
+        svc.refund_transaction(txn.id, Decimal("50.00"))
         db.add.assert_called_once()
         db.commit.assert_called()
 

@@ -5,8 +5,7 @@ Tests: happy path, error when no business, invalid date format.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from datetime import date
+from unittest.mock import patch
 
 from app.agents.tools.sales_tools import get_daily_sales
 

@@ -15,7 +15,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -91,7 +91,7 @@ class TestCreateTaxRate:
         chain = _chain()
         db.query.return_value = chain
 
-        result = svc.create_tax_rate(BIZ, "VAT", Decimal("15"))
+        svc.create_tax_rate(BIZ, "VAT", Decimal("15"))
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -261,7 +261,7 @@ class TestAssignToProduct:
         db.query.return_value = _chain(first=None)
 
         pid, tid = uuid.uuid4(), uuid.uuid4()
-        result = svc.assign_to_product(pid, tid)
+        svc.assign_to_product(pid, tid)
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -308,7 +308,7 @@ class TestAssignToCategory:
         db.query.return_value = _chain(first=None)
 
         cid, tid = uuid.uuid4(), uuid.uuid4()
-        result = svc.assign_to_category(cid, tid)
+        svc.assign_to_category(cid, tid)
 
         db.add.assert_called_once()
         link = db.add.call_args[0][0]

@@ -9,7 +9,6 @@ Uses real hitl_manager + real cache_manager with fake Redis.
 """
 
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 
 from app.agents.lib.hitl_manager import pause_for_approval, get_pending_action, reject_hitl
 from app.agents.lib.cache_manager import clear_hitl_pending

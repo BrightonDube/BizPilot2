@@ -145,7 +145,7 @@ class TestCreateUser:
         user_data.last_name = "User"
         user_data.phone = None
 
-        result = await svc.create_user(user_data)
+        await svc.create_user(user_data)
 
         mock_hash.assert_called_once_with("secret123")
         db.add.assert_called_once()

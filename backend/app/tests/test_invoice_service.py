@@ -12,7 +12,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -212,7 +212,7 @@ class TestCreateInvoice:
 
         db.query.side_effect = query_side_effect
 
-        result = svc.create_invoice(BIZ_ID, data)
+        svc.create_invoice(BIZ_ID, data)
         # Invoice added + 1 item added = 2 add calls
         assert db.add.call_count == 2
         db.commit.assert_called_once()
@@ -238,7 +238,7 @@ class TestCreateInvoice:
 
         db.query.side_effect = query_side_effect
 
-        result = svc.create_invoice(BIZ_ID, data)
+        svc.create_invoice(BIZ_ID, data)
         # Only the invoice itself is added (no items)
         assert db.add.call_count == 1
         db.commit.assert_called_once()
@@ -261,7 +261,7 @@ class TestCreateInvoice:
 
         db.query.side_effect = query_side_effect
 
-        result = svc.create_invoice(BIZ_ID, data)
+        svc.create_invoice(BIZ_ID, data)
         added_invoice = db.add.call_args_list[0][0][0]
         assert isinstance(added_invoice, Invoice)
         assert added_invoice.billing_address == addr.model_dump()
@@ -312,7 +312,7 @@ class TestUpdateInvoice:
 
         db.query.return_value = _chain(rows=[])  # _calculate_invoice_totals
 
-        result = svc.update_invoice(invoice, data)
+        svc.update_invoice(invoice, data)
         assert invoice.notes == "Updated notes"
         assert invoice.terms == "Net 30"
         db.commit.assert_called_once()
@@ -360,7 +360,7 @@ class TestRecordPayment:
         invoice.amount_paid = Decimal("0")
         invoice.total = Decimal("1000")
 
-        result = svc.record_payment(invoice, Decimal("300"), "card")
+        svc.record_payment(invoice, Decimal("300"), "card")
         assert invoice.amount_paid == Decimal("300")
         assert invoice.status == InvoiceStatus.PARTIAL
         db.commit.assert_called_once()
@@ -370,7 +370,7 @@ class TestRecordPayment:
         invoice.amount_paid = Decimal("500")
         invoice.total = Decimal("1000")
 
-        result = svc.record_payment(invoice, Decimal("500"), "cash")
+        svc.record_payment(invoice, Decimal("500"), "cash")
         assert invoice.amount_paid == Decimal("1000")
         assert invoice.status == InvoiceStatus.PAID
         assert invoice.paid_date == date.today()
@@ -460,7 +460,6 @@ class TestGetInvoiceStats:
         overdue_sub.count.return_value = 3
 
         count_tracker = {"n": 0}
-        original_count = base_chain.count
 
         def count_side_effect():
             idx = count_tracker["n"]

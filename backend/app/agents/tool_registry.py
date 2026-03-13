@@ -14,6 +14,29 @@ To add a new tool:
 from typing import Any, Callable, Dict, List, Optional
 
 from app.agents.constants import ActionType, RiskLevel
+from app.agents.tools.sales_tools import get_daily_sales
+from app.agents.tools.order_tools import (
+    get_orders,
+    get_order,
+    create_order_draft,
+    submit_order_draft,
+    update_order_status,
+)
+from app.agents.tools.inventory_tools import (
+    get_inventory_summary,
+    get_low_stock_items,
+)
+from app.agents.tools.metrics_tools import (
+    get_weekly_report,
+    get_monthly_report,
+    get_product_performance,
+    get_dashboard_kpis,
+)
+from app.agents.tools.customer_tools import get_customers, get_top_customers
+from app.agents.tools.supplier_tools import get_suppliers
+from app.agents.tools.invoice_tools import get_invoice_stats, get_invoices
+from app.agents.tools.report_tools import generate_pdf_report
+from app.agents.tools.staff_tools import get_staff_summary, get_time_entries
 
 
 class ToolDefinition:
@@ -89,33 +112,6 @@ class ToolRegistry:
 # Singleton instance — import and use this everywhere
 # ---------------------------------------------------------------------------
 registry = ToolRegistry()
-
-# ---------------------------------------------------------------------------
-# Tool registrations — thin wrappers around BizPilot service functions
-# ---------------------------------------------------------------------------
-from app.agents.tools.sales_tools import get_daily_sales
-from app.agents.tools.order_tools import (
-    get_orders,
-    get_order,
-    create_order_draft,
-    submit_order_draft,
-    update_order_status,
-)
-from app.agents.tools.inventory_tools import (
-    get_inventory_summary,
-    get_low_stock_items,
-)
-from app.agents.tools.metrics_tools import (
-    get_weekly_report,
-    get_monthly_report,
-    get_product_performance,
-    get_dashboard_kpis,
-)
-from app.agents.tools.customer_tools import get_customers, get_top_customers
-from app.agents.tools.supplier_tools import get_suppliers
-from app.agents.tools.invoice_tools import get_invoice_stats, get_invoices
-from app.agents.tools.report_tools import generate_pdf_report
-from app.agents.tools.staff_tools import get_staff_summary, get_time_entries
 
 # --- Sales tools ---
 registry.register(ToolDefinition(

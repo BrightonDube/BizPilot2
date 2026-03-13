@@ -5,8 +5,7 @@ Tests partner identifier format, revenue share limits, and user role validation.
 
 from decimal import Decimal
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 

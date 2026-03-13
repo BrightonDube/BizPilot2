@@ -2,12 +2,11 @@
 import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-from datetime import date, datetime, timezone
+from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import pytest
 
 from app.models.layby_notification import (
     NotificationChannel,
@@ -182,7 +181,7 @@ class TestSend:
         svc, db = _svc()
         layby = _layby()
 
-        record = svc._send(
+        svc._send(
             layby=layby,
             notification_type="test_type",
             channel=NotificationChannel.IN_APP,
@@ -224,7 +223,7 @@ class TestSend:
         svc.email_service.send_email.side_effect = RuntimeError("SMTP down")
         layby = _layby(email="x@y.com")
 
-        record = svc._send(
+        svc._send(
             layby=layby,
             notification_type="reminder",
             channel=NotificationChannel.EMAIL,
@@ -312,7 +311,7 @@ class TestSendPaymentReminder:
         layby = _layby(balance_due=Decimal("750.00"))
         entry = _schedule(due_date=date(2025, 8, 1), amount_due=Decimal("250.00"))
 
-        result = svc.send_payment_reminder(layby, entry)
+        svc.send_payment_reminder(layby, entry)
 
         added = db.add.call_args[0][0]
         assert added.notification_type == "payment_reminder"

@@ -101,7 +101,7 @@ def test_assignment_integrity(num_assignments):
     Why: If two drivers are both "actively assigned" to the same order,
     one would arrive to find the other already delivered it.
     """
-    order_id = str(uuid4())
+    str(uuid4())
     active_count = num_assignments
 
     if active_count == 1:

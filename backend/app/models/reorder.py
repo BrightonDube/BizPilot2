@@ -1,7 +1,6 @@
 """Automated reorder models."""
 
 import enum
-import uuid
 from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Enum as SQLEnum, Boolean, Numeric, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship

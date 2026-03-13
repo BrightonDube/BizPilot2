@@ -5,7 +5,6 @@ Generates a plain English execution plan before the agent calls any tools.
 The agent always shows this plan and waits for user confirmation first.
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 

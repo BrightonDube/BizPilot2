@@ -8,8 +8,7 @@ Tests that:
 - list_for_agent returns correct OpenAI format
 """
 
-import pytest
-from app.agents.tool_registry import registry, ToolDefinition
+from app.agents.tool_registry import registry
 from app.agents.constants import ActionType, RiskLevel
 
 

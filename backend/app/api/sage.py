@@ -13,7 +13,6 @@ encryption, logging, and queue management. The API layer only
 handles HTTP concerns (auth, validation, serialization).
 """
 
-from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
 

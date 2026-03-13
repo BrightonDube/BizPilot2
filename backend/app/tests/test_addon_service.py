@@ -10,7 +10,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
 
 import uuid
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -54,7 +54,7 @@ def svc(db):
 
 class TestCreateModifierGroup:
     def test_creates_group_with_defaults(self, svc, db):
-        result = svc.create_modifier_group(BIZ_ID, "Toppings")
+        svc.create_modifier_group(BIZ_ID, "Toppings")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -160,7 +160,7 @@ class TestAddModifier:
         parent_group.business_id = uuid.UUID(BIZ_ID)
         db.query.return_value = _chain(first=parent_group)
 
-        result = svc.add_modifier(GROUP_ID, "Extra Cheese", price_adjustment=5.0)
+        svc.add_modifier(GROUP_ID, "Extra Cheese", price_adjustment=5.0)
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
         assert isinstance(added, Modifier)
@@ -215,7 +215,7 @@ class TestDeleteModifier:
 class TestAssignGroupToProduct:
     def test_creates_new_link(self, svc, db):
         db.query.return_value = _chain(first=None)
-        result = svc.assign_group_to_product(PRODUCT_ID, GROUP_ID, sort_order=2)
+        svc.assign_group_to_product(PRODUCT_ID, GROUP_ID, sort_order=2)
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
         assert isinstance(added, ProductModifierGroup)

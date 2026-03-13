@@ -7,7 +7,6 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.staff_target_service import StaffTargetService
 
@@ -44,7 +43,7 @@ def _chain(db, rows=None, first=None, count=0, scalar=None, one=None):
 class TestTargetCRUD:
     def test_create_target(self):
         svc, db = _svc()
-        result = svc.create_target(BIZ, "sales", "monthly", START, END, Decimal("10000"))
+        svc.create_target(BIZ, "sales", "monthly", START, END, Decimal("10000"))
         db.add.assert_called_once()
         db.commit.assert_called()
 

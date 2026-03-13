@@ -12,13 +12,12 @@ Tests cover all 7 report methods:
 
 import os
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import pytest
 
 from app.services.inventory_report_service import InventoryReportService
 
@@ -212,8 +211,6 @@ class TestTurnoverAnalysis:
         """Empty inventory returns zero turnover metrics."""
         svc, db = _make_service()
 
-        from app.models.product import Product
-        from app.models.order import OrderItem
 
         def query_router(model, *args):
             chain = MagicMock()
@@ -297,7 +294,6 @@ class TestDashboard:
         """Dashboard returns KPIs and alerts."""
         svc, db = _make_service()
 
-        from app.models.product import Product
 
         def query_router(model, *args):
             chain = MagicMock()

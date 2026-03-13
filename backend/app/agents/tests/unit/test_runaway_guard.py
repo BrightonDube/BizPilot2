@@ -8,9 +8,7 @@ Tests that:
 - Progress summary is included in stop result
 """
 
-import pytest
 from app.agents.lib.runaway_guard import RunawayGuard, GuardResult
-from app.agents.constants import Limits
 
 
 def test_normal_step_increments_counter():

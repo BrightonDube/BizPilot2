@@ -11,7 +11,6 @@ different lifecycle management and configuration needs.
 """
 
 import enum
-import uuid
 
 from sqlalchemy import (
     Column,

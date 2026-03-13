@@ -13,12 +13,11 @@ Keeping them separate avoids bloating the core report service and
 enables independent testing and evolution.
 """
 
-from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
+from datetime import date, datetime
 from typing import Optional, List, Tuple
 from uuid import UUID
 
-from sqlalchemy import func, desc, and_, or_, case, cast, Numeric
+from sqlalchemy import func, desc
 from sqlalchemy.orm import Session as DbSession
 
 from app.models.session import Session

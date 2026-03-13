@@ -7,7 +7,6 @@ and lost-quotes breakdowns (Requirements 7.1–7.8).
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
-from uuid import UUID
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -79,7 +78,7 @@ class ProformaReportService:
         start_dt = datetime.combine(start_date, datetime.min.time())
         end_dt = datetime.combine(end_date, datetime.min.time()) + timedelta(days=1)
 
-        base = self.db.query(ProformaInvoice).filter(
+        self.db.query(ProformaInvoice).filter(
             ProformaInvoice.business_id == business_id,
             ProformaInvoice.deleted_at.is_(None),
             ProformaInvoice.created_at >= start_dt,

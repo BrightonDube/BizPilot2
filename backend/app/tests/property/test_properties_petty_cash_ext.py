@@ -12,7 +12,6 @@ operations) that manual testing would miss.
 
 from hypothesis import given, strategies as st, settings, assume
 from decimal import Decimal
-from datetime import datetime, date
 
 
 # ---------------------------------------------------------------------------

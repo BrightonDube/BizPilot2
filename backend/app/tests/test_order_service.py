@@ -7,10 +7,9 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.order_service import OrderService
-from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus, OrderDirection
+from app.models.order import OrderStatus, PaymentStatus, OrderDirection
 from app.schemas.order import OrderCreate, OrderUpdate, OrderItemCreate, OrderItemModifierCreate
 
 
@@ -278,7 +277,7 @@ class TestUpdateOrder:
         data = OrderUpdate(notes="Updated notes")
         db.query.return_value = _chain(rows=[])
 
-        result = svc.update_order(order, data)
+        svc.update_order(order, data)
         assert order.notes == "Updated notes"
         db.commit.assert_called_once()
         db.refresh.assert_called_once()

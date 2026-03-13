@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.models.gift_card import GiftCard, GiftCardTransaction, GiftCardStatus
+from app.models.gift_card import GiftCardStatus
 from app.services.gift_card_service import GiftCardService
 
 BIZ = str(uuid.uuid4())

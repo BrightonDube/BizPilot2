@@ -10,7 +10,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
 
 import uuid
-from datetime import date, time, datetime, timezone
+from datetime import date, time
 from unittest.mock import MagicMock, patch
 
 import pytest

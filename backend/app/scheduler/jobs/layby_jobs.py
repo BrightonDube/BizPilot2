@@ -9,7 +9,6 @@ Runs periodically (daily by default) and:
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import and_
 
 from app.core.database import SessionLocal
 from app.models.layby import Layby, LaybyStatus

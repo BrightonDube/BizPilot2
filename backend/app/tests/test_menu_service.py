@@ -11,11 +11,10 @@ Tests cover:
 import os
 import uuid
 from decimal import Decimal
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import pytest
 
 from app.services.menu_service import MenuService
 

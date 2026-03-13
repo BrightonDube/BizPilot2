@@ -72,13 +72,13 @@ class TestGetPointsExpiringSoon:
         db.query.return_value.filter.return_value = mock_query
         service = LoyaltyService(db)
 
-        with patch.object(service, 'get_points_expiring_soon', return_value=[]) as mocked:
+        with patch.object(service, 'get_points_expiring_soon', return_value=[]):
             result = service.get_points_expiring_soon("business-123", warning_days=7)
             assert result == []
 
     def test_returns_sorted_by_soonest_expiry(self):
         """Items must be sorted by expires_at ascending."""
-        service = LoyaltyService(MagicMock())
+        LoyaltyService(MagicMock())
         # Inject result directly since we're testing the sort logic
         mock_result = [
             {"customer_id": "c1", "points": 100, "expires_at": "2099-01-10T00:00:00", "days_remaining": 10, "transaction_id": "t1"},
@@ -134,7 +134,7 @@ class TestGetExpiredPointsReport:
 
     def test_report_structure_has_required_keys(self):
         """Report must have: transactions, total_records, total_expired_points, page, per_page, pages."""
-        service = LoyaltyService(MagicMock())
+        LoyaltyService(MagicMock())
         required_keys = {
             "transactions", "total_records", "total_expired_points", "page", "per_page", "pages"
         }

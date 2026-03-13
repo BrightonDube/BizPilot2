@@ -3,10 +3,9 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from datetime import datetime
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.report_subscription_service import ReportSubscriptionService
 from app.models.report_subscription import (
@@ -59,7 +58,7 @@ class TestCreateSubscription:
         chain = _chain(first=None)
         db.query.return_value = chain
 
-        result = svc.create_subscription(
+        svc.create_subscription(
             USER_ID, ReportType.SALES_SUMMARY, DeliveryFrequency.WEEKLY
         )
 
@@ -286,7 +285,7 @@ class TestLogDelivery:
         start = datetime(2025, 1, 1)
         end = datetime(2025, 1, 31)
 
-        result = svc.log_delivery(
+        svc.log_delivery(
             user_id=USER_ID,
             report_type=ReportType.SALES_SUMMARY,
             frequency=DeliveryFrequency.WEEKLY,

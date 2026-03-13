@@ -7,7 +7,6 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import pytest
 
 from app.models.delivery import DeliveryZone
 from app.services.delivery_zone_service import (

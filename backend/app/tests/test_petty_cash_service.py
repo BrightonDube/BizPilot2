@@ -13,9 +13,8 @@ Tests cover:
 
 import os
 import uuid
-from datetime import datetime, timezone, date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
@@ -313,7 +312,7 @@ class TestDisbursement:
         disb.status = DisbursementStatus.PENDING.value
         db.query.return_value.filter.return_value.first.return_value = disb
 
-        result = svc.complete_disbursement(str(uuid.uuid4()))
+        svc.complete_disbursement(str(uuid.uuid4()))
         assert disb.status == DisbursementStatus.COMPLETED.value
         assert disb.completed_at is not None
 

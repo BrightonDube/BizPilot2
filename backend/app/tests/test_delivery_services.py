@@ -10,13 +10,11 @@ Tests cover:
 
 import os
 import uuid
-from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import pytest
 
 from app.services.delivery_fee_service import calculate_fee, _haversine_km
 from app.services.delivery_zone_service import (
@@ -26,7 +24,6 @@ from app.services.delivery_zone_service import (
     check_address_in_zone,
 )
 from app.services.delivery_assign_service import (
-    _active_delivery_count,
     get_available_drivers,
     auto_assign,
     get_driver_workload,

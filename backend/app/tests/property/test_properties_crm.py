@@ -11,7 +11,6 @@ Requirements: 2 (Purchase History), 5 (Customer Statistics), 8 (Segmentation)
 
 from decimal import Decimal
 from unittest.mock import Mock
-from uuid import uuid4
 
 from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st

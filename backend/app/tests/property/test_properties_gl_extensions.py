@@ -6,7 +6,6 @@ Tests recurring entries, account balances, and GL audit log invariants.
 from decimal import Decimal
 from datetime import date
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

@@ -8,7 +8,6 @@ Tests that:
 - Model tier is a valid TaskType
 """
 
-import pytest
 from app.agents.agent_registry import registry as agent_registry
 from app.agents.tool_registry import registry as tool_registry
 from app.core.ai_models import TaskType

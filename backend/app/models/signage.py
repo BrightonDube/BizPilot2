@@ -10,7 +10,6 @@ with playlists, scheduling, and analytics — fundamentally different
 functionality.
 """
 
-import uuid
 
 from sqlalchemy import (
     Column,

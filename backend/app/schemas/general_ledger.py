@@ -35,7 +35,7 @@ class AccountResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class AccountBalanceResponse(BaseModel):
+class AccountBalanceSummary(BaseModel):
     """Schema for account balance response."""
     account_id: str
     account_code: str

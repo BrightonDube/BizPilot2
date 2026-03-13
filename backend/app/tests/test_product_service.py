@@ -15,13 +15,12 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
 from decimal import Decimal
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from app.models.product import Product, ProductCategory, ProductStatus
 from app.models.product_ingredient import ProductIngredient
-from app.models.inventory import InventoryItem
 from app.schemas.product import (
     ProductCreate,
     ProductUpdate,
@@ -223,7 +222,7 @@ class TestCreateProduct:
             track_inventory=False,
         )
 
-        result = svc.create_product(BIZ, data)
+        svc.create_product(BIZ, data)
 
         db.add.assert_called()
         db.commit.assert_called_once()
@@ -295,7 +294,7 @@ class TestUpdateProduct:
         product = _mock_product()
         data = ProductUpdate(name="Updated Name")
 
-        result = svc.update_product(product, data)
+        svc.update_product(product, data)
 
         db.commit.assert_called_once()
         db.refresh.assert_called_once_with(product)
@@ -363,7 +362,7 @@ class TestAddProductIngredient:
         )
         product_id = str(uuid.uuid4())
 
-        result = svc.add_product_ingredient(product_id, BIZ, data)
+        svc.add_product_ingredient(product_id, BIZ, data)
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -542,7 +541,7 @@ class TestCreateCategory:
         svc, db = _svc()
         data = ProductCategoryCreate(name="Beverages")
 
-        result = svc.create_category(BIZ, data)
+        svc.create_category(BIZ, data)
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -569,7 +568,6 @@ class TestDeleteCategory:
         """Deleting a category moves its products to uncategorized first."""
         svc, db = _svc()
         cat = _mock_category()
-        cat_id = cat.id
 
         # Two db.query calls: one for Product.update, one implicit via delete
         product_chain = _chain()

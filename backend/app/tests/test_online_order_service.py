@@ -11,7 +11,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
 
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -21,7 +21,6 @@ from app.models.menu import MenuItem
 from app.models.online_order import (
     FulfillmentType,
     OnlineOrder,
-    OnlineOrderItem,
     OnlineOrderStatus,
     OnlineStore,
 )
@@ -78,7 +77,7 @@ class TestGetOrCreateStore:
     def test_creates_new_store_when_none_exists(self, svc, db):
         db.query.return_value = _chain(first=None)
 
-        result = svc.get_or_create_store(BIZ_ID, "New Store")
+        svc.get_or_create_store(BIZ_ID, "New Store")
 
         db.add.assert_called_once()
         db.commit.assert_called_once()

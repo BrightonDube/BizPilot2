@@ -8,14 +8,12 @@ Pairing-code generation, playlist ordering, and content publishing
 involve multi-step logic that doesn't belong in thin API endpoints.
 """
 
-import math
 import secrets
 import string
 from datetime import datetime, timezone
 from typing import Optional, Tuple, List
 from uuid import UUID
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.signage import (

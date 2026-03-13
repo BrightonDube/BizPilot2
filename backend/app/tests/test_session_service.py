@@ -7,7 +7,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-for-val
 import hashlib
 import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -132,7 +132,7 @@ class TestCreateSession:
     def test_creates_and_persists(self, svc, db):
         db.query.return_value = _chain(update_count=1)
 
-        result = svc.create_session(
+        svc.create_session(
             user_id=USER_ID,
             refresh_token=REFRESH_TOKEN,
             user_agent=DESKTOP_UA,
@@ -227,7 +227,6 @@ class TestGetUserSessions:
 class TestUpdateSessionActivity:
     def test_updates_last_active_at(self, svc, db):
         session = _make_session()
-        old_ts = session.last_active_at
 
         result = svc.update_session_activity(session)
 

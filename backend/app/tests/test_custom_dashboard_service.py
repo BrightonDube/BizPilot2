@@ -84,7 +84,7 @@ class TestGetDashboard:
 class TestCreateDashboard:
     def test_basic(self):
         svc, db = _svc()
-        result = svc.create_dashboard(BIZ, USR, "Sales")
+        svc.create_dashboard(BIZ, USR, "Sales")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -182,7 +182,7 @@ class TestListWidgets:
 class TestAddWidget:
     def test_basic_defaults(self):
         svc, db = _svc()
-        result = svc.add_widget(DASH_ID, "chart", "Revenue")
+        svc.add_widget(DASH_ID, "chart", "Revenue")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         added = db.add.call_args[0][0]
@@ -321,7 +321,7 @@ class TestApplyTemplate:
 class TestShareDashboard:
     def test_creates_share(self):
         svc, db = _svc()
-        result = svc.share_dashboard(DASH_ID, USR2, permission="edit")
+        svc.share_dashboard(DASH_ID, USR2, permission="edit")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         added = db.add.call_args[0][0]

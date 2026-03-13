@@ -10,10 +10,8 @@ Flow for a standard request:
   3. hitl resume      → handled by app/api/agents.py calling resume_after_hitl()
 """
 
-import json
-import uuid
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from sqlalchemy.orm import Session
 
@@ -24,7 +22,6 @@ from app.agents.tool_registry import registry as tool_registry
 from app.agents.lib.prompt_builder import PromptBuilder, ContextProvider
 from app.agents.lib.runaway_guard import RunawayGuard
 from app.agents.lib.plan_generator import generate_plan
-from app.agents.lib.hitl_manager import pause_for_approval
 from app.agents.lib.cache_manager import get_cached_prompt, cache_prompt
 from app.agents.lib.observability_logger import log_agent_step
 from app.agents.lib.agent_logger import AgentLogger
@@ -85,11 +82,11 @@ class Orchestrator:
             agent_def, user, sharing_level
         )
         messages = self._build_messages(system_prompt, chat_history, user_message)
-        tools = tool_registry.list_for_agent(agent_def.tools)
         step = 0
-
         while True:
             step += 1
+            # Refresh tool definitions for current context
+            tool_registry.list_for_agent(agent_def.tools)
             try:
                 response = await execute_task(
                     task_type=agent_def.model_tier,
@@ -123,6 +120,8 @@ class Orchestrator:
                 tokens_used=response.usage.get("total_tokens", 0),
                 reasoning=final_text[:500],
             )
+            # Commit logs and any tool-induced changes
+            await self.db.commit()
 
             if guard_result.stopped:
                 return {"type": "stopped", "message": guard_result.partial_summary}
@@ -165,6 +164,7 @@ class Orchestrator:
                 result_summary=str(result)[:500],
                 success=True,
             )
+            await self.db.commit()
             return {"type": "tool_result", "tool": tool_name, "result": result}
 
         except Exception as exc:
@@ -182,6 +182,7 @@ class Orchestrator:
                 success=False,
                 error_message=str(exc),
             )
+            await self.db.commit()
             return {"type": "error", "message": f"Tool execution failed: {str(exc)}"}
 
     async def _get_system_prompt(

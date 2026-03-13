@@ -4,7 +4,6 @@ import os
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import math
 from decimal import Decimal
 from unittest.mock import MagicMock
 from uuid import uuid4

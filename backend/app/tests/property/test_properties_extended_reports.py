@@ -5,8 +5,7 @@ Tests report date range validation, pagination bounds, and export format options
 
 from datetime import datetime, timedelta
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 

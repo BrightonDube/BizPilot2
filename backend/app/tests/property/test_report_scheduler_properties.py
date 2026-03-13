@@ -7,14 +7,13 @@ Feature: Automated Report Emails
 Requirements: 3.1, 3.6
 """
 
-from unittest.mock import Mock, MagicMock, patch, call
+from unittest.mock import Mock, MagicMock, patch
 from hypothesis import given, strategies as st, settings, HealthCheck
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.scheduler.jobs.report_scheduler_job import process_automated_reports_job
 from app.models.report_subscription import DeliveryFrequency, DeliveryStatus, ReportType, ReportSubscription
 from app.services.report_generator_service import ReportData
-from app.services.report_subscription_service import ReportSubscriptionService
 
 # Strategies
 @st.composite
@@ -40,7 +39,7 @@ def test_scheduler_job_execution_flow(frequency, active_subscriptions):
          patch('app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService') as mock_sub_service_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportGeneratorService') as mock_gen_service_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportEmailService') as mock_email_service_cls, \
-         patch('app.scheduler.jobs.report_scheduler_job.EmailService') as mock_raw_email_service_cls:
+         patch('app.scheduler.jobs.report_scheduler_job.EmailService'):
         
         mock_db = MagicMock()
         mock_session_cls.return_value = mock_db
@@ -130,15 +129,14 @@ def test_report_generation_isolation(frequency, num_subs, failing_index):
     with patch('app.scheduler.jobs.report_scheduler_job.SessionLocal') as mock_session_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService') as mock_sub_service_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportGeneratorService') as mock_gen_service_cls, \
-         patch('app.scheduler.jobs.report_scheduler_job.ReportEmailService') as mock_email_service_cls, \
-         patch('app.scheduler.jobs.report_scheduler_job.EmailService') as mock_raw_email_service_cls:
+         patch('app.scheduler.jobs.report_scheduler_job.ReportEmailService'), \
+         patch('app.scheduler.jobs.report_scheduler_job.EmailService'):
 
         mock_db = MagicMock()
         mock_session_cls.return_value = mock_db
 
         mock_sub_service = mock_sub_service_cls.return_value
         mock_gen_service = mock_gen_service_cls.return_value
-        mock_email_service = mock_email_service_cls.return_value
 
         # Create subscriptions
         subs = []
@@ -201,7 +199,7 @@ def test_email_delivery_retry_logic(frequency, max_retries):
          patch('app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService') as mock_sub_service_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportGeneratorService') as mock_gen_service_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportEmailService') as mock_email_service_cls, \
-         patch('app.scheduler.jobs.report_scheduler_job.EmailService') as mock_raw_email_service_cls:
+         patch('app.scheduler.jobs.report_scheduler_job.EmailService'):
 
         mock_db = MagicMock()
         mock_session_cls.return_value = mock_db
@@ -267,15 +265,14 @@ def test_delivery_logging_completeness(frequency, num_subs):
     with patch('app.scheduler.jobs.report_scheduler_job.SessionLocal') as mock_session_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService') as mock_sub_service_cls, \
          patch('app.scheduler.jobs.report_scheduler_job.ReportGeneratorService') as mock_gen_service_cls, \
-         patch('app.scheduler.jobs.report_scheduler_job.ReportEmailService') as mock_email_service_cls, \
-         patch('app.scheduler.jobs.report_scheduler_job.EmailService') as mock_raw_email_service_cls:
+         patch('app.scheduler.jobs.report_scheduler_job.ReportEmailService'), \
+         patch('app.scheduler.jobs.report_scheduler_job.EmailService'):
 
         mock_db = MagicMock()
         mock_session_cls.return_value = mock_db
 
         mock_sub_service = mock_sub_service_cls.return_value
         mock_gen_service = mock_gen_service_cls.return_value
-        mock_email_service = mock_email_service_cls.return_value
 
         period_start = datetime(2024, 1, 1)
         period_end = datetime(2024, 1, 7)
@@ -300,7 +297,7 @@ def test_delivery_logging_completeness(frequency, num_subs):
         report_data = Mock(spec=ReportData)
         mock_gen_service.generate_report.return_value = report_data
 
-        result = process_automated_reports_job(frequency)
+        process_automated_reports_job(frequency)
 
         # log_delivery must have been called once for each subscription
         assert mock_sub_service.log_delivery.call_count == num_subs

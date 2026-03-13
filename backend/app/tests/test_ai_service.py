@@ -50,7 +50,7 @@ class TestUserSettings:
     def test_create_new(self):
         svc, db = _svc()
         db.query.return_value = _chain(first=None)
-        result = svc.get_or_create_user_settings(USR)
+        svc.get_or_create_user_settings(USR)
         db.add.assert_called_once()
         db.commit.assert_called()
 
@@ -74,7 +74,7 @@ class TestConversations:
 
     def test_create(self):
         svc, db = _svc()
-        result = svc.create_conversation(USR, title="Test")
+        svc.create_conversation(USR, title="Test")
         assert db.add.call_count >= 2  # conversation + welcome msg
         db.commit.assert_called()
 
@@ -117,7 +117,7 @@ class TestMessages:
         convo = MagicMock()
         convo.id = CONV
         db.query.return_value = _chain(first=convo)
-        result = svc.add_message(USR, CONV, "Hello", True)
+        svc.add_message(USR, CONV, "Hello", True)
         db.add.assert_called()
 
 

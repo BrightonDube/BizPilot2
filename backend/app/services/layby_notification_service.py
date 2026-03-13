@@ -14,11 +14,10 @@ import logging
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
-from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.models.layby import Layby, LaybyStatus
+from app.models.layby import Layby
 from app.models.layby_notification import (
     LaybyNotification,
     NotificationChannel,

@@ -3,9 +3,7 @@
 Tests driver shift lifecycle, delivery tracking, and proof validation.
 """
 
-from datetime import datetime, timedelta
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

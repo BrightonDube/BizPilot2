@@ -13,14 +13,14 @@ Endpoints:
 
 import uuid
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_sync_db
-from app.api.deps import get_current_active_user, get_current_business_id, check_feature
+from app.api.deps import get_current_business_id, check_feature
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
 from app.services.ai_service import AIService

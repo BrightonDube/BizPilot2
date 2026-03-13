@@ -7,8 +7,6 @@ Why typed report schemas instead of returning raw dicts?
 """
 
 from typing import List, Optional
-from decimal import Decimal
-from datetime import date
 
 from pydantic import BaseModel, Field
 

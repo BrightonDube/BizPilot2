@@ -56,7 +56,7 @@ def svc(db):
 
 class TestCreateCategory:
     def test_creates_category_minimal(self, svc, db):
-        result = svc.create_category(BIZ_ID, "Office Supplies")
+        svc.create_category(BIZ_ID, "Office Supplies")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -132,7 +132,7 @@ class TestDeleteCategory:
 
 class TestCreateExpense:
     def test_creates_expense_defaults_date_to_today(self, svc, db):
-        result = svc.create_expense(BIZ_ID, USER_ID, Decimal("250.00"), "Stationery")
+        svc.create_expense(BIZ_ID, USER_ID, Decimal("250.00"), "Stationery")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()

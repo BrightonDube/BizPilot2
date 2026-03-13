@@ -8,8 +8,8 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from datetime import date
+from unittest.mock import MagicMock, patch
 
 import pytest
 

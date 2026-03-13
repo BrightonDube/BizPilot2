@@ -6,10 +6,9 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.sage_service import SageService
-from app.models.sage import SageConnectionStatus, SageSyncStatus, SageQueueStatus
+from app.models.sage import SageConnectionStatus, SageQueueStatus
 
 
 BIZ = uuid4()

@@ -13,9 +13,8 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from app.models.tag import TagCategory, Tag, ProductTag
 from app.services.tag_service import TagService
@@ -111,7 +110,7 @@ class TestCreateCategory:
 
     def test_optional_fields_set(self):
         svc, db = _svc()
-        result = svc.create_category(
+        svc.create_category(
             BIZ,
             name="Size",
             slug="size",
@@ -282,7 +281,7 @@ class TestComputeHierarchy:
 class TestCreateTag:
     def test_creates_root_tag(self):
         svc, db = _svc()
-        result = svc.create_tag(BIZ, name="Red", slug="red")
+        svc.create_tag(BIZ, name="Red", slug="red")
 
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
@@ -300,7 +299,7 @@ class TestCreateTag:
         chain = _chain(first=parent)
         db.query.return_value = chain
 
-        result = svc.create_tag(
+        svc.create_tag(
             BIZ,
             name="Vegan",
             slug="vegan",
@@ -313,7 +312,7 @@ class TestCreateTag:
     def test_optional_fields(self):
         svc, db = _svc()
         cat_id = uuid.uuid4()
-        result = svc.create_tag(
+        svc.create_tag(
             BIZ,
             name="Organic",
             slug="organic",
@@ -469,7 +468,7 @@ class TestAssignTag:
         chain = _chain(first=tag)
         db.query.return_value = chain
 
-        result = svc.assign_tag(product_id, tag.id, assigned_by=uuid.uuid4())
+        svc.assign_tag(product_id, tag.id, assigned_by=uuid.uuid4())
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
         assert added.product_id == product_id
@@ -483,7 +482,7 @@ class TestAssignTag:
         chain = _chain(first=None)
         db.query.return_value = chain
 
-        result = svc.assign_tag(uuid.uuid4(), uuid.uuid4())
+        svc.assign_tag(uuid.uuid4(), uuid.uuid4())
         db.add.assert_called_once()
         db.commit.assert_called_once()
 

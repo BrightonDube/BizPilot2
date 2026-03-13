@@ -8,12 +8,10 @@ updates when a guest is seated, but doesn't manage table positioning or
 floor plan logic.
 """
 
-import math
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple, List
 
-from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.restaurant_table import (

@@ -10,7 +10,7 @@ Feature: Staff Targets
 
 from decimal import Decimal
 
-from hypothesis import given, settings, HealthCheck, assume
+from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st
 
 

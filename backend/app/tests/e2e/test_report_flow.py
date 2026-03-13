@@ -10,7 +10,6 @@ Feature: Automated Report Emails
 Requirements: 3.1 – 3.6
 """
 
-import pytest
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from unittest.mock import MagicMock, Mock, patch
@@ -21,10 +20,7 @@ from app.models.report_subscription import (
     DeliveryFrequency,
     DeliveryStatus,
 )
-from app.services.report_subscription_service import ReportSubscriptionService
-from app.services.report_generator_service import ReportGeneratorService, ReportData
-from app.services.report_email_service import ReportEmailService
-from app.services.email_service import EmailService
+from app.services.report_generator_service import ReportData
 from app.scheduler.jobs.report_scheduler_job import process_automated_reports_job
 
 
@@ -88,7 +84,7 @@ class TestReportFlowE2E:
             patch("app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService") as mock_sub_svc_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportGeneratorService") as mock_gen_svc_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService") as mock_email_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.EmailService") as mock_raw_email_cls,
+            patch("app.scheduler.jobs.report_scheduler_job.EmailService"),
         ):
             mock_db = MagicMock()
             mock_session_cls.return_value = mock_db
@@ -140,15 +136,14 @@ class TestReportFlowE2E:
             patch("app.scheduler.jobs.report_scheduler_job.SessionLocal") as mock_session_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService") as mock_sub_svc_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportGeneratorService") as mock_gen_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService") as mock_email_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.EmailService") as mock_raw_email_cls,
+            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService"),
+            patch("app.scheduler.jobs.report_scheduler_job.EmailService"),
         ):
             mock_db = MagicMock()
             mock_session_cls.return_value = mock_db
 
             mock_sub_svc = mock_sub_svc_cls.return_value
             mock_gen_svc = mock_gen_svc_cls.return_value
-            mock_email_svc = mock_email_svc_cls.return_value
 
             mock_sub_svc.get_active_subscriptions_by_frequency.return_value = [sub]
             mock_gen_svc.calculate_monthly_period.return_value = (
@@ -171,15 +166,14 @@ class TestReportFlowE2E:
             patch("app.scheduler.jobs.report_scheduler_job.SessionLocal") as mock_session_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService") as mock_sub_svc_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportGeneratorService") as mock_gen_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService") as mock_email_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.EmailService") as mock_raw_email_cls,
+            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService"),
+            patch("app.scheduler.jobs.report_scheduler_job.EmailService"),
         ):
             mock_db = MagicMock()
             mock_session_cls.return_value = mock_db
 
             mock_sub_svc = mock_sub_svc_cls.return_value
             mock_gen_svc = mock_gen_svc_cls.return_value
-            mock_email_svc = mock_email_svc_cls.return_value
 
             mock_sub_svc.get_active_subscriptions_by_frequency.return_value = [sub]
             mock_gen_svc.calculate_weekly_period.return_value = (
@@ -203,7 +197,7 @@ class TestReportFlowE2E:
             patch("app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService") as mock_sub_svc_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportGeneratorService") as mock_gen_svc_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService") as mock_email_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.EmailService") as mock_raw_email_cls,
+            patch("app.scheduler.jobs.report_scheduler_job.EmailService"),
         ):
             mock_db = MagicMock()
             mock_session_cls.return_value = mock_db
@@ -230,9 +224,9 @@ class TestReportFlowE2E:
         with (
             patch("app.scheduler.jobs.report_scheduler_job.SessionLocal") as mock_session_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService") as mock_sub_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.ReportGeneratorService") as mock_gen_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService") as mock_email_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.EmailService") as mock_raw_email_cls,
+            patch("app.scheduler.jobs.report_scheduler_job.ReportGeneratorService"),
+            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService"),
+            patch("app.scheduler.jobs.report_scheduler_job.EmailService"),
         ):
             mock_db = MagicMock()
             mock_session_cls.return_value = mock_db
@@ -256,15 +250,14 @@ class TestReportFlowE2E:
             patch("app.scheduler.jobs.report_scheduler_job.SessionLocal") as mock_session_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportSubscriptionService") as mock_sub_svc_cls,
             patch("app.scheduler.jobs.report_scheduler_job.ReportGeneratorService") as mock_gen_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService") as mock_email_svc_cls,
-            patch("app.scheduler.jobs.report_scheduler_job.EmailService") as mock_raw_email_cls,
+            patch("app.scheduler.jobs.report_scheduler_job.ReportEmailService"),
+            patch("app.scheduler.jobs.report_scheduler_job.EmailService"),
         ):
             mock_db = MagicMock()
             mock_session_cls.return_value = mock_db
 
             mock_sub_svc = mock_sub_svc_cls.return_value
             mock_gen_svc = mock_gen_svc_cls.return_value
-            mock_email_svc = mock_email_svc_cls.return_value
 
             mock_sub_svc.get_active_subscriptions_by_frequency.return_value = [sub1, sub2]
             mock_gen_svc.calculate_weekly_period.return_value = (

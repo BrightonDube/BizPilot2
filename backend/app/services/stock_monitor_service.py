@@ -12,15 +12,14 @@ and lets us optimise the monitoring queries independently.
 
 import math
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.models.product import Product
-from app.models.reorder import ProductReorderSettings, ReorderRule
+from app.models.reorder import ProductReorderSettings
 
 
 class StockMonitorService:

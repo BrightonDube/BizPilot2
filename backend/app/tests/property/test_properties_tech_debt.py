@@ -261,7 +261,6 @@ def test_image_component_migration_preserves_attributes(src, alt, width, height)
     Migrating <img src=X alt=Y> to <Image src=X alt=Y width=W height=H>
     must preserve src and alt attributes and always include dimensions.
     """
-    original = f'<img src="{src}" alt="{alt}" />'
 
     # Simulated migration
     migrated = (

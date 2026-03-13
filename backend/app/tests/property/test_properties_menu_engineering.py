@@ -5,8 +5,7 @@ Tests PLU code format, modifier pricing, and recipe cost calculation.
 
 from decimal import Decimal
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 

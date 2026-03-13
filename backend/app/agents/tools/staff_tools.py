@@ -4,30 +4,30 @@ backend/app/agents/tools/staff_tools.py
 Thin wrappers around TimeEntryService and StaffReportService.
 """
 
+import asyncio
+import logging
 from datetime import date, datetime
 from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.services.ai_service import AIService
 from app.services.time_entry_service import TimeEntryService
 from app.services.staff_report_service import StaffReportService
+from app.agents.tools.common import get_business_id_for_user
+
+logger = logging.getLogger("bizpilot.agents")
 
 
-def _get_business_id(db: Session, user: User) -> Optional[str]:
-    ai_svc = AIService(db)
-    business = ai_svc._get_business_for_user(user.id)
-    return str(business.id) if business else None
-
-
-def _parse_date(value: Optional[str]) -> date:
-    if value:
-        try:
-            return datetime.strptime(value, "%Y-%m-%d").date()
-        except ValueError:
-            pass
-    return date.today()
+def _parse_date(value: Optional[str]) -> Optional[date]:
+    """Parse YYYY-MM-DD string into a date object. Returns None on failure."""
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        logger.warning(f"Invalid date format: {value}. Expected YYYY-MM-DD.")
+        return None
 
 
 async def get_staff_summary(
@@ -37,16 +37,22 @@ async def get_staff_summary(
     end_date: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Return a staff performance and attendance summary for a period."""
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
-    start = _parse_date(start_date)
-    end = _parse_date(end_date)
+    start = _parse_date(start_date) or date.today()
+    end = _parse_date(end_date) or date.today()
+
+    if start_date and not _parse_date(start_date):
+        return {"error": f"Invalid start_date format: {start_date}. Use YYYY-MM-DD."}
+    if end_date and not _parse_date(end_date):
+        return {"error": f"Invalid end_date format: {end_date}. Use YYYY-MM-DD."}
 
     try:
         svc = StaffReportService(db)
-        report = svc.get_performance_report(
+        report = await asyncio.to_thread(
+            svc.get_performance_report,
             business_id=business_id,
             start_date=start,
             end_date=end,
@@ -64,15 +70,16 @@ async def get_time_entries(
     limit: int = 50,
 ) -> Dict[str, Any]:
     """Return clock-in/clock-out entries for the business in a date range."""
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
-    start = _parse_date(start_date)
-    end = _parse_date(end_date)
+    start = _parse_date(start_date) or date.today()
+    end = _parse_date(end_date) or date.today()
 
     svc = TimeEntryService(db)
-    entries = svc.get_entries(
+    entries = await asyncio.to_thread(
+        svc.get_entries,
         business_id=business_id,
         start_date=datetime.combine(start, datetime.min.time()),
         end_date=datetime.combine(end, datetime.max.time()),

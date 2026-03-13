@@ -4,29 +4,24 @@ backend/app/agents/tools/invoice_tools.py
 Thin wrappers around InvoiceService for agent tool calls.
 """
 
+import asyncio
 from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.services.ai_service import AIService
 from app.services.invoice_service import InvoiceService
-
-
-def _get_business_id(db: Session, user: User) -> Optional[str]:
-    ai_svc = AIService(db)
-    business = ai_svc._get_business_for_user(user.id)
-    return str(business.id) if business else None
+from app.agents.tools.common import get_business_id_for_user
 
 
 async def get_invoice_stats(db: Session, user: User) -> Dict[str, Any]:
     """Return invoice statistics: total, outstanding, overdue amounts."""
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
     svc = InvoiceService(db)
-    stats = svc.get_invoice_stats(business_id)
+    stats = await asyncio.to_thread(svc.get_invoice_stats, business_id)
     return stats if isinstance(stats, dict) else {"stats": str(stats)}
 
 
@@ -37,7 +32,7 @@ async def get_invoices(
     limit: int = 20,
 ) -> Dict[str, Any]:
     """Return a list of recent invoices, optionally filtered by status."""
-    business_id = _get_business_id(db, user)
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
     if not business_id:
         return {"error": "No business found for user"}
 
@@ -47,7 +42,7 @@ async def get_invoices(
     if status:
         filter_kwargs["status"] = status
 
-    invoices = svc.get_invoices(**filter_kwargs)
+    invoices = await asyncio.to_thread(svc.get_invoices, **filter_kwargs)
 
     return {
         "total": len(invoices),

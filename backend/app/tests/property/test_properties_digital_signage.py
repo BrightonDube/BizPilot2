@@ -3,7 +3,6 @@
 Tests pairing code format, content duration, playlist ordering, and status.
 """
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

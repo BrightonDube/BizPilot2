@@ -5,8 +5,7 @@ Tests time conflict detection, status transitions, and party size constraints.
 
 from datetime import datetime, timedelta
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 

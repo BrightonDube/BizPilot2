@@ -4,10 +4,9 @@ Stores a permanent audit trail of every decision an AI agent makes.
 Every tool call, routing decision, and HITL event is recorded here.
 """
 
-import uuid
 from sqlalchemy import Column, Text, Integer, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from app.models.base import BaseModel, utc_now
+from app.models.base import BaseModel
 
 
 class AgentLog(BaseModel):

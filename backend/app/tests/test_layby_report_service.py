@@ -2,15 +2,13 @@
 import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.models.layby import LaybyStatus
-from app.models.layby_payment import PaymentStatus
 from app.services.layby_report_service import LaybyReportService
 
 

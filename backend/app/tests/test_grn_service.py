@@ -5,9 +5,8 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from datetime import datetime
-from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
-from uuid import uuid4, UUID
+from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 
@@ -206,7 +205,7 @@ class TestCreateGRN:
         svc = GRNService(db)
 
         data = _make_grn_create(po.id, [po_item.id], quantities=[10])
-        result = svc.create_grn(data, biz, received_by=uuid4())
+        svc.create_grn(data, biz, received_by=uuid4())
 
         # PO item received_quantity updated
         assert po_item.received_quantity == 10

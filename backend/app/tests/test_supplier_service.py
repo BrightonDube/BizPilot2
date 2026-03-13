@@ -15,7 +15,6 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 import uuid
 from unittest.mock import MagicMock
 
-import pytest
 
 from app.models.supplier import Supplier
 from app.services.supplier_service import SupplierService
@@ -244,7 +243,7 @@ class TestCreateSupplier:
         data.notes = "Important supplier"
         data.tags = ["preferred", "local"]
 
-        result = svc.create_supplier(BIZ, data)
+        svc.create_supplier(BIZ, data)
 
         db.add.assert_called_once()
         db.commit.assert_called_once()

@@ -2,9 +2,9 @@
 import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -12,7 +12,6 @@ from fastapi import HTTPException
 
 from app.services.order_management_service import (
     OrderManagementService,
-    VALID_TRANSITIONS,
 )
 from app.models.order import OrderStatus, OrderType
 from app.models.restaurant_table import TableStatus
@@ -198,7 +197,7 @@ class TestSplitOrder:
         item.discount_amount = 0
         order = _order(items=[item])
         db.query.return_value = _chain(first=order)
-        result = svc.split_order(ORD, [item_id], BIZ)
+        svc.split_order(ORD, [item_id], BIZ)
         db.add.assert_called()
 
     def test_split_no_items(self):
@@ -258,7 +257,7 @@ class TestAddRemoveItems:
         svc, db = _svc()
         order = _order()
         db.query.return_value = _chain(first=order)
-        result = svc.add_item_to_order(ORD, BIZ, "Coffee", Decimal("25"), quantity=2)
+        svc.add_item_to_order(ORD, BIZ, "Coffee", Decimal("25"), quantity=2)
         db.add.assert_called()
 
     def test_add_item_to_cancelled(self):

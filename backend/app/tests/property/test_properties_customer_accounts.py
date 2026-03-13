@@ -11,10 +11,9 @@ Requirements: 1-9
 """
 
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock
 from uuid import uuid4
 
-from hypothesis import given, settings, HealthCheck, assume
+from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st
 
 

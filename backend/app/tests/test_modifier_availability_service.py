@@ -11,12 +11,11 @@ Tests cover:
 
 import os
 import uuid
-from datetime import date, datetime, time
-from unittest.mock import MagicMock, call
+from datetime import date, time
+from unittest.mock import MagicMock
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import pytest
 
 from app.services.modifier_availability_service import ModifierAvailabilityService
 
@@ -331,7 +330,7 @@ class TestSet86dStatus:
     def test_creates_new_blanket_rule_when_none_exists(self):
         svc, db = _make_service()
         db.query.return_value = _chain(first=None)
-        result = svc.set_86d_status(MOD_ID, is_86d=True)
+        svc.set_86d_status(MOD_ID, is_86d=True)
         db.add.assert_called_once()
         db.commit.assert_called_once()
         added_rule = db.add.call_args[0][0]
@@ -370,7 +369,7 @@ class TestCreateAvailabilityRule:
 
     def test_creates_rule_with_all_fields(self):
         svc, db = _make_service()
-        result = svc.create_availability_rule(
+        svc.create_availability_rule(
             modifier_id=MOD_ID,
             day_of_week=0,
             start_time=time(9, 0),

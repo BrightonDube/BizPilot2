@@ -17,7 +17,6 @@ import uuid
 from datetime import datetime
 from unittest.mock import MagicMock
 
-import pytest
 
 from app.models.audit_log import AuditAction, UserAuditLog
 from app.services.audit_service import AuditService

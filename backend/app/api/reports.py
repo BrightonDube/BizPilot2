@@ -12,6 +12,7 @@ from app.models.user import User
 from app.services.sales_report_service import SalesReportService
 from app.services.staff_report_service import StaffReportService
 from app.services.inventory_report_service import InventoryReportService
+from app.services.modifier_analytics_service import ModifierAnalyticsService
 from app.models.business_user import BusinessUser
 from app.models.order import Order, OrderDirection
 from app.models.customer import Customer
@@ -2243,8 +2244,6 @@ async def get_inventory_dashboard(
 
 # ── Modifier & Combo Reports ──────────────────────────────────────
 # Tasks 9.1-9.4 from addons-modifiers spec (Requirement 10)
-
-from app.services.modifier_analytics_service import ModifierAnalyticsService
 
 
 @router.get("/modifiers/summary")

@@ -10,7 +10,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -18,7 +18,6 @@ from app.models.loyalty import (
     LoyaltyProgram,
     CustomerLoyalty,
     PointsTransaction,
-    PointsTransactionType,
     LoyaltyTier,
 )
 from app.services.loyalty_service import LoyaltyService
@@ -98,7 +97,7 @@ class TestGetOrCreateProgram:
     def test_creates_when_missing(self, service, db):
         """Creates a new program if none exists."""
         db.query.return_value.filter.return_value.first.return_value = None
-        result = service.get_or_create_program(BIZ_ID)
+        service.get_or_create_program(BIZ_ID)
         db.add.assert_called_once()
         db.commit.assert_called_once()
 
@@ -150,7 +149,7 @@ class TestEarnPoints:
 
         with patch("app.services.loyalty_service.utc_now") as mock_now:
             mock_now.return_value = datetime(2025, 7, 20, tzinfo=timezone.utc)
-            result = service.earn_points(CUST_ID, BIZ_ID, Decimal("100.00"))
+            service.earn_points(CUST_ID, BIZ_ID, Decimal("100.00"))
 
         db.add.assert_called()
         added = db.add.call_args[0][0]
@@ -185,7 +184,7 @@ class TestEarnPoints:
 
         with patch("app.services.loyalty_service.utc_now") as mock_now:
             mock_now.return_value = datetime(2025, 7, 20, tzinfo=timezone.utc)
-            result = service.earn_points(CUST_ID, BIZ_ID, Decimal("100.00"))
+            service.earn_points(CUST_ID, BIZ_ID, Decimal("100.00"))
 
         added = db.add.call_args[0][0]
         # 100 * 10 * 2.0 gold multiplier = 2000

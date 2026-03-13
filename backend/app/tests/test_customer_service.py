@@ -16,7 +16,6 @@ import uuid
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from app.models.customer import Customer, CustomerType
 from app.schemas.customer import CustomerCreate, CustomerUpdate

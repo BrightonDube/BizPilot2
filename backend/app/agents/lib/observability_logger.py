@@ -43,10 +43,18 @@ def log_agent_step(
         safe_summary = _truncate(result_summary, 500)
         safe_error = _truncate(error_message, 500)
 
+        # Ensure user_id and business_id are valid UUID strings/objects
+        try:
+            u_id = uuid.UUID(str(user_id))
+            b_id = uuid.UUID(str(business_id))
+        except (ValueError, TypeError):
+            logger.error(f"Invalid UUID for log: user={user_id}, business={business_id}")
+            return
+
         log_entry = AgentLog(
             session_id=session_id,
-            user_id=uuid.UUID(str(user_id)),
-            business_id=uuid.UUID(str(business_id)),
+            user_id=u_id,
+            business_id=b_id,
             agent_name=agent_name,
             step_number=step_number,
             tool_name=tool_name,
@@ -58,7 +66,9 @@ def log_agent_step(
             error_message=safe_error,
         )
         db.add(log_entry)
-        db.commit()
+        # Use flush instead of commit so the transaction remains open
+        # and doesn't trigger a mid-task commit that might break other logic
+        db.flush()
 
     except Exception as exc:
         # Never let a logging error crash the agent — just warn
@@ -68,7 +78,7 @@ def log_agent_step(
             step_number,
             str(exc),
         )
-        # Roll back the failed insert so the session stays usable
+        # Roll back the failed flush so the session stays usable
         try:
             db.rollback()
         except Exception:

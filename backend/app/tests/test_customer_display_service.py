@@ -14,9 +14,8 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from app.models.customer_display import CustomerDisplay, DisplayConfig
 from app.services.customer_display_service import CustomerDisplayService
@@ -84,7 +83,7 @@ class TestRegisterDisplay:
 
     def test_register_display_success(self):
         svc, db = _svc()
-        result = svc.register_display(
+        svc.register_display(
             BIZ, name="Checkout 1", display_type="tablet",
         )
         db.add.assert_called_once()
@@ -100,7 +99,7 @@ class TestRegisterDisplay:
 
     def test_register_display_with_terminal_id(self):
         svc, db = _svc()
-        result = svc.register_display(
+        svc.register_display(
             BIZ, name="Bar Display", display_type="monitor", terminal_id="T-42",
         )
         added = db.add.call_args[0][0]
@@ -326,7 +325,7 @@ class TestCreateConfig:
         svc, db = _svc()
         display_id = uuid.uuid4()
 
-        result = svc.create_config(display_id)
+        svc.create_config(display_id)
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()

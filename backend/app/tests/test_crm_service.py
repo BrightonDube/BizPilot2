@@ -8,8 +8,7 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -45,7 +44,7 @@ def service(db):
 class TestCreateSegment:
     def test_creates_segment(self, service, db):
         """Creates a segment and commits."""
-        result = service.create_segment(BIZ_ID, "VIP", description="Top spenders")
+        service.create_segment(BIZ_ID, "VIP", description="Top spenders")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         added = db.add.call_args[0][0]
@@ -83,7 +82,7 @@ class TestAddToSegment:
     def test_add_new_member(self, service, db):
         """Adds customer to segment."""
         db.query.return_value.filter.return_value.first.return_value = None
-        result = service.add_to_segment(SEG_ID, CUST_ID)
+        service.add_to_segment(SEG_ID, CUST_ID)
         db.add.assert_called_once()
         db.commit.assert_called_once()
 
@@ -132,7 +131,7 @@ class TestGetSegmentMembers:
 class TestLogInteraction:
     def test_logs_interaction(self, service, db):
         """Creates and commits interaction."""
-        result = service.log_interaction(
+        service.log_interaction(
             CUST_ID, BIZ_ID, "user-1",
             InteractionType.NOTE, "Follow up call",
         )
@@ -176,7 +175,7 @@ class TestCompleteFollowUp:
         interaction.is_completed = False
         db.query.return_value.filter.return_value.first.return_value = interaction
 
-        result = service.complete_follow_up("int-1", BIZ_ID)
+        service.complete_follow_up("int-1", BIZ_ID)
         assert interaction.is_completed is True
         db.commit.assert_called()
 

@@ -9,7 +9,7 @@ Tests:
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from app.agents.tasks.chat_agent import _detect_agent, ChatAgent
 from app.models.user_settings import AIDataSharingLevel

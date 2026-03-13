@@ -3,10 +3,9 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import pytest
 
 from app.services.xero_service import XeroService
 
@@ -64,7 +63,7 @@ class TestGetConnection:
 class TestCreateConnection:
     def test_creates_with_defaults(self):
         svc, db = _svc()
-        result = svc.create_connection(BIZ)
+        svc.create_connection(BIZ)
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -91,7 +90,7 @@ class TestCreateConnection:
     def test_creates_with_all_params(self):
         svc, db = _svc()
         cfg = {"key": "val"}
-        result = svc.create_connection(BIZ, tenant_id="t-1", config=cfg)
+        svc.create_connection(BIZ, tenant_id="t-1", config=cfg)
         created = db.add.call_args[0][0]
         assert created.business_id == BIZ
         assert created.tenant_id == "t-1"
@@ -273,7 +272,7 @@ class TestGetSyncLog:
 class TestCreateSyncLog:
     def test_creates_with_defaults(self):
         svc, db = _svc()
-        result = svc.create_sync_log(BIZ, "invoice", ENTITY_ID)
+        svc.create_sync_log(BIZ, "invoice", ENTITY_ID)
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -321,7 +320,7 @@ class TestMarkSynced:
         svc, db = _svc()
         log = MagicMock()
         db.query.return_value = _chain(first=log)
-        result = svc.mark_synced(LOG_ID, "xero-pay-1", payload_hash="abc123hash")
+        svc.mark_synced(LOG_ID, "xero-pay-1", payload_hash="abc123hash")
         assert log.payload_hash == "abc123hash"
         assert log.xero_id == "xero-pay-1"
 

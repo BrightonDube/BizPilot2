@@ -3,10 +3,9 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.tracked_bulk_service import TrackedBulkOperationService
 from app.models.bulk_operation import BulkOperationType, OperationStatus, ItemStatus
