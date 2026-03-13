@@ -3,3 +3,4 @@ packages:
   - 'mobile'
   - 'shared'
   - 'scripts'
+strictPeerDependencies: false
