@@ -4,7 +4,6 @@ Covers display groups, displays, content, playlists, and playlist items.
 """
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
 

@@ -8,7 +8,6 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.models.delivery import Delivery, DeliveryStatus, DeliveryZone, Driver
 from app.services.delivery_service import DeliveryService
@@ -96,7 +95,7 @@ def _mock_delivery(**kw):
 class TestCreateZone:
     def test_creates_and_commits(self):
         svc, db = _svc()
-        zone = svc.create_zone(BIZ, "Downtown", Decimal("30.00"), 45, description="CBD area")
+        svc.create_zone(BIZ, "Downtown", Decimal("30.00"), 45, description="CBD area")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -108,7 +107,7 @@ class TestCreateZone:
 
     def test_defaults_no_description(self):
         svc, db = _svc()
-        zone = svc.create_zone(BIZ, "Suburbs", Decimal("15.00"), 20)
+        svc.create_zone(BIZ, "Suburbs", Decimal("15.00"), 20)
         added = db.add.call_args[0][0]
         assert added.description is None
 
@@ -162,7 +161,7 @@ class TestUpdateZone:
 class TestCreateDriver:
     def test_creates_and_commits(self):
         svc, db = _svc()
-        driver = svc.create_driver(
+        svc.create_driver(
             BIZ, "Jane", "0829876543",
             vehicle_type="car", license_plate="XYZ 789",
         )
@@ -195,7 +194,7 @@ class TestListDrivers:
         svc, db = _svc()
         chain = _chain(rows=[_mock_driver()])
         db.query.return_value = chain
-        result = svc.list_drivers(BIZ, available_only=True)
+        svc.list_drivers(BIZ, available_only=True)
         # Extra filter call for is_available
         assert chain.filter.call_count >= 2
 
@@ -239,7 +238,7 @@ class TestToggleDriverAvailability:
 class TestCreateDelivery:
     def test_without_driver_sets_pending(self):
         svc, db = _svc()
-        delivery = svc.create_delivery(BIZ, ORDER_ID, "123 Main St", "0821111111")
+        svc.create_delivery(BIZ, ORDER_ID, "123 Main St", "0821111111")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         added = db.add.call_args[0][0]
@@ -248,7 +247,7 @@ class TestCreateDelivery:
 
     def test_with_driver_sets_assigned(self):
         svc, db = _svc()
-        delivery = svc.create_delivery(
+        svc.create_delivery(
             BIZ, ORDER_ID, "456 Oak Ave", "0822222222",
             driver_id=DRIVER_ID,
         )
@@ -290,7 +289,7 @@ class TestAssignDriver:
         svc, db = _svc()
         delivery = _mock_delivery(status=DeliveryStatus.IN_TRANSIT)
         db.query.return_value = _chain(first=delivery)
-        result = svc.assign_driver(DELIVERY_ID, DRIVER_ID, BIZ)
+        svc.assign_driver(DELIVERY_ID, DRIVER_ID, BIZ)
         assert delivery.status == DeliveryStatus.IN_TRANSIT
         assert delivery.driver_id == DRIVER_ID
 
@@ -316,7 +315,7 @@ class TestUpdateStatus:
         svc, db = _svc()
         delivery = _mock_delivery(status=DeliveryStatus.IN_TRANSIT)
         db.query.return_value = _chain(first=delivery)
-        result = svc.update_status(DELIVERY_ID, BIZ, DeliveryStatus.DELIVERED)
+        svc.update_status(DELIVERY_ID, BIZ, DeliveryStatus.DELIVERED)
         assert delivery.status == DeliveryStatus.DELIVERED
         assert delivery.actual_delivery_time is not None
 
@@ -324,7 +323,7 @@ class TestUpdateStatus:
         svc, db = _svc()
         delivery = _mock_delivery()
         db.query.return_value = _chain(first=delivery)
-        result = svc.update_status(DELIVERY_ID, BIZ, DeliveryStatus.DELIVERED, proof="signed.jpg")
+        svc.update_status(DELIVERY_ID, BIZ, DeliveryStatus.DELIVERED, proof="signed.jpg")
         assert delivery.proof_of_delivery == "signed.jpg"
 
     def test_not_found_returns_none(self):

@@ -229,7 +229,6 @@ from app.models.staff_target import (
     CommissionRuleType,
     CommissionStatus as StaffCommissionStatus,
     IncentiveType,
-    RewardType,
     AchievementStatus,
 )
 from app.models.combo import ComboDeal, ComboComponent, ComboComponentType
@@ -418,6 +417,10 @@ __all__ = [
     # Restaurant Tables
     "RestaurantTable",
     "TableStatus",
+    "FloorPlan",
+    "Section",
+    "Reservation",
+    "ReservationStatus",
     # Order Status History
     "OrderStatusHistory",
     # Petty Cash
@@ -451,6 +454,8 @@ __all__ = [
     "StockTakeStatus",
     "StockCount",
     "InventoryAdjustment",
+    "StockTakeScope",
+    "StockTakeCounter",
     "InventoryPeriod",
     "InventoryPeriodStatus",
     "PeriodSnapshot",
@@ -486,6 +491,10 @@ __all__ = [
     "PurchaseRequest",
     "PurchaseRequestItem",
     "PurchaseOrderStatus",
+    "ProductReorderSettings",
+    "GoodsReceivedNote",
+    "GRNItem",
+    "ReorderAuditLog",
     # General Ledger
     "AccountType",
     "JournalEntryStatus",
@@ -499,6 +508,7 @@ __all__ = [
     "GLAuditLog",
     "GLAuditAction",
     "RecurringEntryFrequency",
+    "InventoryReportConfig",
     # Custom Dashboards
     "Dashboard",
     "DashboardWidget",

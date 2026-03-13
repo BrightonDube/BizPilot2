@@ -7,7 +7,7 @@ Provides aggregate analytics for delivery operations:
 - Driver performance comparison
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 

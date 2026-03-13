@@ -7,13 +7,12 @@ Feature: Automated Report Emails
 Requirements: 3.1, 3.2, 3.3, 3.6
 """
 
-from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from unittest.mock import Mock, MagicMock
 from hypothesis import given, strategies as st, settings, HealthCheck
 
 from app.services.report_subscription_service import ReportSubscriptionService
-from app.models.report_subscription import ReportSubscription, ReportType, DeliveryFrequency, DeliveryStatus, ReportDeliveryLog
+from app.models.report_subscription import ReportSubscription, ReportType, DeliveryFrequency
 
 # Strategies
 
@@ -187,7 +186,7 @@ def test_subscription_independence(data1, data2):
     sub1_active = sub1.is_active
     
     # Create sub2
-    sub2 = service.create_subscription(
+    service.create_subscription(
         user_id=data2['user_id'],
         report_type=data2['report_type'],
         frequency=data2['frequency']

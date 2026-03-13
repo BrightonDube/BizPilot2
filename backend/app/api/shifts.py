@@ -4,6 +4,7 @@ import math
 from typing import Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from pydantic import BaseModel as PydanticBase
 
 from app.core.database import get_sync_db
 from app.api.deps import get_current_business_id, get_current_active_user
@@ -20,6 +21,7 @@ from app.schemas.shift import (
     LeaveRequestListResponse,
 )
 from app.services.shift_service import ShiftService
+from app.services.pin_service import PinService
 
 router = APIRouter(prefix="/shifts", tags=["Shifts"])
 
@@ -303,9 +305,6 @@ async def reject_leave(
 
 
 # ── PIN Authentication ───────────────────────────────────────────────────────
-
-from pydantic import BaseModel as PydanticBase
-from app.services.pin_service import PinService
 
 
 class PinSetRequest(PydanticBase):

@@ -15,11 +15,10 @@ clear. If Sage operations grow, we can extract a SageClient later.
 """
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from typing import Optional, List, Tuple, Dict, Any
 from uuid import UUID
 
-from sqlalchemy import func, desc, and_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.sage import (

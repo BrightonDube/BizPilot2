@@ -7,9 +7,8 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from app.models.commission import CommissionRecord, CommissionStatus
 from app.services.commission_service import CommissionService

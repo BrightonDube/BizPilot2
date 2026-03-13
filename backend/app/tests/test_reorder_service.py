@@ -4,12 +4,11 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
-from app.models.inventory import InventoryItem, InventoryTransaction, TransactionType
+from app.models.inventory import InventoryItem
 from app.models.product import Product
 from app.models.reorder import (
     PurchaseOrderStatus,
@@ -105,7 +104,7 @@ def _make_pr_item(**overrides):
 class TestCreateRule:
     def test_create_rule_basic(self):
         svc, db = _svc()
-        rule = svc.create_rule(BIZ_ID, PRODUCT_ID, min_stock=10, reorder_qty=50)
+        svc.create_rule(BIZ_ID, PRODUCT_ID, min_stock=10, reorder_qty=50)
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -117,7 +116,7 @@ class TestCreateRule:
 
     def test_create_rule_with_optional_params(self):
         svc, db = _svc()
-        rule = svc.create_rule(
+        svc.create_rule(
             BIZ_ID, PRODUCT_ID,
             min_stock=5, reorder_qty=100,
             supplier_id=SUPPLIER_ID,
@@ -303,7 +302,7 @@ class TestGeneratePurchaseRequest:
             {"product_id": str(uuid4()), "quantity": 10, "unit_cost": "25.00"},
             {"product_id": str(uuid4()), "quantity": 5, "unit_cost": "50.00"},
         ]
-        pr = svc.generate_purchase_request(BIZ_ID, items, supplier_id=SUPPLIER_ID, user_id=USER_ID)
+        svc.generate_purchase_request(BIZ_ID, items, supplier_id=SUPPLIER_ID, user_id=USER_ID)
         # db.add called: 1 for PR + 2 for items = 3
         assert db.add.call_count == 3
         db.flush.assert_called_once()

@@ -9,7 +9,6 @@ provides a unified internal data model that adapters translate to/from,
 keeping the rest of the codebase PMS-agnostic.
 """
 
-import uuid
 
 from sqlalchemy import (
     Column,

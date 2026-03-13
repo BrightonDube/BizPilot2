@@ -1,11 +1,9 @@
 """Tests for RewardCatalogService – reward catalog CRUD & tier benefits."""
 
 import uuid
-from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-import pytest
 
 from app.models.loyalty import RewardCatalogItem, TierBenefit
 from app.services.reward_catalog_service import RewardCatalogService
@@ -161,7 +159,7 @@ class TestCreateReward:
         svc, db = _svc()
         data = {"name": "Voucher", "points_cost": 500, "reward_type": "voucher"}
 
-        result = svc.create_reward(BIZ, data)
+        svc.create_reward(BIZ, data)
 
         assert db.add.call_args[0][0].business_id == BIZ
 
@@ -345,7 +343,7 @@ class TestCreateTierBenefit:
         svc, db = _svc()
         data = {"tier_name": "silver", "benefit_type": "bonus_points"}
 
-        result = svc.create_tier_benefit(BIZ, data)
+        svc.create_tier_benefit(BIZ, data)
 
         assert db.add.call_args[0][0].business_id == BIZ
 

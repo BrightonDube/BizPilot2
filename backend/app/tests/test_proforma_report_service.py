@@ -8,9 +8,8 @@ import os
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 

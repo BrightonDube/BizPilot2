@@ -11,7 +11,6 @@ separate file avoids bloating the original module.
 """
 
 import enum
-import uuid
 
 from sqlalchemy import (
     Column,
@@ -22,7 +21,6 @@ from sqlalchemy import (
     Time,
     DateTime,
     ForeignKey,
-    Enum as SQLEnum,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 

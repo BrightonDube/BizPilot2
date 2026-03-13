@@ -4,8 +4,7 @@ Tests PIN security, single active shift constraint, cash variance,
 and float configuration.
 """
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from decimal import Decimal
 

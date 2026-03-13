@@ -5,7 +5,6 @@ Tests sync idempotency, payload hash change detection, and entity mapping.
 
 import hashlib
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

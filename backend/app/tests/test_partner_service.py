@@ -11,7 +11,6 @@ import uuid
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from app.models.partner import (
     Partner,
@@ -437,7 +436,7 @@ class TestAddPartnerUser:
         pu_obj = MagicMock(spec=PartnerUser)
 
         with patch("app.services.partner_service.PartnerUser", return_value=pu_obj) as MockPU:
-            result = svc.add_partner_user(
+            svc.add_partner_user(
                 uuid.UUID(PARTNER_ID),
                 uuid.UUID(USER_ID),
                 partner_role="admin",

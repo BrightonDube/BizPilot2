@@ -8,9 +8,8 @@ Validates correctness properties from the design:
 Feature: Loyalty Programs
 """
 
-from decimal import Decimal
 
-from hypothesis import given, settings, HealthCheck, assume
+from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st
 
 from app.models.loyalty import LoyaltyTier

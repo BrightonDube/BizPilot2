@@ -4,9 +4,8 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
-import pytest
 
 from app.services.notification_service import NotificationService
 from app.models.notification import Notification, NotificationPreference
@@ -78,7 +77,7 @@ class TestCreateNotification:
         db = MagicMock()
         svc = NotificationService(db)
 
-        result = svc.create_notification(BIZ_ID, USER_ID, "Title", "Msg")
+        svc.create_notification(BIZ_ID, USER_ID, "Title", "Msg")
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -94,7 +93,7 @@ class TestCreateNotification:
         db = MagicMock()
         svc = NotificationService(db)
 
-        result = svc.create_notification(
+        svc.create_notification(
             BIZ_ID, USER_ID, "T", "M",
             notification_type="warning",
             channel="email",
@@ -308,7 +307,7 @@ class TestGetPreferences:
         db.query.return_value = _chain(first=None)
         svc = NotificationService(db)
 
-        result = svc.get_preferences(USER_ID)
+        svc.get_preferences(USER_ID)
 
         db.add.assert_called_once()
         db.commit.assert_called_once()

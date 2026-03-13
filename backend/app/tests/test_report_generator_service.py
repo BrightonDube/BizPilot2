@@ -3,10 +3,9 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.report_generator_service import ReportGeneratorService, ReportData
 from app.models.report_subscription import ReportType

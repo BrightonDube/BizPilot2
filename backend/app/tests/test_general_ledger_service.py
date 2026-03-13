@@ -13,7 +13,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
@@ -129,7 +129,7 @@ class TestJournalEntries:
             {"account_id": acct_b, "debit": "0", "credit": "100"},
         ]
 
-        entry = svc.create_journal_entry(BIZ, "Test sale", lines, user_id=USER)
+        svc.create_journal_entry(BIZ, "Test sale", lines, user_id=USER)
         db.add.assert_called()
         db.commit.assert_called_once()
 

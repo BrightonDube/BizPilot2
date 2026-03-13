@@ -3,11 +3,9 @@ import os
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import uuid
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.models.location import (
     Location,
@@ -95,7 +93,7 @@ def _make_transfer_item(**overrides):
 class TestCreateLocation:
     def test_creates_and_flushes(self):
         svc, db = _make_service()
-        result = svc.create_location(BIZ, "Shop A", code="SA", address="123 Main",
+        svc.create_location(BIZ, "Shop A", code="SA", address="123 Main",
                                      city="JHB", phone="011", email="a@b.com",
                                      is_warehouse=True, is_primary=True)
 
@@ -236,7 +234,7 @@ class TestSetStockLevel:
         chain = _chain(first=None)
         db.query.return_value = chain
 
-        result = svc.set_stock_level(LOC_A, PROD, 15, min_quantity=2, max_quantity=200)
+        svc.set_stock_level(LOC_A, PROD, 15, min_quantity=2, max_quantity=200)
 
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
@@ -483,7 +481,7 @@ class TestReceiveTransfer:
         db.query.side_effect = side_effect
 
         # Pass empty received_items — should default to ti.quantity = 8
-        result = svc.receive_transfer(TRANSFER_ID, BIZ, [])
+        svc.receive_transfer(TRANSFER_ID, BIZ, [])
 
         assert src_stock.quantity == 12  # 20 - 8
         assert dst_stock.quantity == 8   # 0 + 8

@@ -6,7 +6,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
 
 import uuid
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -115,7 +115,7 @@ class TestConstants:
 
 class TestCreateTemplate:
     def test_create_template_basic(self, db, svc):
-        result = svc.create_template(
+        svc.create_template(
             business_id=BIZ_ID,
             user_id=USER_ID,
             name="Sales Report",
@@ -134,7 +134,7 @@ class TestCreateTemplate:
         assert added.schedule_recipients == []
 
     def test_create_template_with_schedule(self, db, svc):
-        result = svc.create_template(
+        svc.create_template(
             business_id=BIZ_ID,
             user_id=USER_ID,
             name="Scheduled",

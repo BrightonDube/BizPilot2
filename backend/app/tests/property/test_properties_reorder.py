@@ -12,8 +12,6 @@ hand-picked test cases.
 
 from decimal import Decimal, ROUND_HALF_UP
 from hypothesis import given, strategies as st, assume, settings
-from unittest.mock import MagicMock
-from uuid import uuid4
 
 
 # ---------------------------------------------------------------------------

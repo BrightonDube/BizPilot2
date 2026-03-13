@@ -7,7 +7,6 @@ Determines which delivery zone an address/coordinate falls into, supporting:
 - **postcode**: Exact postcode lookup
 """
 
-from decimal import Decimal
 from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session

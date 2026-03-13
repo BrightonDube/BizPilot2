@@ -12,7 +12,7 @@ duplicating these rules in multiple places.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from sqlalchemy.orm import Session
 

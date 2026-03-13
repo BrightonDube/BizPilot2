@@ -3,7 +3,6 @@
 Tests queue ordering, status transitions, and metadata watermarks.
 """
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

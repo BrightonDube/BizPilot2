@@ -18,7 +18,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.models.product import ProductCategory, Product
+from app.models.product import ProductCategory
 from app.models.business_user import BusinessUser
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryReorderItem
 from app.services.category_service import CategoryService

@@ -3,7 +3,7 @@ import os
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
@@ -104,7 +104,7 @@ class TestClockIn:
     def test_clock_in_success(self, mock_active):
         svc, db = _svc()
 
-        result = svc.clock_in(
+        svc.clock_in(
             USER, BIZ,
             device_id="dev-1",
             ip_address="1.2.3.4",
@@ -507,7 +507,7 @@ class TestCreateManualEntry:
         cin = datetime(2025, 1, 15, 8, 0, 0)
         cout = datetime(2025, 1, 15, 16, 0, 0)
 
-        result = svc.create_manual_entry(USER, BIZ, cin, cout, notes="Adjustment")
+        svc.create_manual_entry(USER, BIZ, cin, cout, notes="Adjustment")
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
         assert added.entry_type == TimeEntryType.MANUAL_ADJUSTMENT

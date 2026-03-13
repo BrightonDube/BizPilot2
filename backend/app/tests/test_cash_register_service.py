@@ -59,7 +59,7 @@ def service(db):
 class TestCreateRegister:
     def test_creates_register(self, service, db):
         """Creates a register, adds to db, commits and refreshes."""
-        result = service.create_register(BIZ_ID, "Till 1")
+        service.create_register(BIZ_ID, "Till 1")
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -101,7 +101,7 @@ class TestUpdateRegister:
         mock_reg.name = "Old"
         db.query.return_value.filter.return_value.first.return_value = mock_reg
 
-        result = service.update_register(REG_ID, BIZ_ID, name="New Name")
+        service.update_register(REG_ID, BIZ_ID, name="New Name")
         assert mock_reg.name == "New Name"
         db.commit.assert_called_once()
         db.refresh.assert_called_once_with(mock_reg)
@@ -153,7 +153,7 @@ class TestOpenSession:
         mock_reg = MagicMock(spec=CashRegister)
         db.query.side_effect = self._side_effect(mock_reg, None)
 
-        result = service.open_session(REG_ID, BIZ_ID, USER_ID)
+        service.open_session(REG_ID, BIZ_ID, USER_ID)
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
         assert isinstance(added, RegisterSession)
@@ -371,7 +371,7 @@ class TestAddCashMovement:
         mock_sess = MagicMock(spec=RegisterSession)
         db.query.return_value.filter.return_value.first.return_value = mock_sess
 
-        result = service.add_cash_movement(
+        service.add_cash_movement(
             SESS_ID, BIZ_ID, "cash_in", Decimal("150"), "Float top-up", USER_ID,
         )
         db.add.assert_called_once()
@@ -410,7 +410,7 @@ class TestRecordSale:
         mock_sess = self._open_session_mock()
         db.query.return_value.filter.return_value.first.return_value = mock_sess
 
-        result = service.record_sale(SESS_ID, Decimal("100"), "cash")
+        service.record_sale(SESS_ID, Decimal("100"), "cash")
         assert mock_sess.total_sales == Decimal("100")
         assert mock_sess.transaction_count == 1
         assert mock_sess.total_cash_payments == Decimal("100")

@@ -5,7 +5,6 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.signage_service import SignageService, _generate_pairing_code
 

@@ -12,7 +12,6 @@ split-brain issues when multiple devices edit the same entity offline.
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.sync_queue import SyncQueueItem, SyncMetadata

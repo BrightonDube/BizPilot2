@@ -46,7 +46,7 @@ def _chain(db, rows=None, first=None, count=0, scalar=None):
 class TestDashboardCRUD:
     def test_create(self):
         svc, db = _svc()
-        result = svc.create_dashboard(BIZ, USR, "My Dashboard")
+        svc.create_dashboard(BIZ, USR, "My Dashboard")
         db.add.assert_called_once()
         db.commit.assert_called_once()
 
@@ -77,7 +77,7 @@ class TestDashboardCRUD:
         dash = MagicMock()
         dash.name = "Old"
         _chain(db, first=dash)
-        result = svc.update_dashboard(DASH_ID, BIZ, name="New")
+        svc.update_dashboard(DASH_ID, BIZ, name="New")
         db.commit.assert_called()
 
     def test_delete(self):
@@ -92,7 +92,7 @@ class TestDashboardCRUD:
 class TestWidgetCRUD:
     def test_add_widget(self):
         svc, db = _svc()
-        result = svc.add_widget(DASH_ID, "kpi_total_sales", "Sales")
+        svc.add_widget(DASH_ID, "kpi_total_sales", "Sales")
         db.add.assert_called_once()
         db.commit.assert_called_once()
 
@@ -133,7 +133,7 @@ class TestWidgetData:
 
     def test_kpi_total_orders(self):
         svc, db = _svc()
-        chain = _chain(db, count=42)
+        _chain(db, count=42)
         result = svc._kpi_total_orders(BIZ, None)
         assert result == {"value": 42}
 
@@ -209,7 +209,7 @@ class TestDuplicateAndTemplates:
         widget.height = 3
         source.widgets = [widget]
         _chain(db, first=source)
-        result = svc.duplicate_dashboard(DASH_ID, BIZ, USR)
+        svc.duplicate_dashboard(DASH_ID, BIZ, USR)
         assert db.add.call_count >= 2  # clone + widget
 
     def test_create_template(self):
@@ -241,7 +241,7 @@ class TestDuplicateAndTemplates:
             {"widget_type": "kpi_total_sales", "title": "Sales"}
         ]
         _chain(db, first=tpl)
-        result = svc.apply_template(TPL_ID, BIZ, USR)
+        svc.apply_template(TPL_ID, BIZ, USR)
         assert db.add.call_count >= 2  # dashboard + widget
 
     def test_delete_system_template(self):

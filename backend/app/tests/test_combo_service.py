@@ -13,7 +13,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
 from decimal import Decimal
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -133,7 +133,7 @@ class TestGetComboById:
 class TestCreateCombo:
     def test_creates_and_commits(self):
         svc, db = _svc()
-        result = svc.create_combo(
+        svc.create_combo(
             business_id=BIZ,
             name="Lunch Special",
             display_name="Lunch Special",

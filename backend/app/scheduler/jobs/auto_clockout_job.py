@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import List, Dict, Any
+from typing import List
 from dataclasses import dataclass
 
 from app.core.database import SessionLocal

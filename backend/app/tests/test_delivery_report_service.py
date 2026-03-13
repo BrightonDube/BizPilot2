@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-import pytest
 
 from app.services.delivery_report_service import DeliveryReportService
 

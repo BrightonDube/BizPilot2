@@ -5,7 +5,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 
 from datetime import datetime, date, time, timezone, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import pytest
 
 from app.services.time_tracking_service import TimeTrackingService
@@ -119,7 +119,7 @@ class TestGetOrCreateBusinessSettings:
     def test_creates_settings_when_missing(self):
         svc, db = _svc()
         db.query.return_value = _chain(first=None)
-        result = svc.get_or_create_business_settings(BIZ_ID)
+        svc.get_or_create_business_settings(BIZ_ID)
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()
@@ -134,7 +134,7 @@ class TestClockIn:
     def test_success(self):
         svc, db = _svc()
         db.query.return_value = _chain(first=None)  # no active entry
-        result = svc.clock_in(BIZ_ID, USR_ID)
+        svc.clock_in(BIZ_ID, USR_ID)
         db.add.assert_called_once()
         db.commit.assert_called_once()
         db.refresh.assert_called_once()

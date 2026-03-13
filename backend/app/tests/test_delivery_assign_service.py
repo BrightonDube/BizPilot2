@@ -5,7 +5,7 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

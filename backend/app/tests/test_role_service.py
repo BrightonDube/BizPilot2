@@ -11,10 +11,10 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
 
 import json
 import uuid
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 import pytest
 
-from app.models.role import Role, Permission, DEFAULT_ROLES
+from app.models.role import Role, Permission
 from app.models.business_user import BusinessUser
 from app.services.role_service import RoleService
 
@@ -166,7 +166,7 @@ class TestCreateRole:
     def test_creates_role_with_correct_fields(self, svc, db):
         perms = ["products:view", "orders:create"]
 
-        result = svc.create_role(
+        svc.create_role(
             name="Sales Rep",
             description="Sales team role",
             permissions=perms,
@@ -186,7 +186,7 @@ class TestCreateRole:
         assert json.loads(added.permissions) == perms
 
     def test_creates_role_with_empty_permissions(self, svc, db):
-        result = svc.create_role(
+        svc.create_role(
             name="Empty",
             description="No perms",
             permissions=[],
@@ -289,7 +289,7 @@ class TestUpdateRole:
         role = _make_role()
         db.query.return_value = _chain(first=role)
 
-        result = svc.update_role(str(ROLE_ID), permissions=[])
+        svc.update_role(str(ROLE_ID), permissions=[])
 
         role.set_permissions.assert_called_once_with([])
 
@@ -485,7 +485,7 @@ class TestCreateSystemRoles:
     def test_stores_permissions_as_json(self, svc, db):
         db.query.return_value = _chain(first=None)
 
-        result = svc.create_system_roles()
+        svc.create_system_roles()
 
         added = db.add.call_args[0][0]
         assert json.loads(added.permissions) == ["products:view", "orders:create"]

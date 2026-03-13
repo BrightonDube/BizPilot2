@@ -12,9 +12,8 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock
 
-import pytest
 
 from app.models.sync_queue import SyncQueueItem, SyncMetadata
 from app.services.sync_queue_service import SyncQueueService
@@ -88,7 +87,7 @@ class TestEnqueue:
 
     def test_enqueue_creates_item_with_pending_status(self):
         svc, db = _svc()
-        result = svc.enqueue(
+        svc.enqueue(
             business_id=str(BIZ),
             entity_type="product",
             entity_id=str(ENTITY_ID),
@@ -108,7 +107,7 @@ class TestEnqueue:
 
     def test_enqueue_commits_and_refreshes(self):
         svc, db = _svc()
-        result = svc.enqueue(
+        svc.enqueue(
             business_id=str(BIZ),
             entity_type="order",
             entity_id=str(ENTITY_ID),
@@ -120,7 +119,7 @@ class TestEnqueue:
 
     def test_enqueue_with_device_id(self):
         svc, db = _svc()
-        result = svc.enqueue(
+        svc.enqueue(
             business_id=str(BIZ),
             entity_type="product",
             entity_id=str(ENTITY_ID),
@@ -372,7 +371,7 @@ class TestUpdateMetadata:
         existing = _mock_metadata(records_synced=10, last_sync_status="completed")
         db.query.return_value = _chain(first=existing)
 
-        result = svc.update_metadata(str(BIZ), "product", records_synced=5)
+        svc.update_metadata(str(BIZ), "product", records_synced=5)
         assert existing.last_sync_status == "completed"
         assert existing.records_synced == 15  # 10 + 5
         assert existing.last_sync_at is not None
@@ -385,14 +384,14 @@ class TestUpdateMetadata:
         existing = _mock_metadata(records_synced=None)
         db.query.return_value = _chain(first=existing)
 
-        result = svc.update_metadata(str(BIZ), "product", records_synced=7)
+        svc.update_metadata(str(BIZ), "product", records_synced=7)
         assert existing.records_synced == 7  # (None or 0) + 7
 
     def test_update_metadata_creates_new_when_not_found(self):
         svc, db = _svc()
         db.query.return_value = _chain(first=None)
 
-        result = svc.update_metadata(str(BIZ), "order", records_synced=3)
+        svc.update_metadata(str(BIZ), "order", records_synced=3)
         db.add.assert_called_once()
         added = db.add.call_args[0][0]
         assert isinstance(added, SyncMetadata)

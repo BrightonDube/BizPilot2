@@ -14,8 +14,7 @@ partial rollback, and audit queries.
 
 import logging
 import uuid
-from datetime import datetime, timezone
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_
@@ -29,9 +28,8 @@ from app.models.bulk_operation import (
     ItemStatus,
     OperationStatus,
 )
-from app.models.customer import Customer
 from app.models.inventory import InventoryItem
-from app.models.product import Product, ProductStatus
+from app.models.product import Product
 from app.models.product_supplier import ProductSupplier
 from app.schemas.bulk_operations import ValidationError, ValidationResult
 

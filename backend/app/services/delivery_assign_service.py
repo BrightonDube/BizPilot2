@@ -7,10 +7,9 @@ Assigns pending deliveries to the best available driver using:
 4. Manual reassignment with reason tracking
 """
 
-from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.delivery import Delivery, DeliveryStatus, Driver

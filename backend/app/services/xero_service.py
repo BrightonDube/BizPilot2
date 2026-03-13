@@ -9,12 +9,10 @@ and entity mapping — all complex enough to warrant isolation from
 the general accounting service.
 """
 
-import math
 from datetime import datetime, timezone
 from typing import Optional, Tuple, List
 from uuid import UUID
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.xero import XeroConnection, XeroSyncLog

@@ -3,9 +3,7 @@
 Tests stock transfer validity, location uniqueness, and cross-location queries.
 """
 
-from decimal import Decimal
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 

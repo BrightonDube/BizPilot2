@@ -15,8 +15,7 @@ output using mock data rather than querying a real database.
 
 from decimal import Decimal
 from hypothesis import given, strategies as st, settings
-from unittest.mock import MagicMock, patch
-from uuid import uuid4
+from unittest.mock import MagicMock
 
 
 # ---------------------------------------------------------------------------

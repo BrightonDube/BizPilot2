@@ -15,7 +15,6 @@ and reusable.
 from typing import Optional, Tuple, List
 from uuid import UUID
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.custom_dashboard import (

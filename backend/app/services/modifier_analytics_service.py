@@ -18,9 +18,9 @@ later without touching the operational code.
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func, desc, asc, case, and_
+from sqlalchemy import func, desc, asc
 from sqlalchemy.orm import Session
 
 from app.models.combo import ComboDeal

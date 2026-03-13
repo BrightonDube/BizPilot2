@@ -10,9 +10,8 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from app.models.tag import SmartCollection, CollectionProduct
 from app.services.smart_collection_service import SmartCollectionService

@@ -8,14 +8,13 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 
 from app.models.restaurant_table import RestaurantTable, TableStatus
-from app.models.order import Order, OrderStatus
+from app.models.order import Order
 from app.services.table_service import TableService
 
 
@@ -65,7 +64,7 @@ class TestCreateTable:
     def test_create_table_success(self, service, db):
         """Creating a table when no duplicate exists."""
         db.query.return_value.filter.return_value.first.return_value = None
-        result = service.create_table(BIZ_ID, "T5", capacity=6, section="Patio")
+        service.create_table(BIZ_ID, "T5", capacity=6, section="Patio")
 
         db.add.assert_called_once()
         db.commit.assert_called_once()
@@ -163,7 +162,7 @@ class TestUpdateTable:
     def test_update_table_changes_fields(self, service, db, sample_table):
         """Updates specified fields."""
         db.query.return_value.filter.return_value.first.return_value = sample_table
-        result = service.update_table(
+        service.update_table(
             sample_table.id, sample_table.business_id,
             capacity=8, section="VIP",
         )

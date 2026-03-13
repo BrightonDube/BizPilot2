@@ -5,7 +5,7 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest

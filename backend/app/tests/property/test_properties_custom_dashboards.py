@@ -3,7 +3,6 @@
 Tests widget configuration validation, layout constraints, and share permissions.
 """
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

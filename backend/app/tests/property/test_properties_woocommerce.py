@@ -3,7 +3,6 @@
 Tests sync map entity types, bi-directional sync, and ID mapping.
 """
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -47,7 +46,6 @@ class TestWooCommerceProperties:
         Orders are placed by customers on WooCommerce (pull in).
         Mixing directions causes data conflicts.
         """
-        expected_direction = "push" if entity_type == "product" else "pull"
         # Both directions are technically valid but the default should match
         assert direction in {"push", "pull"}
 

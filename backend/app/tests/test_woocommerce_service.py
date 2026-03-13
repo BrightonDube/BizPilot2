@@ -6,9 +6,8 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from app.services.woocommerce_service import WooCommerceService
 

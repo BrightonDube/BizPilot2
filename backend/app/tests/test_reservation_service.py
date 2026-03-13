@@ -8,8 +8,8 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch, call
+from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -82,7 +82,7 @@ class TestCreateReservation:
 
     def test_create_without_table(self, service, db):
         """Creates a reservation without a table assignment."""
-        result = service.create_reservation(
+        service.create_reservation(
             business_id=BIZ_ID,
             guest_name="Alice",
             party_size=2,
@@ -101,7 +101,7 @@ class TestCreateReservation:
         mock_table = MagicMock(spec=RestaurantTable)
         db.query.return_value.filter.return_value.first.return_value = mock_table
 
-        result = service.create_reservation(
+        service.create_reservation(
             business_id=BIZ_ID,
             guest_name="Bob",
             party_size=3,
@@ -124,7 +124,7 @@ class TestCreateReservation:
 
     def test_create_sets_default_duration(self, service, db):
         """Default duration is 90 minutes."""
-        result = service.create_reservation(
+        service.create_reservation(
             business_id=BIZ_ID,
             guest_name="Dave",
             party_size=1,
@@ -212,7 +212,7 @@ class TestUpdateReservation:
         mock_r = _mock_reservation(res_id=RES_ID)
         db.query.return_value.filter.return_value.first.return_value = mock_r
 
-        result = service.update_reservation(
+        service.update_reservation(
             RES_ID, BIZ_ID,
             guest_name="Updated Name", party_size=6,
         )
@@ -248,7 +248,7 @@ class TestCancelReservation:
         mock_r = _mock_reservation(res_id=RES_ID, status=ReservationStatus.CONFIRMED.value)
         db.query.return_value.filter.return_value.first.return_value = mock_r
 
-        result = service.cancel_reservation(RES_ID, BIZ_ID)
+        service.cancel_reservation(RES_ID, BIZ_ID)
         assert mock_r.status == ReservationStatus.CANCELLED.value
         db.commit.assert_called()
 
@@ -295,7 +295,7 @@ class TestSeatReservation:
         # db.query(RestaurantTable).get(table_id) for table lookup
         db.query.return_value.get.return_value = mock_table
 
-        result = service.seat_reservation(RES_ID, BIZ_ID)
+        service.seat_reservation(RES_ID, BIZ_ID)
         assert mock_r.status == ReservationStatus.SEATED.value
         assert mock_table.status == TableStatus.OCCUPIED
         db.commit.assert_called()
@@ -331,7 +331,7 @@ class TestMarkNoShow:
         )
         db.query.return_value.filter.return_value.first.return_value = mock_r
 
-        result = service.mark_no_show(RES_ID, BIZ_ID)
+        service.mark_no_show(RES_ID, BIZ_ID)
         assert mock_r.status == ReservationStatus.NO_SHOW.value
         db.commit.assert_called()
 

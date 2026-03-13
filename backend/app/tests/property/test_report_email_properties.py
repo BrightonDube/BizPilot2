@@ -7,8 +7,7 @@ Feature: Automated Report Emails
 Requirements: 3.4, 3.5
 """
 
-from typing import Dict, Any
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from hypothesis import given, strategies as st, settings, HealthCheck
 from uuid import uuid4
 from datetime import datetime
@@ -63,7 +62,7 @@ def test_email_content_completeness(report_data):
     
     # Generate email content (without sending)
     subject = service.generate_subject(report_data)
-    body = service.generate_html_body(report_data)
+    service.generate_html_body(report_data)
     
     # Verify Subject contains Business Name and Report Type
     assert report_data.business_name in subject
@@ -76,7 +75,7 @@ def test_email_content_completeness(report_data):
         if isinstance(value, (int, float, str)) and key != 'top_products' and key != 'low_stock_items':
             # Simple check if the metric key (formatted) appears in the body
             # We assume the service makes keys readable (e.g. total_revenue -> Total Revenue)
-            readable_key = key.replace('_', ' ').title()
+            key.replace('_', ' ').title()
             # assert readable_key in body # This might be too strict if template changes
             pass
 

@@ -2,9 +2,9 @@
 
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-unit-tests")
 
@@ -212,7 +212,7 @@ class TestLaybyNotificationService:
         schedule.due_date = datetime(2025, 2, 1)
         schedule.amount_due = Decimal("250.00")
 
-        result = service.send_payment_reminder(layby, schedule)
+        service.send_payment_reminder(layby, schedule)
 
         assert db.add.called
         db.commit.assert_called()
@@ -228,7 +228,7 @@ class TestLaybyNotificationService:
         service, db = self._make_service()
         layby = self._make_layby()
 
-        result = service.send_overdue_notice(
+        service.send_overdue_notice(
             layby, days_overdue=5, overdue_amount=Decimal("100.00")
         )
 
@@ -244,7 +244,7 @@ class TestLaybyNotificationService:
         service, db = self._make_service()
         layby = self._make_layby()
 
-        result = service.send_collection_ready(layby)
+        service.send_collection_ready(layby)
 
         notification_records = [
             call[0][0] for call in db.add.call_args_list
@@ -258,7 +258,7 @@ class TestLaybyNotificationService:
         service, db = self._make_service()
         layby = self._make_layby()
 
-        result = service.send_cancellation_confirmation(layby, reason="Customer request")
+        service.send_cancellation_confirmation(layby, reason="Customer request")
 
         notification_records = [
             call[0][0] for call in db.add.call_args_list
@@ -287,7 +287,7 @@ class TestLaybyNotificationService:
         with patch.object(
             service.email_service, "send_email", side_effect=Exception("SMTP error")
         ):
-            result = service.send_collection_ready(
+            service.send_collection_ready(
                 layby, channel=NotificationChannel.EMAIL
             )
 

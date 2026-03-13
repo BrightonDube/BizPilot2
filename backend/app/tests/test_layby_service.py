@@ -2,16 +2,15 @@
 import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 
 from app.models.layby import LaybyStatus, PaymentFrequency
-from app.models.layby_payment import PaymentType, PaymentStatus
-from app.models.layby_schedule import ScheduleStatus
+from app.models.layby_payment import PaymentStatus
 from app.services.layby_service import LaybyService
 
 
@@ -152,7 +151,7 @@ class TestGetLayby:
 class TestListLaybys:
     def test_basic(self):
         svc, db = _make_service()
-        chain = _chain(db, rows=[_make_layby()], count=1)
+        _chain(db, rows=[_make_layby()], count=1)
         laybys, total = svc.list_laybys(BIZ)
         assert total == 1
         assert len(laybys) == 1
@@ -193,7 +192,7 @@ class TestMakePayment:
             return chain
         db.query.side_effect = query_side_effect
 
-        payment = svc.make_payment(BIZ, LAYBY_ID, Decimal("200.00"), "cash", USER)
+        svc.make_payment(BIZ, LAYBY_ID, Decimal("200.00"), "cash", USER)
         db.add.assert_called()
         db.commit.assert_called()
 
@@ -291,7 +290,7 @@ class TestRefundPayment:
             return chain
         db.query.side_effect = query_side_effect
 
-        result = svc.refund_payment(BIZ, LAYBY_ID, PAY_ID, "test", USER)
+        svc.refund_payment(BIZ, LAYBY_ID, PAY_ID, "test", USER)
         db.commit.assert_called()
         assert payment.refund_amount == Decimal("100.00")
 
@@ -336,7 +335,7 @@ class TestCancelLayby:
             return chain
         db.query.side_effect = query_side_effect
 
-        result = svc.cancel_layby(BIZ, LAYBY_ID, "changed mind", USER)
+        svc.cancel_layby(BIZ, LAYBY_ID, "changed mind", USER)
         assert layby.status == LaybyStatus.CANCELLED
         db.commit.assert_called()
         svc.stock_service.release_stock.assert_called_once()
@@ -360,7 +359,7 @@ class TestCollectLayby:
         svc, db = _make_service()
         layby = _make_layby(can_be_collected=True, status=LaybyStatus.READY_FOR_COLLECTION)
         _chain(db, first=layby)
-        result = svc.collect_layby(BIZ, LAYBY_ID, USER)
+        svc.collect_layby(BIZ, LAYBY_ID, USER)
         assert layby.status == LaybyStatus.COMPLETED
         svc.stock_service.collect_stock.assert_called_once()
         db.commit.assert_called()
@@ -477,7 +476,7 @@ class TestConfig:
         _chain(db, first=config)
         data = MagicMock()
         data.model_dump.return_value = {"max_duration_days": 120}
-        result = svc.update_config(BIZ, data)
+        svc.update_config(BIZ, data)
         db.commit.assert_called()
 
     def test_update_config_creates_new(self):

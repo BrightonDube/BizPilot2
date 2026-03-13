@@ -5,7 +5,7 @@ from sqlalchemy import Column, String, Integer, Enum as SQLEnum, Numeric, Boolea
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from app.models.base import BaseModel, utc_now
+from app.models.base import BaseModel
 
 
 class TableStatus(str, enum.Enum):

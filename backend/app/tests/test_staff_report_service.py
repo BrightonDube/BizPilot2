@@ -3,11 +3,9 @@ import os
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from datetime import date
-from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
 
 from app.services.staff_report_service import StaffReportService
 
@@ -143,7 +141,7 @@ class TestAttendanceReport:
     def test_attendance_report_user_filter(self):
         svc, db = _make_service()
         chain = _chain(db, [self._make_row()])
-        result = svc.get_attendance_report(BIZ, START, END, user_id=str(USER1))
+        svc.get_attendance_report(BIZ, START, END, user_id=str(USER1))
         # filter should be called at least twice (base + user filter)
         assert chain.filter.call_count >= 1
 

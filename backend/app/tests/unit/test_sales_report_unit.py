@@ -10,11 +10,10 @@ Unit tests verify specific known scenarios with exact expected values
 that a human can hand-verify.
 """
 
-from datetime import datetime, date
+from datetime import datetime
 from decimal import Decimal
 from uuid import uuid4
 
-import pytest
 
 
 # ---------------------------------------------------------------------------

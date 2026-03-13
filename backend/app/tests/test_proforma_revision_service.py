@@ -5,11 +5,9 @@ with auto-incrementing revision numbers.
 """
 
 import os
-import sys
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
@@ -90,7 +88,7 @@ class TestCreateRevision:
         _MockRevisionModel.return_value = instance
 
         service = ProformaRevisionService(db)
-        result = service.create_revision(proforma_id=proforma_id, created_by=created_by)
+        service.create_revision(proforma_id=proforma_id, created_by=created_by)
 
         _MockRevisionModel.assert_called_once()
         kwargs = _MockRevisionModel.call_args[1]

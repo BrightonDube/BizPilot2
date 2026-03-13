@@ -9,12 +9,11 @@ Tests cover:
 
 import os
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, PropertyMock
+from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-import pytest
 
 from app.services.extended_report_service import ExtendedReportService
 

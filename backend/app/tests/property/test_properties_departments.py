@@ -9,7 +9,6 @@ Validates key correctness properties from the design:
 Feature: Department-Based Team Roles
 """
 
-from unittest.mock import Mock, MagicMock, PropertyMock
 from uuid import uuid4
 
 from hypothesis import given, settings, HealthCheck

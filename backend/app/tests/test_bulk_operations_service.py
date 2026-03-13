@@ -9,7 +9,7 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import uuid
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

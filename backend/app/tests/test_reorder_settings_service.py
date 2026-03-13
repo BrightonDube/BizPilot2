@@ -4,12 +4,11 @@ import os
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import pytest
 
-from app.models.reorder import ProductReorderSettings, ReorderAuditLog
+from app.models.reorder import ProductReorderSettings
 from app.schemas.reorder import ProductReorderSettingsCreate
 from app.services.reorder_settings_service import ReorderSettingsService
 

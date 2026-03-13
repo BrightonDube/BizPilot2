@@ -8,12 +8,12 @@ Requirements: 3.1, 3.2, 3.3
 """
 
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 from unittest.mock import Mock, MagicMock
 from hypothesis import given, strategies as st, settings, HealthCheck
 from uuid import uuid4
 
-from app.services.report_generator_service import ReportGeneratorService, ReportData
+from app.services.report_generator_service import ReportGeneratorService
 from app.models.report_subscription import ReportType
 from app.models.business import Business
 from app.models.order import Order, OrderDirection
@@ -531,7 +531,7 @@ def test_reporting_period_data_filtering(period, business, user_email):
         deleted_at=None,
         business_id=business.id,
     )
-    out_period_order = Mock(
+    Mock(
         spec=Order,
         id=uuid4(),
         total=out_period_total,
