@@ -10,11 +10,12 @@ import {
   DollarSign,
   TrendingUp,
   Package,
-  Layers,
   ArrowDownUp,
   Warehouse,
   AlertTriangle,
   Truck,
+  Layers,
+  RefreshCw,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -26,6 +27,20 @@ import {
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 import { FeatureGate } from '@/components/subscription/FeatureGate';
+import {
+  InventoryReportData,
+  StockLevelsReportData,
+  StockMovementsReportData,
+  ValuationReportData,
+  TurnoverReportData,
+  SupplierPerformanceReportData,
+  StockLevelItem,
+  StockMovementItem,
+  ValuationItem,
+  TurnoverItem,
+  SupplierPerformanceItem,
+} from '@/lib/types';
+import axios from 'axios';
 
 type TabKey= 'stock-levels' | 'movements' | 'valuation' | 'turnover' | 'supplier-performance';
 
@@ -47,7 +62,7 @@ function formatZAR(value: number): string {
   return `R ${value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function getDefaultDates() {
+function getDefaultDates(): { start: string; end: string } {
   const today = new Date();
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -57,14 +72,12 @@ function getDefaultDates() {
   };
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-export default function InventoryReportsPage() {
+export default function InventoryReportsPage(): React.ReactElement {
   const defaults = getDefaultDates();
   const [activeTab, setActiveTab] = useState<TabKey>('stock-levels');
   const [startDate, setStartDate] = useState(defaults.start);
   const [endDate, setEndDate] = useState(defaults.end);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<InventoryReportData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,7 +88,7 @@ export default function InventoryReportsPage() {
   // Valuation method
   const [valuationMethod, setValuationMethod] = useState<string>('average_cost');
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -111,8 +124,14 @@ export default function InventoryReportsPage() {
           break;
       }
       setData(res.data);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Failed to fetch report data');
+    } catch (err: unknown) { if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("An unexpected error occurred"); }
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || err.message || 'Failed to fetch report data');
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
       setData(null);
     } finally {
       setIsLoading(false);
@@ -206,6 +225,14 @@ export default function InventoryReportsPage() {
                 </select>
               </div>
             )}
+            
+            <button
+              onClick={fetchData}
+              className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
           </div>
         </CardContent>
       </Card>
@@ -241,11 +268,11 @@ export default function InventoryReportsPage() {
         </Card>
       ) : data ? (
         <div className="space-y-6">
-          {activeTab === 'stock-levels' && <StockLevelsReport data={data} />}
-          {activeTab === 'movements' && <MovementsReport data={data} />}
-          {activeTab === 'valuation' && <ValuationReport data={data} />}
-          {activeTab === 'turnover' && <TurnoverReport data={data} />}
-          {activeTab === 'supplier-performance' && <SupplierPerformanceReport data={data} />}
+          {activeTab === 'stock-levels' && <StockLevelsReport data={data as StockLevelsReportData} />}
+          {activeTab === 'movements' && <MovementsReport data={data as StockMovementsReportData} />}
+          {activeTab === 'valuation' && <ValuationReport data={data as ValuationReportData} />}
+          {activeTab === 'turnover' && <TurnoverReport data={data as TurnoverReportData} />}
+          {activeTab === 'supplier-performance' && <SupplierPerformanceReport data={data as SupplierPerformanceReportData} />}
         </div>
       ) : null}
     </div>
@@ -255,8 +282,8 @@ export default function InventoryReportsPage() {
 
 // --- Sub-components for each tab ---
 
-function StockLevelsReport({ data }: { data: any }) {
-  const items = data.items ?? data.products ?? data ?? [];
+function StockLevelsReport({ data }: { data: StockLevelsReportData }): React.ReactElement {
+  const items = data.items ?? data.products ?? [];
   const list = Array.isArray(items) ? items : [];
   return (
     <>
@@ -293,12 +320,12 @@ function StockLevelsReport({ data }: { data: any }) {
           <CardContent>
             <DataTable
               columns={['Product', 'SKU', 'Category', 'In Stock', 'Reorder Level', 'Unit Cost', 'Stock Value']}
-              rows={list.map((p: any) => [
+              rows={list.map((p: StockLevelItem) => [
                 p.name ?? p.product_name ?? '-',
                 p.sku ?? '-',
                 p.category_name ?? p.category ?? '-',
-                p.quantity_in_stock ?? p.stock ?? 0,
-                p.reorder_level ?? p.reorder_point ?? '-',
+                (p.quantity_in_stock ?? p.stock ?? 0).toString(),
+                (p.reorder_level ?? p.reorder_point ?? 0).toString(),
                 formatZAR(p.unit_cost ?? p.cost_price ?? 0),
                 formatZAR(p.stock_value ?? 0),
               ])}
@@ -310,8 +337,8 @@ function StockLevelsReport({ data }: { data: any }) {
   );
 }
 
-function MovementsReport({ data }: { data: any }) {
-  const movements = data.movements ?? data.items ?? data ?? [];
+function MovementsReport({ data }: { data: StockMovementsReportData }): React.ReactElement {
+  const movements = data.movements ?? data.items ?? [];
   const list = Array.isArray(movements) ? movements : [];
   return (
     <>
@@ -348,11 +375,11 @@ function MovementsReport({ data }: { data: any }) {
           <CardContent>
             <DataTable
               columns={['Date', 'Product', 'Type', 'Quantity', 'Reference', 'Notes']}
-              rows={list.map((m: any) => [
+              rows={list.map((m: StockMovementItem) => [
                 m.date ?? (m.created_at ? new Date(m.created_at).toLocaleDateString() : '-'),
                 m.product_name ?? m.name ?? '-',
                 m.movement_type ?? m.type ?? '-',
-                m.quantity ?? 0,
+                m.quantity.toString(),
                 m.reference ?? m.reference_number ?? '-',
                 m.notes ?? '-',
               ])}
@@ -364,8 +391,8 @@ function MovementsReport({ data }: { data: any }) {
   );
 }
 
-function ValuationReport({ data }: { data: any }) {
-  const items = data.items ?? data.products ?? data ?? [];
+function ValuationReport({ data }: { data: ValuationReportData }): React.ReactElement {
+  const items = data.items ?? data.products ?? [];
   const list = Array.isArray(items) ? items : [];
   return (
     <>
@@ -402,13 +429,13 @@ function ValuationReport({ data }: { data: any }) {
           <CardContent>
             <DataTable
               columns={['Product', 'SKU', 'Quantity', 'Unit Cost', 'Total Value', '% of Total']}
-              rows={list.map((p: any) => [
+              rows={list.map((p: ValuationItem) => [
                 p.name ?? p.product_name ?? '-',
                 p.sku ?? '-',
-                p.quantity ?? p.quantity_in_stock ?? 0,
+                (p.quantity ?? p.quantity_in_stock ?? 0).toString(),
                 formatZAR(p.unit_cost ?? p.cost_price ?? 0),
                 formatZAR(p.total_value ?? p.stock_value ?? 0),
-                p.percentage != null ? `${p.percentage.toFixed(1)}%` : '-',
+                p.percentage != null ? p.percentage.toFixed(1) + '%' : '-',
               ])}
             />
           </CardContent>
@@ -418,20 +445,20 @@ function ValuationReport({ data }: { data: any }) {
   );
 }
 
-function TurnoverReport({ data }: { data: any }) {
-  const items = data.items ?? data.products ?? data ?? [];
+function TurnoverReport({ data }: { data: TurnoverReportData }): React.ReactElement {
+  const items = data.items ?? data.products ?? [];
   const list = Array.isArray(items) ? items : [];
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Avg Turnover Rate"
-          value={data.average_turnover_rate?.toFixed(2) ?? '-'}
+          value={data.average_turnover_rate ? data.average_turnover_rate.toFixed(2) : '-'}
           icon={<TrendingUp className="w-5 h-5" />}
         />
         <StatCard
           title="Avg Days to Sell"
-          value={data.average_days_to_sell?.toFixed(1) ?? '-'}
+          value={data.average_days_to_sell ? data.average_days_to_sell.toFixed(1) : '-'}
           icon={<ArrowDownUp className="w-5 h-5" />}
         />
         <StatCard
@@ -456,12 +483,12 @@ function TurnoverReport({ data }: { data: any }) {
           <CardContent>
             <DataTable
               columns={['Product', 'Units Sold', 'Avg Stock', 'Turnover Rate', 'Days to Sell', 'Revenue']}
-              rows={list.map((p: any) => [
+              rows={list.map((p: TurnoverItem) => [
                 p.name ?? p.product_name ?? '-',
-                p.units_sold ?? p.quantity_sold ?? 0,
-                p.average_stock ?? p.avg_inventory ?? 0,
-                p.turnover_rate?.toFixed(2) ?? '-',
-                p.days_to_sell?.toFixed(1) ?? '-',
+                (p.units_sold ?? p.quantity_sold ?? 0).toString(),
+                (p.average_stock ?? p.avg_inventory ?? 0).toString(),
+                p.turnover_rate ? p.turnover_rate.toFixed(2) : '-',
+                p.days_to_sell ? p.days_to_sell.toFixed(1) : '-',
                 formatZAR(p.revenue ?? p.total_revenue ?? 0),
               ])}
             />
@@ -472,8 +499,8 @@ function TurnoverReport({ data }: { data: any }) {
   );
 }
 
-function SupplierPerformanceReport({ data }: { data: any }) {
-  const suppliers = data.suppliers ?? data.items ?? data ?? [];
+function SupplierPerformanceReport({ data }: { data: SupplierPerformanceReportData }): React.ReactElement {
+  const suppliers = data.suppliers ?? data.items ?? [];
   const list = Array.isArray(suppliers) ? suppliers : [];
   return (
     <>
@@ -495,7 +522,7 @@ function SupplierPerformanceReport({ data }: { data: any }) {
         />
         <StatCard
           title="Avg Lead Time"
-          value={data.average_lead_time != null ? `${data.average_lead_time.toFixed(1)} days` : '-'}
+          value={data.average_lead_time != null ? data.average_lead_time.toFixed(1) + ' days' : '-'}
           icon={<TrendingUp className="w-5 h-5" />}
         />
       </div>
@@ -510,13 +537,13 @@ function SupplierPerformanceReport({ data }: { data: any }) {
           <CardContent>
             <DataTable
               columns={['Supplier', 'Orders', 'Items Supplied', 'Total Spend', 'Avg Lead Time', 'On-Time %']}
-              rows={list.map((s: any) => [
+              rows={list.map((s: SupplierPerformanceItem) => [
                 s.name ?? s.supplier_name ?? '-',
-                s.order_count ?? s.orders ?? 0,
-                s.items_supplied ?? s.total_items ?? 0,
+                (s.order_count ?? s.orders ?? 0).toString(),
+                (s.items_supplied ?? s.total_items ?? 0).toString(),
                 formatZAR(s.total_spend ?? s.amount ?? 0),
-                s.avg_lead_time != null ? `${s.avg_lead_time.toFixed(1)} days` : '-',
-                s.on_time_percentage != null ? `${s.on_time_percentage.toFixed(1)}%` : '-',
+                s.avg_lead_time != null ? s.avg_lead_time.toFixed(1) + ' days' : '-',
+                s.on_time_percentage != null ? s.on_time_percentage.toFixed(1) + '%' : '-',
               ])}
             />
           </CardContent>
@@ -528,7 +555,7 @@ function SupplierPerformanceReport({ data }: { data: any }) {
 
 // --- Reusable table component ---
 
-function DataTable({ columns, rows }: { columns: string[]; rows: any[][] }) {
+function DataTable({ columns, rows }: { columns: string[]; rows: string[][] }): React.ReactElement {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">

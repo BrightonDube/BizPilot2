@@ -14,6 +14,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import { apiClient } from "@/lib/api";
 import {
   Badge,
@@ -81,7 +82,7 @@ type Tab = "xero" | "woocommerce";
 
 /* ---------- status badge helper ---------- */
 
-function statusBadge(status: string) {
+function statusBadge(status: string): React.ReactElement {
   switch (status) {
     case "active":
     case "synced":
@@ -102,7 +103,7 @@ function statusBadge(status: string) {
  * MAIN COMPONENT
  * ================================================================ */
 
-export default function IntegrationsPageClient() {
+export default function IntegrationsPageClient(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<Tab>("xero");
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -146,7 +147,7 @@ export default function IntegrationsPageClient() {
  * XERO TAB
  * ================================================================ */
 
-function XeroTab() {
+function XeroTab(): React.ReactElement {
   const [connection, setConnection] = useState<XeroConnection | null>(null);
   const [syncLogs, setSyncLogs] = useState<XeroSyncLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,7 +158,7 @@ function XeroTab() {
   const [tenantId, setTenantId] = useState("");
   const [tenantName, setTenantName] = useState("");
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError("");
     try {
@@ -166,9 +167,9 @@ function XeroTab() {
 
       const logsRes = await apiClient.get("/xero/sync-logs");
       setSyncLogs(Array.isArray(logsRes.data) ? logsRes.data : logsRes.data.items ?? []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       /* 404 means no connection yet — not an error */
-      if (err?.response?.status === 404) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
         setConnection(null);
       } else {
         setError("Failed to load Xero data.");
@@ -180,7 +181,7 @@ function XeroTab() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleConnect = async () => {
+  const handleConnect = async (): Promise<void> => {
     try {
       await apiClient.post("/xero/connection", {
         tenant_id: tenantId || null,
@@ -195,7 +196,7 @@ function XeroTab() {
     }
   };
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = async (): Promise<void> => {
     if (!connection) return;
     try {
       await apiClient.delete("/xero/connection");
@@ -318,7 +319,7 @@ function XeroTab() {
  * WOOCOMMERCE TAB
  * ================================================================ */
 
-function WooCommerceTab() {
+function WooCommerceTab(): React.ReactElement {
   const [connection, setConnection] = useState<WooConnection | null>(null);
   const [syncMaps, setSyncMaps] = useState<WooSyncMap[]>([]);
   const [loading, setLoading] = useState(true);
@@ -330,7 +331,7 @@ function WooCommerceTab() {
   const [consumerKey, setConsumerKey] = useState("");
   const [consumerSecret, setConsumerSecret] = useState("");
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError("");
     try {
@@ -339,8 +340,8 @@ function WooCommerceTab() {
 
       const mapsRes = await apiClient.get("/woocommerce/sync-maps");
       setSyncMaps(Array.isArray(mapsRes.data) ? mapsRes.data : mapsRes.data.items ?? []);
-    } catch (err: any) {
-      if (err?.response?.status === 404) {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
         setConnection(null);
       } else {
         setError("Failed to load WooCommerce data.");
@@ -352,7 +353,7 @@ function WooCommerceTab() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleConnect = async () => {
+  const handleConnect = async (): Promise<void> => {
     if (!storeUrl) { setError("Store URL is required."); return; }
     try {
       await apiClient.post("/woocommerce/connection", {
@@ -370,7 +371,7 @@ function WooCommerceTab() {
     }
   };
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = async (): Promise<void> => {
     if (!connection) return;
     try {
       await apiClient.delete("/woocommerce/connection");

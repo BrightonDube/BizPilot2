@@ -92,6 +92,7 @@ class ModifierGroup(BaseModel):
         "Modifier",
         foreign_keys=[parent_modifier_id],
         uselist=False,
+        back_populates="nested_groups",
     )
     menu_items = relationship(
         "MenuItem",
@@ -130,6 +131,7 @@ class Modifier(BaseModel):
         "ModifierGroup",
         foreign_keys="[ModifierGroup.parent_modifier_id]",
         lazy="selectin",
+        back_populates="nested_parent",
     )
 
 

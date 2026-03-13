@@ -75,7 +75,7 @@ function getDefaultDates() {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export default function StaffReportsPage() {
+export default function StaffReportsPage(): React.ReactElement {
   const defaults = getDefaultDates();
   const [activeTab, setActiveTab] = useState<TabKey>('performance');
   const [startDate, setStartDate] = useState(defaults.start);
@@ -88,7 +88,7 @@ export default function StaffReportsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {

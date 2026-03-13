@@ -37,7 +37,7 @@ const TYPE_LABELS: Record<string, string> = {
   standard: 'Standard',
 };
 
-export default function OrderHistoryPage() {
+export default function OrderHistoryPage(): React.ReactElement {
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -52,7 +52,7 @@ export default function OrderHistoryPage() {
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       const params: Record<string, any> = { page, per_page: perPage };
@@ -64,7 +64,7 @@ export default function OrderHistoryPage() {
       const res = await apiClient.get('/order-management/history', { params });
       setOrders(res.data.items);
       setTotal(res.data.total);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to fetch orders:', err);
     } finally {
       setLoading(false);
@@ -77,13 +77,13 @@ export default function OrderHistoryPage() {
 
   const totalPages = Math.ceil(total / perPage);
 
-  const viewStatusHistory = async (orderId: string) => {
+  const viewStatusHistory = async (orderId: string): Promise<void> => {
     try {
       const res = await apiClient.get(`/order-management/${orderId}/status-history`);
       setStatusHistory(res.data);
       setSelectedOrder(orderId);
       setShowHistory(true);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to fetch status history:', err);
     }
   };
@@ -211,7 +211,7 @@ export default function OrderHistoryPage() {
               <p className="text-gray-600 text-sm">No status changes recorded.</p>
             ) : (
               <div className="space-y-3">
-                {statusHistory.map((h: any, i: number) => (
+                {statusHistory.map((h: OrderStatusHistory, i: number) => (
                   <div key={i} className="flex items-start gap-3 border-l-2 border-blue-300 pl-3 pb-3">
                     <div>
                       <div className="text-sm font-medium">

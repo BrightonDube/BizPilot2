@@ -297,6 +297,7 @@ from app.models.sage import (
     SageSyncLog,
     SageSyncQueue,
 )
+from app.models.webhook import WebhookSubscription, WebhookDelivery
 
 __all__ = [
     "BaseModel",
@@ -657,4 +658,6 @@ __all__ = [
     "SageAccountMapping",
     "SageSyncLog",
     "SageSyncQueue",
+    "WebhookSubscription",
+    "WebhookDelivery",
 ]
