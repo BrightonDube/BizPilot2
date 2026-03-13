@@ -4,7 +4,6 @@ Extends the base delivery schemas with operational/real-time concerns.
 """
 
 from datetime import date, time, datetime
-from decimal import Decimal
 from typing import Any, Optional
 from uuid import UUID
 

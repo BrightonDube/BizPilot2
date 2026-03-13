@@ -14,7 +14,6 @@ import uuid
 from datetime import datetime, timezone, date, time
 from typing import Optional
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.delivery_tracking import (
@@ -220,3 +219,23 @@ class DeliveryTrackingService:
             .filter(DeliveryProof.delivery_id == delivery_id)
             .first()
         )
+
+    # -----------------------------------------------------------------------
+    # ETA Calculation
+    # -----------------------------------------------------------------------
+
+    @staticmethod
+    def estimate_eta_minutes(
+        distance_km: float,
+        avg_speed_kmh: float = 30.0,
+        prep_minutes: int = 10,
+    ) -> int:
+        """Estimate delivery time in minutes.
+
+        Combines preparation time with travel estimate at average speed.
+        Default 30 km/h accounts for urban stop-start driving.
+        """
+        if distance_km <= 0:
+            return prep_minutes
+        travel_minutes = (distance_km / avg_speed_kmh) * 60
+        return prep_minutes + round(travel_minutes)

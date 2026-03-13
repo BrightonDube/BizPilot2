@@ -9,7 +9,7 @@ Feature: Table Management
 
 from datetime import datetime, timedelta
 
-from hypothesis import given, settings, HealthCheck, assume
+from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st
 
 

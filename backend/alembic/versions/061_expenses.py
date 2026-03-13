@@ -18,9 +18,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    expensetrackingstatus = sa.Enum(
+    # WHY create_type=False: We manually create the enum below, so we must prevent
+    # SQLAlchemy's create_table from auto-creating it again (which would error).
+    expensetrackingstatus = postgresql.ENUM(
         'pending', 'approved', 'rejected', 'paid',
         name='expensetrackingstatus',
+        create_type=False,
     )
     expensetrackingstatus.create(op.get_bind(), checkfirst=True)
 

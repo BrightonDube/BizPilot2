@@ -3,9 +3,8 @@
 Tests shift scheduling, tracking status progression, and proof validation.
 """
 
-from datetime import date, time, timedelta
+from datetime import time
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 

@@ -10,7 +10,7 @@ test matrices would miss.
 """
 
 from decimal import Decimal, ROUND_HALF_UP
-from hypothesis import given, strategies as st, assume, settings
+from hypothesis import given, strategies as st, settings
 
 from app.services.modifier_pricing_service import ModifierPricingService
 

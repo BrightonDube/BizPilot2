@@ -4,9 +4,11 @@ from typing import Optional
 from uuid import UUID
 from decimal import Decimal
 from datetime import date
+import io
 import math
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -396,7 +398,177 @@ async def generate_statement(
         )
 
 
-# ── AR Summary & DSO ──────────────────────────────────────────────────────
+@router.get("/{account_id}/statement/pdf")
+async def generate_statement_pdf(
+    account_id: UUID,
+    period_end: date = Query(..., description="Statement period end date"),
+    period_start: Optional[date] = Query(None, description="Statement period start date"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Generate a PDF account statement for download.
+
+    Renders the statement via build_report_pdf with summary,
+    aging breakdown, and transaction detail sections.
+    """
+    from app.core.pdf import build_report_pdf, format_currency, format_date
+
+    service = CustomerAccountService(db)
+    account = _get_account_or_404(service, account_id, business_id)
+
+    try:
+        statement = service.generate_statement(
+            account=account,
+            period_end=period_end,
+            period_start=period_start,
+        )
+        transactions = service.get_statement_transactions(statement)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    customer_name = ""
+    if hasattr(account, "customer") and account.customer:
+        customer_name = getattr(account.customer, "name", "")
+
+    sections = [
+        {
+            "title": "Account Details",
+            "rows": [
+                {"label": "Account Number", "value": account.account_number},
+                {"label": "Customer", "value": customer_name or "—"},
+                {"label": "Period", "value": f"{format_date(statement.period_start)} – {format_date(statement.period_end)}"},
+            ],
+        },
+        {
+            "title": "Balance Summary",
+            "rows": [
+                {"label": "Opening Balance", "value": format_currency(statement.opening_balance)},
+                {"label": "Total Charges", "value": format_currency(statement.total_charges)},
+                {"label": "Total Payments", "value": format_currency(statement.total_payments)},
+                {"label": "Closing Balance", "value": format_currency(statement.closing_balance)},
+            ],
+        },
+        {
+            "title": "Aging Breakdown",
+            "rows": [
+                {"label": "Current", "value": format_currency(statement.current_amount)},
+                {"label": "30 Days", "value": format_currency(statement.days_30_amount)},
+                {"label": "60 Days", "value": format_currency(statement.days_60_amount)},
+                {"label": "90+ Days", "value": format_currency(statement.days_90_plus_amount)},
+            ],
+        },
+    ]
+
+    # Add transaction rows if present
+    if transactions:
+        tx_rows = [
+            {
+                "label": f"{format_date(t.created_at)} – {(t.description or '')[:35]}",
+                "value": format_currency(t.amount),
+            }
+            for t in transactions[:50]  # cap at 50 for PDF readability
+        ]
+        sections.append({"title": f"Transactions ({len(transactions)} total)", "rows": tx_rows})
+
+    pdf_bytes = build_report_pdf(
+        title="Account Statement",
+        business_name=customer_name or "BizPilot",
+        date_range=f"{format_date(statement.period_start)} – {format_date(statement.period_end)}",
+        sections=sections,
+    )
+
+    filename = f"statement_{account.account_number}_{period_end}.pdf"
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/{account_id}/statement/email")
+async def email_statement(
+    account_id: UUID,
+    period_end: date = Query(..., description="Statement period end date"),
+    period_start: Optional[date] = Query(None, description="Statement period start date"),
+    to_email: Optional[str] = Query(None, description="Override recipient email"),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Email an account statement as a PDF attachment.
+
+    Uses the customer's email by default; override with to_email param.
+    Marks the statement as sent after successful delivery.
+    """
+    from app.core.pdf import build_simple_pdf, format_currency, format_date
+    from app.services.email_service import EmailService, EmailAttachment
+
+    service = CustomerAccountService(db)
+    account = _get_account_or_404(service, account_id, business_id)
+
+    # Resolve recipient email
+    recipient = to_email
+    if not recipient and hasattr(account, "customer") and account.customer:
+        recipient = getattr(account.customer, "email", None)
+    if not recipient:
+        raise HTTPException(status_code=400, detail="No email address available for this account")
+
+    try:
+        statement = service.generate_statement(
+            account=account,
+            period_end=period_end,
+            period_start=period_start,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Build a simple PDF summary
+    lines = [
+        "ACCOUNT STATEMENT",
+        "",
+        f"Account: {account.account_number}",
+        f"Period: {format_date(statement.period_start)} – {format_date(statement.period_end)}",
+        "",
+        f"Opening Balance:  {format_currency(statement.opening_balance)}",
+        f"Total Charges:    {format_currency(statement.total_charges)}",
+        f"Total Payments:   {format_currency(statement.total_payments)}",
+        f"Closing Balance:  {format_currency(statement.closing_balance)}",
+        "",
+        "Aging:",
+        f"  Current:   {format_currency(statement.current_amount)}",
+        f"  30 Days:   {format_currency(statement.days_30_amount)}",
+        f"  60 Days:   {format_currency(statement.days_60_amount)}",
+        f"  90+ Days:  {format_currency(statement.days_90_plus_amount)}",
+    ]
+    pdf_bytes = build_simple_pdf(lines)
+    filename = f"statement_{account.account_number}_{period_end}.pdf"
+
+    email_svc = EmailService()
+    try:
+        email_svc.send_email(
+            to_email=recipient,
+            subject=f"Account Statement – {account.account_number} ({format_date(period_end)})",
+            body_text=(
+                f"Please find attached your account statement for the period "
+                f"ending {format_date(period_end)}.\n\n"
+                f"Closing Balance: {format_currency(statement.closing_balance)}\n\n"
+                f"Thank you for your business."
+            ),
+            attachments=[
+                EmailAttachment(filename=filename, content=pdf_bytes, content_type="application/pdf")
+            ],
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+    # Mark statement as sent
+    from datetime import datetime as dt, timezone as tz
+    statement.is_sent = True
+    statement.sent_at = dt.now(tz.utc)
+    db.commit()
+
+    return {"message": f"Statement emailed to {recipient}", "sent_at": statement.sent_at}
 
 
 @router.get("/reports/ar-summary")

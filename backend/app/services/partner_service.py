@@ -9,12 +9,10 @@ configuration initialisation, and default branding setup — logic
 that shouldn't live in thin API handlers.
 """
 
-import math
 from datetime import datetime, timezone
 from typing import Optional, Tuple, List
 from uuid import UUID
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.partner import (

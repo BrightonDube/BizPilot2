@@ -5,7 +5,6 @@ Tests order flow, change calculation, receipt numbering, and void/refund rules.
 
 from decimal import Decimal
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 

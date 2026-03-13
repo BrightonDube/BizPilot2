@@ -1,6 +1,7 @@
 """Production API endpoints."""
 
 import math
+import logging
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -21,6 +22,7 @@ from app.schemas.production import (
 from app.services.production_service import ProductionService
 
 router = APIRouter(prefix="/production", tags=["Production"])
+logger = logging.getLogger(__name__)
 
 
 def _order_to_response(order) -> ProductionOrderResponse:
@@ -238,6 +240,12 @@ async def complete_production(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
+        )
+    except Exception as e:
+        logger.exception("Failed to complete production order %s: %s", order_id, str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to complete production: {str(e)}",
         )
 
 

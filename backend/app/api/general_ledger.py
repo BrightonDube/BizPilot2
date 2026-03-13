@@ -10,6 +10,7 @@ from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
 from app.schemas.general_ledger import (
+    AccountBalanceSummary,
     AccountBalanceResponse,
     AccountBalanceListResponse,
     AccountCreate,
@@ -134,7 +135,7 @@ async def get_account(
     return _account_to_response(account)
 
 
-@router.get("/accounts/{account_id}/balance", response_model=AccountBalanceResponse)
+@router.get("/accounts/{account_id}/balance", response_model=AccountBalanceSummary)
 async def get_account_balance(
     account_id: str,
     as_of: Optional[datetime] = None,
@@ -148,7 +149,7 @@ async def get_account_balance(
     if not account:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
     result = service.get_account_balance(account_id, business_id, as_of=as_of)
-    return AccountBalanceResponse(**result)
+    return AccountBalanceSummary(**result)
 
 
 # --- Journal Entries ---

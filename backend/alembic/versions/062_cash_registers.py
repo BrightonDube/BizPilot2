@@ -47,7 +47,7 @@ def upgrade() -> None:
         sa.Column('business_id', sa.UUID(), nullable=False),
         sa.Column('opened_by', sa.UUID(), nullable=False),
         sa.Column('closed_by', sa.UUID(), nullable=True),
-        sa.Column('status', sa.Enum('closed', 'open', 'suspended', name='registerstatus', create_type=False), server_default='open'),
+        sa.Column('status', registerstatus, server_default='open'),
         sa.Column('opening_float', sa.Numeric(12, 2), server_default='0'),
         sa.Column('closing_float', sa.Numeric(12, 2), nullable=True),
         sa.Column('expected_cash', sa.Numeric(12, 2), nullable=True),

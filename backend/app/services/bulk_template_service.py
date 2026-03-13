@@ -76,7 +76,7 @@ class BulkTemplateService:
             and_(
                 BulkTemplate.deleted_at.is_(None),
                 # Show templates belonging to this business OR system templates
-                (BulkTemplate.business_id == business_id) | (BulkTemplate.is_system_template == True),
+                (BulkTemplate.business_id == business_id) | (BulkTemplate.is_system_template),
             )
         )
 

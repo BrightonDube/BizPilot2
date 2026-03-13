@@ -1,8 +1,8 @@
 """Auto clock-out job."""
 
 import logging
-from datetime import datetime
-from typing import List, Dict, Any
+from datetime import datetime, timezone
+from typing import List
 from dataclasses import dataclass
 
 from app.core.database import SessionLocal
@@ -36,7 +36,7 @@ def auto_clock_out_job() -> AutoClockOutResult:
     Returns:
         AutoClockOutResult containing execution statistics
     """
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     businesses_processed = 0
     employees_auto_clocked_out = 0
     errors = []
@@ -82,7 +82,7 @@ def auto_clock_out_job() -> AutoClockOutResult:
                 # Continue processing other businesses
         
         # Update job log with success
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         job_log.end_time = end_time
         job_log.status = JobStatus.COMPLETED
         job_log.items_processed = businesses_processed
@@ -110,7 +110,7 @@ def auto_clock_out_job() -> AutoClockOutResult:
     
     except Exception as e:
         # Handle catastrophic failure
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         error_msg = f"Job failed with error: {str(e)}"
         logger.error(error_msg, exc_info=True)
         errors.append(error_msg)

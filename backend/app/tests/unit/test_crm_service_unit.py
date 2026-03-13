@@ -10,11 +10,10 @@ could target wrong customers with promotions. We need exact scenario tests
 to complement the property-based invariant tests.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from uuid import uuid4
 
-import pytest
 
 
 # ---------------------------------------------------------------------------

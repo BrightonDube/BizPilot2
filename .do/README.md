@@ -96,6 +96,17 @@ Your 1-year credits easily cover this deployment.
 
 ## Troubleshooting
 
+### ⚠️ CRITICAL: Never `doctl apps update --spec .do/app.yaml`
+
+Running `doctl apps update --spec` with the repo's `app.yaml` will **clobber all SECRET-type env vars** (DATABASE_URL, SECRET_KEY, etc.) because the file doesn't contain their values. This caused 6 cascading deploy failures.
+
+**Safe way to update app spec:**
+1. `doctl apps spec get <app-id> > /tmp/spec.yaml` (preserves encrypted secrets)
+2. Edit `/tmp/spec.yaml` with your changes
+3. `doctl apps update <app-id> --spec /tmp/spec.yaml`
+
+Or just push code to `main` — `deploy_on_push` handles everything.
+
 ### Cookies not working
 - Verify `COOKIE_SECURE=true` and `COOKIE_SAMESITE=lax`
 - Check browser DevTools → Application → Cookies
@@ -107,3 +118,24 @@ Your 1-year credits easily cover this deployment.
 ### Database connection fails
 - Verify `DATABASE_URL` is set correctly
 - For Neon, use the pooled connection string
+
+### Migration fails with "SECRET_KEY must be at least 32 characters"
+- The `alembic/env.py` has a fallback SECRET_KEY for migration contexts
+- If this error appears, the fallback was overridden by an invalid env var
+- Check that the `release-migrate` job has a valid SECRET_KEY in DO dashboard
+
+### Migration fails with "Can't locate revision"
+- This happens when a rollback deploy uses old code that doesn't know the latest migration
+- The DB is already at a newer revision than the old code understands
+- Fix: trigger a new deploy with the latest code (don't rely on rollbacks)
+- `doctl apps create-deployment <app-id> --force-rebuild`
+
+### API fails health check (exit code 128)
+- OOM kill on 0.5GB instance. Ensure `WEB_CONCURRENCY=1` (1 worker)
+- Health check uses `/health/liveness` (lightweight, no DB check)
+- Initial delay is 60s — don't reduce below this on starter instances
+
+### "type already exists" in migrations
+- Caused by `sa.Enum()` inside `op.create_table()` — triggers implicit CREATE TYPE
+- Fix: use `postgresql.ENUM(..., create_type=False)` and create enum separately
+- CI lint catches this: `python scripts/lint_migrations.py`

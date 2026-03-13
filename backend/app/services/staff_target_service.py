@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from app.models.staff_target import (
     CommissionRule,
     CommissionTier,
-    CommissionDetail,
     IncentiveAchievement,
     IncentiveProgram,
     PerformanceSnapshot,

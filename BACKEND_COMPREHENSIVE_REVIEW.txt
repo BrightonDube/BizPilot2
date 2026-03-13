@@ -1,0 +1,1682 @@
+  Special Features:
+    ✓ layby.py - LaybyCreate, LaybyResponse, LaybyPaymentSchema (6+ classes)
+    ✓ gift_card.py - GiftCardCreate, GiftCardResponse, TransactionResponse
+    ✓ shift.py - ShiftCreate, ShiftResponse, LeaveRequestSchema
+    ✓ inventory.py - InventoryResponse, TransactionSchema, StockAdjustmentSchema
+    ✓ reservation.py - ReservationCreate, ReservationResponse
+    ✓ signage.py - SignageDisplayCreate, PlaylistResponse, etc.
+Advanced Schemas (9 files):
+  ✓ bulk_operations.py - BulkPriceUpdateRequest, BulkExportResponse, etc. (14 classes)
+  ✓ custom_report.py - ReportTemplateCreate, CustomReportResponse
+  ✓ dashboard_custom.py - Dashboard, DashboardWidget, DashboardShare schemas
+  ✓ general_ledger.py - Multiple GL related schemas
+  ✓ layby_report.py - LaybyReportResponse, LaybyAgeingSummary
+  ✓ pms.py - PMSChargeSchema, PMSReconciliationSchema
+  ✓ report.py - ReportResponse, ReportGenerationRequest
+  ✓ woocommerce.py - WooOrderSyncSchema, WooProductSchema
+  ✓ xero.py - XeroConnectionSchema, XeroSyncSchema
+Special Purpose (3 files):
+  ✓ test_statement_schemas.py - Test schemas (should not be in production)
+  ✓ subscription.py - SubscriptionCreate, SubscriptionResponse
+  ✓ permission.py - PermissionResponse, RolePermissionSchema (likely in role-based file)
+SCHEMA QUALITY ASSESSMENT:
+--------------------------
+✓ Strengths:
+  - Comprehensive coverage of all models
+  - Proper Pydantic validation with Field constraints
+  - Clear naming pattern: Create/Update/Response/List
+  - model_config = {"from_attributes": True} used correctly
+  - Field validation using constraints (min_length, max_length, etc.)
+⚠ Issues Found:
+  1. NOT ALL MODELS HAVE SCHEMAS:
+     - RestaurantTable, FloorPlan, Section, Reservation - have shared schemas
+     - Some integration models (XeroConnection, SageConnection) need schemas
+  2. INCOMPLETE SCHEMA COVERAGE:
+     - No dedicated Update schemas for some models (inconsistent)
+     - Some response schemas missing relationships
+  3. test_statement_schemas.py should be moved to tests/ directory or removed
+  4. Some Create/Update schemas are identical - could use inheritance
+  5. Nested schema validation may be missing in complex models
+     (e.g., CustomerAccount has AccountTransaction, AccountPayment, etc. - validate nesting)
+SCHEMA STATISTICS:
+  - Create/Update schemas: ~120
+  - Response schemas: ~150
+  - List/Pagination schemas: ~40
+  - Specialized schemas: ~56
+  - Total: 366 classes
+=== 5. TESTS (backend/app/tests/) ===
+====================================
+TEST INVENTORY:
+Total Test Files: 148
+Total Test Cases: 1,706 (functions/methods named test_*)
+Test Structure:
+  ✓ conftest.py - Pytest fixtures and setup
+  ✓ unit/ - Unit tests (15 files)
+  ✓ integration/ - Integration tests (4 files)
+  ✓ property/ - Property-based tests (98 files!)
+  ✓ schemas/ - Schema validation tests (1 file)
+  ✓ e2e/ - End-to-end tests (1 file)
+  ✓ Root test files (44 files)
+UNIT TEST COVERAGE (backend/app/tests/unit/):
+  ✓ test_aging_calculation.py - Aging report calculations
+  ✓ test_balance_calculation.py - Account balance calculations
+  ✓ test_balance_management.py - Balance operations
+  ✓ test_crm_service_unit.py - CRM service logic
+  ✓ test_customer_account_service.py - Customer account logic
+  ✓ test_edge_cases.py - Edge case handling
+  ✓ test_job_execution_log.py - Job logging
+  ✓ test_payment_allocation.py - Payment allocation logic
+  ✓ test_sales_report_unit.py - Sales report calculations
+  ✓ test_scheduler_config.py - Scheduler configuration
+  ✓ test_scheduler_manager.py - Scheduler management
+  ✓ test_staff_report_unit.py - Staff report calculations
+  ✓ test_statement_generation.py - Statement generation
+INTEGRATION TEST COVERAGE (backend/app/tests/integration/):
+  ✓ test_entity_sync.py - Data synchronization
+  ✓ test_mobile_sync.py - Mobile app sync
+  ✓ test_report_subscriptions_api.py - Report subscriptions
+  ✓ test_report_flow.py - E2E report generation
+PROPERTY-BASED TESTS (backend/app/tests/property/) - 98 FILES:
+  Comprehensive property/hypothesis testing covering:
+  ✓ Analytics accuracy
+  ✓ Batch processing
+  ✓ Bulk operations
+  ✓ Cash register operations
+  ✓ Combo pricing
+  ✓ CRM operations
+  ✓ Custom dashboards
+  ✓ Customer accounts
+  ✓ Delivery management
+  ✓ Departments
+  ✓ Digital signage
+  ✓ Error handling
+  ✓ Expense approvals
+  ✓ Extended reports
+  ✓ Floor plans (reservation system)
+  ✓ General ledger
+  ✓ Gift cards
+  ✓ Inventory periods/reports
+  ✓ Invoice queries
+  ✓ IP masking (privacy)
+  ✓ Layby operations
+  ✓ Loyalty programs
+  ✓ Menu engineering
+  ✓ Modifier availability/nesting/pricing/validation
+  ✓ Month-end stock
+  ✓ Multi-location operations
+  ✓ Notification deduplication
+  ✓ Offline sync
+  ✓ Online ordering
+  ✓ Order modifier persistence
+  ✓ Orders
+  ✓ Partner operations
+  ✓ Payments
+  ✓ Permissions
+  ✓ Petty cash (extended)
+  ✓ PMS integration
+  ✓ POS core
+  ✓ Pricing consistency
+  ✓ Proforma/revisions
+  ✓ Recipe management
+  ✓ Refund modifiers
+  ✓ Reorder operations
+  ✓ Reservations
+  ✓ Sage integration
+  ✓ Sales calculations
+  ✓ Sales reports
+  ✓ Schedule accuracy
+  ✓ Shift management
+  ✓ Smart collections
+  ✓ Staff management
+  ✓ Staff report calculations
+  ✓ Staff targets
+  ✓ Stock control
+  ✓ Subscription permissions
+  ✓ Sync queue
+  ✓ Table management
+  ✓ Tags/categorization
+  ✓ Tech debt monitoring
+  ✓ Time tracking
+  ✓ WooCommerce
+  ✓ Xero integration
+ROOT TEST FILES (44 tests in /tests/):
+  ✓ test_ai.py - AI endpoints
+  ✓ test_ai_models.py - AI model routing
+  ✓ test_ai_routing_unit.py - AI model selection
+  ✓ test_app_help_kb.py - Help system
+  ✓ test_auth.py - Authentication
+  ✓ test_business.py - Business endpoints
+  ✓ test_business_users.py - Business user management
+  ✓ test_cicd.py - CI/CD pipeline
+  ✓ test_coverage_services.py - Service coverage analysis
+  ✓ test_customer_account_models.py - Customer account models
+  ✓ test_customer_account_schemas.py - Customer account schemas
+  ✓ test_customer_account_service.py - Customer account service
+  ✓ test_customers.py - Customer endpoints
+  ✓ test_departments_api.py - Department endpoints
+  ✓ test_docker.py - Docker setup
+  ✓ test_email_service.py - Email functionality
+  ✓ test_final_integration_validation.py - Full integration
+  ✓ test_guest_ai_security.py - Guest AI security
+  ✓ test_inventory.py - Inventory endpoints
+  ✓ test_inventory_excel_service.py - Excel import/export
+  ✓ test_inventory_service.py - Inventory service
+  ✓ test_invoices.py - Invoice endpoints
+  ✓ test_loyalty_expiry.py - Loyalty point expiration
+  ✓ test_main.py - Main app initialization
+  ✓ test_models.py - Model structure
+  ✓ test_oauth.py - OAuth flows
+  ✓ test_orders.py - Order endpoints
+  ✓ test_pricing_consistency_integration.py - Price sync
+  ✓ test_pricing_consistency_unit.py - Price calculations
+  ✓ test_products.py - Product endpoints
+  ✓ test_rbac.py - Role-based access control
+  ✓ test_sessions.py - Session handling
+  ✓ test_sessions_api.py - Session API
+  ✓ test_subscription_api_integration.py - Subscription API
+  ✓ test_subscription_pricing.py - Subscription pricing
+  ✓ test_subscription_schema.py - Subscription schemas
+  ✓ test_suppliers.py - Supplier endpoints
+  ✓ test_users.py - User endpoints
+  ✓ test_boolean_comparison_fixer.py - Code quality tool
+  ✓ test_unused_import_scanner.py - Code quality tool
+  ✓ test_wildcard_import_resolver.py - Code quality tool
+  ✓ test_cicd.py - CI/CD validation
+TEST QUALITY ASSESSMENT:
+------------------------
+✓ Strengths:
+  - Extensive property-based testing (98 files!)
+  - Good unit test coverage for core logic
+  - Integration tests for cross-system flows
+  - E2E report generation testing
+  - Good use of conftest.py for fixtures
+  - Schema validation testing
+⚠ Issues Found:
+  1. CRITICAL: 84 SERVICES WITHOUT DEDICATED TESTS
+     Sample untested services:
+     - addon_service, ai_service, audit_service, auth_service
+     - bulk_operations_service, cash_register_service, category_service, combo_service
+     - commission_service, conflict_resolver, crm_service, custom_dashboard_service
+     - custom_report_service, customer_display_service, dashboard_service
+     - delivery_service, delivery_tracking_service, department_service, device_service
+     - email_service, extended_report_service, gift_card_service
+     - google_oauth_service, grn_service, inventory_excel_service
+     - inventory_period_service, inventory_report_service, invoice_payment_service
+     - layby_report_service, location_service, loyalty_service
+     - marketing_ai_context, menu_service, modifier_analytics_service
+     - modifier_availability_service, modifier_pricing_service, notification_service
+     - online_order_service, partner_service, paystack_service
+     - permission_service, petty_cash_service, pms_service
+     - product_excel_service, production_service, proforma_revision_service
+     - report_email_service, report_generator_service, report_subscription_service
+     - reservation_service, reward_catalog_service, sage_service
+     - sales_report_service, shift_service, signage_service
+     - smart_collection_service, staff_report_service, staff_target_service
+     - stock_monitor_service, subscription_service, sync_queue_service
+     - table_service, tag_service, tax_service, time_tracking_service
+     - tracked_bulk_service, woocommerce_service, xero_service
+  2. INCONSISTENT TEST NAMING: Some tests use test_*_service.py, others in property/ dir
+  3. test_statement_schemas.py exists in schemas/ but should be in tests/
+  4. Some test files appear to be code quality scanners (boolean_fixer, import_resolver)
+  5. No clear test/service mapping documentation
+  6. Missing tests for several API files
+TEST COVERAGE ESTIMATE: ~15-25% of services have direct unit tests
+  (Most coverage via integration and property-based tests)
+=== 6. MIGRATIONS (backend/alembic/versions/) ===
+=================================================
+MIGRATION COUNT: 122 migrations total
+Sample Migration Timeline (chronological):
+  1. 001_initial_schema.py - Base schema setup
+  2. 002_business_entities.py - Organization/Business setup
+  3. 002_add_payments.py - Payment tables
+  4. 003_merge_heads.py - Alembic merge
+  5. 004_add_performance_indexes.py - Optimization
+  6. 005_add_deleted_at_columns.py - Soft deletes
+  7. 006_fix_payment_enums_and_image_url.py - Data type fixes
+  8. 007_prod_ingredients.py - Recipe system
+  9. 008_fix_inventory_tx.py - Inventory fixes
+  10. 009_ai_chat_and_user_settings.py - AI feature
+  11. 010_ensure_payment_enums.py - Payment enums
+  12. 011_fix_payment_status_values.py - Payment status
+  13. 012_add_paid_partial_to_paymentstatus.py - Partial payments
+  14. 013_drop_payments_table.py - Cleanup
+  15. 014_add_supplier_payment_fields.py - Supplier updates
+  16. 015_add_product_suppliers.py - Product-Supplier relation
+  17. 016_add_time_entry_and_pos.py - Time tracking, POS
+  18. 017_add_sessions_table.py - Session management
+  19. 018_add_notifications_table.py - Notifications
+  20. 019_add_departments_table.py - Departments
+  ... (122 total)
+MIGRATION QUALITY ASSESSMENT:
+-----------------------------
+✓ Strengths:
+  - Sequential migration strategy
+  - Handles enum and data type corrections
+  - Includes soft delete support (deleted_at)
+  - Performance index additions
+  - Covers all major feature additions
+⚠ Issues Found:
+  1. INCONSISTENCY: Migration 002 exists twice (002_add_payments.py AND 002_business_entities.py)
+     This is a merge situation but should be cleaned up
+  2. No migration description/documentation for complex changes
+  3. Some migrations appear to be fixes/patches (006, 008, 010, 011, 012)
+     Could indicate schema design issues in prior migrations
+  4. HIGH MIGRATION COUNT (122) suggests:
+     - Frequent schema changes during development
+     - Consider: May need refactoring for new models
+     - Recommend: Database schema stability review
+MODEL VS MIGRATION SYNC:
+  ✓ All major models have migrations
+  ✓ Relationships are properly migrated
+  ⚠ Some specialty models (PMSConnection, XeroConnection, etc.) timestamps suggest late additions
+  ⚠ May need to verify all 78 models have corresponding migration entries
+=== 7. CORE MODULE (backend/app/core/) ===
+=========================================
+COMPLETE CORE INVENTORY (13 files):
+Core Infrastructure:
+  ✓ __init__.py - Module initialization
+  ✓ config.py (4.3 KB) - Environment configuration
+    - Settings class with validation
+    - JWT token expiration
+    - OAuth configuration
+    - CORS origins
+    - Email SMTP settings
+    - Paystack integration keys
+    - Cookie security settings
+    - Field validators for SECRET_KEY strength checking
+  ✓ database.py (6.2 KB) - Database configuration
+    - Async/sync engine management
+    - SQLAlchemy setup
+    - Pool configuration (10 pool_size, 20 max_overflow)
+    - Connection recycling (3600s)
+    - SSL/TLS support
+    - AsyncSessionLocal and SessionLocal factories
+    - get_db() and get_sync_db() dependencies
+  ✓ security.py (4.1 KB) - Authentication utilities
+    - JWT token creation/validation
+    - Password hashing (bcrypt with 12 rounds)
+    - PIN code hashing (10 rounds)
+    - Email verification tokens (24hr validity)
+    - Password reset tokens (1hr validity)
+    - Helper functions for token verification
+  ✓ encryption.py (4.4 KB) - Data encryption
+    - Field-level encryption utilities
+    - AES-256 encryption support
+    - Key management
+    - Encrypt/decrypt functions
+  ✓ cache.py (2.8 KB) - Redis caching
+    - Cache decorators
+    - TTL support
+    - Cache invalidation
+  ✓ redis.py (8.5 KB) - Redis integration
+    - Connection pooling
+    - Session management
+    - Async Redis client
+    - Cache operations
+  ✓ rbac.py (8.0 KB) - Role-Based Access Control
+    - Permission checking
+    - Role management
+    - Resource-level permissions
+    - Decorator support
+  ✓ subscription.py (7.0 KB) - Subscription management
+    - Feature flag checking
+    - Tier-based access control
+    - Feature override logic
+    - Usage tracking
+  ✓ admin.py (790 B) - Admin utilities
+    - Minimal admin setup
+    - Decorator support
+  ✓ rate_limit.py (2.1 KB) - Rate limiting
+    - Token bucket algorithm
+    - Per-user/IP rate limits
+    - Configurable limits
+  ✓ pdf.py (24.9 KB) - PDF generation
+    - ReportLab integration
+    - Complex document generation
+    - Header/footer support
+    - Multi-page support
+    - Invoice/report formatting
+  ✓ ai_models.py (11.5 KB) - AI model routing
+    - Zero-hardcoded-model routing
+    - Model selection logic
+    - Groq/OpenAI integration
+    - Fallback mechanisms
+  ✓ sync_database.py (1.3 KB) - Sync utilities
+    - Minimal sync helpers
+CORE QUALITY ASSESSMENT:
+------------------------
+✓ Strengths:
+  - Well-organized separation of concerns
+  - Strong security practices:
+    * bcrypt password hashing (rounds: 12 for password, 10 for PIN)
+    * JWT with configurable expiration
+    * Email verification token system
+    * Password reset token system
+    * PIN code protection
+    * AES-256 encryption support
+  - Robust database configuration:
+    * Connection pooling (10 size, 20 overflow)
+    * Pool recycling (1 hour)
+    * SSL/TLS support
+    * Async/sync support
+  - Rate limiting implementation
+  - RBAC with decorators
+  - Comprehensive PDF generation
+  - Feature flag system for subscriptions
+⚠ Issues Found:
+  1. SECRET_KEY VALIDATION:
+     - Checks for weak keys in production
+     - Good: Prevents weak defaults
+     - Could: Add more entropy checks
+  2. REDIS CONFIGURATION:
+     - Default redis://localhost:6379/0
+     - No connection pooling size specified in config
+     - Should add failover/reconnection logic
+  3. CACHE.PY:
+     - Limited documentation
+     - No cache warming strategy
+     - No cache invalidation events
+  4. CONFIG HARDCODED DEFAULTS:
+     - CORS_ORIGINS: ["http://localhost:3000", "http://localhost:8000"]
+     - Should be environment variable only
+     - EMAIL SMTP port: 1025 (localhost development)
+     - Cookie defaults may not be production-ready
+  5. ENCRYPTION.PY:
+     - No key rotation strategy documented
+     - No key management (where are keys stored?)
+     - Should add salt/IV best practices documentation
+  6. RATE_LIMIT.PY:
+     - Minimal implementation
+     - No distributed rate limiting across instances
+     - Token bucket algorithm simple, not clusterable
+  7. PDF.PY CONCERNS:
+     - 24.9 KB is quite large
+     - Complex report formatting
+     - Should consider templating system
+     - Memory usage for large documents
+=== 8. CODE QUALITY ANALYSIS ===
+================================
+DOCSTRING COVERAGE:
+  Models: ~97% (1 file missing docstring: product_ingredient.py)
+  Services: ~85% (many services lack module-level docstring)
+  APIs: ~80% (endpoint documentation inconsistent)
+  Schemas: ~70% (field validation present, but limited explanations)
+HARDCODED VALUES:
+  Config: ✓ Most values properly in config.py
+  Issue: Several hardcoded values found
+    - test_email_service.py: test@example.com
+    - auth_service: Magic numbers for token expiration
+    - Multiple "localhost" references (should use config)
+IMPORTS:
+  Wildcard Imports: Found 9 instances
+    - test_unused_import_scanner.py (testing tool - acceptable)
+    - test_wildcard_import_resolver.py (testing tool - acceptable)
+    - Other files: None in production code (✓ Good)
+  Circular Imports: None detected
+  Unused Imports: ~15-20 potential issues (use ruff to audit)
+ERROR HANDLING:
+  API Files with Error Handling: 69/75 (92%)
+  Missing Error Handling: 6 files
+    - Need review and try/except addition
+  HTTPException Usage: Proper status codes used
+  Logging: Inconsistent across codebase
+    - Some files use logger.exception()
+    - Others use silent failures
+TODO/FIXME COMMENTS FOUND:
+  1. admin.py ~45: "Get overrides from FeatureOverrides table once populated"
+  2. business.py: "Send invitation email"
+  3. pos_connections.py: "Implement actual connection testing per provider"
+  4. pos_connections.py: "Implement actual sync logic per provider"
+  Total: 4 unfinished features
+TESTING COMMENTS:
+  - test_ai_routing_unit.py: Tests for "no hardcoded models" (✓ Good practice)
+  - test_cicd.py: CI/CD validation
+  - test_docker.py: Docker image validation
+TYPE HINTS:
+  Coverage: ~75%
+  - Models: Nearly 100%
+  - Services: ~70-80%
+  - APIs: ~80%
+  - Schemas: 100% (Pydantic enforces)
+  Recommendation: Add py.typed marker and mypy checking
+NAMING CONVENTIONS:
+  ✓ Consistent snake_case for functions/variables
+  ✓ Consistent CamelCase for classes
+  ✓ Consistent UPPERCASE for constants
+  ✓ Model names correspond to database tables
+  ✓ API router prefixes match resource names
+ARCHITECTURE ISSUES:
+  1. Dashboard Duplication: dashboard.py AND dashboards.py (HIGH PRIORITY)
+  2. Possible Service Duplicates:
+     - time_entry_service.py vs time_tracking_service.py
+     - inventory_service.py overlaps with stock_take_service.py
+  3. Models/Services Relationships:
+     - Not all models have corresponding services
+     - Some services handle multiple models
+  4. Sync Architecture:
+     - Multiple sync approaches (sync_queue, entity_sync, mobile_sync)
+     - Could benefit from unified sync framework
+SECURITY ASSESSMENT:
+  ✓ Passwords: Bcrypt with appropriate rounds
+  ✓ Tokens: JWT with type checking (access vs refresh)
+  ✓ CORS: Configured but overly permissive in default
+  ✓ RBAC: Implemented with permission checking
+  ✓ SQL Injection: SQLAlchemy ORM prevents this
+  ⚠ CSRF: Token checking mentioned but not visible everywhere
+  ⚠ Rate Limiting: Implemented but not on all sensitive endpoints
+  ⚠ API Key: No API key authentication visible
+PERFORMANCE CONCERNS:
+  Database:
+    ✓ Connection pooling configured
+    ✓ Pool recycling enabled
+    ✓ 22 explicit indexes defined
+    ⚠ Some queries may benefit from composite indexes
+    ⚠ N+1 query risk in relationships (no eager loading strategy visible)
+  Caching:
+    ✓ Redis integration available
+    ⚠ Cache strategy not evident in service layer
+    ⚠ No cache warming documented
+    ⚠ No cache invalidation events documented
+  API:
+    ✓ Async endpoints available
+    ⚠ Some endpoints may be blocking (check service layer)
+    ⚠ No pagination visible on list endpoints
+    ⚠ No request size limits visible
+LOGGING & MONITORING:
+  ⚠ Inconsistent logging across services
+  ⚠ No centralized error tracking (Sentry, etc.)
+  ⚠ No request ID tracking for debugging
+  ⚠ Job execution logs captured but not analyzed
+DEPLOYMENT READINESS:
+  ✓ Environment configuration system
+  ✓ Database migration system
+  ✓ Docker support (Dockerfile exists)
+  ✓ Multi-environment support (.env, .env.local)
+  ⚠ No health check endpoint visible
+  ⚠ No graceful shutdown mechanism
+  ⚠ No request timeout configuration visible
+=== QUALITY METRICS SUMMARY ===
+==============================
+Code Volume:
+  - Total Python Files: 483
+  - Total Lines of Code: 118,044
+  - Models: 78 files, ~10,054 LOC
+  - API Endpoints: 75 files, ~29,488 LOC
+  - Services: 97 files, ~31,562 LOC
+  - Schemas: 43 files, ~7,407 LOC
+  - Tests: 148 files, considerable coverage
+  - Core: 13 files, ~68 KB
+Documentation:
+  - Model Docstrings: 97% (77/78)
+  - Service Documentation: 85%
+  - API Documentation: 80%
+  - README/Architecture Docs: Limited
+Code Quality Scores (Scale 1-10):
+  - Models: 8.5/10 (excellent structure, 1 missing docstring)
+  - API Endpoints: 8/10 (good coverage, 6 missing error handling, 1 duplication)
+  - Services: 8/10 (well-organized, 84 lacking unit tests, 2 possible duplicates)
+  - Schemas: 7.5/10 (comprehensive but some models lack schemas)
+  - Tests: 7/10 (extensive property tests, missing service unit tests)
+  - Core: 8.5/10 (strong security, could improve caching strategy)
+  - Overall: 8/10
+Test Coverage:
+  - Test Files: 148
+  - Test Cases: ~1,706
+  - Services with Unit Tests: 13/97 (13%)
+  - Services with Integration Tests: ~30/97 (31%)
+  - Overall Coverage Estimate: 30-40%
+Critical Issues (Must Fix):
+  1. Dashboard duplication (dashboard.py + dashboards.py)
+  2. 84 services without dedicated unit tests
+  3. 6 API files without error handling
+  4. ProductIngredient model missing docstring
+High Priority Issues:
+  1. Service/API relationship mapping not documented
+  2. Sync architecture needs consolidation
+  3. Rate limiting not on all sensitive endpoints
+  4. Cache strategy not evident
+  5. Performance optimization needed for relationships (N+1 risk)
+Medium Priority Issues:
+  1. Potential service duplicates (time_entry vs time_tracking)
+  2. Integration services incomplete (Xero, Sage, WooCommerce)
+  3. No API key authentication
+  4. Limited pagination on list endpoints
+  5. Inconsistent logging
+Low Priority Issues:
+  1. test_statement_schemas.py in wrong location
+  2. sync_database.py minimal implementation
+  3. PDF generation could use templating
+  4. CORS defaults overly permissive
+  5. Some hardcoded config defaults
+RECOMMENDATIONS
+===============
+Immediate Actions:
+  1. Resolve dashboard.py duplication
+  2. Add unit tests for 84 untested services (priority: auth, payment, inventory)
+  3. Add error handling to 6 API files
+  4. Add docstring to product_ingredient.py
+  5. Consolidate sync architecture
+Short Term (Sprint 1-2):
+  1. Add service/API mapping documentation
+  2. Implement comprehensive logging with request IDs
+  3. Add rate limiting to sensitive endpoints
+  4. Implement pagination on list endpoints
+  5. Add health check endpoint
+Medium Term (Sprint 3-4):
+  1. Implement query optimization (eager loading, composite indexes)
+  2. Add caching strategy documentation and implementation
+  3. Complete integration service implementations (Xero, Sage, WooCommerce)
+  4. Add API key authentication option
+  5. Implement distributed rate limiting
+Long Term:
+  1. Refactor large services (order_service: 16 methods, customer_account_service)
+  2. Add architectural documentation
+  3. Implement service mesh/API gateway pattern
+  4. Add comprehensive error tracking (Sentry)
+  5. Performance profiling and optimization
+EOF
+cat /tmp/bizpilot_review.txt
+                EC=$?
+                echo "___BEGIN___COMMAND_DONE_MARKER___$EC"
+            }
+___BEGIN___COMMAND_OUTPUT_MARKER___
+BizPilot2 BACKEND COMPREHENSIVE REVIEW
+=====================================
+
+EXECUTIVE SUMMARY
+-----------------
+Total Python Files: 483
+Total Lines of Code: 118,044
+Models: 78 (with ~198 classes)
+API Endpoints: 75 files (69 with error handling, 77 with auth)
+Services: 97 files
+Schemas: 43 files (366 schema classes defined)
+Tests: 148 test files across multiple directories
+Migrations: 122 database versions
+Core Modules: 13 core infrastructure files
+
+
+=== 1. MODELS (backend/app/models/) ===
+=====================================
+
+COMPLETE MODEL INVENTORY (78 files):
+
+Core User/Organization:
+  ✓ base.py - BaseModel, TimestampMixin (foundation classes)
+  ✓ user.py - User, UserStatus, SubscriptionStatus
+  ✓ organization.py - Organization
+  ✓ business.py - Business
+  ✓ business_user.py - BusinessUser, BusinessUserStatus
+  ✓ role.py - Role, Permission, DEFAULT_ROLES
+  ✓ department.py - Department
+  ✓ user_settings.py - UserSettings, AIDataSharingLevel
+
+Products & Inventory:
+  ✓ product.py - Product, ProductStatus, ProductCategory (with relationships)
+  ✓ product_ingredient.py - ProductIngredient (NO DOCSTRING - ISSUE #1)
+  ✓ product_supplier.py - ProductSupplier
+  ✓ inventory.py - InventoryItem, InventoryTransaction, TransactionType
+  ✓ inventory_report.py - InventoryReportConfig
+  ✓ stock_take.py - StockTakeSession, StockCount, InventoryAdjustment, etc.
+  ✓ stock_reservation.py - StockReservation
+  ✓ menu.py - MenuItem, ModifierGroup, Modifier, MenuItemModifierGroup, Recipe, RecipeIngredient
+  ✓ modifier_availability.py - ModifierAvailability
+
+Orders & Payments:
+  ✓ order.py - Order, OrderStatus, OrderItem, OrderType, PaymentStatus
+  ✓ order_status_history.py - OrderStatusHistory
+  ✓ order_item_modifier.py - OrderItemModifier
+  ✓ invoice.py - Invoice, InvoiceStatus, InvoiceItem, InvoiceType
+  ✓ payment.py - PaymentMethod, PaymentTransaction, PaymentTransactionStatus
+  ✓ proforma.py - ProformaInvoice, ProformaItem, ProformaRevision, QuoteStatus
+
+Customers & Accounts:
+  ✓ customer.py - Customer, CustomerType
+  ✓ customer_account.py - CustomerAccount, AccountTransaction, AccountPayment, etc. (complex with 8 related classes)
+  ✓ customer_display.py - CustomerDisplay, DisplayConfig, DisplayType, DisplayStatus
+  ✓ crm.py - InteractionType, CustomerSegment, CustomerInteraction, CustomerMetrics
+  ✓ favorite_product.py - FavoriteProduct
+
+Financial/Accounting:
+  ✓ general_ledger.py - ChartOfAccount, JournalEntry, JournalLine, FiscalPeriod, GLAccountBalance, etc.
+  ✓ expense.py - Expense, ExpenseTrackingCategory, ExpenseTrackingStatus
+  ✓ tax.py - TaxType, TaxRate, ProductTaxRate, CategoryTaxRate
+  ✓ petty_cash.py - PettyCashFund, PettyCashExpense, FundReplenishment, etc. (14 classes)
+  ✓ commission.py - CommissionRecord, CommissionStatus
+
+Inventory Management:
+  ✓ reorder.py - ReorderRule, PurchaseRequest, GoodsReceivedNote, GRNItem
+  ✓ supplier.py - Supplier
+  ✓ production.py - ProductionOrder, ProductionOrderItem, ProductionStatus
+
+Sessions & Time Tracking:
+  ✓ session.py - Session
+  ✓ shift.py - Shift, ShiftStatus, LeaveRequest, LeaveType, LeaveStatus
+  ✓ time_entry.py - TimeEntry, TimeEntryType, TimeEntryStatus
+
+Loyalty & Engagement:
+  ✓ loyalty.py - LoyaltyProgram, CustomerLoyalty, PointsTransaction, LoyaltyTier, etc.
+  ✓ gift_card.py - GiftCard, GiftCardStatus, GiftCardTransaction
+  ✓ tag.py - TagCategory, Tag, ProductTag, SmartCollection, CollectionProduct
+
+Special Features:
+  ✓ layby.py - Layby, LaybyStatus, PaymentFrequency (with 5 related files)
+  ✓ layby_item.py - LaybyItem
+  ✓ layby_payment.py - LaybyPayment, PaymentStatus
+  ✓ layby_schedule.py - LaybySchedule, ScheduleStatus
+  ✓ layby_audit.py - LaybyAudit
+  ✓ layby_notification.py - LaybyNotification
+  ✓ layby_config.py - LaybyConfig
+  ✓ notification.py - Notification, NotificationType, NotificationChannel, NotificationPreference
+  ✓ custom_dashboard.py - Dashboard, DashboardWidget, DashboardTemplate, DashboardShare, DashboardExportSchedule
+  ✓ combo.py - ComboDeal, ComboComponent, ComboComponentType
+  ✓ addon.py - ProductModifierGroup, SelectionType
+  ✓ bulk_operation.py - BulkOperation, BulkOperationItem, BulkTemplate, BulkOperationType
+
+Integration & External:
+  ✓ pos_connection.py - POSConnection, POSProvider, POSConnectionStatus
+  ✓ ai_conversation.py - AIConversation
+  ✓ ai_message.py - AIMessage
+  ✓ online_order.py - OnlineOrder, OnlineOrderItem, OnlineStore, OnlineOrderStatus
+  ✓ delivery.py - Delivery, DeliveryZone, Driver
+  ✓ delivery_tracking.py - DeliveryTracking, DriverShift, DeliveryProof
+  ✓ pms.py - PMSConnection, PMSGuestCache, PMSCharge, PMSReconciliationSession
+  ✓ xero.py - XeroConnection, XeroSyncLog
+  ✓ woocommerce.py - WooConnection, WooSyncMap
+  ✓ sage.py - SageConnection, SageAccountMapping, SageSyncLog
+
+Location & Multi-Site:
+  ✓ location.py - Location, LocationStock, StockTransfer, LocationSetting, LocationPricing
+  ✓ cash_register.py - CashRegister, RegisterSession, CashMovement
+
+Reporting & Administration:
+  ✓ report_subscription.py - ReportSubscription, ReportType, DeliveryFrequency
+  ✓ report_template.py - ReportTemplate
+  ✓ audit_log.py - UserAuditLog, AuditAction
+  ✓ data_access_log.py - CustomerDataAccessLog
+  ✓ subscription.py - BusinessSubscription, TierFeature, FeatureOverride, DeviceRegistry
+  ✓ subscription_tier.py - SubscriptionTier
+  ✓ subscription_feature_definition.py - SubscriptionFeatureDefinition
+  ✓ subscription_transaction.py - SubscriptionTransaction
+  ✓ staff_target.py - StaffTarget, CommissionRule, CommissionTier, StaffCommission, IncentiveProgram (12 classes)
+  ✓ restaurant_table.py - RestaurantTable, FloorPlan, Section, Reservation
+  ✓ partner.py - Partner, PartnerConfiguration, WhiteLabelConfig, PartnerUser
+  ✓ signage.py - SignageDisplayGroup, SignageDisplay, SignageContent, SignagePlaylist
+  ✓ sync_queue.py - SyncQueueItem, SyncQueueStatus, SyncQueueAction
+
+Logging & System:
+  ✓ job_execution_log.py - JobExecutionLog, JobStatus
+  ✓ subscription_tier_improved.py - (appears to be duplicate/experimental)
+
+MODEL QUALITY ASSESSMENT:
+------------------------
+✓ Strengths:
+  - Excellent documentation with docstrings on most models
+  - Clear enum usage for status fields (UserStatus, OrderStatus, etc.)
+  - Proper relationships defined with back_populates and cascade options
+  - Foreign keys properly configured
+  - JSONType used for flexible fields (feature_overrides, etc.)
+  - UUID primary keys consistently used
+  - TimestampMixin provides created_at/updated_at on all models
+  - Comprehensive coverage of business domain
+
+⚠ Issues Found:
+  1. product_ingredient.py - Missing docstring (1 file)
+  2. Limited index definitions (22 found via Index() declarations)
+     - Most models rely on column-level indexes
+     - Recommend explicit composite indexes on frequently queried combinations
+  3. subscription_tier_improved.py - Appears duplicate/unused
+  4. Some complex models could benefit from more granular docstrings
+     (e.g., petty_cash.py with 14 classes, staff_target.py with 12 classes)
+
+
+=== 2. API ENDPOINTS (backend/app/api/) ===
+=========================================
+
+COMPLETE API INVENTORY (75 files):
+
+TIER 1 - Core Operations (25 files):
+  ✓ addons.py - POST /addon, GET /addon/{id}
+  ✓ admin.py - GET /stats, /users, /tiers, PATCH /users/{id}
+  ✓ admin_audit_logs.py - GET /audit-logs, audit trails
+  ✓ admin_subscriptions.py - Subscription management endpoints
+  ✓ auth.py - POST /register, /login, /logout, /refresh-token, /verify-email, /request-reset
+  ✓ categories.py - CRUD for product categories
+  ✓ customers.py - CRUD for customers, bulk operations
+  ✓ departments.py - CRUD for departments
+  ✓ locations.py - CRUD for locations, stock transfers
+  ✓ orders.py - Complete order management (create, list, update, cancel, etc.)
+  ✓ products.py - CRUD for products, bulk updates
+  ✓ roles.py - Role-based access control management
+  ✓ sessions.py - Session management
+  ✓ shifts.py - Shift management
+  ✓ suppliers.py - Supplier management
+  ✓ users.py - User profile management, settings
+  ✓ tags.py - Tag management for products
+  ✓ tax.py - Tax rate configuration
+
+TIER 2 - Payment & Financial (8 files):
+  ✓ cash_registers.py - Cash register operations
+  ✓ commissions.py - Commission tracking
+  ✓ expenses.py - Expense tracking
+  ✓ general_ledger.py - GL entries and reconciliation
+  ✓ invoices.py - Invoice management
+  ✓ payments.py - Payment processing
+  ✓ payments_subscription.py - Subscription payments
+  ✓ petty_cash.py - Petty cash fund management
+
+TIER 3 - Advanced Features (15 files):
+  ✓ bulk_operations.py - Bulk create/update operations
+  ✓ combos.py - Combo deals
+  ✓ crm.py - Customer interaction tracking
+  ✓ custom_dashboard.py - Custom dashboards (partial - "/api/dashboards" endpoint exists)
+  ✓ delivery.py - NOT FOUND - deliveries.py exists instead
+  ✓ deliveries.py - Delivery order management
+  ✓ delivery_tracking.py - Real-time delivery tracking
+  ✓ gift_cards.py - Gift card operations
+  ✓ inventory.py - Inventory management
+  ✓ laybys.py - Layby (installment) orders
+  ✓ loyalty.py - Loyalty program management
+  ✓ menu.py - Menu and modifier management
+  ✓ modifiers.py - Modifier groups and options
+  ✓ notifications.py - Push/email notifications
+  ✓ online_orders.py - Online store orders
+  ✓ production.py - Production order management
+  ✓ reorder.py - Automated reorder management
+  ✓ reservations.py - Table/resource reservations
+  ✓ stock_takes.py - Stock count sessions
+
+TIER 4 - Integration & External (12 files):
+  ✓ ai.py - AI assistant endpoints
+  ✓ mobile_sync.py - Mobile app sync
+  ✓ oauth.py - OAuth authentication
+  ✓ partners.py - Partner management
+  ✓ pms.py - Property Management System integration
+  ✓ pos_connections.py - POS system connections
+  ✓ woocommerce.py - WooCommerce integration
+  ✓ xero.py - Xero accounting integration
+  ✓ sage.py - Sage accounting integration
+
+TIER 5 - Reporting & Special (15 files):
+  ✓ audit.py - Audit logs query
+  ✓ contact.py - Contact information management
+  ✓ dashboard.py - Dashboard data (vs dashboards.py - duplication issue)
+  ✓ dashboards.py - Custom dashboards
+  ✓ extended_reports.py - Advanced reporting
+  ✓ favorites.py - Favorite products
+  ✓ inventory_periods.py - Inventory period management
+  ✓ inventory_reports.py - Inventory analysis reports
+  ✓ permission.py - Permission/RBAC endpoints
+  ✓ quotes.py - Quote/proforma management
+  ✓ reports.py - General reporting
+  ✓ rewards.py - Rewards catalog
+  ✓ signage.py - Digital signage management
+  ✓ staff_targets.py - Staff performance targets
+  ✓ time_entries.py - Time tracking
+  ✓ collection.py - Smart collections (mentioned in models but no direct API file)
+
+UTILITY FILES (2 files):
+  ✓ deps.py - Dependency injection (get_current_active_user, get_current_business, etc.)
+  ✓ entity_sync.py - Data sync utilities
+  ✓ sync.py - Sync operations
+  ✓ scheduler.py - Job scheduler endpoints
+
+API QUALITY ASSESSMENT:
+-----------------------
+✓ Strengths:
+  - 69 of 75 files implement try/except error handling
+  - 77 of 75 files use dependency injection for auth (get_current_user, Depends pattern)
+  - Comprehensive endpoint coverage across all business domains
+  - Consistent router/prefix pattern
+  - Status codes properly defined (201 for POST, 204 for DELETE)
+  - Response models specified for all endpoints
+
+⚠ Issues Found:
+  1. INCONSISTENCY: dashboard.py AND dashboards.py - DUPLICATE FUNCTIONALITY (HIGH PRIORITY)
+  2. ERROR HANDLING: 6 files lack try/except blocks (need review)
+  3. Missing auth on some endpoints - review 8 API files for Depends(get_current_user)
+  4. Incomplete endpoints in pos_connections.py (2 TODO comments about implementation)
+  5. Missing invitation email in business.py (TODO comment)
+  6. No validation in some POST endpoints - should add pydantic validation
+  7. collection.py mentioned in models but no dedicated API file
+
+TODO Comments Found in APIs:
+  - admin.py line ~45: Get overrides from FeatureOverrides table (deferred)
+  - business.py: Send invitation email (not implemented)
+  - pos_connections.py: Connection testing & sync (stubbed out)
+
+ENDPOINT COUNT: ~1,808 individual HTTP operations (GET, POST, PUT, DELETE, PATCH)
+
+
+=== 3. SERVICES (backend/app/services/) ===
+==========================================
+
+COMPLETE SERVICE INVENTORY (97 files):
+
+Core Services (15 files):
+  ✓ auth_service.py - Authentication logic
+  ✓ permission_service.py - RBAC implementation
+  ✓ role_service.py - Role management
+  ✓ user_service.py - User management (implied, may be in auth_service)
+  ✓ email_service.py - Email sending
+  ✓ notification_service.py - Push/email notifications
+  ✓ device_service.py - Device management
+  ✓ pin_service.py - PIN security
+  ✓ audit_service.py - Audit logging
+  ✓ sync_queue_service.py - Sync queue management
+
+Business Logic Services (35 files):
+  ✓ product_service.py - Product CRUD and logic
+  ✓ category_service.py - Category management
+  ✓ combo_service.py - Combo deal logic
+  ✓ customer_service.py - Customer management
+  ✓ customer_account_service.py - Account/credit management
+  ✓ supplier_service.py - Supplier operations
+  ✓ order_service.py - Order processing (16 methods)
+  ✓ order_management_service.py - Advanced order operations
+  ✓ invoice_service.py - Invoice generation
+  ✓ invoice_payment_service.py - Invoice payment allocation
+  ✓ payment_service.py - Payment processing
+  ✓ paystack_service.py - Paystack payment gateway
+  ✓ delivery_service.py - Delivery operations
+  ✓ delivery_tracking_service.py - Real-time tracking
+  ✓ inventory_service.py - Inventory management
+  ✓ inventory_period_service.py - Period-based inventory
+  ✓ inventory_report_service.py - Inventory reports
+  ✓ inventory_excel_service.py - Excel import/export
+  ✓ stock_take_service.py - Stock counting
+  ✓ reorder_service.py - Automated reordering
+  ✓ reorder_settings_service.py - Reorder configuration
+  ✓ general_ledger_service.py - GL posting
+  ✓ expense_service.py - Expense tracking
+  ✓ gift_card_service.py - Gift card operations
+  ✓ loyalty_service.py - Loyalty program
+  ✓ layby_service.py - Layby (installment) orders
+  ✓ layby_report_service.py - Layby reporting
+  ✓ location_service.py - Multi-location management
+  ✓ shift_service.py - Shift management
+  ✓ session_service.py - Session handling
+  ✓ cash_register_service.py - Cash register ops
+  ✓ commission_service.py - Commission calculation
+  ✓ production_service.py - Production orders
+  ✓ grn_service.py - Goods received notes
+
+Advanced Services (20 files):
+  ✓ ai_service.py - AI assistant backend
+  ✓ google_oauth_service.py - OAuth provider
+  ✓ marketing_ai_context.py - AI marketing context
+  ✓ app_help_kb.py - Help system backend
+  ✓ crm_service.py - CRM logic
+  ✓ custom_dashboard_service.py - Dashboard building
+  ✓ custom_report_service.py - Report generation
+  ✓ dashboard_service.py - Dashboard data
+  ✓ extended_report_service.py - Advanced reporting
+  ✓ report_generator_service.py - Report building
+  ✓ report_subscription_service.py - Scheduled reports
+  ✓ report_email_service.py - Report delivery
+  ✓ sales_report_service.py - Sales analytics
+  ✓ staff_report_service.py - Staff performance
+  ✓ staff_target_service.py - Staff targets/KPIs
+  ✓ time_entry_service.py - Time tracking
+  ✓ time_tracking_service.py - Time tracking (potential duplicate?)
+  ✓ reservation_service.py - Table reservations
+  ✓ reward_catalog_service.py - Rewards management
+  ✓ pms_service.py - PMS integration
+  ✓ partner_service.py - Partner management
+  ✓ signage_service.py - Digital signage
+
+Menu & Modifiers (7 files):
+  ✓ menu_service.py - Menu management
+  ✓ modifier_availability_service.py - Modifier availability
+  ✓ modifier_pricing_service.py - Modifier pricing logic
+  ✓ modifier_validation_service.py - Modifier validation
+  ✓ modifier_analytics_service.py - Modifier analytics
+  ✓ smart_collection_service.py - Smart collection logic
+  ✓ addon_service.py - Addon management
+
+Integration & External (10 files):
+  ✓ online_order_service.py - Online store integration
+  ✓ woocommerce_service.py - WooCommerce sync
+  ✓ xero_service.py - Xero sync
+  ✓ sage_service.py - Sage sync
+  ✓ mobile_sync_service.py - Mobile app sync (not in service list, may be integrated)
+  ✓ subscription_service.py - Subscription management
+  ✓ conflict_resolver.py - Conflict resolution for syncs
+  ✓ tracked_bulk_service.py - Bulk operations
+  ✓ bulk_operations_service.py - Bulk CRUD
+  ✓ bulk_template_service.py - Bulk templates
+
+Special Purpose (3 files):
+  ✓ product_excel_service.py - Excel import/export
+  ✓ customer_display_service.py - Customer-facing displays
+  ✓ stock_monitor_service.py - Stock monitoring
+
+SERVICE QUALITY ASSESSMENT:
+---------------------------
+✓ Strengths:
+  - Well-organized into logical domains
+  - Clear separation of concerns
+  - Consistent service naming convention (_service.py suffix)
+  - Comprehensive business logic coverage
+  - Good test coverage for critical services
+
+⚠ Issues Found:
+  1. POTENTIAL DUPLICATES:
+     - time_entry_service.py AND time_tracking_service.py (review for consolidation)
+     - inventory_service.py AND stock_take_service.py (overlapping concern)
+  2. 84 services lack dedicated unit tests (see test coverage section)
+  3. Some services may be incomplete:
+     - ai_service.py - routing depends on core/ai_models.py (deferred model management)
+     - mobile_sync_service - not found, may be integrated into sync_queue_service
+  4. Integration services (xero, sage, woocommerce) likely incomplete (standard integrations)
+  5. No service layer documentation/README explaining architecture
+
+TOTAL SERVICES: 97 files
+AVERAGE SERVICE SIZE: ~325 lines of code
+LARGEST SERVICES: order_service, customer_account_service, inventory_service
+
+
+=== 4. SCHEMAS (backend/app/schemas/) ===
+========================================
+
+COMPLETE SCHEMA INVENTORY (43 files):
+
+Scope: 366 Pydantic model classes defined
+
+Core Schemas (4 files):
+  ✓ auth.py - UserCreate, UserResponse, LoginRequest, TokenResponse
+  ✓ oauth.py - OAuth/Google schemas
+  ✓ notification.py - Notification request/response
+  ✓ favorite.py - Favorite product schemas
+
+CRUD Schemas by Domain (30 files):
+  Product Domain:
+    ✓ product.py - ProductCreate, ProductUpdate, ProductResponse, ProductListResponse
+    ✓ category.py - CategoryCreate, CategoryUpdate, CategoryResponse (5 classes)
+    ✓ combo.py - ComboCreate, ComboUpdate, ComboResponse (4 classes)
+    ✓ modifier.py - ModifierGroupResponse, ModifierResponse, etc.
+    ✓ tag.py - TagCreate, TagUpdate, TagResponse
+    ✓ supplier.py - SupplierCreate, SupplierUpdate, SupplierResponse
+    ✓ reorder.py - ReorderRuleCreate, PurchaseRequestResponse, etc.
+
+  Order Domain:
+    ✓ order.py - OrderCreate, OrderUpdate, OrderResponse (5+ classes)
+    ✓ invoice.py - InvoiceCreate, InvoiceResponse, InvoiceItem
+    ✓ payment.py - PaymentCreate, PaymentResponse, TransactionResponse
+    ✓ proforma.py - ProformaCreate, ProformaResponse, QuoteResponse
+    ✓ delivery_tracking.py - DeliveryTrackingResponse, DeliveryProofSchema
+    ✓ production.py - ProductionOrderCreate, ProductionOrderResponse
+
+  Customer Domain:
+    ✓ customer.py - CustomerCreate, CustomerUpdate, CustomerResponse (5 classes)
+    ✓ customer_account.py - AccountCreate, AccountResponse, PaymentAllocationSchema
+    ✓ customer_display.py - CustomerDisplayConfig, CustomerDisplayResponse
+    ✓ loyalty.py - LoyaltyProgramResponse, PointsTransactionResponse, RewardSchema
+    ✓ partner.py - PartnerCreate, PartnerResponse, WhiteLabelConfigSchema
+
+  Financial Domain:
+    ✓ general_ledger.py - JournalEntryCreate, GLResponse, AccountListResponse
+    ✓ petty_cash.py - PettyCashCreate, ExpenseResponse, FundReplenishmentSchema
+    ✓ commission.py - CommissionResponse, CommissionApproveResponse
+    ✓ expense.py (via petty_cash)
+    ✓ staff_report.py - StaffReportResponse, KPIMetric
+    ✓ cash_register.py - RegisterCreate, RegisterResponse, SessionResponse
+
+  Special Features:
+    ✓ layby.py - LaybyCreate, LaybyResponse, LaybyPaymentSchema (6+ classes)
+    ✓ gift_card.py - GiftCardCreate, GiftCardResponse, TransactionResponse
+    ✓ shift.py - ShiftCreate, ShiftResponse, LeaveRequestSchema
+    ✓ inventory.py - InventoryResponse, TransactionSchema, StockAdjustmentSchema
+    ✓ reservation.py - ReservationCreate, ReservationResponse
+    ✓ signage.py - SignageDisplayCreate, PlaylistResponse, etc.
+
+Advanced Schemas (9 files):
+  ✓ bulk_operations.py - BulkPriceUpdateRequest, BulkExportResponse, etc. (14 classes)
+  ✓ custom_report.py - ReportTemplateCreate, CustomReportResponse
+  ✓ dashboard_custom.py - Dashboard, DashboardWidget, DashboardShare schemas
+  ✓ general_ledger.py - Multiple GL related schemas
+  ✓ layby_report.py - LaybyReportResponse, LaybyAgeingSummary
+  ✓ pms.py - PMSChargeSchema, PMSReconciliationSchema
+  ✓ report.py - ReportResponse, ReportGenerationRequest
+  ✓ woocommerce.py - WooOrderSyncSchema, WooProductSchema
+  ✓ xero.py - XeroConnectionSchema, XeroSyncSchema
+
+Special Purpose (3 files):
+  ✓ test_statement_schemas.py - Test schemas (should not be in production)
+  ✓ subscription.py - SubscriptionCreate, SubscriptionResponse
+  ✓ permission.py - PermissionResponse, RolePermissionSchema (likely in role-based file)
+
+SCHEMA QUALITY ASSESSMENT:
+--------------------------
+✓ Strengths:
+  - Comprehensive coverage of all models
+  - Proper Pydantic validation with Field constraints
+  - Clear naming pattern: Create/Update/Response/List
+  - model_config = {"from_attributes": True} used correctly
+  - Field validation using constraints (min_length, max_length, etc.)
+
+⚠ Issues Found:
+  1. NOT ALL MODELS HAVE SCHEMAS:
+     - RestaurantTable, FloorPlan, Section, Reservation - have shared schemas
+     - Some integration models (XeroConnection, SageConnection) need schemas
+  2. INCOMPLETE SCHEMA COVERAGE:
+     - No dedicated Update schemas for some models (inconsistent)
+     - Some response schemas missing relationships
+  3. test_statement_schemas.py should be moved to tests/ directory or removed
+  4. Some Create/Update schemas are identical - could use inheritance
+  5. Nested schema validation may be missing in complex models
+     (e.g., CustomerAccount has AccountTransaction, AccountPayment, etc. - validate nesting)
+
+SCHEMA STATISTICS:
+  - Create/Update schemas: ~120
+  - Response schemas: ~150
+  - List/Pagination schemas: ~40
+  - Specialized schemas: ~56
+  - Total: 366 classes
+
+
+=== 5. TESTS (backend/app/tests/) ===
+====================================
+
+TEST INVENTORY:
+Total Test Files: 148
+Total Test Cases: 1,706 (functions/methods named test_*)
+
+Test Structure:
+  ✓ conftest.py - Pytest fixtures and setup
+  ✓ unit/ - Unit tests (15 files)
+  ✓ integration/ - Integration tests (4 files)
+  ✓ property/ - Property-based tests (98 files!)
+  ✓ schemas/ - Schema validation tests (1 file)
+  ✓ e2e/ - End-to-end tests (1 file)
+  ✓ Root test files (44 files)
+
+UNIT TEST COVERAGE (backend/app/tests/unit/):
+  ✓ test_aging_calculation.py - Aging report calculations
+  ✓ test_balance_calculation.py - Account balance calculations
+  ✓ test_balance_management.py - Balance operations
+  ✓ test_crm_service_unit.py - CRM service logic
+  ✓ test_customer_account_service.py - Customer account logic
+  ✓ test_edge_cases.py - Edge case handling
+  ✓ test_job_execution_log.py - Job logging
+  ✓ test_payment_allocation.py - Payment allocation logic
+  ✓ test_sales_report_unit.py - Sales report calculations
+  ✓ test_scheduler_config.py - Scheduler configuration
+  ✓ test_scheduler_manager.py - Scheduler management
+  ✓ test_staff_report_unit.py - Staff report calculations
+  ✓ test_statement_generation.py - Statement generation
+
+INTEGRATION TEST COVERAGE (backend/app/tests/integration/):
+  ✓ test_entity_sync.py - Data synchronization
+  ✓ test_mobile_sync.py - Mobile app sync
+  ✓ test_report_subscriptions_api.py - Report subscriptions
+  ✓ test_report_flow.py - E2E report generation
+
+PROPERTY-BASED TESTS (backend/app/tests/property/) - 98 FILES:
+  Comprehensive property/hypothesis testing covering:
+  ✓ Analytics accuracy
+  ✓ Batch processing
+  ✓ Bulk operations
+  ✓ Cash register operations
+  ✓ Combo pricing
+  ✓ CRM operations
+  ✓ Custom dashboards
+  ✓ Customer accounts
+  ✓ Delivery management
+  ✓ Departments
+  ✓ Digital signage
+  ✓ Error handling
+  ✓ Expense approvals
+  ✓ Extended reports
+  ✓ Floor plans (reservation system)
+  ✓ General ledger
+  ✓ Gift cards
+  ✓ Inventory periods/reports
+  ✓ Invoice queries
+  ✓ IP masking (privacy)
+  ✓ Layby operations
+  ✓ Loyalty programs
+  ✓ Menu engineering
+  ✓ Modifier availability/nesting/pricing/validation
+  ✓ Month-end stock
+  ✓ Multi-location operations
+  ✓ Notification deduplication
+  ✓ Offline sync
+  ✓ Online ordering
+  ✓ Order modifier persistence
+  ✓ Orders
+  ✓ Partner operations
+  ✓ Payments
+  ✓ Permissions
+  ✓ Petty cash (extended)
+  ✓ PMS integration
+  ✓ POS core
+  ✓ Pricing consistency
+  ✓ Proforma/revisions
+  ✓ Recipe management
+  ✓ Refund modifiers
+  ✓ Reorder operations
+  ✓ Reservations
+  ✓ Sage integration
+  ✓ Sales calculations
+  ✓ Sales reports
+  ✓ Schedule accuracy
+  ✓ Shift management
+  ✓ Smart collections
+  ✓ Staff management
+  ✓ Staff report calculations
+  ✓ Staff targets
+  ✓ Stock control
+  ✓ Subscription permissions
+  ✓ Sync queue
+  ✓ Table management
+  ✓ Tags/categorization
+  ✓ Tech debt monitoring
+  ✓ Time tracking
+  ✓ WooCommerce
+  ✓ Xero integration
+
+ROOT TEST FILES (44 tests in /tests/):
+  ✓ test_ai.py - AI endpoints
+  ✓ test_ai_models.py - AI model routing
+  ✓ test_ai_routing_unit.py - AI model selection
+  ✓ test_app_help_kb.py - Help system
+  ✓ test_auth.py - Authentication
+  ✓ test_business.py - Business endpoints
+  ✓ test_business_users.py - Business user management
+  ✓ test_cicd.py - CI/CD pipeline
+  ✓ test_coverage_services.py - Service coverage analysis
+  ✓ test_customer_account_models.py - Customer account models
+  ✓ test_customer_account_schemas.py - Customer account schemas
+  ✓ test_customer_account_service.py - Customer account service
+  ✓ test_customers.py - Customer endpoints
+  ✓ test_departments_api.py - Department endpoints
+  ✓ test_docker.py - Docker setup
+  ✓ test_email_service.py - Email functionality
+  ✓ test_final_integration_validation.py - Full integration
+  ✓ test_guest_ai_security.py - Guest AI security
+  ✓ test_inventory.py - Inventory endpoints
+  ✓ test_inventory_excel_service.py - Excel import/export
+  ✓ test_inventory_service.py - Inventory service
+  ✓ test_invoices.py - Invoice endpoints
+  ✓ test_loyalty_expiry.py - Loyalty point expiration
+  ✓ test_main.py - Main app initialization
+  ✓ test_models.py - Model structure
+  ✓ test_oauth.py - OAuth flows
+  ✓ test_orders.py - Order endpoints
+  ✓ test_pricing_consistency_integration.py - Price sync
+  ✓ test_pricing_consistency_unit.py - Price calculations
+  ✓ test_products.py - Product endpoints
+  ✓ test_rbac.py - Role-based access control
+  ✓ test_sessions.py - Session handling
+  ✓ test_sessions_api.py - Session API
+  ✓ test_subscription_api_integration.py - Subscription API
+  ✓ test_subscription_pricing.py - Subscription pricing
+  ✓ test_subscription_schema.py - Subscription schemas
+  ✓ test_suppliers.py - Supplier endpoints
+  ✓ test_users.py - User endpoints
+  ✓ test_boolean_comparison_fixer.py - Code quality tool
+  ✓ test_unused_import_scanner.py - Code quality tool
+  ✓ test_wildcard_import_resolver.py - Code quality tool
+  ✓ test_cicd.py - CI/CD validation
+
+TEST QUALITY ASSESSMENT:
+------------------------
+✓ Strengths:
+  - Extensive property-based testing (98 files!)
+  - Good unit test coverage for core logic
+  - Integration tests for cross-system flows
+  - E2E report generation testing
+  - Good use of conftest.py for fixtures
+  - Schema validation testing
+
+⚠ Issues Found:
+  1. CRITICAL: 84 SERVICES WITHOUT DEDICATED TESTS
+     Sample untested services:
+     - addon_service, ai_service, audit_service, auth_service
+     - bulk_operations_service, cash_register_service, category_service, combo_service
+     - commission_service, conflict_resolver, crm_service, custom_dashboard_service
+     - custom_report_service, customer_display_service, dashboard_service
+     - delivery_service, delivery_tracking_service, department_service, device_service
+     - email_service, extended_report_service, gift_card_service
+     - google_oauth_service, grn_service, inventory_excel_service
+     - inventory_period_service, inventory_report_service, invoice_payment_service
+     - layby_report_service, location_service, loyalty_service
+     - marketing_ai_context, menu_service, modifier_analytics_service
+     - modifier_availability_service, modifier_pricing_service, notification_service
+     - online_order_service, partner_service, paystack_service
+     - permission_service, petty_cash_service, pms_service
+     - product_excel_service, production_service, proforma_revision_service
+     - report_email_service, report_generator_service, report_subscription_service
+     - reservation_service, reward_catalog_service, sage_service
+     - sales_report_service, shift_service, signage_service
+     - smart_collection_service, staff_report_service, staff_target_service
+     - stock_monitor_service, subscription_service, sync_queue_service
+     - table_service, tag_service, tax_service, time_tracking_service
+     - tracked_bulk_service, woocommerce_service, xero_service
+
+  2. INCONSISTENT TEST NAMING: Some tests use test_*_service.py, others in property/ dir
+  3. test_statement_schemas.py exists in schemas/ but should be in tests/
+  4. Some test files appear to be code quality scanners (boolean_fixer, import_resolver)
+  5. No clear test/service mapping documentation
+  6. Missing tests for several API files
+
+TEST COVERAGE ESTIMATE: ~15-25% of services have direct unit tests
+  (Most coverage via integration and property-based tests)
+
+
+=== 6. MIGRATIONS (backend/alembic/versions/) ===
+=================================================
+
+MIGRATION COUNT: 122 migrations total
+
+Sample Migration Timeline (chronological):
+  1. 001_initial_schema.py - Base schema setup
+  2. 002_business_entities.py - Organization/Business setup
+  3. 002_add_payments.py - Payment tables
+  4. 003_merge_heads.py - Alembic merge
+  5. 004_add_performance_indexes.py - Optimization
+  6. 005_add_deleted_at_columns.py - Soft deletes
+  7. 006_fix_payment_enums_and_image_url.py - Data type fixes
+  8. 007_prod_ingredients.py - Recipe system
+  9. 008_fix_inventory_tx.py - Inventory fixes
+  10. 009_ai_chat_and_user_settings.py - AI feature
+  11. 010_ensure_payment_enums.py - Payment enums
+  12. 011_fix_payment_status_values.py - Payment status
+  13. 012_add_paid_partial_to_paymentstatus.py - Partial payments
+  14. 013_drop_payments_table.py - Cleanup
+  15. 014_add_supplier_payment_fields.py - Supplier updates
+  16. 015_add_product_suppliers.py - Product-Supplier relation
+  17. 016_add_time_entry_and_pos.py - Time tracking, POS
+  18. 017_add_sessions_table.py - Session management
+  19. 018_add_notifications_table.py - Notifications
+  20. 019_add_departments_table.py - Departments
+  ... (122 total)
+
+MIGRATION QUALITY ASSESSMENT:
+-----------------------------
+✓ Strengths:
+  - Sequential migration strategy
+  - Handles enum and data type corrections
+  - Includes soft delete support (deleted_at)
+  - Performance index additions
+  - Covers all major feature additions
+
+⚠ Issues Found:
+  1. INCONSISTENCY: Migration 002 exists twice (002_add_payments.py AND 002_business_entities.py)
+     This is a merge situation but should be cleaned up
+  2. No migration description/documentation for complex changes
+  3. Some migrations appear to be fixes/patches (006, 008, 010, 011, 012)
+     Could indicate schema design issues in prior migrations
+  4. HIGH MIGRATION COUNT (122) suggests:
+     - Frequent schema changes during development
+     - Consider: May need refactoring for new models
+     - Recommend: Database schema stability review
+
+MODEL VS MIGRATION SYNC:
+  ✓ All major models have migrations
+  ✓ Relationships are properly migrated
+  ⚠ Some specialty models (PMSConnection, XeroConnection, etc.) timestamps suggest late additions
+  ⚠ May need to verify all 78 models have corresponding migration entries
+
+
+=== 7. CORE MODULE (backend/app/core/) ===
+=========================================
+
+COMPLETE CORE INVENTORY (13 files):
+
+Core Infrastructure:
+  ✓ __init__.py - Module initialization
+  ✓ config.py (4.3 KB) - Environment configuration
+    - Settings class with validation
+    - JWT token expiration
+    - OAuth configuration
+    - CORS origins
+    - Email SMTP settings
+    - Paystack integration keys
+    - Cookie security settings
+    - Field validators for SECRET_KEY strength checking
+
+  ✓ database.py (6.2 KB) - Database configuration
+    - Async/sync engine management
+    - SQLAlchemy setup
+    - Pool configuration (10 pool_size, 20 max_overflow)
+    - Connection recycling (3600s)
+    - SSL/TLS support
+    - AsyncSessionLocal and SessionLocal factories
+    - get_db() and get_sync_db() dependencies
+
+  ✓ security.py (4.1 KB) - Authentication utilities
+    - JWT token creation/validation
+    - Password hashing (bcrypt with 12 rounds)
+    - PIN code hashing (10 rounds)
+    - Email verification tokens (24hr validity)
+    - Password reset tokens (1hr validity)
+    - Helper functions for token verification
+
+  ✓ encryption.py (4.4 KB) - Data encryption
+    - Field-level encryption utilities
+    - AES-256 encryption support
+    - Key management
+    - Encrypt/decrypt functions
+
+  ✓ cache.py (2.8 KB) - Redis caching
+    - Cache decorators
+    - TTL support
+    - Cache invalidation
+
+  ✓ redis.py (8.5 KB) - Redis integration
+    - Connection pooling
+    - Session management
+    - Async Redis client
+    - Cache operations
+
+  ✓ rbac.py (8.0 KB) - Role-Based Access Control
+    - Permission checking
+    - Role management
+    - Resource-level permissions
+    - Decorator support
+
+  ✓ subscription.py (7.0 KB) - Subscription management
+    - Feature flag checking
+    - Tier-based access control
+    - Feature override logic
+    - Usage tracking
+
+  ✓ admin.py (790 B) - Admin utilities
+    - Minimal admin setup
+    - Decorator support
+
+  ✓ rate_limit.py (2.1 KB) - Rate limiting
+    - Token bucket algorithm
+    - Per-user/IP rate limits
+    - Configurable limits
+
+  ✓ pdf.py (24.9 KB) - PDF generation
+    - ReportLab integration
+    - Complex document generation
+    - Header/footer support
+    - Multi-page support
+    - Invoice/report formatting
+
+  ✓ ai_models.py (11.5 KB) - AI model routing
+    - Zero-hardcoded-model routing
+    - Model selection logic
+    - Groq/OpenAI integration
+    - Fallback mechanisms
+
+  ✓ sync_database.py (1.3 KB) - Sync utilities
+    - Minimal sync helpers
+
+CORE QUALITY ASSESSMENT:
+------------------------
+✓ Strengths:
+  - Well-organized separation of concerns
+  - Strong security practices:
+    * bcrypt password hashing (rounds: 12 for password, 10 for PIN)
+    * JWT with configurable expiration
+    * Email verification token system
+    * Password reset token system
+    * PIN code protection
+    * AES-256 encryption support
+  - Robust database configuration:
+    * Connection pooling (10 size, 20 overflow)
+    * Pool recycling (1 hour)
+    * SSL/TLS support
+    * Async/sync support
+  - Rate limiting implementation
+  - RBAC with decorators
+  - Comprehensive PDF generation
+  - Feature flag system for subscriptions
+
+⚠ Issues Found:
+  1. SECRET_KEY VALIDATION:
+     - Checks for weak keys in production
+     - Good: Prevents weak defaults
+     - Could: Add more entropy checks
+
+  2. REDIS CONFIGURATION:
+     - Default redis://localhost:6379/0
+     - No connection pooling size specified in config
+     - Should add failover/reconnection logic
+
+  3. CACHE.PY:
+     - Limited documentation
+     - No cache warming strategy
+     - No cache invalidation events
+
+  4. CONFIG HARDCODED DEFAULTS:
+     - CORS_ORIGINS: ["http://localhost:3000", "http://localhost:8000"]
+     - Should be environment variable only
+     - EMAIL SMTP port: 1025 (localhost development)
+     - Cookie defaults may not be production-ready
+
+  5. ENCRYPTION.PY:
+     - No key rotation strategy documented
+     - No key management (where are keys stored?)
+     - Should add salt/IV best practices documentation
+
+  6. RATE_LIMIT.PY:
+     - Minimal implementation
+     - No distributed rate limiting across instances
+     - Token bucket algorithm simple, not clusterable
+
+  7. PDF.PY CONCERNS:
+     - 24.9 KB is quite large
+     - Complex report formatting
+     - Should consider templating system
+     - Memory usage for large documents
+
+
+=== 8. CODE QUALITY ANALYSIS ===
+================================
+
+DOCSTRING COVERAGE:
+  Models: ~97% (1 file missing docstring: product_ingredient.py)
+  Services: ~85% (many services lack module-level docstring)
+  APIs: ~80% (endpoint documentation inconsistent)
+  Schemas: ~70% (field validation present, but limited explanations)
+
+HARDCODED VALUES:
+  Config: ✓ Most values properly in config.py
+  Issue: Several hardcoded values found
+    - test_email_service.py: test@example.com
+    - auth_service: Magic numbers for token expiration
+    - Multiple "localhost" references (should use config)
+
+IMPORTS:
+  Wildcard Imports: Found 9 instances
+    - test_unused_import_scanner.py (testing tool - acceptable)
+    - test_wildcard_import_resolver.py (testing tool - acceptable)
+    - Other files: None in production code (✓ Good)
+
+  Circular Imports: None detected
+  Unused Imports: ~15-20 potential issues (use ruff to audit)
+
+ERROR HANDLING:
+  API Files with Error Handling: 69/75 (92%)
+  Missing Error Handling: 6 files
+    - Need review and try/except addition
+  HTTPException Usage: Proper status codes used
+  Logging: Inconsistent across codebase
+    - Some files use logger.exception()
+    - Others use silent failures
+
+TODO/FIXME COMMENTS FOUND:
+  1. admin.py ~45: "Get overrides from FeatureOverrides table once populated"
+  2. business.py: "Send invitation email"
+  3. pos_connections.py: "Implement actual connection testing per provider"
+  4. pos_connections.py: "Implement actual sync logic per provider"
+  Total: 4 unfinished features
+
+TESTING COMMENTS:
+  - test_ai_routing_unit.py: Tests for "no hardcoded models" (✓ Good practice)
+  - test_cicd.py: CI/CD validation
+  - test_docker.py: Docker image validation
+
+TYPE HINTS:
+  Coverage: ~75%
+  - Models: Nearly 100%
+  - Services: ~70-80%
+  - APIs: ~80%
+  - Schemas: 100% (Pydantic enforces)
+  Recommendation: Add py.typed marker and mypy checking
+
+NAMING CONVENTIONS:
+  ✓ Consistent snake_case for functions/variables
+  ✓ Consistent CamelCase for classes
+  ✓ Consistent UPPERCASE for constants
+  ✓ Model names correspond to database tables
+  ✓ API router prefixes match resource names
+
+ARCHITECTURE ISSUES:
+  1. Dashboard Duplication: dashboard.py AND dashboards.py (HIGH PRIORITY)
+  2. Possible Service Duplicates:
+     - time_entry_service.py vs time_tracking_service.py
+     - inventory_service.py overlaps with stock_take_service.py
+  3. Models/Services Relationships:
+     - Not all models have corresponding services
+     - Some services handle multiple models
+  4. Sync Architecture:
+     - Multiple sync approaches (sync_queue, entity_sync, mobile_sync)
+     - Could benefit from unified sync framework
+
+SECURITY ASSESSMENT:
+  ✓ Passwords: Bcrypt with appropriate rounds
+  ✓ Tokens: JWT with type checking (access vs refresh)
+  ✓ CORS: Configured but overly permissive in default
+  ✓ RBAC: Implemented with permission checking
+  ✓ SQL Injection: SQLAlchemy ORM prevents this
+  ⚠ CSRF: Token checking mentioned but not visible everywhere
+  ⚠ Rate Limiting: Implemented but not on all sensitive endpoints
+  ⚠ API Key: No API key authentication visible
+
+PERFORMANCE CONCERNS:
+  Database:
+    ✓ Connection pooling configured
+    ✓ Pool recycling enabled
+    ✓ 22 explicit indexes defined
+    ⚠ Some queries may benefit from composite indexes
+    ⚠ N+1 query risk in relationships (no eager loading strategy visible)
+
+  Caching:
+    ✓ Redis integration available
+    ⚠ Cache strategy not evident in service layer
+    ⚠ No cache warming documented
+    ⚠ No cache invalidation events documented
+
+  API:
+    ✓ Async endpoints available
+    ⚠ Some endpoints may be blocking (check service layer)
+    ⚠ No pagination visible on list endpoints
+    ⚠ No request size limits visible
+
+LOGGING & MONITORING:
+  ⚠ Inconsistent logging across services
+  ⚠ No centralized error tracking (Sentry, etc.)
+  ⚠ No request ID tracking for debugging
+  ⚠ Job execution logs captured but not analyzed
+
+DEPLOYMENT READINESS:
+  ✓ Environment configuration system
+  ✓ Database migration system
+  ✓ Docker support (Dockerfile exists)
+  ✓ Multi-environment support (.env, .env.local)
+  ⚠ No health check endpoint visible
+  ⚠ No graceful shutdown mechanism
+  ⚠ No request timeout configuration visible
+
+
+=== QUALITY METRICS SUMMARY ===
+==============================
+
+Code Volume:
+  - Total Python Files: 483
+  - Total Lines of Code: 118,044
+  - Models: 78 files, ~10,054 LOC
+  - API Endpoints: 75 files, ~29,488 LOC
+  - Services: 97 files, ~31,562 LOC
+  - Schemas: 43 files, ~7,407 LOC
+  - Tests: 148 files, considerable coverage
+  - Core: 13 files, ~68 KB
+
+Documentation:
+  - Model Docstrings: 97% (77/78)
+  - Service Documentation: 85%
+  - API Documentation: 80%
+  - README/Architecture Docs: Limited
+
+Code Quality Scores (Scale 1-10):
+  - Models: 8.5/10 (excellent structure, 1 missing docstring)
+  - API Endpoints: 8/10 (good coverage, 6 missing error handling, 1 duplication)
+  - Services: 8/10 (well-organized, 84 lacking unit tests, 2 possible duplicates)
+  - Schemas: 7.5/10 (comprehensive but some models lack schemas)
+  - Tests: 7/10 (extensive property tests, missing service unit tests)
+  - Core: 8.5/10 (strong security, could improve caching strategy)
+  - Overall: 8/10
+
+Test Coverage:
+  - Test Files: 148
+  - Test Cases: ~1,706
+  - Services with Unit Tests: 13/97 (13%)
+  - Services with Integration Tests: ~30/97 (31%)
+  - Overall Coverage Estimate: 30-40%
+
+Critical Issues (Must Fix):
+  1. Dashboard duplication (dashboard.py + dashboards.py)
+  2. 84 services without dedicated unit tests
+  3. 6 API files without error handling
+  4. ProductIngredient model missing docstring
+
+High Priority Issues:
+  1. Service/API relationship mapping not documented
+  2. Sync architecture needs consolidation
+  3. Rate limiting not on all sensitive endpoints
+  4. Cache strategy not evident
+  5. Performance optimization needed for relationships (N+1 risk)
+
+Medium Priority Issues:
+  1. Potential service duplicates (time_entry vs time_tracking)
+  2. Integration services incomplete (Xero, Sage, WooCommerce)
+  3. No API key authentication
+  4. Limited pagination on list endpoints
+  5. Inconsistent logging
+
+Low Priority Issues:
+  1. test_statement_schemas.py in wrong location
+  2. sync_database.py minimal implementation
+  3. PDF generation could use templating
+  4. CORS defaults overly permissive
+  5. Some hardcoded config defaults
+
+RECOMMENDATIONS
+===============
+
+Immediate Actions:
+  1. Resolve dashboard.py duplication
+  2. Add unit tests for 84 untested services (priority: auth, payment, inventory)
+  3. Add error handling to 6 API files
+  4. Add docstring to product_ingredient.py
+  5. Consolidate sync architecture
+
+Short Term (Sprint 1-2):
+  1. Add service/API mapping documentation
+  2. Implement comprehensive logging with request IDs
+  3. Add rate limiting to sensitive endpoints
+  4. Implement pagination on list endpoints
+  5. Add health check endpoint
+
+Medium Term (Sprint 3-4):
+  1. Implement query optimization (eager loading, composite indexes)
+  2. Add caching strategy documentation and implementation
+  3. Complete integration service implementations (Xero, Sage, WooCommerce)
+  4. Add API key authentication option
+  5. Implement distributed rate limiting
+
+Long Term:
+  1. Refactor large services (order_service: 16 methods, customer_account_service)
+  2. Add architectural documentation
+  3. Implement service mesh/API gateway pattern
+  4. Add comprehensive error tracking (Sentry)
+  5. Performance profiling and optimization
+___BEGIN___COMMAND_DONE_MARKER___0

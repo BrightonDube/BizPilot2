@@ -4,10 +4,8 @@ Tests stock valuation methods, turnover ratios, and report consistency.
 """
 
 from decimal import Decimal
-from unittest.mock import MagicMock
 
-import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 

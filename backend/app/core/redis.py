@@ -101,13 +101,9 @@ class RedisManager:
                 "socket_timeout": 5,
             }
             
-            # Add SSL support only if using secure Redis URL
-            if redis_url.startswith("rediss://"):
-                try:
-                    import ssl
-                    connection_kwargs["ssl"] = ssl.create_default_context()
-                except ImportError:
-                    logger.warning("SSL support requested but ssl module not available")
+            # SSL is automatically handled by redis-py when using the rediss:// scheme.
+            # Explicitly passing ssl=ssl_context can sometimes cause issues with 
+            # underlying connection classes in certain environments.
             
             self._redis = await aioredis.from_url(
                 redis_url,
@@ -120,9 +116,9 @@ class RedisManager:
             logger.info(f"Redis connected successfully: {redis_url.split('@')[-1]}")  # Don't log password
             
         except (RedisError, RedisConnectionError, Exception) as e:
-            logger.warning(
+            logger.error(
                 f"Redis connection failed: {e}. "
-                "Falling back to direct database queries."
+                "Caching and rate limiting are DISABLED. Falling back to direct database queries."
             )
             self._redis = None
             self._available = False

@@ -3,7 +3,6 @@
 Tests rule logic, collection membership, and slug uniqueness.
 """
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

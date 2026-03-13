@@ -13,7 +13,6 @@ for basic tracking.  Integrated payments need:
 """
 
 import enum
-import uuid
 
 from sqlalchemy import (
     Column,

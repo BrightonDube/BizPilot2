@@ -10,13 +10,10 @@ orchestration (procurement).  Keeping them in separate services makes
 each easier to test and evolve independently.
 """
 
-import math
 from datetime import datetime
-from decimal import Decimal
 from typing import List, Optional, Tuple
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.models.product import Product
@@ -28,7 +25,7 @@ from app.models.reorder import (
     PurchaseOrderStatus,
     ReorderAuditLog,
 )
-from app.schemas.reorder import GRNCreate, GRNResponse, GRNItemResponse
+from app.schemas.reorder import GRNCreate
 
 
 class GRNService:

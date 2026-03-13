@@ -8,7 +8,6 @@ This service handles the reward catalog (configuration).  Separating them
 avoids a God-service and allows independent testing.
 """
 
-from decimal import Decimal
 from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session

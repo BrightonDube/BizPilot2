@@ -42,11 +42,27 @@ def upgrade() -> None:
     op.drop_column('notifications', 'reference_type')
     op.drop_column('notifications', 'reference_id')
 
-    # Alter notification_type from String(50) → Enum
+    # Alter notification_type from String(50) → Enum.
+    # WHY: The old column was String(50) with free-form values like 'order_shipped',
+    # 'order_received', 'low_stock', 'out_of_stock', 'payment_overdue', 'payment_received'.
+    # These don't exist in the new enum, so we must map them via a CASE expression
+    # before casting. Any unmapped value defaults to 'info'.
     op.alter_column(
         'notifications', 'notification_type',
         type_=notificationtype_enum,
-        postgresql_using="notification_type::notificationtype",
+        postgresql_using="""
+            CASE
+                WHEN notification_type IN ('order_shipped', 'order_received', 'order_placed', 'order_ready') THEN 'order'
+                WHEN notification_type IN ('low_stock', 'out_of_stock', 'stock_alert') THEN 'inventory'
+                WHEN notification_type IN ('payment_received', 'payment_overdue', 'payment_failed') THEN 'payment'
+                WHEN notification_type = 'system' THEN 'system'
+                WHEN notification_type = 'warning' THEN 'warning'
+                WHEN notification_type = 'error' THEN 'error'
+                WHEN notification_type = 'success' THEN 'success'
+                WHEN notification_type = 'info' THEN 'info'
+                ELSE 'info'
+            END::notificationtype
+        """,
         nullable=True,
     )
 

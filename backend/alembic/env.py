@@ -31,11 +31,11 @@ else:
     logger.info(f"Loaded environment from {default_env_path}")
 
 # Alembic runs in CI/automation contexts where SECRET_KEY may be unset.
-# The application Settings validates SECRET_KEY on import, but migrations
-# don't require JWT functionality. Provide a safe default to allow env.py
-# to import app modules.
+# The application Settings validates SECRET_KEY on import (≥32 chars, not weak),
+# but migrations don't require JWT functionality. Provide a migration-only
+# fallback that passes validation to allow env.py to import app modules.
 if not os.getenv("SECRET_KEY"):
-    os.environ["SECRET_KEY"] = "0123456789abcdef"
+    os.environ["SECRET_KEY"] = "alembic-migration-only-fallback-key-not-for-prod-use"
     logger.debug("Using default SECRET_KEY for migration context")
 
 from app.core.database import Base  # noqa: E402
@@ -177,6 +177,16 @@ def convert_async_url_to_sync(url: str) -> str:
 # Override sqlalchemy.url with environment variable if set
 database_url = os.getenv("DATABASE_URL")
 if database_url:
+    # WHY validate early: A clobbered DATABASE_URL (e.g. empty string from
+    # a bad doctl spec push) causes a cryptic SQLAlchemy parse error deep in
+    # the stack. Fail fast with a clear message instead.
+    if len(database_url) < 10 or "://" not in database_url:
+        raise RuntimeError(
+            f"DATABASE_URL appears invalid (length={len(database_url)}). "
+            "Check that secrets are properly set in DigitalOcean dashboard. "
+            "Do NOT use `doctl apps update --spec` with a local app.yaml — "
+            "it clobbers SECRET-type env vars."
+        )
     database_url = convert_async_url_to_sync(database_url)
     config.set_main_option("sqlalchemy.url", database_url)
     logger.debug("Using database URL from DATABASE_URL environment variable")

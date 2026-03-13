@@ -1,6 +1,7 @@
 """Authentication API endpoints."""
 
 import logging
+import asyncio # CHANGED: Added for non-blocking email operations
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from pydantic import BaseModel as PydanticBaseModel
@@ -52,28 +53,29 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
     """
     Set HttpOnly cookies for web authentication.
     """
+    # CHANGED: Consolidated cookie parameters for better maintainability and consistency.
+    cookie_params = {
+        "httponly": True,
+        "secure": settings.COOKIE_SECURE or settings.is_production,
+        "samesite": settings.COOKIE_SAMESITE,
+        "path": "/",
+        "domain": settings.COOKIE_DOMAIN or None,
+    }
+    
     # Access token cookie
     response.set_cookie(
         key="access_token",
         value=access_token,
-        httponly=True,
-        secure=settings.COOKIE_SECURE or settings.is_production,
-        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        path="/",
-        domain=settings.COOKIE_DOMAIN or None,
+        **cookie_params
     )
     
     # Refresh token cookie
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
-        httponly=True,
-        secure=settings.COOKIE_SECURE or settings.is_production,
-        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-        path="/",
-        domain=settings.COOKIE_DOMAIN or None,
+        **cookie_params
     )
 
 
@@ -130,7 +132,9 @@ If you did not create this account, please ignore this email.
 Best regards,
 The BizPilot Team
 """
-            email_service.send_email(
+            # CHANGED: Use asyncio.to_thread to prevent blocking the event loop with synchronous SMTP calls (Performance High).
+            await asyncio.to_thread(
+                email_service.send_email,
                 to_email=user.email,
                 subject="Verify Your BizPilot Email",
                 body_text=email_body,
@@ -138,7 +142,8 @@ The BizPilot Team
             logger.info(f"Verification email sent to {user.email}")
         except Exception as e:
             logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
-    else:
+    elif settings.DEBUG:
+        # CHANGED: Only log verification URL in DEBUG mode to prevent sensitive data leakage in production logs (Security Medium).
         logger.info(f"[DEV] Email verification URL for {user.email}: {verification_url}")
     
     return UserResponse(
@@ -151,123 +156,7 @@ The BizPilot Team
         status=user.status.value,
     )
 
-
-@router.get("/test-auth-components")
-async def test_auth_components():
-    """Test individual authentication components to isolate the issue."""
-    try:
-        # Test 1: Basic imports
-        from app.core.security import get_password_hash, verify_password
-        from app.core.security import create_access_token
-        
-        # Test 2: Password hashing
-        test_password = "test123"
-        hashed = get_password_hash(test_password)
-        verified = verify_password(test_password, hashed)
-        
-        # Test 3: JWT token creation
-        test_token = create_access_token(data={"sub": "test-user"})
-        
-        return {
-            "status": "success",
-            "tests": {
-                "imports": "ok",
-                "password_hash": "ok" if verified else "failed",
-                "jwt_creation": "ok" if test_token else "failed",
-                "token_length": len(test_token) if test_token else 0
-            }
-        }
-    except Exception as e:
-        import traceback
-        return {
-            "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
-
-
-@router.get("/test-db-query")
-async def test_db_query(db=Depends(get_db)):
-    """Test database connection and user query."""
-    try:
-        from app.models.user import User
-        from sqlalchemy import select
-        
-        # Test 1: Simple count query
-        result = await db.execute(select(User))
-        users = result.scalars().all()
-        user_count = len(users)
-        
-        # Test 2: Try to get first user (if any)
-        first_user = users[0] if users else None
-        user_info = None
-        if first_user:
-            user_info = {
-                "id": str(first_user.id),
-                "email": first_user.email,
-                "has_password": first_user.hashed_password is not None,
-                "status": first_user.status.value if first_user.status else None,
-            }
-        
-        return {
-            "status": "success",
-            "tests": {
-                "db_connection": "ok",
-                "user_count": user_count,
-                "first_user": user_info
-            }
-        }
-    except Exception as e:
-        import traceback
-        return {
-            "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
-
-
-@router.post("/test-login")
-async def test_login(
-    request: Request,
-    credentials: UserLogin,
-    db=Depends(get_db),
-):
-    """Debug endpoint to test login and capture exact errors."""
-    import traceback
-    try:
-        auth_service = AuthService(db)
-        
-        # Step 1: Try to get user
-        user = await auth_service.get_user_by_email(credentials.email)
-        if not user:
-            return {"status": "error", "step": "get_user", "error": "User not found"}
-        
-        # Step 2: Check password
-        if not user.hashed_password:
-            return {"status": "error", "step": "check_password", "error": "No password set (OAuth user)"}
-        
-        password_ok = verify_password(credentials.password, user.hashed_password)
-        if not password_ok:
-            return {"status": "error", "step": "verify_password", "error": "Password mismatch"}
-        
-        # Step 3: Create tokens
-        access_token = create_access_token(data={"sub": str(user.id)})
-        refresh_token = create_refresh_token(data={"sub": str(user.id)})
-        
-        return {
-            "status": "success",
-            "user_id": str(user.id),
-            "email": user.email,
-            "access_token_length": len(access_token),
-            "refresh_token_length": len(refresh_token),
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "step": "exception",
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
+# CHANGED: Removed insecure debug endpoints 'test-auth-components', 'test-db-query', and 'test-login' which exposed internal state and tracebacks (Security Critical).
 
 
 @router.post("/login", response_model=Token)
@@ -446,7 +335,9 @@ If you did not request this password reset, please ignore this email or contact 
 Best regards,
 The BizPilot Team
 """
-                email_service.send_email(
+                # CHANGED: Use asyncio.to_thread to prevent blocking the event loop with synchronous SMTP calls (Performance High).
+                await asyncio.to_thread(
+                    email_service.send_email,
                     to_email=data.email,
                     subject="Reset Your BizPilot Password",
                     body_text=email_body,
@@ -455,8 +346,8 @@ The BizPilot Team
             except Exception as e:
                 # Log error but don't expose to user (security)
                 logger.error(f"Failed to send password reset email to {data.email}: {str(e)}")
-        else:
-            # In development, log the reset URL for testing
+        elif settings.DEBUG:
+            # CHANGED: Only log reset URL in DEBUG mode to prevent sensitive data leakage in production logs (Security Medium).
             logger.info(f"[DEV] Password reset URL for {data.email}: {reset_url}")
     
     # Always return success to prevent email enumeration
@@ -464,7 +355,7 @@ The BizPilot Team
 
 
 @router.post("/reset-password")
-# @limiter.limit(PASSWORD_RESET_RATE_LIMIT)  # Temporarily disabled for debugging
+@limiter.limit(PASSWORD_RESET_RATE_LIMIT) # CHANGED: Re-enabled rate limiting (Security High).
 async def reset_password(request: Request, data: PasswordResetConfirm, db=Depends(get_db)):
     """Reset password with token."""
     email = verify_password_reset_token(data.token)
@@ -488,6 +379,7 @@ async def reset_password(request: Request, data: PasswordResetConfirm, db=Depend
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_profile(
     current_user: User = Depends(get_current_active_user),
+    db=Depends(get_db),
     response: Response = None,
 ):
     """Get current user profile."""
@@ -497,10 +389,21 @@ async def get_current_user_profile(
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     
-    # Get current tier name if available
+    # WHY explicit query instead of current_user.current_tier:
+    # The User object comes from an async session. Accessing .current_tier
+    # triggers SQLAlchemy lazy loading which requires a sync greenlet context.
+    # In async FastAPI endpoints this raises MissingGreenlet. We query the
+    # tier name explicitly using the async db session instead.
     current_tier_name = None
-    if current_user.current_tier:
-        current_tier_name = current_user.current_tier.name
+    if current_user.current_tier_id:
+        from app.models.subscription_tier import SubscriptionTier
+        from sqlalchemy import select
+        result = await db.execute(
+            select(SubscriptionTier.name).filter(
+                SubscriptionTier.id == current_user.current_tier_id
+            )
+        )
+        current_tier_name = result.scalar_one_or_none()
     
     return UserResponse(
         id=str(current_user.id),
@@ -593,7 +496,7 @@ async def setup_pin(
 
 
 @router.post("/pin/login", response_model=Token)
-# @limiter.limit(AUTH_RATE_LIMIT)  # Temporarily disabled for debugging
+@limiter.limit(AUTH_RATE_LIMIT) # CHANGED: Re-enabled rate limiting (Security High).
 async def pin_login(
     request: Request,
     credentials: PINLogin,
@@ -654,7 +557,7 @@ async def remove_pin(
     db=Depends(get_db),
 ):
     """Remove the PIN code from the current user's account."""
-    current_user.pin_code = None
+    # CHANGED: Removed reference to non-existent 'pin_code' column; only 'pin_code_hash' is used (Code Quality).
     current_user.pin_code_hash = None
     await db.commit()
     
@@ -670,6 +573,3 @@ async def get_pin_status(
         "has_pin": current_user.pin_code_hash is not None,
         "biometric_enabled": current_user.biometric_enabled or False,
     }
-
-
-# Import Pydantic BaseModel for schemas

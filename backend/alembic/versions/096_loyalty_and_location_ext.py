@@ -11,7 +11,7 @@ and unrelated to each other, so combining them avoids migration sprawl.
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 
 revision = "096_loyalty_and_location_ext"
 down_revision = "095_sync_queue"

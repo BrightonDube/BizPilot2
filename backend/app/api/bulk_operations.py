@@ -21,7 +21,6 @@ from app.schemas.bulk_operations import (
     BulkImportRequest,
     BulkOperationDetailResponse,
     BulkOperationItemListResponse,
-    BulkOperationItemResponse,
     BulkOperationListResponse,
     BulkOperationResponse,
     BulkPriceUpdateRequest,

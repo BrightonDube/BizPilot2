@@ -17,7 +17,14 @@
     "backend:check-migrations": "cd backend && python scripts/check_alembic_revision_lengths.py",
     "backend:migrate": "cd backend && python -m alembic upgrade head",
     "beads:sync": "pwsh -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\beads-sync.ps1",
-    "scan:unused-imports": "cd scripts && pnpm scan:unused-imports"
+    "scan:unused-imports": "cd scripts && pnpm scan:unused-imports",
+    "mobile:start": "pnpm --filter mobile start",
+    "mobile:android": "pnpm --filter mobile android",
+    "mobile:ios": "pnpm --filter mobile ios",
+    "mobile:web": "pnpm --filter mobile web",
+    "mobile:test": "pnpm --filter mobile test",
+    "mobile:lint": "pnpm --filter mobile lint",
+    "mobile:typecheck": "pnpm --filter mobile typecheck"
   },
   "keywords": [
     "bizpilot",

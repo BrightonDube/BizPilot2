@@ -540,13 +540,12 @@ async def export_payroll_report(
     
     # Data rows
     for row_idx, item in enumerate(report, 4):
-        net_hours = item["total_hours"] - item["break_hours"]
         row_data = [
             item["employee"],
             item["email"],
             round(item["total_hours"], 2),
             round(item["break_hours"], 2),
-            round(net_hours, 2),
+            round(item["total_hours"], 2),
             item["entries"],
         ]
         for col_idx, value in enumerate(row_data, 1):
@@ -560,7 +559,7 @@ async def export_payroll_report(
     ws.cell(row=total_row, column=1, value="TOTAL").font = Font(bold=True)
     ws.cell(row=total_row, column=3, value=round(total_hours, 2)).font = Font(bold=True)
     ws.cell(row=total_row, column=4, value=round(total_breaks, 2)).font = Font(bold=True)
-    ws.cell(row=total_row, column=5, value=round(total_hours - total_breaks, 2)).font = Font(bold=True)
+    ws.cell(row=total_row, column=5, value=round(total_hours, 2)).font = Font(bold=True)
     
     # Adjust column widths
     ws.column_dimensions['A'].width = 25

@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from app.models.combo import ComboDeal, ComboComponent, ComboComponentType
-from app.models.product import Product, ProductCategory
+from app.models.product import Product
 
 
 class ComboService:

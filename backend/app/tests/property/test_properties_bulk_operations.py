@@ -8,10 +8,8 @@ Feature: Bulk Operations
 Requirements: 1-10 (price updates, stock, import/export, validation, audit)
 """
 
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 from uuid import uuid4
 
 from hypothesis import given, settings, strategies as st, HealthCheck
@@ -23,7 +21,6 @@ from app.models.bulk_operation import (
     ItemStatus,
     OperationStatus,
 )
-from app.schemas.bulk_operations import ValidationResult
 
 
 # ── Strategies ───────────────────────────────────────────────────────────────
@@ -266,7 +263,7 @@ def test_before_after_snapshot_consistency(data):
 
     mock_db.add.side_effect = capture_add
 
-    op = service.execute_price_update(
+    service.execute_price_update(
         user_id=str(uuid4()),
         business_id="biz-1",
         product_ids=[pid],

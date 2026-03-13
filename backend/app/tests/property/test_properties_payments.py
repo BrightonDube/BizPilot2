@@ -5,7 +5,6 @@ Tests payment amount validation, refund limits, and payment method consistency.
 
 from decimal import Decimal
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 

@@ -55,7 +55,7 @@ export function ProfitMarginChart({ products }: ProfitMarginChartProps) {
 
   return (
     <div className="h-80">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} />
           <XAxis dataKey="name" stroke={chartTheme.textColor} fontSize={12} />

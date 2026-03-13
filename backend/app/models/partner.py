@@ -9,7 +9,6 @@ their own brand.  Partners need isolated configuration, branding,
 billing, and user management separate from the direct B2B model.
 """
 
-import uuid
 
 from sqlalchemy import (
     Column,

@@ -428,3 +428,168 @@ class MenuService:
                 r["classification"] = "Dog"
 
         return records
+
+    # ── Menu Reports ─────────────────────────────────────────────
+
+    def get_item_sales_report(
+        self, business_id: str, days: int = 30
+    ) -> List[Dict[str, Any]]:
+        """Aggregate sales per menu item over a rolling period.
+
+        Joins order_items → products → menu_items to produce
+        quantity sold, revenue, and average price per item.
+        """
+        from datetime import datetime, timedelta, timezone
+        from sqlalchemy import func
+        from app.models.order import OrderItem, Order
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        rows = (
+            self.db.query(
+                OrderItem.product_id,
+                OrderItem.name,
+                func.sum(OrderItem.quantity).label("total_qty"),
+                func.sum(OrderItem.total).label("total_revenue"),
+                func.count(OrderItem.id).label("order_count"),
+            )
+            .join(Order, OrderItem.order_id == Order.id)
+            .filter(
+                Order.business_id == business_id,
+                Order.created_at >= cutoff,
+                Order.deleted_at.is_(None),
+            )
+            .group_by(OrderItem.product_id, OrderItem.name)
+            .order_by(func.sum(OrderItem.total).desc())
+            .all()
+        )
+
+        return [
+            {
+                "product_id": str(r.product_id) if r.product_id else None,
+                "name": r.name,
+                "total_qty": int(r.total_qty or 0),
+                "total_revenue": float(r.total_revenue or 0),
+                "order_count": int(r.order_count or 0),
+                "avg_price": round(float(r.total_revenue or 0) / max(int(r.total_qty or 1), 1), 2),
+            }
+            for r in rows
+        ]
+
+    def get_profitability_report(
+        self, business_id: str, days: int = 30
+    ) -> List[Dict[str, Any]]:
+        """Per-item profitability combining sales revenue and cost data.
+
+        Matches menu items to their cost (from MenuItem.cost or recipe cost)
+        and calculates profit = revenue - (cost × qty sold).
+        """
+        from datetime import datetime, timedelta, timezone
+        from sqlalchemy import func
+        from app.models.order import OrderItem, Order
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        # Sales aggregation
+        sales = (
+            self.db.query(
+                OrderItem.product_id,
+                OrderItem.name,
+                func.sum(OrderItem.quantity).label("qty"),
+                func.sum(OrderItem.total).label("revenue"),
+            )
+            .join(Order, OrderItem.order_id == Order.id)
+            .filter(
+                Order.business_id == business_id,
+                Order.created_at >= cutoff,
+                Order.deleted_at.is_(None),
+            )
+            .group_by(OrderItem.product_id, OrderItem.name)
+            .all()
+        )
+
+        # Build cost lookup from menu items
+        items = (
+            self.db.query(MenuItem)
+            .filter(
+                MenuItem.business_id == business_id,
+                MenuItem.deleted_at.is_(None),
+            )
+            .all()
+        )
+        cost_map: Dict[str, float] = {}
+        for it in items:
+            # MenuItem may reference a product_id via its relationship
+            pid = str(it.product_id) if hasattr(it, "product_id") and it.product_id else str(it.id)
+            cost_map[pid] = float(it.cost or 0)
+
+        results = []
+        for row in sales:
+            pid = str(row.product_id) if row.product_id else ""
+            unit_cost = cost_map.get(pid, 0)
+            qty = int(row.qty or 0)
+            revenue = float(row.revenue or 0)
+            total_cost = unit_cost * qty
+            profit = revenue - total_cost
+            margin = (profit / revenue * 100) if revenue > 0 else 0
+
+            results.append({
+                "product_id": pid,
+                "name": row.name,
+                "qty_sold": qty,
+                "revenue": round(revenue, 2),
+                "total_cost": round(total_cost, 2),
+                "profit": round(profit, 2),
+                "margin_pct": round(margin, 1),
+            })
+
+        results.sort(key=lambda x: x["profit"], reverse=True)
+        return results
+
+    def get_modifier_popularity_report(
+        self, business_id: str
+    ) -> List[Dict[str, Any]]:
+        """Rank modifier groups and individual modifiers by usage.
+
+        Since order_items don't track applied modifiers directly,
+        this returns modifier configuration data: groups, modifiers,
+        min/max rules, and price adjustments — useful for menu planning.
+        """
+        groups = (
+            self.db.query(ModifierGroup)
+            .filter(
+                ModifierGroup.business_id == business_id,
+                ModifierGroup.deleted_at.is_(None),
+            )
+            .all()
+        )
+
+        results = []
+        for g in groups:
+            modifiers = (
+                self.db.query(Modifier)
+                .filter(
+                    Modifier.group_id == g.id,
+                    Modifier.deleted_at.is_(None),
+                )
+                .all()
+            )
+            results.append({
+                "group_id": str(g.id),
+                "group_name": g.name,
+                "min_selections": g.min_selections,
+                "max_selections": g.max_selections,
+                "modifier_count": len(modifiers),
+                "modifiers": [
+                    {
+                        "id": str(m.id),
+                        "name": m.name,
+                        "price_adjustment": float(m.price_adjustment or 0),
+                        "is_available": m.is_available,
+                    }
+                    for m in modifiers
+                ],
+            })
+
+        results.sort(key=lambda x: x["modifier_count"], reverse=True)
+        return results

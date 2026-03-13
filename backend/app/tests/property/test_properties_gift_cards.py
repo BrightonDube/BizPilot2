@@ -6,7 +6,6 @@ Tests balance tracking, redemption limits, and card number format.
 from decimal import Decimal
 from datetime import date, timedelta
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 

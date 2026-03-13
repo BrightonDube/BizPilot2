@@ -17,8 +17,9 @@ class BusinessTimeSettings(BaseModel):
     business_id = Column(UUID(as_uuid=True), ForeignKey("businesses.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
     
     # Day-end processing
-    day_end_time = Column(Time, nullable=False, default=time(23, 59))  # When to auto clock-out employees
-    auto_clock_out_penalty_hours = Column(Numeric(4, 2), default=Decimal("5.00"))  # Penalty hours for not clocking out
+    day_end_time = Column(Time, nullable=False, default=time(5, 0))  # 5 AM local time auto clock-out
+    auto_clock_out_penalty_hours = Column(Numeric(4, 2), default=Decimal("4.00"))  # Penalty hours for not clocking out
+    timezone = Column(String(50), nullable=False, default="Africa/Johannesburg")  # Business timezone for scheduling
     
     # Work hour settings
     standard_work_hours = Column(Numeric(4, 2), default=Decimal("8.00"))  # Standard work day hours
@@ -40,5 +41,7 @@ class BusinessTimeSettings(BaseModel):
         return self.day_end_time.strftime("%H:%M") if self.day_end_time else "23:59"
 
     def should_auto_clock_out(self, current_time: time) -> bool:
-        """Check if current time is past day end time."""
-        return current_time >= self.day_end_time if self.day_end_time else False
+        """Check if current time is within the day-end hour (e.g., 05:00–05:59)."""
+        if not self.day_end_time:
+            return False
+        return current_time.hour == self.day_end_time.hour

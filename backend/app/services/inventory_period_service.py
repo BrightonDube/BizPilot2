@@ -13,7 +13,6 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import List, Optional, Tuple
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.stock_take import (

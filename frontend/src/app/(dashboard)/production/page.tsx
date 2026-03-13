@@ -6,7 +6,7 @@ import { Plus, Factory, Play, CheckCircle, XCircle, Eye, Trash2 } from 'lucide-r
 
 import { apiClient } from '@/lib/api'
 import { Button, Card, CardContent, PageHeader, LoadingSpinner, Badge } from '@/components/ui'
-import { formatDate } from '@/lib/utils'
+import { formatDate, safeToFixed } from '@/lib/utils'
 import { FeatureGate } from '@/components/subscription/FeatureGate'
 
 interface ProductionOrder {
@@ -184,9 +184,9 @@ export default function ProductionPage() {
                     <p className="text-gray-300">{order.product_name || 'Unknown Product'}</p>
                     <div className="flex gap-6 mt-2 text-sm text-gray-400">
                       <span>Qty: {order.quantity_produced}/{order.quantity_to_produce}</span>
-                      <span>Est. Cost: R {order.estimated_cost?.toFixed(2) || '0.00'}</span>
+                      <span>Est. Cost: R {safeToFixed(order.estimated_cost)}</span>
                       {order.status === 'completed' && (
-                        <span>Actual Cost: R {order.actual_cost?.toFixed(2) || '0.00'}</span>
+                        <span>Actual Cost: R {safeToFixed(order.actual_cost)}</span>
                       )}
                       {order.scheduled_date && (
                         <span>Scheduled: {formatDate(order.scheduled_date)}</span>
@@ -201,7 +201,7 @@ export default function ProductionPage() {
                           />
                         </div>
                         <span className="text-xs text-gray-400 mt-1">
-                          {order.completion_percentage.toFixed(0)}% complete
+                          {safeToFixed(order.completion_percentage, 0)}% complete
                         </span>
                       </div>
                     )}

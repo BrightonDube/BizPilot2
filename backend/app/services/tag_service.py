@@ -12,7 +12,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.tag import TagCategory, Tag, ProductTag

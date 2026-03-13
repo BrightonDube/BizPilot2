@@ -1,13 +1,11 @@
 """Service for generating and sending report emails."""
 
 import logging
-from typing import Optional, List
 import io
 import pandas as pd
 
 from app.services.email_service import EmailService, EmailAttachment
 from app.services.report_generator_service import ReportData
-from app.models.report_subscription import ReportType
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +116,7 @@ class ReportEmailService:
     def send_report_email(self, report_data: ReportData, include_excel: bool = False) -> None:
         """Send the report email."""
         subject = self.generate_subject(report_data)
-        body = self.generate_html_body(report_data)
+        self.generate_html_body(report_data)
         
         attachments = []
         if include_excel:

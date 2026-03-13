@@ -9,14 +9,13 @@ Feature: Custom Dashboards
 Requirements: 1-7
 """
 
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 from hypothesis import given, settings, HealthCheck
 from hypothesis import strategies as st
 
 from app.models.custom_dashboard import (
-    Dashboard,
     DashboardWidget,
     DashboardTemplate,
     DashboardShare,
@@ -71,7 +70,7 @@ def test_widget_data_handler_dispatch(widget_type):
     from app.services.dashboard_service import DashboardService
 
     mock_db = MagicMock()
-    service = DashboardService(mock_db)
+    DashboardService(mock_db)
 
     # get_widget_data uses the handlers dict — we just verify the key exists
     assert widget_type in {

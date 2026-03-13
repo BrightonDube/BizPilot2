@@ -5,7 +5,6 @@ Tests reward catalog, tier benefits, and points redemption invariants.
 
 from decimal import Decimal
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

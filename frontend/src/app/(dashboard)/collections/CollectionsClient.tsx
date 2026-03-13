@@ -36,13 +36,20 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
+interface Rule {
+  id: string;
+  type: "tag" | "category" | "price" | "inventory";
+  operator: "is" | "is_not" | "greater_than" | "less_than" | "contains";
+  value: string | number | string[];
+}
+
 interface Collection {
   id: string;
   name: string;
   slug: string;
   description: string | null;
-  rules: any[] | null;
-  rule_logic: string;
+  rules: Rule[] | null;
+  rule_logic: "and" | "or";
   is_active: boolean;
   auto_update: boolean;
   product_count: number;
@@ -62,7 +69,7 @@ export default function CollectionsClient() {
     name: "",
     slug: "",
     description: "",
-    rule_logic: "and",
+    rule_logic: "and" as "and" | "or",
     auto_update: true,
   });
 
@@ -77,8 +84,9 @@ export default function CollectionsClient() {
         params: { active_only: false },
       });
       setCollections(res.data.items ?? res.data);
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to load collections");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error?.message ?? "Failed to load collections");
     } finally {
       setLoading(false);
     }
@@ -104,8 +112,9 @@ export default function CollectionsClient() {
         auto_update: true,
       });
       load();
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to create collection");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error?.message ?? "Failed to create collection");
     }
   };
 
@@ -113,8 +122,9 @@ export default function CollectionsClient() {
     try {
       await apiClient.delete(`/api/collections/${id}`);
       load();
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to delete");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error?.message ?? "Failed to delete");
     }
   };
 
@@ -122,8 +132,9 @@ export default function CollectionsClient() {
     try {
       await apiClient.post(`/api/collections/${id}/refresh`);
       load();
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to refresh");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error?.message ?? "Failed to refresh");
     }
   };
 
@@ -192,7 +203,7 @@ export default function CollectionsClient() {
                   className="w-full bg-gray-700 text-white border border-gray-600 rounded p-2"
                   value={form.rule_logic}
                   onChange={(e) =>
-                    setForm({ ...form, rule_logic: e.target.value })
+                    setForm({ ...form, rule_logic: e.target.value as "and" | "or" })
                   }
                 >
                   <option value="and">AND (all rules must match)</option>

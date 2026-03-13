@@ -9,12 +9,10 @@ while Xero is push-only.  Different conflict resolution and sync
 strategies require separate service logic.
 """
 
-import math
 from datetime import datetime, timezone
 from typing import Optional, Tuple, List
 from uuid import UUID
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.woocommerce import WooConnection, WooSyncMap

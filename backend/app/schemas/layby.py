@@ -39,6 +39,12 @@ class LaybyCancelRequest(BaseModel):
     reason: Optional[str] = None
 
 
+class RefundCreate(BaseModel):
+    """Request body for refunding a layby payment."""
+    reason: str
+    amount: Optional[Decimal] = None  # partial refund; None = full refund
+
+
 class LaybyConfigUpdate(BaseModel):
     min_deposit_percentage: Optional[Decimal] = None
     max_duration_days: Optional[int] = None
@@ -78,6 +84,9 @@ class PaymentResponse(BaseModel):
     payment_type: str
     status: str
     payment_reference: Optional[str] = None
+    refund_amount: Optional[Decimal] = None
+    refund_reason: Optional[str] = None
+    refunded_at: Optional[datetime] = None
     notes: Optional[str] = None
     created_at: datetime
 

@@ -7,15 +7,13 @@ Feature: Automated Report Emails
 Requirements: 3.1, 3.2, 3.3
 """
 
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 from app.services.report_subscription_service import ReportSubscriptionService
 from app.models.report_subscription import (
     ReportSubscription,
-    ReportDeliveryLog,
     ReportType,
     DeliveryFrequency,
     DeliveryStatus,
@@ -134,7 +132,7 @@ class TestInactiveSubscriptionExclusion:
         service, db = _make_service()
 
         active_sub = _make_sub(is_active=True)
-        inactive_sub = _make_sub(is_active=False)
+        _make_sub(is_active=False)
 
         query_mock = MagicMock()
         db.query.return_value = query_mock

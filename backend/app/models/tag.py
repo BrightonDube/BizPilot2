@@ -12,7 +12,6 @@ A JSONB array on the products table would require full-table scans for
 any of these operations.
 """
 
-import uuid
 
 from sqlalchemy import (
     Column,

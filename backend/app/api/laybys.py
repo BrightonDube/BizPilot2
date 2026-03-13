@@ -1,10 +1,13 @@
 """Laybys API endpoints."""
 
+import csv
+import io
 from datetime import date, timedelta
 from typing import Optional, List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 
 from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
@@ -17,6 +20,7 @@ from app.schemas.layby import (
     LaybyListResponse,
     PaymentCreate,
     PaymentResponse,
+    RefundCreate,
     ScheduleResponse,
     LaybyExtendRequest,
     LaybyCancelRequest,
@@ -116,6 +120,89 @@ async def summary_report(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get summary report: {str(e)}",
+        )
+
+
+@router.get("/reports/export")
+async def export_laybys_csv(
+    report_type: str = Query("active", description="Report type: active, overdue, aging, summary"),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Export a layby report as a CSV file.
+
+    Supported ``report_type`` values: active, overdue, aging, summary.
+    """
+    try:
+        service = LaybyReportService(db)
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        if report_type == "active":
+            data = service.get_active_laybys(business_id=business_id)
+            writer.writerow(["Metric", "Value"])
+            for key, val in data.items():
+                writer.writerow([key, val])
+
+        elif report_type == "overdue":
+            data = service.get_overdue_laybys(business_id=business_id)
+            writer.writerow(["Reference", "Customer ID", "Balance Due", "Next Payment", "Days Overdue"])
+            for lb in data.get("laybys", []):
+                writer.writerow([
+                    lb.get("reference_number"),
+                    lb.get("customer_id"),
+                    lb.get("balance_due"),
+                    lb.get("next_payment_date"),
+                    lb.get("days_overdue"),
+                ])
+
+        elif report_type == "aging":
+            data = service.get_aging_report(business_id=business_id)
+            writer.writerow(["Bucket", "Count", "Total Value", "Total Outstanding"])
+            for bucket_name, bucket_data in data.get("buckets", {}).items():
+                writer.writerow([
+                    bucket_name,
+                    bucket_data.get("count"),
+                    bucket_data.get("total_value"),
+                    bucket_data.get("total_outstanding"),
+                ])
+
+        elif report_type == "summary":
+            sd = start_date or (date.today() - timedelta(days=30))
+            ed = end_date or date.today()
+            data = service.get_summary(business_id=business_id, start_date=sd, end_date=ed)
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Period", f"{data['start_date']} to {data['end_date']}"])
+            writer.writerow(["Created Count", data["created"]["count"]])
+            writer.writerow(["Created Value", data["created"]["total_value"]])
+            writer.writerow(["Completed", data["completed"]["count"]])
+            writer.writerow(["Cancelled", data["cancelled"]["count"]])
+            writer.writerow(["Payments Count", data["payments"]["count"]])
+            writer.writerow(["Payments Total", data["payments"]["total"]])
+            writer.writerow(["Refunds Total", data["refunds"]["total"]])
+            writer.writerow(["Active Snapshot", data["active_snapshot"]["count"]])
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown report type: {report_type}",
+            )
+
+        output.seek(0)
+        filename = f"layby_{report_type}_report.csv"
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to export report: {str(e)}",
         )
 
 
@@ -329,6 +416,44 @@ async def get_schedule(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get schedule: {str(e)}",
+        )
+
+
+@router.post(
+    "/{layby_id}/payments/{payment_id}/refund",
+    response_model=PaymentResponse,
+)
+async def refund_payment(
+    layby_id: UUID,
+    payment_id: UUID,
+    data: RefundCreate,
+    current_user: User = Depends(get_current_active_user),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """Refund a specific layby payment (full or partial).
+
+    If ``amount`` is omitted the entire payment is refunded.
+    """
+    try:
+        service = LaybyService(db)
+        payment = service.refund_payment(
+            business_id=business_id,
+            layby_id=layby_id,
+            payment_id=payment_id,
+            reason=data.reason,
+            refunded_by=current_user.id,
+            refund_amount=data.amount,
+        )
+        return payment
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process refund: {str(e)}",
         )
 
 

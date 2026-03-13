@@ -521,7 +521,7 @@ class InventoryReportService:
                 InventoryTransaction.product_id,
                 Product.name.label("product_name"),
                 InventoryTransaction.transaction_type,
-                func.sum(func.abs(InventoryTransaction.quantity)).label("total_qty"),
+                func.sum(func.abs(InventoryTransaction.quantity_change)).label("total_qty"),
                 func.count(InventoryTransaction.id).label("incident_count"),
             )
             .join(Product, Product.id == InventoryTransaction.product_id)

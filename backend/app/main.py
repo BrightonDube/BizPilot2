@@ -23,6 +23,11 @@ from app.scheduler.jobs.overdue_invoice_job import check_overdue_invoices_job
 from app.scheduler.jobs.auto_clockout_job import auto_clock_out_job
 from app.scheduler.jobs.device_cleanup_job import device_cleanup_job
 from app.scheduler.jobs.demo_expiry_job import demo_expiry_job
+from app.scheduler.jobs.layby_jobs import (
+    layby_reminders_job,
+    layby_overdue_check_job,
+    layby_collection_reminder_job,
+)
 
 # Configure logging for performance monitoring
 logging.basicConfig(level=logging.INFO)
@@ -393,6 +398,42 @@ async def startup_event():
             hours=1,
             job_id='demo_expiry',
             name='Demo Expiry Check'
+        )
+
+        # Register auto clock-out job (runs hourly, checks each business's local timezone)
+        scheduler_manager.add_job(
+            auto_clock_out_job,
+            trigger='interval',
+            hours=1,
+            job_id='auto_clock_out',
+            name='Auto Clock-Out Day End'
+        )
+
+        # Register layby reminder job (daily at 7 AM UTC)
+        scheduler_manager.add_job(
+            layby_reminders_job,
+            trigger='cron',
+            cron_expression='0 7 * * *',
+            job_id='layby_reminders',
+            name='Layby Payment Reminders'
+        )
+
+        # Register layby overdue check (daily at 1 AM UTC)
+        scheduler_manager.add_job(
+            layby_overdue_check_job,
+            trigger='cron',
+            cron_expression='0 1 * * *',
+            job_id='layby_overdue_check',
+            name='Layby Overdue Check'
+        )
+
+        # Register layby collection reminder (daily at 9 AM UTC)
+        scheduler_manager.add_job(
+            layby_collection_reminder_job,
+            trigger='cron',
+            cron_expression='0 9 * * *',
+            job_id='layby_collection_reminder',
+            name='Layby Collection Reminder'
         )
 
         # Start scheduler

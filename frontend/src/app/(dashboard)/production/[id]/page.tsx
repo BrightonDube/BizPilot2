@@ -244,7 +244,7 @@ export default function ProductionDetailPage() {
                       />
                     </div>
                     <span className="text-sm text-gray-400 mt-1">
-                      {order.completion_percentage.toFixed(0)}% complete
+                      {safeToFixed(order.completion_percentage, 0)}% complete
                     </span>
                   </div>
                 </div>

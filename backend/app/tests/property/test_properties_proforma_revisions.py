@@ -5,7 +5,6 @@ Tests revision numbering, snapshot integrity, and quote lifecycle.
 
 from decimal import Decimal
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 
@@ -31,7 +30,7 @@ class TestProformaRevisionProperties:
         """
         sorted_revs = sorted(revisions)
         for i, rev in enumerate(sorted_revs):
-            expected = sorted_revs[0] + i
+            sorted_revs[0] + i
             # In a well-maintained system, revisions are 1, 2, 3, ...
             assert rev >= 1
 

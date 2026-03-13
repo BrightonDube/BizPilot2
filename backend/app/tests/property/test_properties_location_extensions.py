@@ -5,7 +5,6 @@ Tests location pricing, settings, and user access invariants.
 
 from decimal import Decimal
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -35,7 +34,7 @@ class TestLocationPricingProperties:
         Larger deviations likely indicate a data entry error.  The system
         should warn but not prevent — this test validates the warning logic.
         """
-        adjusted = base_price * (Decimal("1") + variance_pct / Decimal("100"))
+        base_price * (Decimal("1") + variance_pct / Decimal("100"))
         is_within_bounds = abs(variance_pct) <= Decimal("50")
         assert isinstance(is_within_bounds, bool)
 

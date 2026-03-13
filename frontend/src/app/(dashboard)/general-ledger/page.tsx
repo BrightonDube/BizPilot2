@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { PageHeader, Badge, LoadingSpinner, EmptyState } from '@/components/ui/bizpilot';
+import { PageHeader, LoadingSpinner, EmptyState } from '@/components/ui/bizpilot';
 import {
   BookOpen, FileText, Scale, BarChart3, Plus, ChevronDown, ChevronUp,
   Send, X, Trash2,
@@ -159,10 +159,12 @@ export default function GeneralLedgerPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'accounts') fetchAccounts();
-    else if (activeTab === 'journal') fetchJournalEntries();
-    else if (activeTab === 'trial-balance') fetchTrialBalance();
-    else if (activeTab === 'reports') setLoading(false);
+    Promise.resolve().then(() => {
+      if (activeTab === 'accounts') fetchAccounts();
+      else if (activeTab === 'journal') fetchJournalEntries();
+      else if (activeTab === 'trial-balance') fetchTrialBalance();
+      else if (activeTab === 'reports') setLoading(false);
+    });
   }, [activeTab, fetchAccounts, fetchJournalEntries, fetchTrialBalance]);
 
   const handleAddAccount = async () => {

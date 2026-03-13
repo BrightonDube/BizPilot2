@@ -7,7 +7,6 @@ business data models (orders, products, customers).
 
 from typing import List, Optional, Tuple, Any
 from datetime import datetime, timedelta, timezone
-import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from fastapi import HTTPException, status

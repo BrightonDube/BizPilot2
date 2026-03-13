@@ -18,9 +18,9 @@ later without touching the operational code.
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func, desc, asc, case, and_
+from sqlalchemy import func, desc, asc
 from sqlalchemy.orm import Session
 
 from app.models.combo import ComboDeal
@@ -53,7 +53,7 @@ class ModifierAnalyticsService:
         query = (
             self.db.query(
                 OrderItemModifier.modifier_name,
-                OrderItemModifier.group_name,
+                OrderItemModifier.modifier_group_name.label("group_name"),
                 func.count(OrderItemModifier.id).label("selection_count"),
             )
             .join(OrderItem, OrderItem.id == OrderItemModifier.order_item_id)
@@ -71,7 +71,7 @@ class ModifierAnalyticsService:
 
         results = (
             query
-            .group_by(OrderItemModifier.modifier_name, OrderItemModifier.group_name)
+            .group_by(OrderItemModifier.modifier_name, OrderItemModifier.modifier_group_name)
             .order_by(desc("selection_count"))
             .limit(limit)
             .all()
@@ -106,7 +106,7 @@ class ModifierAnalyticsService:
         query = (
             self.db.query(
                 OrderItemModifier.modifier_name,
-                OrderItemModifier.group_name,
+                OrderItemModifier.modifier_group_name.label("group_name"),
                 func.sum(OrderItemModifier.total_price).label("total_revenue"),
                 func.count(OrderItemModifier.id).label("selection_count"),
             )
@@ -122,7 +122,7 @@ class ModifierAnalyticsService:
 
         results = (
             query
-            .group_by(OrderItemModifier.modifier_name, OrderItemModifier.group_name)
+            .group_by(OrderItemModifier.modifier_name, OrderItemModifier.modifier_group_name)
             .order_by(desc("total_revenue"))
             .limit(limit)
             .all()
@@ -201,7 +201,7 @@ class ModifierAnalyticsService:
         query = (
             self.db.query(
                 OrderItemModifier.modifier_name,
-                OrderItemModifier.group_name,
+                OrderItemModifier.modifier_group_name.label("group_name"),
                 func.count(OrderItemModifier.id).label("selection_count"),
                 func.sum(OrderItemModifier.total_price).label("total_revenue"),
                 func.avg(OrderItemModifier.total_price).label("avg_price"),
@@ -217,7 +217,7 @@ class ModifierAnalyticsService:
         query = self._apply_date_filters(query, start_date, end_date)
 
         query = query.group_by(
-            OrderItemModifier.modifier_name, OrderItemModifier.group_name
+            OrderItemModifier.modifier_name, OrderItemModifier.modifier_group_name
         )
 
         if order_by == "unpopular":

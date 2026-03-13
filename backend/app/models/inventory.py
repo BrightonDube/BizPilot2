@@ -17,6 +17,10 @@ class TransactionType(str, enum.Enum):
     RETURN = "return"
     WRITE_OFF = "write_off"
     COUNT = "count"
+    WASTE = "waste"
+    DAMAGED = "damaged"
+    EXPIRED = "expired"
+    PRODUCTION = "production"
 
 
 class InventoryItem(BaseModel):

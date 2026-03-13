@@ -3,7 +3,7 @@ Inventory Reports API — endpoints for stock-level, movement, valuation,
 turnover, wastage, and dashboard reports.
 
 Exposes the InventoryReportService's 7 report types as REST endpoints
-with date-range filtering and pagination.
+with date-range filtering and pagination.  Includes CSV export.
 
 Why a dedicated inventory reports API?
 Inventory reports are read-heavy, computationally expensive, and often
@@ -12,10 +12,13 @@ transactional API responsive while allowing report endpoints to have
 their own caching and timeout strategies.
 """
 
+import csv
+import io
 from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_sync_db
@@ -177,3 +180,75 @@ async def get_inventory_dashboard(
         business_id=business_id,
     )
     return result
+
+
+@router.get("/export/stock-levels/csv")
+async def export_stock_levels_csv(
+    category_id: Optional[str] = Query(None),
+    low_stock_only: bool = Query(False),
+    business_id: UUID = Depends(get_current_business_id),
+    current_user=Depends(get_current_active_user),
+    db: Session = Depends(get_sync_db),
+):
+    """Export current stock levels as a CSV file."""
+    service = InventoryReportService(db)
+    report = service.get_stock_levels(
+        business_id=business_id,
+        category_id=category_id,
+        low_stock_only=low_stock_only,
+    )
+
+    output = io.StringIO()
+    fields = [
+        "product_name", "sku", "category_name", "current_stock",
+        "reorder_level", "cost_price", "selling_price", "stock_value",
+        "is_low_stock", "is_out_of_stock",
+    ]
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(report.get("items", []))
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=stock_levels.csv"},
+    )
+
+
+@router.get("/export/wastage/csv")
+async def export_wastage_csv(
+    start_date: str = Query(..., description="YYYY-MM-DD"),
+    end_date: str = Query(..., description="YYYY-MM-DD"),
+    business_id: UUID = Depends(get_current_business_id),
+    current_user=Depends(get_current_active_user),
+    db: Session = Depends(get_sync_db),
+):
+    """Export wastage report as a CSV file."""
+    from datetime import date as date_type
+
+    sd = date_type.fromisoformat(start_date)
+    ed = date_type.fromisoformat(end_date)
+
+    service = InventoryReportService(db)
+    report = service.get_wastage_report(
+        business_id=business_id,
+        start_date=sd,
+        end_date=ed,
+    )
+
+    output = io.StringIO()
+    fields = [
+        "product_name", "wastage_type", "quantity",
+        "incident_count", "estimated_value",
+    ]
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(report.get("items", []))
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=wastage_report.csv"},
+    )
