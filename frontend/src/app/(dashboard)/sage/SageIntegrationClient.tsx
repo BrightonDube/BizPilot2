@@ -35,6 +35,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import axios from "axios";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,7 +85,7 @@ interface QueueItem {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const statusBadge = (status: string) => {
+const statusBadge = (status: string): React.ReactElement => {
   const map: Record<string, "success" | "danger" | "warning" | "secondary"> = {
     connected: "success",
     disconnected: "secondary",
@@ -102,7 +103,7 @@ const statusBadge = (status: string) => {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function SageIntegrationClient() {
+export default function SageIntegrationClient(): React.ReactElement {
   const [tab, setTab] = useState<"connection" | "mappings" | "sync">(
     "connection"
   );
@@ -130,31 +131,31 @@ export default function SageIntegrationClient() {
   // Data fetching
   // ------------------------------------------------------------------
 
-  const loadConnection = useCallback(async () => {
+  const loadConnection = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await apiClient.get("/api/sage/status");
       setConnStatus(res.data);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load connection status");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load connection status"); }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const loadMappings = useCallback(async () => {
+  const loadMappings = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await apiClient.get("/api/sage/mappings");
       setMappings(res.data);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load mappings");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load mappings"); }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const loadSync = useCallback(async () => {
+  const loadSync = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const [historyRes, queueRes] = await Promise.all([
@@ -164,7 +165,7 @@ export default function SageIntegrationClient() {
       setSyncHistory(historyRes.data.items ?? []);
       setQueue(queueRes.data);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load sync data");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load sync data"); }
     } finally {
       setLoading(false);
     }
@@ -181,16 +182,16 @@ export default function SageIntegrationClient() {
   // Actions
   // ------------------------------------------------------------------
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = async (): Promise<void> => {
     try {
       await apiClient.post("/api/sage/disconnect");
       loadConnection();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to disconnect");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to disconnect"); }
     }
   };
 
-  const handleToggleSync = async () => {
+  const handleToggleSync = async (): Promise<void> => {
     if (!connStatus) return;
     try {
       await apiClient.post("/api/sage/toggle-sync", {
@@ -198,11 +199,11 @@ export default function SageIntegrationClient() {
       });
       loadConnection();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to toggle sync");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to toggle sync"); }
     }
   };
 
-  const handleSaveMapping = async () => {
+  const handleSaveMapping = async (): Promise<void> => {
     try {
       await apiClient.post("/api/sage/mappings", mappingForm);
       setShowAddMapping(false);
@@ -214,16 +215,16 @@ export default function SageIntegrationClient() {
       });
       loadMappings();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to save mapping");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to save mapping"); }
     }
   };
 
-  const handleRetryQueueItem = async (id: string) => {
+  const handleRetryQueueItem = async (id: string): Promise<void> => {
     try {
       await apiClient.post(`/api/sage/sync/queue/${id}/retry`);
       loadSync();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to retry item");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to retry item"); }
     }
   };
 

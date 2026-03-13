@@ -66,7 +66,7 @@ function getDefaultDates() {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export default function SalesReportsPage() {
+export default function SalesReportsPage(): React.ReactElement {
   const defaults = getDefaultDates();
   const [activeTab, setActiveTab] = useState<TabKey>('daily');
   const [startDate, setStartDate] = useState(defaults.start);
@@ -75,7 +75,7 @@ export default function SalesReportsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -144,7 +144,7 @@ export default function SalesReportsPage() {
 
   const exportableTypes = ['products', 'categories', 'payments', 'discounts', 'refunds'];
 
-  const handleExportCSV = async () => {
+  const handleExportCSV = async (): Promise<void> => {
     if (!exportableTypes.includes(activeTab)) return;
     try {
       const res = await apiClient.get('/reports/export/csv', {

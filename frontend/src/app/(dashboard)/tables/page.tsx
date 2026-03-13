@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/api';
 import { Plus, Grid3X3, RefreshCw, Users, Loader2, Edit2, Trash2, X } from 'lucide-react';
+import axios from 'axios';
 
 interface RestaurantTable {
   id: string;
@@ -27,7 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   blocked: 'bg-gray-100 border-gray-500 text-gray-800',
 };
 
-export default function TablesPage() {
+export default function TablesPage(): React.ReactElement {
   const [tables, setTables] = useState<RestaurantTable[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -40,12 +41,12 @@ export default function TablesPage() {
     position_y: 0,
   });
 
-  const fetchTables = useCallback(async () => {
+  const fetchTables = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       const res = await apiClient.get('/tables/floor-plan');
       setTables(res.data);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to fetch tables:', err);
     } finally {
       setLoading(false);
@@ -56,44 +57,68 @@ export default function TablesPage() {
     fetchTables();
   }, [fetchTables]);
 
-  const handleCreate = async () => {
+  const handleCreate = async (): Promise<void> => {
     try {
       await apiClient.post('/tables', formData);
       setShowCreateModal(false);
       setFormData({ table_number: '', capacity: 4, section: '', position_x: 0, position_y: 0 });
       fetchTables();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to create table');
+    } catch (err: unknown) {
+      let message = 'Failed to create table';
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.detail || err.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      alert(message);
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (): Promise<void> => {
     if (!editTable) return;
     try {
-      await apiClient.put(`/tables/${editTable.id}`, formData);
+      await apiClient.put('/tables/' + editTable.id, formData);
       setEditTable(null);
       fetchTables();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to update table');
+    } catch (err: unknown) {
+      let message = 'Failed to update table';
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.detail || err.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      alert(message);
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string): Promise<void> => {
     if (!confirm('Delete this table?')) return;
     try {
-      await apiClient.delete(`/tables/${id}`);
+      await apiClient.delete('/tables/' + id);
       fetchTables();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to delete table');
+    } catch (err: unknown) {
+      let message = 'Failed to delete table';
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.detail || err.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      alert(message);
     }
   };
 
-  const handleStatusChange = async (id: string, status: string) => {
+  const handleStatusChange = async (id: string, status: string): Promise<void> => {
     try {
-      await apiClient.patch(`/tables/${id}/status`, { status });
+      await apiClient.patch('/tables/' + id + '/status', { status });
       fetchTables();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to update status');
+    } catch (err: unknown) {
+      let message = 'Failed to update status';
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.detail || err.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      alert(message);
     }
   };
 
@@ -108,10 +133,10 @@ export default function TablesPage() {
     reserved: tables.filter(t => t.status === 'reserved').length,
   };
 
-  function renderTableCard(table: RestaurantTable) {
+  function renderTableCard(table: RestaurantTable): React.ReactElement {
     const colors = STATUS_COLORS[table.status] || STATUS_COLORS.available;
     return (
-      <div key={table.id} className={`border-2 rounded-lg p-4 ${colors} cursor-pointer transition-all hover:shadow-md`}>
+      <div key={table.id} className={'border-2 rounded-lg p-4 ' + colors + ' cursor-pointer transition-all hover:shadow-md'}>
         <div className="flex justify-between items-start mb-2">
           <span className="text-lg font-bold">{table.table_number}</span>
           <div className="flex gap-1">

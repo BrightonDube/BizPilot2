@@ -35,6 +35,7 @@ import {
   BarChart3,
   Award,
 } from "lucide-react";
+import axios from "axios";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -85,12 +86,12 @@ interface LeaderboardEntry {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const formatCurrency = (val: number) =>
+const formatCurrency = (val: number): string =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(
     val
   );
 
-const statusBadge = (status: string) => {
+const statusBadge = (status: string): React.ReactElement => {
   const map: Record<string, "success" | "warning" | "danger" | "secondary"> = {
     active: "warning",
     achieved: "success",
@@ -100,14 +101,14 @@ const statusBadge = (status: string) => {
   return <Badge variant={map[status] ?? "secondary"}>{status}</Badge>;
 };
 
-const progressPct = (achieved: number, target: number) =>
+const progressPct = (achieved: number, target: number): number =>
   target > 0 ? Math.min(100, Math.round((achieved / target) * 100)) : 0;
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export default function StaffTargetsClient() {
+export default function StaffTargetsClient(): React.ReactElement {
   // Tab state
   const [tab, setTab] = useState<
     "targets" | "leaderboard" | "incentives" | "performance"
@@ -143,7 +144,7 @@ export default function StaffTargetsClient() {
   // Data fetching
   // ------------------------------------------------------------------
 
-  const loadTargets = useCallback(async () => {
+  const loadTargets = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const [targetsRes, templatesRes] = await Promise.all([
@@ -153,13 +154,13 @@ export default function StaffTargetsClient() {
       setTargets(targetsRes.data.items ?? targetsRes.data);
       setTemplates(templatesRes.data);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load targets");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load targets"); }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const loadLeaderboard = useCallback(async () => {
+  const loadLeaderboard = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await apiClient.get("/api/staff-targets/leaderboard", {
@@ -167,19 +168,19 @@ export default function StaffTargetsClient() {
       });
       setLeaderboard(res.data);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load leaderboard");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load leaderboard"); }
     } finally {
       setLoading(false);
     }
   }, [metric]);
 
-  const loadIncentives = useCallback(async () => {
+  const loadIncentives = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await apiClient.get("/api/staff-targets/incentives");
       setIncentives(res.data);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load incentives");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load incentives"); }
     } finally {
       setLoading(false);
     }
@@ -198,7 +199,7 @@ export default function StaffTargetsClient() {
   // Actions
   // ------------------------------------------------------------------
 
-  const handleCreateTarget = async () => {
+  const handleCreateTarget = async (): Promise<void> => {
     try {
       await apiClient.post("/api/staff-targets", {
         ...form,
@@ -215,16 +216,16 @@ export default function StaffTargetsClient() {
       });
       loadTargets();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to create target");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to create target"); }
     }
   };
 
-  const handleDeleteTarget = async (id: string) => {
+  const handleDeleteTarget = async (id: string): Promise<void> => {
     try {
       await apiClient.delete(`/api/staff-targets/${id}`);
       loadTargets();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to delete target");
+      if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to delete target"); }
     }
   };
 
