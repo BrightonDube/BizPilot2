@@ -107,7 +107,7 @@ class RedisManager:
                     import ssl
                     connection_kwargs["ssl"] = ssl.create_default_context()
                 except ImportError:
-                    logger.warning("SSL support requested but ssl module not available")
+                    logger.error("SSL support requested but ssl module not available")
             
             self._redis = await aioredis.from_url(
                 redis_url,
@@ -120,9 +120,9 @@ class RedisManager:
             logger.info(f"Redis connected successfully: {redis_url.split('@')[-1]}")  # Don't log password
             
         except (RedisError, RedisConnectionError, Exception) as e:
-            logger.warning(
+            logger.error(
                 f"Redis connection failed: {e}. "
-                "Falling back to direct database queries."
+                "Caching and rate limiting are DISABLED. Falling back to direct database queries."
             )
             self._redis = None
             self._available = False

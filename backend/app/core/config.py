@@ -1,7 +1,7 @@
 """Application configuration settings."""
 
 import json
-from typing import List, Union
+from typing import List, Union, Optional
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from urllib.parse import urlparse
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/bizpilot"
 
     # Redis (Optional - for caching and sessions when implemented)
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: Optional[str] = "redis://localhost:6379/0"
 
     # JWT
     SECRET_KEY: str
