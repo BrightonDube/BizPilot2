@@ -33,10 +33,17 @@ import axios from 'axios';
 interface StockLevelItem {
   product_id: string;
   product_name: string;
+  name?: string;
   sku?: string;
+  category?: string;
+  category_name?: string;
   current_stock: number;
+  quantity_in_stock?: number;
+  stock?: number;
   reorder_level?: number;
+  reorder_point?: number;
   unit_cost?: number;
+  cost_price?: number;
   stock_value?: number;
 }
 
@@ -52,10 +59,15 @@ interface StockLevelsReportData {
 interface StockMovementItem {
   product_id: string;
   product_name: string;
+  name?: string;
   movement_type: string;
+  type?: string;
   quantity: number;
   date: string;
+  created_at?: string;
   reference?: string;
+  reference_number?: string;
+  notes?: string;
 }
 
 interface StockMovementsReportData {
@@ -70,9 +82,15 @@ interface StockMovementsReportData {
 interface ValuationItem {
   product_id: string;
   product_name: string;
+  name?: string;
+  sku?: string;
   quantity: number;
+  quantity_in_stock?: number;
   unit_cost: number;
+  cost_price?: number;
   total_value: number;
+  stock_value?: number;
+  percentage?: number;
 }
 
 interface ValuationReportData {
@@ -88,8 +106,15 @@ interface ValuationReportData {
 interface TurnoverItem {
   product_id: string;
   product_name: string;
+  name?: string;
+  units_sold?: number;
+  quantity_sold?: number;
+  average_stock?: number;
+  avg_inventory?: number;
   turnover_rate?: number;
   days_to_sell?: number;
+  revenue?: number;
+  total_revenue?: number;
   category?: string;
 }
 
@@ -105,10 +130,18 @@ interface TurnoverReportData {
 interface SupplierPerformanceItem {
   supplier_id: string;
   supplier_name: string;
+  name?: string;
   total_orders: number;
+  order_count?: number;
+  orders?: number;
+  items_supplied?: number;
+  total_items?: number;
   total_spend: number;
+  amount?: number;
   average_lead_time?: number;
+  avg_lead_time?: number;
   on_time_delivery_rate?: number;
+  on_time_percentage?: number;
 }
 
 interface SupplierPerformanceReportData {
