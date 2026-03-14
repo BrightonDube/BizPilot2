@@ -6,14 +6,10 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  type TooltipContentProps,
   XAxis,
   YAxis,
 } from 'recharts'
 import { chartTheme } from './ChartRegistry'
-
-type ChartValue = number | string
-type ChartName = string | number
 
 interface Product {
   name: string
@@ -41,7 +37,7 @@ export function ProfitMarginChart({ products }: ProfitMarginChartProps) {
 
   const maxMargin = Math.max(0, ...products.map((p) => p.profit_margin))
 
-  const renderTooltip = ({ active, payload, label }: TooltipContentProps<ChartValue, ChartName>) => {
+  const renderTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null
     const value = toNumber(payload[0]?.value, 0)
 
