@@ -39,8 +39,9 @@ services:
     # WHY 60s initial_delay: On the 0.5GB starter instance, gunicorn workers
     # need time to import all modules + run startup_event (Redis, scheduler).
     # 30s was too tight and caused deployment failures.
+    # NOTE: Health check path must include /api prefix due to ingress routing
     health_check:
-      http_path: /health/liveness
+      http_path: /api/health/liveness
       initial_delay_seconds: 60
       period_seconds: 30
       timeout_seconds: 10
