@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  type TooltipContentProps,
   Cell,
   Legend,
   Pie,
@@ -23,9 +22,6 @@ interface CostBreakdownChartProps {
   data: CostBreakdownData
 }
 
-type ChartValue = number | string
-type ChartName = string | number
-
 function toNumber(value: unknown, fallback = 0): number {
   if (value === null || value === undefined) return fallback
   if (typeof value === 'number') return Number.isFinite(value) ? value : fallback
@@ -41,7 +37,7 @@ export function CostBreakdownChart({ data }: CostBreakdownChartProps) {
     { name: 'Labor Costs', value: data.laborCost, color: chartTheme.colors.accent },
   ]
 
-  const renderTooltip = ({ active, payload }: TooltipContentProps<ChartValue, ChartName>) => {
+  const renderTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null
     const item = payload[0]
     const value = toNumber(item?.value, 0)
