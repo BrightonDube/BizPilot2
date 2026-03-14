@@ -17,6 +17,15 @@ interface OrderHistoryItem {
   tab_name: string | null;
 }
 
+interface OrderStatusHistory {
+  id: string;
+  old_status: string | null;
+  new_status: string;
+  reason: string | null;
+  changed_at: string;
+  changed_by: string;
+}
+
 const STATUS_BADGES: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
   pending: 'bg-yellow-100 text-yellow-700',
@@ -49,7 +58,7 @@ export default function OrderHistoryPage(): React.ReactElement {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
-  const [statusHistory, setStatusHistory] = useState<any[]>([]);
+  const [statusHistory, setStatusHistory] = useState<OrderStatusHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
   const fetchOrders = useCallback(async (): Promise<void> => {
