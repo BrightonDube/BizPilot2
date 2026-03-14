@@ -6,16 +6,12 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  type TooltipContentProps,
   XAxis,
   YAxis,
 } from 'recharts'
 import { useCurrency } from '@/hooks/useCurrency'
 import { formatCurrency } from '@/lib/utils'
 import { chartTheme } from './ChartRegistry'
-
-type ChartValue = number | string
-type ChartName = string | number
 
 interface Product {
   name: string
@@ -58,7 +54,7 @@ export function ProfitTrendChart({ products }: ProfitTrendChartProps) {
     })
   }
 
-  const renderTooltip = ({ active, payload, label }: TooltipContentProps<ChartValue, ChartName>) => {
+  const renderTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null
     const profit = toNumber(payload[0]?.value, 0)
     const dailyProfit = toNumber((payload[0]?.payload as { dailyProfit?: unknown } | undefined)?.dailyProfit, 0)

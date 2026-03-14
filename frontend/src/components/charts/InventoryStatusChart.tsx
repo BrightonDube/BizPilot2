@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  type TooltipContentProps,
   Cell,
   Legend,
   Pie,
@@ -10,9 +9,6 @@ import {
   Tooltip,
 } from 'recharts'
 import { chartTheme } from './ChartRegistry'
-
-type ChartValue = number | string
-type ChartName = string | number
 
 interface InventoryItem {
   name: string
@@ -44,7 +40,7 @@ export function InventoryStatusChart({ inventory }: InventoryStatusChartProps) {
     { name: 'Out of Stock', value: outOfStock, color: chartTheme.colors.danger },
   ]
 
-  const renderTooltip = ({ active, payload }: TooltipContentProps<ChartValue, ChartName>) => {
+  const renderTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null
     const item = payload[0]
     const value = toNumber(item?.value, 0)
