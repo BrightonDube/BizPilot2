@@ -257,6 +257,7 @@ async def get_csrf_token(request: Request):
 
 
 @app.get("/health/liveness")
+@app.get("/api/health/liveness")  # For ingress routing with /api prefix
 async def liveness_check():
     """
     Kubernetes liveness probe - is the app running?
