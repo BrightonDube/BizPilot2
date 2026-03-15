@@ -12,6 +12,15 @@ from app.models.business_time_settings import BusinessTimeSettings
 from app.models.business_user import BusinessUser
 
 
+def _make_aware(dt: datetime) -> datetime:
+    """Ensure datetime is UTC-aware. If naive, assume it is UTC."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 class TimeTrackingService:
     """Service for managing time tracking operations."""
 
@@ -309,8 +318,12 @@ class TimeTrackingService:
         if not entry.clock_in or not entry.clock_out:
             return
         
+        # Ensure both datetimes are UTC-aware
+        clock_in = _make_aware(entry.clock_in)
+        clock_out = _make_aware(entry.clock_out)
+        
         # Calculate total hours
-        total_seconds = (entry.clock_out - entry.clock_in).total_seconds()
+        total_seconds = (clock_out - clock_in).total_seconds()
         entry.hours_worked = Decimal(str(total_seconds)) / Decimal("3600")
         
         # Calculate break duration if not manually set
@@ -327,7 +340,11 @@ class TimeTrackingService:
     def _calculate_break_duration(self, entry: TimeEntry) -> None:
         """Calculate break duration for a time entry."""
         if entry.break_start and entry.break_end:
-            break_seconds = (entry.break_end - entry.break_start).total_seconds()
+            # Ensure both datetimes are UTC-aware
+            break_start = _make_aware(entry.break_start)
+            break_end = _make_aware(entry.break_end)
+            
+            break_seconds = (break_end - break_start).total_seconds()
             entry.break_duration = (Decimal(str(break_seconds)) / Decimal("3600")).quantize(Decimal("0.01"))
 
     def _calculate_current_hours(self, entry: TimeEntry) -> Decimal:
@@ -336,17 +353,21 @@ class TimeTrackingService:
             return Decimal("0")
         
         now = datetime.now(timezone.utc)
-        total_seconds = (now - entry.clock_in).total_seconds()
+        clock_in = _make_aware(entry.clock_in)
+        
+        total_seconds = (now - clock_in).total_seconds()
         
         # Subtract break time if on break
         break_seconds = 0
         if entry.break_start:
+            break_start = _make_aware(entry.break_start)
             if entry.break_end:
                 # Break completed
-                break_seconds = (entry.break_end - entry.break_start).total_seconds()
+                break_end = _make_aware(entry.break_end)
+                break_seconds = (break_end - break_start).total_seconds()
             else:
                 # Currently on break
-                break_seconds = (now - entry.break_start).total_seconds()
+                break_seconds = (now - break_start).total_seconds()
         
         net_seconds = max(0, total_seconds - break_seconds)
         hours = Decimal(str(net_seconds)) / Decimal("3600")

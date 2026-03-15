@@ -436,11 +436,14 @@ async def create_order(
                     ],
                     reply_to=reply_to_email,
                 )
-            except Exception:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to send supplier email",
+            except Exception as e:
+                # Log email failure but don't crash the order creation
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(
+                    f"Failed to send supplier email for order {order.order_number}: {str(e)}"
                 )
+                # Continue without email - order is still saved
 
     items = service.get_order_items(str(order.id))
     return _order_to_response(order, items)
