@@ -174,10 +174,11 @@ export function GlobalAIChat() {
           session_id: guestSession.session?.id,
         });
       } else {
-        // For business context, use authenticated AI endpoint
-        response = await apiClient.post('/ai/chat', {
+        // For business context, use authenticated agent endpoint
+        response = await apiClient.post('/agents/chat', {
           message: trimmed,
           conversation_id: conversationId,
+          session_id: conversationId || `session_${Date.now()}`,
         });
       }
 
@@ -189,7 +190,7 @@ export function GlobalAIChat() {
       const assistantMessage: ChatMessage = {
         id: `${Date.now()}-assistant`,
         role: 'assistant',
-        content: String(response.data?.response ?? ''),
+        content: String(response.data?.message || response.data?.response || ''),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
