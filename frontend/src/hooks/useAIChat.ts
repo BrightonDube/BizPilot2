@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiClient } from '@/lib/api'
-import type { AgentChatRequest, AgentConfirmRequest, AgentResponse } from '@/types/agent'
+import type { AgentChatRequest, AgentResponse } from '@/types/agent'
 
 export type AIDataSharingLevel =
   | 'none'
@@ -176,9 +176,9 @@ export function useAIChat() {
 
         // refresh the conversation list (title/updated_at changes)
         void fetchConversations()
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to send message:', err)
-        const errorMessage = err.response?.data?.detail || err.message || 'Failed to send message'
+        const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || (err as Error).message || 'Failed to send message'
         setError(errorMessage)
       } finally {
         setLoading(false)
@@ -225,9 +225,9 @@ export function useAIChat() {
 
         setMessages((prev) => [...prev, resultMessage])
         setPendingAction(null)
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to confirm action:', err)
-        const errorMessage = err.response?.data?.detail || err.message || 'Failed to confirm action'
+        const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || (err as Error).message || 'Failed to confirm action'
         setError(errorMessage)
       } finally {
         setLoading(false)

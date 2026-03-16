@@ -22,7 +22,7 @@ export type AgentResponse = {
 
 export type HITLActionRequest = {
   // No body needed - session_id is in the path
-}
+} | Record<string, never>
 
 // For backward compatibility with existing AI chat
 export type AIConversation = {
