@@ -65,8 +65,13 @@ export function EmailAuthForm({ mode, onModeChange, onSuccess }: EmailAuthFormPr
           await login(email, password, show2FA ? twoFactorCode : undefined)
           onSuccess?.()
           router.push('/dashboard')
-        } catch (err: any) {
-          if (err.response?.data?.detail === '2FA_REQUIRED') {
+        } catch (err: unknown) {
+          if (
+            typeof err === 'object' && 
+            err !== null && 
+            'response' in err && 
+            (err as { response?: { data?: { detail?: string } } }).response?.data?.detail === '2FA_REQUIRED'
+          ) {
             setShow2FA(true)
             setLocalError('Please enter your 2FA code')
           } else {
