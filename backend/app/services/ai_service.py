@@ -4,7 +4,6 @@ This service provides only the methods needed by the agent system and user setti
 The full AI chat functionality has been migrated to the agent system.
 """
 
-from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models.user_settings import UserSettings, AIDataSharingLevel
