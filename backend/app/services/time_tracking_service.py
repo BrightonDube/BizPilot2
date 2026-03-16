@@ -94,6 +94,8 @@ class TimeTrackingService:
             active_entry.auto_clock_out_reason = reason or "Auto clocked out at day end"
             active_entry.hours_worked = settings.auto_clock_out_penalty_hours
             active_entry.net_hours = settings.auto_clock_out_penalty_hours
+            if hasattr(active_entry, 'penalty_hours'):
+                 active_entry.penalty_hours = Decimal("0.00")
         else:
             # Calculate actual hours
             self._calculate_hours(active_entry)
@@ -215,8 +217,10 @@ class TimeTrackingService:
             
             gross_hours = sum(entry.hours_worked or Decimal("0") for entry in entries)
             break_hours = sum(entry.break_duration or Decimal("0") for entry in entries)
+            penalty_hours = sum(entry.penalty_hours if hasattr(entry, 'penalty_hours') and entry.penalty_hours else Decimal("0") for entry in entries)
             net_hours = sum(entry.net_hours or Decimal("0") for entry in entries)
             entry_count = len([e for e in entries if e.clock_out])  # Only completed entries
+            auto_clockout_count = len([e for e in entries if getattr(e, 'is_auto_clocked_out', False)])
             
             report.append({
                 "user_id": str(user.id),
@@ -224,8 +228,10 @@ class TimeTrackingService:
                 "email": user.email,
                 "total_hours": float(gross_hours),
                 "break_hours": float(break_hours),
+                "penalty_hours": float(penalty_hours),
                 "net_hours": float(net_hours),
                 "entries": entry_count,
+                "auto_clockout_count": auto_clockout_count,
                 "entries_data": entries
             })
         
@@ -329,9 +335,14 @@ class TimeTrackingService:
         # Calculate break duration if not manually set
         if entry.break_start and entry.break_end and not entry.break_duration:
             self._calculate_break_duration(entry)
+            
+        penalty_hours = entry.penalty_hours if hasattr(entry, 'penalty_hours') and entry.penalty_hours else Decimal("0")
         
         # Calculate net hours
-        entry.net_hours = entry.hours_worked - (entry.break_duration or Decimal("0"))
+        entry.net_hours = entry.hours_worked - (entry.break_duration or Decimal("0")) - penalty_hours
+        
+        if entry.net_hours < Decimal("0"):
+            entry.net_hours = Decimal("0")
         
         # Round to 2 decimal places
         entry.hours_worked = entry.hours_worked.quantize(Decimal("0.01"))

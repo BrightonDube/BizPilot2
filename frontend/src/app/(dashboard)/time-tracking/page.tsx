@@ -16,6 +16,7 @@ import {
   Download,
   Filter,
   Timer,
+  AlertTriangle,
   CheckCircle,
   XCircle,
   Pencil,
@@ -71,7 +72,10 @@ interface PayrollReportItem {
   email: string;
   total_hours: number;
   total_break_hours: number;
+  penalty_hours: number;
+  net_hours: number;
   entries_count: number;
+  auto_clockout_count: number;
 }
 
 export default function TimeTrackingPage() {
@@ -634,6 +638,7 @@ export default function TimeTrackingPage() {
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Email</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Total Hours</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Break Hours</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Penalty Hours</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Net Hours</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Entries</th>
                       </tr>
@@ -641,16 +646,32 @@ export default function TimeTrackingPage() {
                     <tbody>
                       {payrollReport.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center py-8 text-gray-500">No payroll data for this period</td>
+                          <td colSpan={7} className="text-center py-8 text-gray-500">No payroll data for this period</td>
                         </tr>
                       ) : (
                         payrollReport.map((item) => (
                           <tr key={item.user_id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                            <td className="py-3 px-4 text-sm text-white font-medium">{item.user_name}</td>
+                            <td className="py-3 px-4 text-sm text-white font-medium">
+                              <div className="flex items-center gap-2">
+                                {item.user_name}
+                                {item.auto_clockout_count > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                    <AlertTriangle className="w-3 h-3" />
+                                    Auto CO: {item.auto_clockout_count}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
                             <td className="py-3 px-4 text-sm text-gray-300">{item.email}</td>
                             <td className="py-3 px-4 text-sm text-white">{item.total_hours.toFixed(2)}</td>
                             <td className="py-3 px-4 text-sm text-gray-300">{item.total_break_hours.toFixed(2)}</td>
-                            <td className="py-3 px-4 text-sm text-green-400 font-medium">{item.total_hours.toFixed(2)}</td>
+                            <td className={`py-3 px-4 text-sm ${item.penalty_hours > 0 ? 'text-red-400 flex items-center gap-1' : 'text-gray-300'}`}>
+                              {item.penalty_hours > 0 && <AlertTriangle className="w-4 h-4" />}
+                              {item.penalty_hours.toFixed(2)}
+                            </td>
+                            <td className={`py-3 px-4 text-sm font-medium ${item.net_hours > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {item.net_hours.toFixed(2)}
+                            </td>
                             <td className="py-3 px-4 text-sm text-gray-300">{item.entries_count}</td>
                           </tr>
                         ))
