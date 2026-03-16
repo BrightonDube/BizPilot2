@@ -5,16 +5,17 @@ Revises: 019_add_departments
 Create Date: 2026-01-16
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '020_add_department_id'
 down_revision = '019_add_departments'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # Add department_id column to business_users table
@@ -32,7 +33,6 @@ def upgrade() -> None:
     
     # Create index on department_id for query performance
     op.create_index('ix_business_users_department_id', 'business_users', ['department_id'])
-
 
 def downgrade() -> None:
     op.drop_index('ix_business_users_department_id', table_name='business_users')

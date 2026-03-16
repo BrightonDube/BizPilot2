@@ -13,15 +13,15 @@ Why separate scope and counters tables?
   duplicate assignments via the unique constraint.
 """
 
-revision = "078_stock_take_scope_counters"
-down_revision = "077_inventory_report_configs"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
+revision = "078_stock_take_scope_counters"
+down_revision = "077_inventory_report_configs"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     # Partial count scoping
@@ -48,7 +48,6 @@ def upgrade() -> None:
 
     op.create_index("ix_stock_take_counters_session_id", "stock_take_counters", ["session_id"])
     op.create_index("ix_stock_take_counters_user_id", "stock_take_counters", ["user_id"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_stock_take_counters_user_id")

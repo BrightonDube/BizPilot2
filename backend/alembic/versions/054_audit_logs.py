@@ -5,17 +5,17 @@ Revises: 053_online_ordering
 Create Date: 2025-01-27 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '054_audit_logs'
 down_revision: Union[str, None] = '053_online_ordering'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create enum
@@ -45,7 +45,6 @@ def upgrade() -> None:
     )
 
     op.create_index('ix_user_audit_logs_action', 'user_audit_logs', ['action'])
-
 
 def downgrade() -> None:
     op.drop_table('user_audit_logs')

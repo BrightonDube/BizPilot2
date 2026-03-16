@@ -5,16 +5,17 @@ Revises: 021_merge_heads
 Create Date: 2026-01-17
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '022_add_layby_config'
 down_revision = '021_merge_heads'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create layby_config table for storing layby configuration settings.
@@ -71,7 +72,6 @@ def upgrade() -> None:
     op.create_index('ix_layby_config_business_id', 'layby_config', ['business_id'])
     op.create_index('ix_layby_config_location_id', 'layby_config', ['location_id'])
     op.create_index('ix_layby_config_is_enabled', 'layby_config', ['is_enabled'])
-
 
 def downgrade() -> None:
     """Drop layby_config table and its indexes."""

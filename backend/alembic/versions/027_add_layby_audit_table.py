@@ -5,16 +5,17 @@ Revises: 026_add_layby_payments
 Create Date: 2026-01-17
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '027_add_layby_audit'
 down_revision = '026_add_layby_payments'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create layby_audit table for tracking all changes and actions on laybys.
@@ -79,7 +80,6 @@ def upgrade() -> None:
     
     # Create index for searching by date range (Requirement 11.8 - search by date range)
     op.create_index('idx_layby_audit_created', 'layby_audit', ['created_at'])
-
 
 def downgrade() -> None:
     """Drop layby_audit table and its indexes."""

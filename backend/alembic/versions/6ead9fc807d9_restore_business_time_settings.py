@@ -5,18 +5,18 @@ Revises: 040_report_subs
 Create Date: 2026-02-04 01:57:43.288784
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '6ead9fc807d9'
 down_revision: Union[str, None] = '040_report_subs'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     op.create_table('business_time_settings',
@@ -35,7 +35,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id', name=op.f('business_time_settings_pkey')),
         sa.UniqueConstraint('business_id', name=op.f('business_time_settings_business_id_key'))
     )
-
 
 def downgrade() -> None:
     op.drop_table('business_time_settings')

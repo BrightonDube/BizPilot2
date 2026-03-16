@@ -12,15 +12,15 @@ event type (mapping_type).  source_id optionally narrows the mapping to a
 specific entity such as a product category or payment method.
 """
 
-revision = "076_gl_account_mappings"
-down_revision = "075_expense_approvals"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
+revision = "076_gl_account_mappings"
+down_revision = "075_expense_approvals"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -42,7 +42,6 @@ def upgrade() -> None:
         ["business_id", "mapping_type", "source_id"],
         unique=True,
     )
-
 
 def downgrade() -> None:
     op.drop_index("ix_gl_account_mappings_type_source")

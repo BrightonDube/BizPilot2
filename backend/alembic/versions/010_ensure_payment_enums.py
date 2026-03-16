@@ -6,17 +6,16 @@ Create Date: 2025-01-08 00:00:00.000000
 
 """
 
-from typing import Sequence, Union
-
 from alembic import op
 
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = "010_ensure_pay_enums"
 down_revision: Union[str, None] = "009_ai_chat_and_user_settings"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     """
@@ -81,7 +80,6 @@ def upgrade() -> None:
         END $$;
         """
     )
-
 
 def downgrade() -> None:
     # Cannot remove enum values in PostgreSQL, so downgrade is a no-op

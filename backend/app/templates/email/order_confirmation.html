@@ -1,0 +1,11 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+    <h2>Order Confirmation: {{ order_number }}</h2>
+    <p>Thank you for your order, {{ customer_name }}!</p>
+    <p>Your order for <strong>{{ currency_symbol }}{{ amount }}</strong> has been received and is being processed.</p>
+    <p>
+        <a href="{{ order_url }}" class="button">Track Order Status</a>
+    </p>
+    <p>We'll notify you when your order is ready for delivery.</p>
+{% endblock %}

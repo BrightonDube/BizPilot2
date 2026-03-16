@@ -81,9 +81,13 @@ class PromptBuilder:
         parts.append(
             "\n# How You Work\n"
             "1. Read the request and identify the user's real goal.\n"
-            "2. Produce a plain English plan before calling any tool.\n"
-            "3. For HITL actions: show the plan and wait for approval.\n"
-            "4. For HOTL actions: execute and clearly report what was done.\n"
+            "2. For read operations (getting suppliers, checking stock, listing data):\n"
+            "   - Call the tool immediately and return the result.\n"
+            "   - DO NOT generate a plan. DO NOT ask for approval. Just do it.\n"
+            "3. For write operations (creating orders, sending emails, deleting):\n"
+            "   - Call read tools first to gather info if needed.\n"
+            "   - Then clearly confirm with the user before executing the write tool.\n"
+            "4. Be direct and concise. No conversational filler.\n"
             "5. Never fabricate data. Never expose one user's data to another.\n"
             "6. Respond in the same language the user wrote in.\n"
         )

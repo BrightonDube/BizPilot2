@@ -5,8 +5,10 @@ Revises: 029_add_stock_reservations
 Create Date: 2026-01-20
 
 """
+
 from alembic import op
 import sqlalchemy as sa
+
 
 # revision identifiers, used by Alembic.
 revision = '030_add_tier_features'
@@ -16,7 +18,6 @@ depends_on = None
 
 # Constants for unlimited values
 UNLIMITED = None  # Use NULL to represent unlimited instead of magic numbers
-
 
 def upgrade() -> None:
     """Create tier_features table for subscription tier definitions.
@@ -153,7 +154,6 @@ def upgrade() -> None:
             },
         ]
     )
-
 
 def downgrade() -> None:
     """Drop tier_features table."""

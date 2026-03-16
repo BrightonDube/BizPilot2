@@ -12,15 +12,15 @@ A separate table allows querying upcoming reservations without scanning
 all order/table records.
 """
 
-revision = "081_reservations"
-down_revision = "080_sections"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
+revision = "081_reservations"
+down_revision = "080_sections"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -47,7 +47,6 @@ def upgrade() -> None:
     op.create_index("ix_reservations_date_time", "reservations", ["date_time"])
     op.create_index("ix_reservations_table_id", "reservations", ["table_id"])
     op.create_index("ix_reservations_status", "reservations", ["status"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_reservations_status")

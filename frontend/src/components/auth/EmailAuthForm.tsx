@@ -17,6 +17,8 @@ export function EmailAuthForm({ mode, onModeChange, onSuccess }: EmailAuthFormPr
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [twoFactorCode, setTwoFactorCode] = useState('')
+  const [show2FA, setShow2FA] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -59,9 +61,18 @@ export function EmailAuthForm({ mode, onModeChange, onSuccess }: EmailAuthFormPr
 
     try {
       if (mode === 'signin') {
-        await login(email, password)
-        onSuccess?.()
-        router.push('/dashboard')
+        try {
+          await login(email, password, show2FA ? twoFactorCode : undefined)
+          onSuccess?.()
+          router.push('/dashboard')
+        } catch (err: any) {
+          if (err.response?.data?.detail === '2FA_REQUIRED') {
+            setShow2FA(true)
+            setLocalError('Please enter your 2FA code')
+          } else {
+            throw err
+          }
+        }
         return
       }
 
@@ -136,7 +147,7 @@ export function EmailAuthForm({ mode, onModeChange, onSuccess }: EmailAuthFormPr
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-        disabled={isLoading}
+        disabled={isLoading || show2FA}
       />
 
       {mode !== 'reset' && (
@@ -147,8 +158,19 @@ export function EmailAuthForm({ mode, onModeChange, onSuccess }: EmailAuthFormPr
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-            disabled={isLoading}
+            disabled={isLoading || show2FA}
           />
+          {show2FA && (
+            <input
+              type="text"
+              value={twoFactorCode}
+              onChange={(e) => setTwoFactorCode(e.target.value)}
+              placeholder="2FA Code"
+              className="w-full px-3 py-2 bg-blue-900/20 border border-blue-500/50 rounded-lg text-white"
+              disabled={isLoading}
+              autoFocus
+            />
+          )}
           {mode === 'signup' && (
             <input
               type="password"

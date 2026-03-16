@@ -80,6 +80,7 @@ from app.api.extended_reports import router as extended_reports_router
 from app.api.sage import router as sage_router
 from app.api.pdf import router as pdf_router
 from app.api.webhooks import router as webhooks_router
+from app.api.two_factor import router as two_factor_router
 from app.api.collections import router as collections_router
 
 router = APIRouter()
@@ -165,6 +166,7 @@ router.include_router(sage_router)
 router.include_router(collections_router)
 router.include_router(pdf_router)
 router.include_router(webhooks_router)
+router.include_router(two_factor_router)
 router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 
 

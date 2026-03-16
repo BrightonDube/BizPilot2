@@ -5,19 +5,18 @@ Revises: 4c77b07b9fef
 Create Date: 2026-03-13 13:30:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = 'ecad824d00b3'
 down_revision: Union[str, None] = '4c77b07b9fef'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     op.create_table(
@@ -43,7 +42,6 @@ def upgrade() -> None:
     op.create_index("ix_waiter_cashups_business_id", "waiter_cashups", ["business_id"])
     op.create_index("ix_waiter_cashups_shift_id", "waiter_cashups", ["shift_id"], unique=True)
     op.create_index("ix_waiter_cashups_waiter_id", "waiter_cashups", ["waiter_id"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_waiter_cashups_waiter_id")

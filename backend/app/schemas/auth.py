@@ -19,6 +19,7 @@ class UserLogin(BaseModel):
     
     email: EmailStr
     password: str
+    two_factor_code: Optional[str] = None
 
 
 class Token(BaseModel):

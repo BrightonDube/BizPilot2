@@ -1,7 +1,7 @@
 import logging
 import os
 import asyncio
-from typing import Tuple, Dict, Any, List
+from typing import Tuple
 from uuid import UUID
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -18,7 +18,6 @@ from app.models.shift import Shift
 from app.models.user import User
 from app.models.business import Business
 from app.models.customer import Customer
-from app.models.supplier import Supplier
 
 logger = logging.getLogger(__name__)
 
@@ -139,10 +138,16 @@ async def generate_cashup_pdf(shift_id: UUID, business_id: UUID, db: AsyncSessio
     )
     business = result_biz.scalars().first()
     
+    from app.models.waiter_cashup import WaiterCashup
+    result_cashup = await db.execute(select(WaiterCashup).where(WaiterCashup.shift_id == shift_id))
+    cashup = result_cashup.scalars().first()
+
     context = {
         "shift": shift,
+        "cashup": cashup,
         "waiter": user,
         "business": business,
+        "currency_symbol": "R",
         "generated_at": datetime.now()
     }
     

@@ -5,19 +5,18 @@ Revises: 3bc48f58a175
 Create Date: 2026-03-13 12:40:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = 'aa34fa0ca264'
 down_revision: Union[str, None] = '3bc48f58a175'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # 1. Update floor_plans table
@@ -57,7 +56,6 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
     )
     op.create_index("ix_floor_plan_section_assignments_business_id", "floor_plan_section_assignments", ["business_id"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_floor_plan_section_assignments_business_id")

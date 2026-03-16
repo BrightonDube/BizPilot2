@@ -64,7 +64,7 @@ export default function OrderHistoryPage(): React.ReactElement {
   const fetchOrders = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const params: Record<string, any> = { page, per_page: perPage };
+      const params: Record<string, string | number> = { page, per_page: perPage };
       if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;
       if (typeFilter) params.order_type = typeFilter;

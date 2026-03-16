@@ -33,6 +33,7 @@ from app.schemas.auth import (
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.api.deps import get_current_active_user
+from app.middleware.rate_limiting import rate_limit_auth_endpoint
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ def clear_auth_cookies(response: Response) -> None:
     )
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(rate_limit_auth_endpoint)])
 @limiter.limit(REGISTER_RATE_LIMIT)
 async def register(request: Request, user_data: UserCreate, db=Depends(get_db)):
     """Register a new user."""
@@ -159,7 +160,7 @@ The BizPilot Team
 # CHANGED: Removed insecure debug endpoints 'test-auth-components', 'test-db-query', and 'test-login' which exposed internal state and tracebacks (Security Critical).
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=Token, dependencies=[Depends(rate_limit_auth_endpoint)])
 @limiter.limit(AUTH_RATE_LIMIT)
 async def login(
     request: Request,
@@ -185,6 +186,21 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Check 2FA
+    if user.totp_enabled:
+        if not credentials.two_factor_code:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="2FA_REQUIRED",
+            )
+        
+        from app.services.two_factor_service import validate_totp_code
+        if not await validate_totp_code(user.id, credentials.two_factor_code, db):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid 2FA code",
+            )
+
     # Create tokens
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
@@ -303,7 +319,7 @@ async def verify_email(data: EmailVerification, db=Depends(get_db)):
     return {"message": "Email verified successfully"}
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", dependencies=[Depends(rate_limit_auth_endpoint)])
 @limiter.limit(PASSWORD_RESET_RATE_LIMIT)
 async def forgot_password(request: Request, data: PasswordReset, db=Depends(get_db)):
     """Request password reset email."""
@@ -354,7 +370,7 @@ The BizPilot Team
     return {"message": "If the email exists, a password reset link has been sent"}
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", dependencies=[Depends(rate_limit_auth_endpoint)])
 @limiter.limit(PASSWORD_RESET_RATE_LIMIT) # CHANGED: Re-enabled rate limiting (Security High).
 async def reset_password(request: Request, data: PasswordResetConfirm, db=Depends(get_db)):
     """Reset password with token."""
@@ -511,6 +527,12 @@ async def pin_login(
     For mobile/POS clients: Only returns tokens in body.
     """
     from app.core.security import verify_pin_code
+    from app.middleware.rate_limiting import rate_limit_pin_login
+    from app.core.redis import get_redis
+    
+    # Rate limit PIN login (Requirement 065)
+    redis = await get_redis()
+    await rate_limit_pin_login(credentials.email, redis)
     
     auth_service = AuthService(db)
     user = await auth_service.get_user_by_email(credentials.email)

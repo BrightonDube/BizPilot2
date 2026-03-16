@@ -4,15 +4,16 @@ Revision ID: 067_staff_targets
 Revises: 066_proforma_invoices
 Create Date: 2025-01-01 00:00:00.000000
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 revision = "067_staff_targets"
 down_revision = "066_proforma_invoices"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # staff_targets
@@ -186,7 +187,6 @@ def upgrade() -> None:
         "performance_snapshots",
         ["user_id", "business_id", "snapshot_date"],
     )
-
 
 def downgrade() -> None:
     op.drop_table("performance_snapshots")

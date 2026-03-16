@@ -7,16 +7,15 @@ Create Date: 2026-01-18 22:27:11.050416
 Note: This is a no-op migration as the is_custom_pricing column
 already exists in the subscription_tiers table.
 """
+
+
 from typing import Sequence, Union
-
-
 
 # revision identifiers, used by Alembic.
 revision: str = 'ef3bb807b7d5'
 down_revision: Union[str, None] = '4777487a7c3d'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     """
@@ -28,7 +27,6 @@ def upgrade() -> None:
     without making redundant changes.
     """
     pass
-
 
 def downgrade() -> None:
     """

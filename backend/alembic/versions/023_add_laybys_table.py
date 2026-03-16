@@ -5,16 +5,17 @@ Revises: 022_add_layby_config
 Create Date: 2026-01-17
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '023_add_laybys'
 down_revision = '022_add_layby_config'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create laybys table for storing layby records.
@@ -105,7 +106,6 @@ def upgrade() -> None:
     
     # Composite index for business + customer queries (common for customer layby history)
     op.create_index('ix_laybys_business_customer', 'laybys', ['business_id', 'customer_id'])
-
 
 def downgrade() -> None:
     """Drop laybys table and its indexes."""

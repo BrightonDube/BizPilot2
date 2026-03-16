@@ -21,6 +21,8 @@ type AIContext = 'marketing' | 'business';
 const MOBILE_NAV_HEIGHT = 64;
 const MOBILE_NAV_CLEARANCE = MOBILE_NAV_HEIGHT + 5;
 
+import { sendMessage as sendAgentMessage } from '@/services/agentChatService';
+
 export function GlobalAIChat() {
   const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
   const pathname = usePathname();
@@ -164,25 +166,16 @@ export function GlobalAIChat() {
     }
 
     try {
-      let response;
-      
-      if (aiContext === 'marketing') {
-        // For marketing context, use guest AI endpoint with session ID
-        response = await apiClient.post('/ai/guest-chat', {
-          message: trimmed,
-          conversation_id: conversationId,
-          session_id: guestSession.session?.id,
-        });
-      } else {
-        // For business context, use authenticated agent endpoint
-        response = await apiClient.post('/agents/chat', {
-          message: trimmed,
-          conversation_id: conversationId,
-          session_id: conversationId || `session_${Date.now()}`,
-        });
-      }
+      // Both marketing and business contexts now use the same endpoint
+      // The backend will route based on the presence of an auth token
+      const response = await sendAgentMessage(
+        trimmed,
+        conversationId,
+        messages,
+        apiClient
+      );
 
-      const returnedConversationId = response.data?.conversation_id;
+      const returnedConversationId = response.conversation_id;
       if (typeof returnedConversationId === 'string' && returnedConversationId.length > 0) {
         setConversationId(returnedConversationId);
       }
@@ -190,7 +183,7 @@ export function GlobalAIChat() {
       const assistantMessage: ChatMessage = {
         id: `${Date.now()}-assistant`,
         role: 'assistant',
-        content: String(response.data?.message || response.data?.response || ''),
+        content: String(response.message || ''),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);

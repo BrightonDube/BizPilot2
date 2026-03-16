@@ -8,18 +8,18 @@ Revises: 014_add_supplier_payment_fields
 Create Date: 2026-01-14 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '015_add_product_suppliers'
 down_revision: Union[str, None] = '014_add_supplier_payment_fields'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create product_suppliers association table
@@ -39,7 +39,6 @@ def upgrade() -> None:
     
     # Create unique constraint
     op.create_unique_constraint('uq_product_supplier', 'product_suppliers', ['product_id', 'supplier_id'])
-
 
 def downgrade() -> None:
     op.drop_constraint('uq_product_supplier', 'product_suppliers', type_='unique')

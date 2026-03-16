@@ -9,11 +9,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+
 revision = "102_pf_approval_audit"
 down_revision = "101_bts_timezone"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Add approval/audit tables and new columns to proforma_invoices."""
@@ -106,7 +106,6 @@ def upgrade() -> None:
             sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
             sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         )
-
 
 def downgrade() -> None:
     """Remove approval/audit tables and columns."""

@@ -11,15 +11,15 @@ automatically include/exclude products.  This enables dynamic menus,
 promotional bundles, and filtered reports without manual maintenance.
 """
 
-revision = "088_smart_collections"
-down_revision = "087_proforma_revisions"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "088_smart_collections"
+down_revision = "087_proforma_revisions"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     # -- smart_collections: rule-based product groupings --------------------
@@ -99,7 +99,6 @@ def upgrade() -> None:
         ),
         sa.UniqueConstraint("collection_id", "product_id", name="uq_collection_products"),
     )
-
 
 def downgrade() -> None:
     op.drop_table("collection_products")

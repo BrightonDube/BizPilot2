@@ -1,0 +1,11 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+    <h2>Welcome to {{ business_name }}!</h2>
+    <p>Hi {{ user_name }},</p>
+    <p>Thank you for joining our business. We're excited to have you on board!</p>
+    <p>
+        <a href="{{ dashboard_url }}" class="button">Go to Dashboard</a>
+    </p>
+    <p>If you have any questions, feel free to contact us.</p>
+{% endblock %}

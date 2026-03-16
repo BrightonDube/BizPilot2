@@ -5,16 +5,17 @@ Revises: 036_add_account_payments
 Create Date: 2026-01-21
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '037_add_account_write_offs'
 down_revision = '036_add_account_payments'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create account_write_offs table.
@@ -100,7 +101,6 @@ def upgrade() -> None:
         'account_write_offs',
         ['approved_by']
     )
-
 
 def downgrade() -> None:
     """Drop account_write_offs table and its indexes."""

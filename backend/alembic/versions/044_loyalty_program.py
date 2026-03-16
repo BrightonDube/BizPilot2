@@ -5,17 +5,17 @@ Revises: 043_order_management
 Create Date: 2025-01-02 00:00:01.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '044_loyalty_program'
 down_revision: Union[str, None] = '043_order_management'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create enums
@@ -83,7 +83,6 @@ def upgrade() -> None:
     )
     op.create_index('ix_points_transactions_customer_id', 'points_transactions', ['customer_id'])
     op.create_index('ix_points_transactions_business_id', 'points_transactions', ['business_id'])
-
 
 def downgrade() -> None:
     op.drop_table('points_transactions')

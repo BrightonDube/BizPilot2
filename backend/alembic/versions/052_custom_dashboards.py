@@ -5,17 +5,17 @@ Revises: 051_automated_reorder
 Create Date: 2025-01-26 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '052_custom_dashboards'
 down_revision: Union[str, None] = '051_automated_reorder'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     op.create_table(
@@ -55,7 +55,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['dashboard_id'], ['dashboards.id']),
     )
     op.create_index('ix_dashboard_widgets_dashboard_id', 'dashboard_widgets', ['dashboard_id'])
-
 
 def downgrade() -> None:
     op.drop_index('ix_dashboard_widgets_dashboard_id', table_name='dashboard_widgets')

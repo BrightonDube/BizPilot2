@@ -1,0 +1,15 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+    <h2>Low Stock Alert</h2>
+    <p>The following items are running low in inventory:</p>
+    <ul>
+        {% for product in products %}
+        <li><strong>{{ product.name }}</strong>: {{ product.stock_quantity }} units left (threshold: {{ product.stock_threshold }})</li>
+        {% endfor %}
+    </ul>
+    <p>Please restock soon to avoid shortages.</p>
+    <p>
+        <a href="{{ inventory_url }}" class="button">Go to Inventory</a>
+    </p>
+{% endblock %}

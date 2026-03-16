@@ -11,15 +11,15 @@ Separating floor plans from tables allows the UI to render different
 layouts and lets staff quickly switch between areas.
 """
 
-revision = "079_floor_plans"
-down_revision = "078_stock_take_scope_counters"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
+revision = "079_floor_plans"
+down_revision = "078_stock_take_scope_counters"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -38,7 +38,6 @@ def upgrade() -> None:
     )
 
     op.create_index("ix_floor_plans_business_id", "floor_plans", ["business_id"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_floor_plans_business_id")

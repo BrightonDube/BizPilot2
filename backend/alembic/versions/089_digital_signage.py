@@ -11,15 +11,15 @@ the store — different lifecycle, different content types, different
 hardware requirements.  Keeping them separate avoids coupling.
 """
 
-revision = "089_digital_signage"
-down_revision = "088_smart_collections"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "089_digital_signage"
+down_revision = "088_smart_collections"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     # -- signage_display_groups: logical grouping for displays ---------------
@@ -188,7 +188,6 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-
 
 def downgrade() -> None:
     op.drop_table("signage_playlist_items")

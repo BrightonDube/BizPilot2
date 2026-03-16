@@ -1,0 +1,9 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+    <h2>Shift Cashup Approved</h2>
+    <p>Hi {{ waiter_name }},</p>
+    <p>Your shift cashup for <strong>{{ shift_date }}</strong> has been reviewed and approved.</p>
+    <p><strong>Total Recorded:</strong> {{ currency_symbol }}{{ total_amount }}</p>
+    <p>Thank you for your hard work!</p>
+{% endblock %}

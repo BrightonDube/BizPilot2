@@ -5,17 +5,17 @@ Revises: 054_audit_logs
 Create Date: 2025-01-27 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '055_multi_location'
 down_revision: Union[str, None] = '054_audit_logs'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create enum
@@ -82,7 +82,6 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table('stock_transfer_items')

@@ -16,11 +16,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+
 revision = "072_reorder_grn_audit"
 down_revision = "071_nested_modifiers"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # ------------------------------------------------------------------
@@ -176,7 +176,6 @@ def upgrade() -> None:
     op.create_index("idx_audit_business", "reorder_audit_log", ["business_id"])
     op.create_index("idx_audit_entity", "reorder_audit_log", ["entity_type", "entity_id"])
     op.create_index("idx_audit_created", "reorder_audit_log", ["created_at"])
-
 
 def downgrade() -> None:
     op.drop_table("reorder_audit_log")

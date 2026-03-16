@@ -6,10 +6,10 @@ Create Date: 2025-12-18 00:00:00.000000
 
 """
 
-from typing import Sequence, Union
-
 from alembic import op
 
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 # NOTE: Postgres alembic_version.version_num is often VARCHAR(32).
@@ -18,7 +18,6 @@ revision: str = "006_fix_pay_enums_imgurl"
 down_revision: Union[str, None] = "005_add_deleted_at_columns"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Normalize payment enums to lowercase and ensure expected values exist
@@ -217,7 +216,6 @@ def upgrade() -> None:
     # Allow long image URLs / data URLs
     op.execute("ALTER TABLE products ALTER COLUMN image_url TYPE TEXT")
     op.execute("ALTER TABLE product_categories ALTER COLUMN image_url TYPE TEXT")
-
 
 def downgrade() -> None:
     # Best-effort rollback for image_url sizes

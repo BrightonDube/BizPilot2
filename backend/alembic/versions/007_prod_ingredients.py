@@ -6,18 +6,17 @@ Create Date: 2025-12-19 00:00:00.000000
 
 """
 
-from typing import Sequence, Union
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 
+from typing import Sequence, Union
+
 revision: str = "007_prod_ingredients"
 down_revision: Union[str, None] = "006_fix_pay_enums_imgurl"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     bind = op.get_bind()
@@ -45,7 +44,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_product_ingredients_business_id", "product_ingredients", ["business_id"])
     op.create_index("ix_product_ingredients_product_id", "product_ingredients", ["product_id"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_product_ingredients_product_id", table_name="product_ingredients")

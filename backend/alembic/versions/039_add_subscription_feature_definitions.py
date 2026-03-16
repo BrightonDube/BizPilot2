@@ -18,7 +18,6 @@ down_revision = '4c665b9d28c3'
 branch_labels = None
 depends_on = None
 
-
 def upgrade() -> None:
     uuid_type = sa.String(length=36).with_variant(postgresql.UUID(as_uuid=True), 'postgresql')
     op.create_table(
@@ -42,7 +41,6 @@ def upgrade() -> None:
         ['key'],
         unique=True,
     )
-
 
 def downgrade() -> None:
     op.drop_index('idx_subscription_feature_definitions_key', table_name='subscription_feature_definitions')

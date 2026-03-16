@@ -5,16 +5,17 @@ Revises: 028_add_layby_notifications
 Create Date: 2026-01-17
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '029_add_stock_reservations'
 down_revision = '028_add_layby_notifications'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create stock_reservations table for tracking reserved inventory for laybys.
@@ -87,7 +88,6 @@ def upgrade() -> None:
     
     # Create index for location-based queries
     op.create_index('idx_stock_reservations_location', 'stock_reservations', ['location_id'])
-
 
 def downgrade() -> None:
     """Drop stock_reservations table and its indexes."""

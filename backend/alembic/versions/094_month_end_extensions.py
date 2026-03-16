@@ -15,11 +15,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
 revision = "094_month_end_extensions"
 down_revision = "093_gl_extensions"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # -- inventory_periods: month-end close lifecycle -------------------
@@ -94,7 +94,6 @@ def upgrade() -> None:
         sa.Column("notes", sa.Text, nullable=True),
     )
     op.create_index("ix_count_history_count", "stock_count_history", ["count_id"])
-
 
 def downgrade() -> None:
     op.drop_table("stock_count_history")

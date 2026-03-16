@@ -5,16 +5,17 @@ Revises: 032_add_feature_overrides
 Create Date: 2026-01-20
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '033_add_device_registry'
 down_revision = '032_add_feature_overrides'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create device_registry table for tracking registered devices per business.
@@ -71,7 +72,6 @@ def upgrade() -> None:
     
     # Create index for filtering active devices (device limit checks)
     op.create_index('idx_device_registry_active', 'device_registry', ['is_active'])
-
 
 def downgrade() -> None:
     """Drop device_registry table and its indexes."""

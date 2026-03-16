@@ -4,17 +4,17 @@ Revision ID: 063_commission_records
 Revises: 062_cash_registers
 Create Date: 2026-03-01 09:00:00.000000
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = "063_commission_records"
 down_revision: Union[str, None] = "062_cash_registers"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # WHY create_type=False: We manually create the enum below, so we must prevent
@@ -53,7 +53,6 @@ def upgrade() -> None:
     op.create_index("ix_commission_records_business_id", "commission_records", ["business_id"])
     op.create_index("ix_commission_records_user_id", "commission_records", ["user_id"])
     op.create_index("ix_commission_records_status", "commission_records", ["status"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_commission_records_status", table_name="commission_records")

@@ -13,18 +13,18 @@ Revises: 013_drop_payments_table
 Create Date: 2026-01-14 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '014_add_supplier_payment_fields'
 down_revision: Union[str, None] = '013_drop_payments_table'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create invoice type enum
@@ -67,7 +67,6 @@ def upgrade() -> None:
     
     # Create index on paystack_reference
     op.execute("CREATE INDEX IF NOT EXISTS ix_invoices_paystack_reference ON invoices (paystack_reference)")
-
 
 def downgrade() -> None:
     # Drop indexes

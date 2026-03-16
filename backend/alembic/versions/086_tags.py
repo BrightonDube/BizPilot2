@@ -12,15 +12,15 @@ table scans.  Separate tag tables with a join table (product_tags)
 support efficient filtering, analytics, and future smart collections.
 """
 
-revision = "086_tags"
-down_revision = "085_customer_displays"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "086_tags"
+down_revision = "085_customer_displays"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     # -- tag_categories: grouping/namespacing for tags ----------------------
@@ -142,7 +142,6 @@ def upgrade() -> None:
         ),
         sa.UniqueConstraint("product_id", "tag_id", name="uq_product_tags_product_tag"),
     )
-
 
 def downgrade() -> None:
     op.drop_table("product_tags")

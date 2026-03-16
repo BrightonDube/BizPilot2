@@ -147,10 +147,15 @@ async def get_optional_user(
     return await auth_service.get_user_by_id(user_id)
 
 
+# Alias for legacy or specific imports
+get_optional_current_user = get_optional_user
+
+
 async def get_current_business_id(
     request: Request,
     current_user: User = Depends(get_current_active_user),
     db=Depends(get_db),
+    redis: Optional[Redis] = Depends(get_redis)
 ) -> str:
     """
     Get the current user's active business ID.
@@ -160,6 +165,10 @@ async def get_current_business_id(
     """
     from app.models.business import Business
     from sqlalchemy import select
+    from app.middleware.rate_limiting import rate_limit_by_business
+    from uuid import UUID
+    
+    business_id = None
     
     # Superadmins can access all businesses
     if current_user.is_superadmin:
@@ -183,42 +192,48 @@ async def get_current_business_id(
                     detail=f"Business with ID {requested_business_id} not found."
                 )
             
-            return str(business.id)
-        
-        # Default: return the oldest available business
-        stmt = select(Business).filter(
-            Business.deleted_at.is_(None)
-        ).order_by(Business.created_at.asc())
+            business_id = str(business.id)
+        else:
+            # Default: return the oldest available business
+            stmt = select(Business).filter(
+                Business.deleted_at.is_(None)
+            ).order_by(Business.created_at.asc())
+            result = db.execute(stmt)
+            if inspect.isawaitable(result):
+                result = await result
+            first_business = result.scalars().first()
+            
+            if not first_business:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No businesses found in the system."
+                )
+            
+            business_id = str(first_business.id)
+    else:
+        # Regular users need an active BusinessUser record
+        stmt = select(BusinessUser).filter(
+            BusinessUser.user_id == current_user.id,
+            BusinessUser.status == BusinessUserStatus.ACTIVE
+        )
         result = db.execute(stmt)
         if inspect.isawaitable(result):
             result = await result
-        first_business = result.scalars().first()
+        business_user = result.scalars().first()
         
-        if not first_business:
+        if not business_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No businesses found in the system."
+                detail="No business found for user. Please create or join a business first."
             )
         
-        return str(first_business.id)
-    
-    # Regular users need an active BusinessUser record
-    stmt = select(BusinessUser).filter(
-        BusinessUser.user_id == current_user.id,
-        BusinessUser.status == BusinessUserStatus.ACTIVE
-    )
-    result = db.execute(stmt)
-    if inspect.isawaitable(result):
-        result = await result
-    business_user = result.scalars().first()
-    
-    if not business_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No business found for user. Please create or join a business first."
-        )
-    
-    return str(business_user.business_id)
+        business_id = str(business_user.business_id)
+
+    # Apply per-business rate limiting (Requirement 065)
+    if business_id:
+        await rate_limit_by_business(request, UUID(business_id), redis)
+        
+    return business_id
 
 
 async def get_permission_service(

@@ -12,15 +12,15 @@ mobile wallets) and a full transaction audit trail with gateway
 references, retry counts, and refund chains.
 """
 
-revision = "084_payment_methods"
-down_revision = "083_delivery_tracking"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "084_payment_methods"
+down_revision = "083_delivery_tracking"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     # -- payment_methods: configured payment types per business ---------------
@@ -118,7 +118,6 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-
 
 def downgrade() -> None:
     op.drop_table("payment_transactions")

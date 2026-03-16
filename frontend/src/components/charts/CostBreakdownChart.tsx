@@ -37,6 +37,7 @@ export function CostBreakdownChart({ data }: CostBreakdownChartProps) {
     { name: 'Labor Costs', value: data.laborCost, color: chartTheme.colors.accent },
   ]
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null
     const item = payload[0]

@@ -5,19 +5,18 @@ Revises: b41692817381
 Create Date: 2026-01-09 11:49:14.953617
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = 'b180eac5e92f'
 down_revision: Union[str, None] = 'b41692817381'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     bind = op.get_bind()
@@ -47,7 +46,6 @@ def upgrade() -> None:
             ["source_product_id"],
             ["id"],
         )
-
 
 def downgrade() -> None:
     bind = op.get_bind()

@@ -5,17 +5,17 @@ Revises: 055_multi_location
 Create Date: 2025-01-28 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '056_addons_modifiers'
 down_revision: Union[str, None] = '055_multi_location'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create selectiontype enum
@@ -112,7 +112,6 @@ def upgrade() -> None:
         ),
         sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table('product_modifier_groups')

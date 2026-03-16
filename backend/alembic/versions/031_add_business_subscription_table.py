@@ -5,16 +5,17 @@ Revises: 030_add_tier_features
 Create Date: 2026-01-20
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '031_add_business_subscription'
 down_revision = '030_add_tier_features'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create business_subscription table for tracking business subscription tiers.
@@ -73,7 +74,6 @@ def upgrade() -> None:
     
     # Create index for finding expiring demos (background job)
     op.create_index('idx_business_subscription_valid_until', 'business_subscription', ['valid_until'])
-
 
 def downgrade() -> None:
     """Drop business_subscription table and its indexes."""

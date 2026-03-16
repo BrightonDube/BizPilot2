@@ -5,19 +5,18 @@ Revises: b180eac5e92f
 Create Date: 2026-01-09 11:51:01.768034
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = 'c53915a0c393'
 down_revision: Union[str, None] = 'b180eac5e92f'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # NOTE:
@@ -100,7 +99,6 @@ def upgrade() -> None:
         "production_order_items",
         ["source_product_id"],
     )
-
 
 def downgrade() -> None:
     op.drop_index("ix_production_order_items_source_product_id", table_name="production_order_items")

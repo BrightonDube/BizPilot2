@@ -11,11 +11,11 @@ from app.services.pdf_service import (
     generate_cashup_pdf,
     generate_purchase_order_pdf
 )
-from app.models.invoice import Invoice, InvoiceItem
+from app.models.invoice import Invoice
 from app.models.business import Business
 from app.models.user import User
 from app.models.shift import Shift
-from app.models.order import Order, OrderItem
+from app.models.order import Order
 
 @pytest.fixture
 def mock_db():
@@ -66,8 +66,17 @@ def test_render_template_produces_non_empty_html(sample_invoice, sample_business
         "invoice": sample_invoice,
         "business": sample_business,
         "items": [],
+        "currency_symbol": "R",
+        "customer": None,
         "generated_at": datetime.now()
     }
+    # Ensure mock has required attributes
+    sample_invoice.tax_amount = 15.00
+    sample_invoice.total = 115.00
+    sample_invoice.subtotal = 100.00
+    sample_invoice.issue_date = date.today()
+    sample_invoice.due_date = date.today()
+    
     html = render_html_from_template("invoice.html", context)
     assert "INV-001" in html
     assert "Test Business" in html
@@ -86,6 +95,13 @@ async def test_generate_pdf_runs_in_thread_pool_not_blocking_event_loop():
 
 @pytest.mark.asyncio
 async def test_invoice_pdf_service_returns_correct_data(mock_db, sample_invoice, sample_business):
+    # Ensure mock has required attributes
+    sample_invoice.tax_amount = 15.00
+    sample_invoice.total = 115.00
+    sample_invoice.subtotal = 100.00
+    sample_invoice.issue_date = date.today()
+    sample_invoice.due_date = date.today()
+
     mock_invoice_result = MagicMock()
     mock_invoice_result.scalars.return_value.first.return_value = sample_invoice
     
@@ -133,7 +149,16 @@ async def test_cashup_pdf_contains_all_required_financial_fields(mock_db, sample
     user = MagicMock(spec=User)
     user.first_name = "John"
     user.last_name = "Doe"
+    user.full_name = "John Doe"
     
+    from app.models.waiter_cashup import WaiterCashup
+    cashup = MagicMock(spec=WaiterCashup)
+    cashup.total_sales = 1700.00
+    cashup.total_tips = 100.00
+    cashup.cash_collected = 500.00
+    cashup.card_collected = 1200.00
+    cashup.status = "approved"
+
     mock_shift_result = MagicMock()
     mock_shift_result.scalars.return_value.first.return_value = shift
     
@@ -143,7 +168,10 @@ async def test_cashup_pdf_contains_all_required_financial_fields(mock_db, sample
     mock_biz_result = MagicMock()
     mock_biz_result.scalars.return_value.first.return_value = sample_business
     
-    mock_db.execute.side_effect = [mock_shift_result, mock_user_result, mock_biz_result]
+    mock_cashup_result = MagicMock()
+    mock_cashup_result.scalars.return_value.first.return_value = cashup
+
+    mock_db.execute.side_effect = [mock_shift_result, mock_user_result, mock_biz_result, mock_cashup_result]
     
     pdf_bytes, filename = await generate_cashup_pdf(shift.id, sample_business.id, mock_db)
     
@@ -156,6 +184,7 @@ async def test_purchase_order_pdf_service_returns_correct_data(mock_db, sample_b
     order.id = uuid4()
     order.order_number = "PO-123"
     order.total = 5000.00
+    order.order_date = date.today()
     order.status = "pending"
     order.notes = "PO notes"
     
@@ -177,6 +206,13 @@ async def test_purchase_order_pdf_service_returns_correct_data(mock_db, sample_b
 
 @pytest.mark.asyncio
 async def test_invoice_pdf_endpoint_returns_200_with_pdf_content_type(sample_invoice, sample_business, mock_db):
+    # Ensure mock has required attributes
+    sample_invoice.tax_amount = 15.00
+    sample_invoice.total = 115.00
+    sample_invoice.subtotal = 100.00
+    sample_invoice.issue_date = date.today()
+    sample_invoice.due_date = date.today()
+
     from app.main import app
     from httpx import AsyncClient, ASGITransport
     from app.api.deps import get_current_business_id

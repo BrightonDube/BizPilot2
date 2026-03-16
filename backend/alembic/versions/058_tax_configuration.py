@@ -5,17 +5,17 @@ Revises: 057_shift_management
 Create Date: 2025-02-01 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '058_tax_configuration'
 down_revision: Union[str, None] = '057_shift_management'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     taxtype_enum = postgresql.ENUM(
@@ -61,7 +61,6 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table('category_tax_rates')

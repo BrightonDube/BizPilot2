@@ -5,16 +5,17 @@ Revises: 035_add_account_transactions
 Create Date: 2026-01-21
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '036_add_account_payments'
 down_revision = '035_add_account_transactions'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create account_payments and payment_allocations tables.
@@ -167,7 +168,6 @@ def upgrade() -> None:
         'payment_allocations',
         ['payment_id', 'transaction_id']
     )
-
 
 def downgrade() -> None:
     """Drop account_payments and payment_allocations tables and their indexes."""

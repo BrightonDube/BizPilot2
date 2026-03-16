@@ -86,7 +86,7 @@ interface QueueItem {
 // ---------------------------------------------------------------------------
 
 const statusBadge = (status: string): React.ReactElement => {
-  const map: Record<string, "success" | "danger" | "warning" | "secondary"> = {
+  const map: Record<string, "success" | "danger" | "warning" | "secondary" | "info" | "default"> = {
     connected: "success",
     disconnected: "secondary",
     expired: "warning",
@@ -94,7 +94,7 @@ const statusBadge = (status: string): React.ReactElement => {
     completed: "success",
     failed: "danger",
     pending: "warning",
-    in_progress: "info" as any,
+    in_progress: "info",
   };
   return <Badge variant={map[status] ?? "secondary"}>{status}</Badge>;
 };
@@ -136,7 +136,7 @@ export default function SageIntegrationClient(): React.ReactElement {
     try {
       const res = await apiClient.get("/api/sage/status");
       setConnStatus(res.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load connection status"); }
     } finally {
       setLoading(false);
@@ -148,7 +148,7 @@ export default function SageIntegrationClient(): React.ReactElement {
     try {
       const res = await apiClient.get("/api/sage/mappings");
       setMappings(res.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load mappings"); }
     } finally {
       setLoading(false);
@@ -164,7 +164,7 @@ export default function SageIntegrationClient(): React.ReactElement {
       ]);
       setSyncHistory(historyRes.data.items ?? []);
       setQueue(queueRes.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load sync data"); }
     } finally {
       setLoading(false);
@@ -186,7 +186,7 @@ export default function SageIntegrationClient(): React.ReactElement {
     try {
       await apiClient.post("/api/sage/disconnect");
       loadConnection();
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to disconnect"); }
     }
   };
@@ -198,7 +198,7 @@ export default function SageIntegrationClient(): React.ReactElement {
         enabled: !connStatus.sync_enabled,
       });
       loadConnection();
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to toggle sync"); }
     }
   };
@@ -214,7 +214,7 @@ export default function SageIntegrationClient(): React.ReactElement {
         tax_code: "",
       });
       loadMappings();
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to save mapping"); }
     }
   };
@@ -223,7 +223,7 @@ export default function SageIntegrationClient(): React.ReactElement {
     try {
       await apiClient.post(`/api/sage/sync/queue/${id}/retry`);
       loadSync();
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to retry item"); }
     }
   };

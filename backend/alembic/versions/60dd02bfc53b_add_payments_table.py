@@ -5,16 +5,16 @@ Revises: 8f1e3ca8b3e8
 Create Date: 2025-12-17 01:26:59.397114
 
 """
-from typing import Sequence, Union
 
 from alembic import op
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '60dd02bfc53b'
 down_revision: Union[str, None] = '8f1e3ca8b3e8'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create enum types if they don't exist
@@ -56,7 +56,6 @@ def upgrade() -> None:
     op.execute("CREATE INDEX IF NOT EXISTS ix_payments_business_id ON payments (business_id)")
     op.execute("CREATE INDEX IF NOT EXISTS ix_payments_customer_id ON payments (customer_id)")
     op.execute("CREATE INDEX IF NOT EXISTS ix_payments_invoice_id ON payments (invoice_id)")
-
 
 def downgrade() -> None:
     op.drop_index(op.f('ix_payments_payment_number'), table_name='payments')

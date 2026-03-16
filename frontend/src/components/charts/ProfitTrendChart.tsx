@@ -54,6 +54,7 @@ export function ProfitTrendChart({ products }: ProfitTrendChartProps) {
     })
   }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null
     const profit = toNumber(payload[0]?.value, 0)

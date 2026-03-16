@@ -5,17 +5,17 @@ Revises: 044_loyalty_program
 Create Date: 2025-01-15 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '045_petty_cash'
 down_revision: Union[str, None] = '044_loyalty_program'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create enums
@@ -95,7 +95,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['fund_id'], ['petty_cash_funds.id']),
         sa.ForeignKeyConstraint(['replenished_by_id'], ['users.id']),
     )
-
 
 def downgrade() -> None:
     op.drop_table('fund_replenishments')

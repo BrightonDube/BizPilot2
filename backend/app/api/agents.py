@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_sync_db
-from app.api.deps import get_current_business_id, check_feature
+from app.api.deps import get_current_business_id, check_feature, get_optional_current_user
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
 from app.services.ai_service import AIService
@@ -82,18 +82,53 @@ def _make_session_id(provided: Optional[str]) -> str:
 # Endpoints
 # ---------------------------------------------------------------------------
 
+PUBLIC_AGENT_PROMPT = """You are BizPilot AI, a helpful assistant on the BizPilot website.
+
+BizPilot is a complete POS and ERP platform for restaurants, retail stores,
+and multi-location businesses. It includes POS, inventory management, supplier
+ordering, invoicing, payroll, CRM, kitchen display systems, and AI automation.
+
+You can answer questions about:
+- What BizPilot does and how it works
+- Pricing and plans
+- Features available for restaurants and retail
+- How to get started
+- How BizPilot compares to other systems
+
+You cannot access any business data — the user is not logged in.
+If they want to see their data or take actions, politely ask them to log in.
+Keep responses friendly, concise, and helpful.
+Never make up specific pricing — direct users to the pricing page at bizpilotpro.app/pricing
+"""
+
 @router.post("/chat", response_model=AgentResponse)
 async def agent_chat(
     request: AgentChatRequest,
-    current_user: User = Depends(check_feature("has_ai")),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     business_id: str = Depends(get_current_business_id),
     db: Session = Depends(get_sync_db),
 ) -> AgentResponse:
     """
     Send a message to the agent system.
-    Returns a plan for user confirmation on the first call.
     """
     session_id = _make_session_id(request.session_id)
+    
+    if current_user is None:
+        from app.core.ai_models import execute_fast_task
+        messages = [
+            {"role": "system", "content": PUBLIC_AGENT_PROMPT},
+            {"role": "user", "content": request.message}
+        ]
+        response = await execute_fast_task(messages=messages)
+        
+        return AgentResponse(
+            type="response",
+            message=response.content.strip(),
+            session_id=session_id,
+            pending=False,
+            conversation_id=request.conversation_id,
+        )
+
     sharing_level = _get_sharing_level(db, current_user)
 
     agent = ChatAgent(db)
@@ -104,7 +139,7 @@ async def agent_chat(
         sharing_level=sharing_level,
         session_id=session_id,
         business_id=business_id,
-        plan_confirmed=False,
+        plan_confirmed=True, # We no longer generate plans
     )
 
     return AgentResponse(
