@@ -99,9 +99,9 @@ class ContextProvider:
 
     def get_static_context(self, user: User) -> Dict[str, Any]:
         """Fetch context that rarely changes: business name, currency, industry."""
-        from app.services.ai_service import AIService
+        from app.services.ai_context_service import AIContextService
 
-        ai_service = AIService(self.db)
+        ai_service = AIContextService(self.db)
         # Using the public method _get_business_for_user is the only way
         # to get the business for a user without duplicating the join logic.
         business = ai_service._get_business_for_user(user.id)
@@ -115,11 +115,11 @@ class ContextProvider:
 
     def get_dynamic_context(self, user: User, sharing_level: Any) -> Dict[str, Any]:
         """Fetch live metrics — respects the user's data-sharing preference."""
-        from app.services.ai_service import AIService
+        from app.services.ai_context_service import AIContextService
         from app.models.user_settings import AIDataSharingLevel
 
         if sharing_level == AIDataSharingLevel.NONE:
             return {}
 
-        ai_service = AIService(self.db)
+        ai_service = AIContextService(self.db)
         return ai_service.build_business_context(user, sharing_level)

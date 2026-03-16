@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiClient } from '@/lib/api'
+import type { AgentChatRequest, AgentResponse } from '@/types/agent'
 
 export type AIDataSharingLevel =
   | 'none'
@@ -20,6 +21,9 @@ export type AIMessage = {
   conversation_id: string
   is_user: boolean
   content: string
+  type?: 'plan' | 'response' | 'hitl_request' | 'tool_result' | 'error' | 'stopped'
+  session_id?: string
+  pending?: boolean
 }
 
 export type AIContext = {
@@ -35,6 +39,8 @@ export function useAIChat() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [context, setContext] = useState<AIContext | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<{session_id: string; description: string} | null>(null)
 
   const fetchContext = useCallback(async () => {
     try {
@@ -120,41 +126,65 @@ export function useAIChat() {
         if (!convo) return
 
         // optimistic user message
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `${Date.now()}-user`,
-            conversation_id: convo!.id,
-            is_user: true,
-            content: trimmed,
-          }
-        ])
+        const userMessage: AIMessage = {
+          id: `${Date.now()}-user`,
+          conversation_id: convo!.id,
+          is_user: true,
+          content: trimmed,
+        }
+        setMessages((prev) => [...prev, userMessage])
 
-        const resp = await apiClient.post<{ response: string; conversation_id?: string }>(
-          `/ai/conversations/${convo.id}/messages`,
-          { message: trimmed, conversation_id: convo.id }
-        )
+        // Use session_id from state or generate new one
+        const currentSessionId = sessionId || `session_${Date.now()}`
+        if (!sessionId) {
+          setSessionId(currentSessionId)
+        }
 
-        const assistantText = String(resp.data?.response ?? '')
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `${Date.now()}-assistant`,
-            conversation_id: convo!.id,
-            is_user: false,
-            content: assistantText,
-          }
-        ])
+        const request: AgentChatRequest = {
+          message: trimmed,
+          session_id: currentSessionId,
+          conversation_id: convo.id,
+        }
+
+        const resp = await apiClient.post<AgentResponse>('/agents/chat', request)
+        const agentData = resp.data
+
+        // Update session_id from response
+        if (agentData.session_id && agentData.session_id !== currentSessionId) {
+          setSessionId(agentData.session_id)
+        }
+
+        const assistantMessage: AIMessage = {
+          id: `${Date.now()}-assistant`,
+          conversation_id: convo!.id,
+          is_user: false,
+          content: agentData.message,
+          type: agentData.type,
+          session_id: agentData.session_id,
+          pending: agentData.pending,
+        }
+
+        setMessages((prev) => [...prev, assistantMessage])
+
+        // Handle HITL request
+        if (agentData.type === 'hitl_request' || agentData.pending) {
+          setPendingAction({
+            session_id: agentData.session_id,
+            description: agentData.message,
+          })
+        }
 
         // refresh the conversation list (title/updated_at changes)
         void fetchConversations()
-      } catch {
-        setError('Failed to send message')
+      } catch (err: unknown) {
+        console.error('Failed to send message:', err)
+        const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || (err as Error).message || 'Failed to send message'
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
     },
-    [createNewConversation, currentConversation, fetchConversations]
+    [createNewConversation, currentConversation, fetchConversations, sessionId]
   )
 
   useEffect(() => {
@@ -167,6 +197,44 @@ export function useAIChat() {
       fetchMessages(currentConversation.id)
     }
   }, [currentConversation?.id, fetchMessages])
+
+  const confirmAction = useCallback(
+    async (approve: boolean) => {
+      if (!pendingAction) return
+
+      try {
+        setError(null)
+        setLoading(true)
+
+        const endpoint = approve 
+          ? `/agents/hitl/${pendingAction.session_id}/approve`
+          : `/agents/hitl/${pendingAction.session_id}/reject`
+
+        const resp = await apiClient.post<AgentResponse>(endpoint, {})
+        const agentData = resp.data
+
+        const resultMessage: AIMessage = {
+          id: `${Date.now()}-result`,
+          conversation_id: currentConversation?.id || '',
+          is_user: false,
+          content: agentData.message,
+          type: agentData.type,
+          session_id: agentData.session_id,
+          pending: false,
+        }
+
+        setMessages((prev) => [...prev, resultMessage])
+        setPendingAction(null)
+      } catch (err: unknown) {
+        console.error('Failed to confirm action:', err)
+        const errorMessage = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || (err as Error).message || 'Failed to confirm action'
+        setError(errorMessage)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [pendingAction, currentConversation]
+  )
 
   const businessSummary = useMemo(() => {
     const biz = context?.business_context
@@ -189,9 +257,12 @@ export function useAIChat() {
     error,
     context,
     businessSummary,
+    sessionId,
+    pendingAction,
     fetchConversations,
     createNewConversation,
     deleteConversation,
     sendMessage,
+    confirmAction,
   }
 }

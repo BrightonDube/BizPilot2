@@ -127,8 +127,8 @@ def sample_business():
 
 @pytest.fixture
 def mock_ai_service(sample_business):
-    """Mock AIService._get_business_for_user to return a predictable business."""
-    with patch("app.agents.tools.sales_tools.AIService") as mock_cls:
+    """Mock AIContextService._get_business_for_user to return a predictable business."""
+    with patch("app.agents.tools.sales_tools.AIContextService") as mock_cls:
         instance = mock_cls.return_value
         instance._get_business_for_user.return_value = sample_business
         yield instance

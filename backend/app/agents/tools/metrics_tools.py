@@ -76,7 +76,7 @@ async def get_dashboard_kpis(db: Session, user: User) -> Dict[str, Any]:
         return {"error": "No business found for user"}
 
     from app.models.user_settings import AIDataSharingLevel
-    from app.services.ai_service import AIService
-    ai_svc = AIService(db)
+    from app.services.ai_context_service import AIContextService
+    ai_svc = AIContextService(db)
     # Reuse the existing business context builder — it already has all KPIs
     return await asyncio.to_thread(ai_svc.build_business_context, user, AIDataSharingLevel.METRICS_ONLY)
