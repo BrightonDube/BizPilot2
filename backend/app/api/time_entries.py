@@ -107,7 +107,10 @@ class PayrollReportItem(BaseModel):
     email: str
     total_hours: float
     total_break_hours: float
+    penalty_hours: float
+    net_hours: float
     entries_count: int
+    auto_clockout_count: int
 
 
 class PayrollReport(BaseModel):
@@ -480,7 +483,10 @@ async def get_payroll_report(
             email=item["email"],
             total_hours=item["total_hours"],
             total_break_hours=item["break_hours"],
-            entries_count=item["entries"]
+            penalty_hours=item.get("penalty_hours", 0.0),
+            net_hours=item["net_hours"],
+            entries_count=item["entries"],
+            auto_clockout_count=item.get("auto_clockout_count", 0)
         ) for item in report],
         total_hours=total_hours,
     )
