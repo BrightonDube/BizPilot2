@@ -19,10 +19,24 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _column_exists(table: str, column: str) -> bool:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    return column in [c["name"] for c in inspector.get_columns(table)]
+
+
 def upgrade() -> None:
     # 1. Update floor_plans table
-    op.add_column("floor_plans", sa.Column("width_units", sa.Integer(), server_default="100", nullable=False))
-    op.add_column("floor_plans", sa.Column("height_units", sa.Integer(), server_default="100", nullable=False))
+    if not _column_exists("floor_plans", "width_units"):
+        op.add_column(
+            "floor_plans",
+            sa.Column("width_units", sa.Integer(), server_default="100", nullable=False)
+        )
+    if not _column_exists("floor_plans", "height_units"):
+        op.add_column(
+            "floor_plans",
+            sa.Column("height_units", sa.Integer(), server_default="100", nullable=False)
+        )
 
     # 2. Create floor_plan_tables table
     op.create_table(
