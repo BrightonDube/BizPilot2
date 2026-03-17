@@ -39,7 +39,8 @@ class TestPricingConsistencyIntegration:
     @pytest.fixture
     def db_session(self):
         """Get database session for testing."""
-        db = next(get_sync_db())
+        from app.core.database import SessionLocal
+        db = SessionLocal()
         try:
             yield db
         finally:
@@ -73,7 +74,8 @@ class TestPricingConsistencyIntegration:
     def setup_method(self):
         """Set up test data before each test."""
         # Ensure database has the correct tiers from shared config
-        db = next(get_sync_db())
+        from app.core.database import SessionLocal
+        db = SessionLocal()
         try:
             # Use TRUNCATE CASCADE to handle all FK dependencies at once
             from sqlalchemy import text

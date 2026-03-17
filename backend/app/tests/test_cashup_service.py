@@ -20,6 +20,8 @@ def db():
             obj.id = uuid.uuid4()
         if hasattr(obj, "created_at") and obj.created_at is None:
             obj.created_at = datetime.now(timezone.utc)
+        if hasattr(obj, "updated_at") and obj.updated_at is None:
+            obj.updated_at = datetime.now(timezone.utc)
 
     mock.refresh = mock_refresh
     return mock
@@ -97,6 +99,15 @@ async def test_approve_cashup_changes_status(db):
         waiter_id=WAITER_ID,
         status="pending",
         total_sales=Decimal("100.00"),
+        total_tips=Decimal("0.00"),
+        cash_collected=Decimal("0.00"),
+        card_collected=Decimal("0.00"),
+        cover_count=0,
+        tables_served=0,
+        shift_id=SHIFT_ID,
+        generated_at=NOW,
+        created_at=NOW,
+        updated_at=NOW,
     )
     db.execute.return_value = AsyncMock(
         scalars=lambda: MagicMock(first=lambda: mock_cashup)
@@ -110,7 +121,20 @@ async def test_approve_cashup_changes_status(db):
 @pytest.mark.asyncio
 async def test_reject_cashup_requires_reason(db):
     mock_cashup = WaiterCashup(
-        id=uuid.uuid4(), business_id=BIZ_ID, waiter_id=WAITER_ID, status="pending"
+        id=uuid.uuid4(),
+        business_id=BIZ_ID,
+        waiter_id=WAITER_ID,
+        shift_id=SHIFT_ID,
+        status="pending",
+        total_sales=Decimal("100.00"),
+        total_tips=Decimal("0.00"),
+        cash_collected=Decimal("0.00"),
+        card_collected=Decimal("0.00"),
+        cover_count=0,
+        tables_served=0,
+        generated_at=NOW,
+        created_at=NOW,
+        updated_at=NOW,
     )
     db.execute.return_value = AsyncMock(
         scalars=lambda: MagicMock(first=lambda: mock_cashup)

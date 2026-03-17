@@ -9,7 +9,8 @@ from app.core.database import get_sync_db
 def db_session():
     """Create a test database session using the actual database."""
     # Use the sync database session for tests (works with both PostgreSQL and SQLite)
-    db = next(get_sync_db())
+    from app.core.database import SessionLocal
+        db = SessionLocal()
     try:
         yield db
     finally:

@@ -44,7 +44,7 @@ class CashupService:
                 await db.execute(
                     select(func.count(Order.id)).filter(
                         Order.business_id == business_id,
-                        Order.user_id == waiter_id,
+                        Order.driver_id == waiter_id,
                         Order.status.in_([OrderStatus.PENDING, OrderStatus.PROCESSING]),
                         Order.created_at >= shift.actual_start,
                     )
@@ -82,7 +82,7 @@ class CashupService:
                 .join(Order, PaymentTransaction.order_id == Order.id)
                 .filter(
                     Order.business_id == business_id,
-                    Order.user_id == waiter_id,
+                    Order.driver_id == waiter_id,
                     Order.created_at >= start_time,
                     Order.created_at <= end_time,
                     PaymentTransaction.status == PaymentTransactionStatus.COMPLETED,
@@ -104,7 +104,7 @@ class CashupService:
                 .join(Order, PaymentTransaction.order_id == Order.id)
                 .filter(
                     Order.business_id == business_id,
-                    Order.user_id == waiter_id,
+                    Order.driver_id == waiter_id,
                     Order.created_at >= start_time,
                     Order.created_at <= end_time,
                     PaymentTransaction.status == PaymentTransactionStatus.COMPLETED,
