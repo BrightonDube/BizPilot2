@@ -57,6 +57,11 @@ jobs:
         run: mypy app/ --ignore-missing-imports
         continue-on-error: true
 
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://bizpilot:bizpilot@localhost:5432/bizpilot
+        run: python -m alembic upgrade head
+
       - name: Run tests
         env:
           SECRET_KEY: test-secret-key-for-ci-testing-only
