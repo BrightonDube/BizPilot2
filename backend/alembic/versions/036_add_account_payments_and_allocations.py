@@ -58,9 +58,10 @@ def upgrade() -> None:
         sa.Column('notes', sa.Text(), nullable=True),
         
         # Audit trail (Requirement 4.6)
-        # Track who received the payment
         sa.Column('received_by', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
@@ -91,6 +92,8 @@ def upgrade() -> None:
         
         # Timestamp for allocation order tracking (Requirement 4.4)
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),

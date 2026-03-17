@@ -65,6 +65,8 @@ def upgrade() -> None:
         # Audit trail (Requirement 2.6, 4.6)
         sa.Column('created_by', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),

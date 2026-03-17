@@ -73,6 +73,8 @@ def upgrade() -> None:
         # Track who performed the collection activity
         sa.Column('performed_by', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),

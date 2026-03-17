@@ -79,6 +79,7 @@ def upgrade() -> None:
         # Audit timestamps
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
