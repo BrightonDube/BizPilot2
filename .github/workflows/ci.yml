@@ -60,6 +60,7 @@ jobs:
       - name: Run tests
         env:
           SECRET_KEY: test-secret-key-for-ci-testing-only
+          DATABASE_URL: postgresql://bizpilot:bizpilot@localhost:5432/bizpilot
         run: pytest app/tests/ -v --tb=short --cov --cov-report=term-missing --cov-report=xml --cov-fail-under=50
 
   migrations:
