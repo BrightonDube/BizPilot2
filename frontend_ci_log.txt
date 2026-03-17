@@ -1,0 +1,371 @@
+Frontend CI	Set up job	∩╗┐2026-03-17T13:06:17.9113914Z Current runner version: '2.332.0'
+Frontend CI	Set up job	2026-03-17T13:06:17.9137315Z ##[group]Runner Image Provisioner
+Frontend CI	Set up job	2026-03-17T13:06:17.9138184Z Hosted Compute Agent
+Frontend CI	Set up job	2026-03-17T13:06:17.9138857Z Version: 20260213.493
+Frontend CI	Set up job	2026-03-17T13:06:17.9139478Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+Frontend CI	Set up job	2026-03-17T13:06:17.9140356Z Build Date: 2026-02-13T00:28:41Z
+Frontend CI	Set up job	2026-03-17T13:06:17.9141087Z Worker ID: {f9b03dc0-5a45-45b6-a4b0-fd697064087a}
+Frontend CI	Set up job	2026-03-17T13:06:17.9142137Z Azure Region: northcentralus
+Frontend CI	Set up job	2026-03-17T13:06:17.9142977Z ##[endgroup]
+Frontend CI	Set up job	2026-03-17T13:06:17.9144832Z ##[group]Operating System
+Frontend CI	Set up job	2026-03-17T13:06:17.9145516Z Ubuntu
+Frontend CI	Set up job	2026-03-17T13:06:17.9146123Z 24.04.3
+Frontend CI	Set up job	2026-03-17T13:06:17.9146670Z LTS
+Frontend CI	Set up job	2026-03-17T13:06:17.9147205Z ##[endgroup]
+Frontend CI	Set up job	2026-03-17T13:06:17.9147839Z ##[group]Runner Image
+Frontend CI	Set up job	2026-03-17T13:06:17.9148462Z Image: ubuntu-24.04
+Frontend CI	Set up job	2026-03-17T13:06:17.9149016Z Version: 20260309.50.1
+Frontend CI	Set up job	2026-03-17T13:06:17.9150135Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260309.50/images/ubuntu/Ubuntu2404-Readme.md
+Frontend CI	Set up job	2026-03-17T13:06:17.9152322Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260309.50
+Frontend CI	Set up job	2026-03-17T13:06:17.9153335Z ##[endgroup]
+Frontend CI	Set up job	2026-03-17T13:06:17.9154500Z ##[group]GITHUB_TOKEN Permissions
+Frontend CI	Set up job	2026-03-17T13:06:17.9156692Z Contents: read
+Frontend CI	Set up job	2026-03-17T13:06:17.9157359Z Metadata: read
+Frontend CI	Set up job	2026-03-17T13:06:17.9157951Z Packages: read
+Frontend CI	Set up job	2026-03-17T13:06:17.9158620Z ##[endgroup]
+Frontend CI	Set up job	2026-03-17T13:06:17.9161317Z Secret source: Actions
+Frontend CI	Set up job	2026-03-17T13:06:17.9162379Z Prepare workflow directory
+Frontend CI	Set up job	2026-03-17T13:06:17.9558118Z Prepare all required actions
+Frontend CI	Set up job	2026-03-17T13:06:17.9596002Z Getting action download info
+Frontend CI	Set up job	2026-03-17T13:06:18.3540488Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Frontend CI	Set up job	2026-03-17T13:06:18.4856047Z Download action repository 'pnpm/action-setup@v4' (SHA:fc06bc1257f339d1d5d8b3a19a8cae5388b55320)
+Frontend CI	Set up job	2026-03-17T13:06:18.9238039Z Download action repository 'actions/setup-node@v6' (SHA:53b83947a5a98c8d113130e565377fae1a50d02f)
+Frontend CI	Set up job	2026-03-17T13:06:19.5508659Z Complete job name: Frontend CI
+Frontend CI	Checkout code	∩╗┐2026-03-17T13:06:19.6361257Z ##[group]Run actions/checkout@v4
+Frontend CI	Checkout code	2026-03-17T13:06:19.6362837Z with:
+Frontend CI	Checkout code	2026-03-17T13:06:19.6363682Z   repository: BrightonDube/BizPilot2
+Frontend CI	Checkout code	2026-03-17T13:06:19.6364970Z   token: ***
+Frontend CI	Checkout code	2026-03-17T13:06:19.6365724Z   ssh-strict: true
+Frontend CI	Checkout code	2026-03-17T13:06:19.6366496Z   ssh-user: git
+Frontend CI	Checkout code	2026-03-17T13:06:19.6367301Z   persist-credentials: true
+Frontend CI	Checkout code	2026-03-17T13:06:19.6368337Z   clean: true
+Frontend CI	Checkout code	2026-03-17T13:06:19.6369268Z   sparse-checkout-cone-mode: true
+Frontend CI	Checkout code	2026-03-17T13:06:19.6370250Z   fetch-depth: 1
+Frontend CI	Checkout code	2026-03-17T13:06:19.6371019Z   fetch-tags: false
+Frontend CI	Checkout code	2026-03-17T13:06:19.6372051Z   show-progress: true
+Frontend CI	Checkout code	2026-03-17T13:06:19.6372858Z   lfs: false
+Frontend CI	Checkout code	2026-03-17T13:06:19.6373587Z   submodules: false
+Frontend CI	Checkout code	2026-03-17T13:06:19.6374400Z   set-safe-directory: true
+Frontend CI	Checkout code	2026-03-17T13:06:19.6375545Z env:
+Frontend CI	Checkout code	2026-03-17T13:06:19.6376264Z   PYTHON_VERSION: 3.12
+Frontend CI	Checkout code	2026-03-17T13:06:19.6377072Z   NODE_VERSION: 20
+Frontend CI	Checkout code	2026-03-17T13:06:19.6377824Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:19.7469806Z Syncing repository: BrightonDube/BizPilot2
+Frontend CI	Checkout code	2026-03-17T13:06:19.7472918Z ##[group]Getting Git version info
+Frontend CI	Checkout code	2026-03-17T13:06:19.7474648Z Working directory is '/home/runner/work/BizPilot2/BizPilot2'
+Frontend CI	Checkout code	2026-03-17T13:06:19.7476975Z [command]/usr/bin/git version
+Frontend CI	Checkout code	2026-03-17T13:06:19.7535368Z git version 2.53.0
+Frontend CI	Checkout code	2026-03-17T13:06:19.7561311Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:19.7576479Z Temporarily overriding HOME='/home/runner/work/_temp/a2c6a593-2802-458d-81fb-8765e13f694e' before making global git config changes
+Frontend CI	Checkout code	2026-03-17T13:06:19.7579300Z Adding repository directory to the temporary git global config as a safe directory
+Frontend CI	Checkout code	2026-03-17T13:06:19.7582697Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BizPilot2/BizPilot2
+Frontend CI	Checkout code	2026-03-17T13:06:19.7620615Z Deleting the contents of '/home/runner/work/BizPilot2/BizPilot2'
+Frontend CI	Checkout code	2026-03-17T13:06:19.7624364Z ##[group]Initializing the repository
+Frontend CI	Checkout code	2026-03-17T13:06:19.7628433Z [command]/usr/bin/git init /home/runner/work/BizPilot2/BizPilot2
+Frontend CI	Checkout code	2026-03-17T13:06:19.7749598Z hint: Using 'master' as the name for the initial branch. This default branch name
+Frontend CI	Checkout code	2026-03-17T13:06:19.7752984Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Frontend CI	Checkout code	2026-03-17T13:06:19.7756860Z hint: to use in all of your new repositories, which will suppress this warning,
+Frontend CI	Checkout code	2026-03-17T13:06:19.7759189Z hint: call:
+Frontend CI	Checkout code	2026-03-17T13:06:19.7760066Z hint:
+Frontend CI	Checkout code	2026-03-17T13:06:19.7761181Z hint: 	git config --global init.defaultBranch <name>
+Frontend CI	Checkout code	2026-03-17T13:06:19.7762696Z hint:
+Frontend CI	Checkout code	2026-03-17T13:06:19.7764172Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Frontend CI	Checkout code	2026-03-17T13:06:19.7766064Z hint: 'development'. The just-created branch can be renamed via this command:
+Frontend CI	Checkout code	2026-03-17T13:06:19.7767485Z hint:
+Frontend CI	Checkout code	2026-03-17T13:06:19.7768203Z hint: 	git branch -m <name>
+Frontend CI	Checkout code	2026-03-17T13:06:19.7769095Z hint:
+Frontend CI	Checkout code	2026-03-17T13:06:19.7770461Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Frontend CI	Checkout code	2026-03-17T13:06:19.7772558Z Initialized empty Git repository in /home/runner/work/BizPilot2/BizPilot2/.git/
+Frontend CI	Checkout code	2026-03-17T13:06:19.7775656Z [command]/usr/bin/git remote add origin https://github.com/BrightonDube/BizPilot2
+Frontend CI	Checkout code	2026-03-17T13:06:19.7802194Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:19.7803837Z ##[group]Disabling automatic garbage collection
+Frontend CI	Checkout code	2026-03-17T13:06:19.7805522Z [command]/usr/bin/git config --local gc.auto 0
+Frontend CI	Checkout code	2026-03-17T13:06:19.7837851Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:19.7840122Z ##[group]Setting up auth
+Frontend CI	Checkout code	2026-03-17T13:06:19.7845801Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Frontend CI	Checkout code	2026-03-17T13:06:19.7880053Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Frontend CI	Checkout code	2026-03-17T13:06:19.8221135Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Frontend CI	Checkout code	2026-03-17T13:06:19.8252525Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Frontend CI	Checkout code	2026-03-17T13:06:19.8483533Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Frontend CI	Checkout code	2026-03-17T13:06:19.8522346Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Frontend CI	Checkout code	2026-03-17T13:06:19.8757376Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Frontend CI	Checkout code	2026-03-17T13:06:19.8793522Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:19.8795131Z ##[group]Fetching the repository
+Frontend CI	Checkout code	2026-03-17T13:06:19.8804902Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +32e8f30cd15853b812a6f45731877567364a71b1:refs/remotes/pull/478/merge
+Frontend CI	Checkout code	2026-03-17T13:06:21.1915490Z From https://github.com/BrightonDube/BizPilot2
+Frontend CI	Checkout code	2026-03-17T13:06:21.1917822Z  * [new ref]         32e8f30cd15853b812a6f45731877567364a71b1 -> pull/478/merge
+Frontend CI	Checkout code	2026-03-17T13:06:21.1949483Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:21.1950625Z ##[group]Determining the checkout info
+Frontend CI	Checkout code	2026-03-17T13:06:21.1952169Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:21.1957967Z [command]/usr/bin/git sparse-checkout disable
+Frontend CI	Checkout code	2026-03-17T13:06:21.2001079Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Frontend CI	Checkout code	2026-03-17T13:06:21.2029430Z ##[group]Checking out the ref
+Frontend CI	Checkout code	2026-03-17T13:06:21.2033540Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/478/merge
+Frontend CI	Checkout code	2026-03-17T13:06:21.4162791Z Note: switching to 'refs/remotes/pull/478/merge'.
+Frontend CI	Checkout code	2026-03-17T13:06:21.4163454Z 
+Frontend CI	Checkout code	2026-03-17T13:06:21.4163991Z You are in 'detached HEAD' state. You can look around, make experimental
+Frontend CI	Checkout code	2026-03-17T13:06:21.4164955Z changes and commit them, and you can discard any commits you make in this
+Frontend CI	Checkout code	2026-03-17T13:06:21.4166014Z state without impacting any branches by switching back to a branch.
+Frontend CI	Checkout code	2026-03-17T13:06:21.4166640Z 
+Frontend CI	Checkout code	2026-03-17T13:06:21.4167160Z If you want to create a new branch to retain commits you create, you may
+Frontend CI	Checkout code	2026-03-17T13:06:21.4168048Z do so (now or later) by using -c with the switch command. Example:
+Frontend CI	Checkout code	2026-03-17T13:06:21.4169060Z 
+Frontend CI	Checkout code	2026-03-17T13:06:21.4169432Z   git switch -c <new-branch-name>
+Frontend CI	Checkout code	2026-03-17T13:06:21.4169834Z 
+Frontend CI	Checkout code	2026-03-17T13:06:21.4170080Z Or undo this operation with:
+Frontend CI	Checkout code	2026-03-17T13:06:21.4170480Z 
+Frontend CI	Checkout code	2026-03-17T13:06:21.4170690Z   git switch -
+Frontend CI	Checkout code	2026-03-17T13:06:21.4170999Z 
+Frontend CI	Checkout code	2026-03-17T13:06:21.4171598Z Turn off this advice by setting config variable advice.detachedHead to false
+Frontend CI	Checkout code	2026-03-17T13:06:21.4172456Z 
+Frontend CI	Checkout code	2026-03-17T13:06:21.4173148Z HEAD is now at 32e8f30 Merge e86192f3e884855e2132eab942cbc3775867c455 into 8405159965b218b7a36ff9bab8cb6704453e9b72
+Frontend CI	Checkout code	2026-03-17T13:06:21.4186483Z ##[endgroup]
+Frontend CI	Checkout code	2026-03-17T13:06:21.4228581Z [command]/usr/bin/git log -1 --format=%H
+Frontend CI	Checkout code	2026-03-17T13:06:21.4253581Z 32e8f30cd15853b812a6f45731877567364a71b1
+Frontend CI	Setup pnpm	∩╗┐2026-03-17T13:06:21.4470276Z ##[group]Run pnpm/action-setup@v4
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4470719Z with:
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4471115Z   dest: ~/setup-pnpm
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4471467Z   run_install: null
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4472106Z   cache: false
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4472545Z   cache_dependency_path: pnpm-lock.yaml
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4473044Z   package_json_file: package.json
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4473412Z   standalone: false
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4473803Z env:
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4474093Z   PYTHON_VERSION: 3.12
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4474442Z   NODE_VERSION: 20
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.4474773Z ##[endgroup]
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.5884041Z ##[group]Running self-installer...
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.9896339Z (node:2352) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Frontend CI	Setup pnpm	2026-03-17T13:06:21.9898390Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.0951053Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.1045405Z Packages: +1
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.1046088Z +
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5089816Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5366741Z 
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5367117Z dependencies:
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5367520Z + pnpm 10.18.0 (10.32.1 is available)
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5367853Z 
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5396504Z Done in 785ms
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5571881Z ##[endgroup]
+Frontend CI	Setup pnpm	2026-03-17T13:06:22.5572259Z Installation Completed!
+Frontend CI	Set up Node.js	∩╗┐2026-03-17T13:06:22.5755090Z ##[group]Run actions/setup-node@v6
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5755355Z with:
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5755531Z   node-version: 20
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5755725Z   cache: pnpm
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5755932Z   cache-dependency-path: pnpm-lock.yaml
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5756202Z   check-latest: false
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5756519Z   token: ***
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5756713Z   package-manager-cache: true
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5756944Z env:
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5757109Z   PYTHON_VERSION: 3.12
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5757309Z   NODE_VERSION: 20
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5757555Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.5757849Z ##[endgroup]
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.7298507Z Found in cache @ /opt/hostedtoolcache/node/20.20.1/x64
+Frontend CI	Set up Node.js	2026-03-17T13:06:22.7302630Z ##[group]Environment details
+Frontend CI	Set up Node.js	2026-03-17T13:06:24.9687126Z node: v20.20.1
+Frontend CI	Set up Node.js	2026-03-17T13:06:24.9687534Z npm: 10.8.2
+Frontend CI	Set up Node.js	2026-03-17T13:06:24.9687840Z yarn: 1.22.22
+Frontend CI	Set up Node.js	2026-03-17T13:06:24.9693426Z ##[endgroup]
+Frontend CI	Set up Node.js	2026-03-17T13:06:24.9714736Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+Frontend CI	Set up Node.js	2026-03-17T13:06:25.4701954Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+Frontend CI	Set up Node.js	2026-03-17T13:06:25.5956273Z pnpm cache is not found
+Frontend CI	Install dependencies	∩╗┐2026-03-17T13:06:25.6082309Z ##[group]Run pnpm install --frozen-lockfile
+Frontend CI	Install dependencies	2026-03-17T13:06:25.6082705Z [36;1mpnpm install --frozen-lockfile[0m
+Frontend CI	Install dependencies	2026-03-17T13:06:25.6142697Z shell: /usr/bin/bash -e {0}
+Frontend CI	Install dependencies	2026-03-17T13:06:25.6142986Z env:
+Frontend CI	Install dependencies	2026-03-17T13:06:25.6143182Z   PYTHON_VERSION: 3.12
+Frontend CI	Install dependencies	2026-03-17T13:06:25.6143410Z   NODE_VERSION: 20
+Frontend CI	Install dependencies	2026-03-17T13:06:25.6143689Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Frontend CI	Install dependencies	2026-03-17T13:06:25.6144009Z ##[endgroup]
+Frontend CI	Install dependencies	2026-03-17T13:06:25.9936015Z Scope: all 5 workspace projects
+Frontend CI	Install dependencies	2026-03-17T13:06:26.1194106Z Lockfile is up to date, resolution step is skipped
+Frontend CI	Install dependencies	2026-03-17T13:06:26.2306887Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Frontend CI	Install dependencies	2026-03-17T13:06:26.4151578Z Packages: +1583
+Frontend CI	Install dependencies	2026-03-17T13:06:26.4152510Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Frontend CI	Install dependencies	2026-03-17T13:06:27.2330560Z Progress: resolved 1583, reused 0, downloaded 88, added 74
+Frontend CI	Install dependencies	2026-03-17T13:06:28.2330406Z Progress: resolved 1583, reused 0, downloaded 148, added 100
+Frontend CI	Install dependencies	2026-03-17T13:06:29.2328460Z Progress: resolved 1583, reused 0, downloaded 154, added 104
+Frontend CI	Install dependencies	2026-03-17T13:06:30.2331614Z Progress: resolved 1583, reused 0, downloaded 406, added 355
+Frontend CI	Install dependencies	2026-03-17T13:06:31.2326251Z Progress: resolved 1583, reused 0, downloaded 717, added 729
+Frontend CI	Install dependencies	2026-03-17T13:06:32.2331103Z Progress: resolved 1583, reused 0, downloaded 974, added 988
+Frontend CI	Install dependencies	2026-03-17T13:06:33.2342334Z Progress: resolved 1583, reused 0, downloaded 1225, added 1238
+Frontend CI	Install dependencies	2026-03-17T13:06:34.2363309Z Progress: resolved 1583, reused 0, downloaded 1283, added 1259
+Frontend CI	Install dependencies	2026-03-17T13:06:35.2389908Z Progress: resolved 1583, reused 0, downloaded 1419, added 1347
+Frontend CI	Install dependencies	2026-03-17T13:06:35.8898121Z Progress: resolved 1583, reused 0, downloaded 1566, added 1583, done
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8582523Z 
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8583994Z Γò¡ Warning ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò«
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8584967Z Γöé                                                                              Γöé
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8585957Z Γöé   Ignored build scripts: puppeteer, sharp, unrs-resolver.                    Γöé
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8587142Z Γöé   Run "pnpm approve-builds" to pick which dependencies should be allowed     Γöé
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8588174Z Γöé   to run scripts.                                                            Γöé
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8589034Z Γöé                                                                              Γöé
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8589979Z Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò»
+Frontend CI	Install dependencies	2026-03-17T13:06:36.8590406Z 
+Frontend CI	Install dependencies	2026-03-17T13:06:36.9285369Z Done in 11.2s using pnpm v10.18.0
+Frontend CI	Lint	∩╗┐2026-03-17T13:06:36.9930793Z ##[group]Run pnpm --filter frontend lint
+Frontend CI	Lint	2026-03-17T13:06:36.9931162Z [36;1mpnpm --filter frontend lint[0m
+Frontend CI	Lint	2026-03-17T13:06:36.9981360Z shell: /usr/bin/bash -e {0}
+Frontend CI	Lint	2026-03-17T13:06:36.9981600Z env:
+Frontend CI	Lint	2026-03-17T13:06:36.9981915Z   PYTHON_VERSION: 3.12
+Frontend CI	Lint	2026-03-17T13:06:36.9982128Z   NODE_VERSION: 20
+Frontend CI	Lint	2026-03-17T13:06:36.9982366Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Frontend CI	Lint	2026-03-17T13:06:36.9982662Z ##[endgroup]
+Frontend CI	Lint	2026-03-17T13:06:37.4053471Z 
+Frontend CI	Lint	2026-03-17T13:06:37.4054673Z > frontend@2.0.0 lint /home/runner/work/BizPilot2/BizPilot2/frontend
+Frontend CI	Lint	2026-03-17T13:06:37.4056794Z > eslint .
+Frontend CI	Lint	2026-03-17T13:06:37.4057008Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6072053Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6073327Z /home/runner/work/BizPilot2/BizPilot2/frontend/e2e/time-tracking.spec.ts
+Frontend CI	Lint	2026-03-17T13:06:54.6112714Z ##[warning]   5:28  warning  'page' is defined but never used                   @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6124094Z ##[warning]  54:11  warning  'employeeRows' is assigned a value but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6125566Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6126198Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/accounts/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6128214Z ##[warning]  149:9  warning  'overdueCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6129553Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6130156Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/addons/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6132408Z ##[warning]  47:5  warning  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+Frontend CI	Lint	2026-03-17T13:06:54.6133971Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6134738Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/collections/CollectionsClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6136496Z ##[warning]  32:3  warning  'Edit2' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6138128Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6138923Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/commissions/CommissionsPageClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6140673Z ##[warning]  29:3  warning  'DollarSign' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6143096Z ##[warning]  33:3  warning  'Download' is defined but never used    @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6144438Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6145229Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/integrations/IntegrationsPageClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6146951Z ##[warning]  35:3  warning  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6149109Z ##[warning]  36:3  warning  'Clock' is defined but never used         @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6151210Z ##[warning]  37:3  warning  'XCircle' is defined but never used       @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6152844Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6153462Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/laybys/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6155036Z ##[warning]  12:3  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6156428Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6157101Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/menu-engineering/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6158665Z ##[warning]  33:3  warning  'Select' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6159948Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6160588Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/order-history/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6162468Z ##[warning]   5:26  warning  'Calendar' is defined but never used                @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6164780Z ##[warning]   5:77  warning  'RotateCcw' is defined but never used               @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6167086Z ##[warning]  60:10  warning  'selectedOrder' is assigned a value but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6170020Z ##[error]  67:36  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6172047Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6172819Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/partners/PartnersPageClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6174592Z ##[warning]  30:3  warning  'Users' is defined but never used     @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6176827Z ##[warning]  31:3  warning  'Palette' is defined but never used   @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6179031Z ##[warning]  32:3  warning  'Settings' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6181231Z ##[warning]  33:3  warning  'Edit' is defined but never used      @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6183679Z ##[warning]  35:3  warning  'Eye' is defined but never used       @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6184981Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6185706Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/payments/PaymentsPageClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6187284Z ##[warning]  20:3  warning  'Edit' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6188590Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6189232Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/pms/PMSPageClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6190771Z ##[warning]   32:3   warning  'WifiOff' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6193170Z ##[warning]  150:24  warning  'type' is defined but never used     @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6194500Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6195090Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/quotes/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6196584Z ##[warning]  19:3  warning  'Eye' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6197868Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6198693Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/recipes/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6200228Z ##[warning]  57:11  warning  'RecipeCost' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6201591Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6202460Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/reports/extended/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6204198Z ##[warning]   32:3  warning  'CardHeader' is defined but never used       @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6206456Z ##[warning]   33:3  warning  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6208724Z ##[warning]  104:7  warning  'fmtPct' is assigned a value but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6210081Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6210789Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/sage/SageIntegrationClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6212642Z ##[error]   97:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6214980Z ##[error]  139:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6217192Z ##[error]  151:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6219365Z ##[error]  167:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6221541Z ##[error]  189:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6223912Z ##[error]  201:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6226184Z ##[error]  217:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6228462Z ##[error]  226:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6229918Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6230539Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/shifts/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6232319Z ##[warning]  5:88  warning  'Banknote' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6234085Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6234800Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/signage/SignagePageClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6236486Z ##[warning]  32:3  warning  'Trash2' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6238763Z ##[warning]  33:3  warning  'Edit' is defined but never used    @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6240135Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6240898Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/staff-targets/StaffTargetsClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6242804Z ##[warning]   32:3   warning  'Users' is defined but never used         @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6244846Z ##[error]  156:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6246214Z ##[error]  170:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6247532Z ##[error]  182:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6248819Z ##[error]  218:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6250134Z ##[error]  227:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6251039Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6251448Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/sync/SyncDashboardClient.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6252917Z ##[warning]  29:3  warning  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6253897Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6254286Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/(dashboard)/time-tracking/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6255508Z ##[warning]  17:3  warning  'Filter' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6256406Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6256722Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/app/auth/login/page.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6257736Z ##[warning]  7:41  warning  'useRef' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6258648Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6259045Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/charts/CostBreakdownChart.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6260150Z ##[error]  40:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6261095Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6261500Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/charts/InventoryStatusChart.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6262620Z ##[error]  43:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6263527Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6263935Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/charts/ProfitMarginChart.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6264871Z ##[error]  40:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6265743Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6266158Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/charts/ProfitTrendChart.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6267086Z ##[error]  57:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+Frontend CI	Lint	2026-03-17T13:06:54.6268002Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6268400Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/combos/ComboComponentEditor.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6269430Z ##[warning]  16:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6270322Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6270686Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/combos/ComboDealList.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6271563Z ##[warning]  20:3  warning  'Tag' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6272590Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6273014Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/modifiers/ModifierManagement.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6274232Z ##[warning]  16:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6275149Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6275522Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/reorder/GoodsReceiving.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6276599Z ##[warning]  21:35  warning  'AlertTriangle' is defined but never used            @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6278192Z ##[warning]  75:9   warning  'formatCurrency' is assigned a value but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6279169Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6279549Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/reorder/ReorderReports.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6280440Z ##[warning]  18:10  warning  'Badge' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6281332Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6281866Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/reports/ComboPerformance.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6282897Z ##[warning]  11:28  warning  'DollarSign' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6284343Z ##[warning]  11:40  warning  'Tag' is defined but never used         @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6285211Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6285607Z /home/runner/work/BizPilot2/BizPilot2/frontend/src/components/reports/ModifierRanking.tsx
+Frontend CI	Lint	2026-03-17T13:06:54.6286508Z ##[warning]  11:27  warning  'ArrowUpDown' is defined but never used  @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6287915Z ##[warning]  12:10  warning  'Badge' is defined but never used        @typescript-eslint/no-unused-vars
+Frontend CI	Lint	2026-03-17T13:06:54.6288791Z 
+Frontend CI	Lint	2026-03-17T13:06:54.6289205Z Γ£û 63 problems (18 errors, 45 warnings)
+Frontend CI	Lint	2026-03-17T13:06:54.6289424Z 
+Frontend CI	Lint	2026-03-17T13:06:54.7168984Z /home/runner/work/BizPilot2/BizPilot2/frontend:
+Frontend CI	Lint	2026-03-17T13:06:54.7170809Z ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë frontend@2.0.0 lint: `eslint .`
+Frontend CI	Lint	2026-03-17T13:06:54.7171327Z Exit status 1
+Frontend CI	Lint	2026-03-17T13:06:54.7357683Z ##[error]Process completed with exit code 1.
+Frontend CI	Post Setup pnpm	∩╗┐2026-03-17T13:06:54.7424866Z Post job cleanup.
+Frontend CI	Post Setup pnpm	2026-03-17T13:06:54.8835327Z Pruning is unnecessary.
+Frontend CI	Post Checkout code	∩╗┐2026-03-17T13:06:54.8987302Z Post job cleanup.
+Frontend CI	Post Checkout code	2026-03-17T13:06:54.9930842Z [command]/usr/bin/git version
+Frontend CI	Post Checkout code	2026-03-17T13:06:54.9968276Z git version 2.53.0
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0022085Z Temporarily overriding HOME='/home/runner/work/_temp/fc9ed359-b564-4a1a-8090-1934c9f9a10b' before making global git config changes
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0023618Z Adding repository directory to the temporary git global config as a safe directory
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0028623Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BizPilot2/BizPilot2
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0066909Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0103328Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0374430Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0399163Z http.https://github.com/.extraheader
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0413365Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0449332Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0713071Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Frontend CI	Post Checkout code	2026-03-17T13:06:55.0754521Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Frontend CI	Complete job	∩╗┐2026-03-17T13:06:55.1122811Z Cleaning up orphan processes
+Frontend CI	Complete job	2026-03-17T13:06:55.1393010Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
