@@ -254,7 +254,7 @@ class TestCancelReservation:
 
     def test_cancel_seated_raises(self, service, db):
         """Cannot cancel a seated reservation."""
-        mock_r = _mock_reservation(res_id=RES_ID, status=ReservationStatus.SEATED.value)
+        mock_r = _mock_reservation(res_id=RES_ID, status=ReservationStatus.ARRIVED.value)
         db.query.return_value.filter.return_value.first.return_value = mock_r
 
         with pytest.raises(ValueError, match="Cannot cancel"):
@@ -296,7 +296,7 @@ class TestSeatReservation:
         db.query.return_value.get.return_value = mock_table
 
         service.seat_reservation(RES_ID, BIZ_ID)
-        assert mock_r.status == ReservationStatus.SEATED.value
+        assert mock_r.status == ReservationStatus.ARRIVED.value
         assert mock_table.status == TableStatus.OCCUPIED
         db.commit.assert_called()
 
@@ -338,7 +338,7 @@ class TestMarkNoShow:
     def test_no_show_seated_raises(self, service, db):
         """Cannot mark a seated reservation as no-show."""
         mock_r = _mock_reservation(
-            res_id=RES_ID, status=ReservationStatus.SEATED.value,
+            res_id=RES_ID, status=ReservationStatus.ARRIVED.value,
         )
         db.query.return_value.filter.return_value.first.return_value = mock_r
 
