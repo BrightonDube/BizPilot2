@@ -18,6 +18,20 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bizpilot
+          POSTGRES_PASSWORD: bizpilot
+          POSTGRES_DB: bizpilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U bizpilot -d bizpilot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
     steps:
       - name: Checkout code
