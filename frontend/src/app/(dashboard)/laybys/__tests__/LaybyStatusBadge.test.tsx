@@ -67,7 +67,7 @@ describe('LaybyStatusBadge', () => {
     // The component should not crash and should render something
     expect(() => {
       render(<LaybyStatusBadge status={invalidStatus} />);
-    }).not.tothrow();
+    }).not.toThrow();
     
     // It should default to ACTIVE styling (the fallback in statusConfig)
     const badge = screen.getByText('Active'); // Falls back to ACTIVE config

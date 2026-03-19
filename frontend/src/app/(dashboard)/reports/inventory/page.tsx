@@ -27,20 +27,139 @@ import {
 } from '@/components/ui';
 import { apiClient } from '@/lib/api';
 import { FeatureGate } from '@/components/subscription/FeatureGate';
-import {
-  InventoryReportData,
-  StockLevelsReportData,
-  StockMovementsReportData,
-  ValuationReportData,
-  TurnoverReportData,
-  SupplierPerformanceReportData,
-  StockLevelItem,
-  StockMovementItem,
-  ValuationItem,
-  TurnoverItem,
-  SupplierPerformanceItem,
-} from '@/lib/types';
 import axios from 'axios';
+
+// Define inventory report types locally
+interface StockLevelItem {
+  product_id: string;
+  product_name: string;
+  name?: string;
+  sku?: string;
+  category_name?: string;
+  category?: string;
+  current_quantity: number;
+  quantity_in_stock?: number;
+  stock?: number;
+  low_stock_alert: number;
+  reorder_level?: number;
+  reorder_point?: number;
+  unit_cost?: number;
+  cost_price?: number;
+  stock_value?: number;
+  status: string;
+}
+
+interface StockMovementItem {
+  product_name: string;
+  name?: string;
+  movement_type: string;
+  type?: string;
+  quantity: number;
+  date: string;
+  created_at?: string;
+  reference?: string;
+  reference_number?: string;
+  notes?: string;
+}
+
+interface ValuationItem {
+  product_name: string;
+  name?: string;
+  sku?: string;
+  quantity: number;
+  quantity_in_stock?: number;
+  unit_cost: number;
+  cost_price?: number;
+  total_value: number;
+  stock_value?: number;
+  percentage?: number;
+}
+
+interface TurnoverItem {
+  product_name: string;
+  name?: string;
+  turnover_rate: number;
+  days_to_sell: number;
+  units_sold?: number;
+  quantity_sold?: number;
+  average_stock?: number;
+  avg_inventory?: number;
+  revenue?: number;
+  total_revenue?: number;
+}
+
+interface SupplierPerformanceItem {
+  supplier_name: string;
+  name?: string;
+  total_orders: number;
+  order_count?: number;
+  orders?: number;
+  on_time_deliveries: number;
+  performance_score: number;
+  items_supplied?: number;
+  total_items?: number;
+  total_spend?: number;
+  amount?: number;
+  avg_lead_time?: number;
+  on_time_percentage?: number;
+}
+
+interface InventoryReportData {
+  stock_levels?: StockLevelItem[];
+  stock_movements?: StockMovementItem[];
+  valuation?: ValuationItem[];
+  turnover?: TurnoverItem[];
+  supplier_performance?: SupplierPerformanceItem[];
+}
+
+interface StockLevelsReportData {
+  items: StockLevelItem[];
+  products?: StockLevelItem[];
+  total_items: number;
+  total_products?: number;
+  total_stock_value?: number;
+  low_stock_count: number;
+  out_of_stock_count: number;
+}
+
+interface StockMovementsReportData {
+  movements: StockMovementItem[];
+  items?: StockMovementItem[];
+  total_movements: number;
+  total_stock_in?: number;
+  total_stock_out?: number;
+  net_movement?: number;
+}
+
+interface ValuationReportData {
+  items: ValuationItem[];
+  products?: ValuationItem[];
+  total_value: number;
+  total_valuation?: number;
+  total_items?: number;
+  average_unit_cost?: number;
+  method?: string;
+}
+
+interface TurnoverReportData {
+  items: TurnoverItem[];
+  products?: TurnoverItem[];
+  average_turnover: number;
+  average_turnover_rate?: number;
+  average_days_to_sell?: number;
+  fast_moving_count?: number;
+  slow_moving_count?: number;
+}
+
+interface SupplierPerformanceReportData {
+  suppliers: SupplierPerformanceItem[];
+  items?: SupplierPerformanceItem[];
+  average_performance: number;
+  total_suppliers?: number;
+  total_orders?: number;
+  total_spend?: number;
+  average_lead_time?: number;
+}
 
 type TabKey= 'stock-levels' | 'movements' | 'valuation' | 'turnover' | 'supplier-performance';
 

@@ -89,7 +89,8 @@ export function ProfitTrendChart({ products }: ProfitTrendChartProps) {
             fontSize={12}
             tickFormatter={(v) => formatCurrency(v, currency)}
           />
-          <Tooltip content={renderTooltip} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Tooltip content={renderTooltip as any} />
           <Area
             type="monotone"
             dataKey="profit"

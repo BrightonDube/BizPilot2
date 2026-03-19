@@ -62,8 +62,8 @@ describe('LaybyRow', () => {
    */
   test('renders outstanding balance formatted as currency', () => {
     render(<LaybyRow layby={mockLayby} />);
-    // Should format 800 as ZAR 800.00
-    expect(screen.getByText(/Balance: R\s*800\.00/)).toBeInTheDocument();
+    // Should format 800 as ZAR 800,00 (South African format)
+    expect(screen.getByText(/Balance: R\s*800,00/)).toBeInTheDocument();
   });
 
   /**
@@ -71,8 +71,8 @@ describe('LaybyRow', () => {
    */
   test('renders total amount formatted as currency', () => {
     render(<LaybyRow layby={mockLayby} />);
-    // Should format 1150 as ZAR 1,150.00
-    expect(screen.getByText(/R\s*1,150\.00/)).toBeInTheDocument();
+    // Should format 1150 as ZAR 1 150,00 (South African format)
+    expect(screen.getByText(/R\s*1\s*150,00/)).toBeInTheDocument();
   });
 
   /**
@@ -80,8 +80,8 @@ describe('LaybyRow', () => {
    */
   test('renders paid amount formatted as currency', () => {
     render(<LaybyRow layby={mockLayby} />);
-    // Should format 350 as ZAR 350.00
-    expect(screen.getByText(/Paid: R\s*350\.00/)).toBeInTheDocument();
+    // Should format 350 as ZAR 350,00 (South African format)
+    expect(screen.getByText(/Paid: R\s*350,00/)).toBeInTheDocument();
   });
 
   /**
@@ -108,8 +108,8 @@ describe('LaybyRow', () => {
    */
   test('renders formatted creation date', () => {
     render(<LaybyRow layby={mockLayby} />);
-    // Should format '2024-01-01T10:00:00Z' as a readable date
-    expect(screen.getByText(/Jan\s+\d{1,2},\s+2024/)).toBeInTheDocument();
+    // Should format '2024-01-01T10:00:00Z' as a readable date in South African format (day first)
+    expect(screen.getByText(/\d{1,2}\s+Jan\s+2024/)).toBeInTheDocument();
   });
 
   /**
@@ -127,10 +127,10 @@ describe('LaybyRow', () => {
   test('formats all monetary values with ZAR currency', () => {
     render(<LaybyRow layby={mockLayby} />);
     
-    // Check that all monetary values include the R symbol
-    expect(screen.getByText(/R\s*1,150\.00/)).toBeInTheDocument(); // Total
-    expect(screen.getByText(/Paid: R\s*350\.00/)).toBeInTheDocument(); // Paid
-    expect(screen.getByText(/Balance: R\s*800\.00/)).toBeInTheDocument(); // Balance
+    // Check that all monetary values include the R symbol (South African format)
+    expect(screen.getByText(/R\s*1\s*150,00/)).toBeInTheDocument(); // Total
+    expect(screen.getByText(/Paid: R\s*350,00/)).toBeInTheDocument(); // Paid
+    expect(screen.getByText(/Balance: R\s*800,00/)).toBeInTheDocument(); // Balance
   });
 
   /**

@@ -132,6 +132,34 @@ export interface Layby {
 }
 
 /**
+ * Represents an audit trail entry for a Layby.
+ */
+export interface LaybyAuditEntry {
+  /** Unique identifier for the audit entry */
+  id: string;
+  /** Action performed (created, payment_made, cancelled, etc.) */
+  action: string;
+  /** User who performed the action */
+  performed_by?: string;
+  /** Previous values before the change (JSON) */
+  old_values?: Record<string, unknown>;
+  /** New values after the change (JSON) */
+  new_values?: Record<string, unknown>;
+  /** Optional notes or description */
+  notes?: string;
+  /** When the action was performed */
+  created_at: string;
+}
+
+/**
+ * Extended Layby detail interface including audit trail.
+ */
+export interface LaybyDetail extends Layby {
+  /** Audit trail for this layby */
+  audit_trail?: LaybyAuditEntry[];
+}
+
+/**
  * Response structure for the paginated layby list endpoint.
  */
 export interface LaybyListResponse {

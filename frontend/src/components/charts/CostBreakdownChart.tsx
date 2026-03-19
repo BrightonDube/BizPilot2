@@ -78,7 +78,8 @@ export function CostBreakdownChart({ data }: CostBreakdownChartProps) {
               <Cell key={entry.name} fill={`${entry.color}CC`} />
             ))}
           </Pie>
-          <Tooltip content={renderTooltip} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Tooltip content={renderTooltip as any} />
           <Legend
             verticalAlign="bottom"
             formatter={(value) => <span className="text-gray-300 text-sm">{value}</span>}
