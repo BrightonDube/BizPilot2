@@ -14,6 +14,8 @@
  * metric toggling) that need browser-side state and event handling.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/lib/api";
 import {
