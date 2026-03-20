@@ -54,7 +54,7 @@ export function ProfitTrendChart({ products }: ProfitTrendChartProps) {
     })
   }
 
-  const renderTooltip = ({ active, payload, label }: any) => {
+  const renderTooltip = ({ active, payload, label }: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     if (!active || !payload?.length) return null
     const profit = toNumber(payload[0]?.value, 0)
     const dailyProfit = toNumber((payload[0]?.payload as { dailyProfit?: unknown } | undefined)?.dailyProfit, 0)
@@ -85,7 +85,8 @@ export function ProfitTrendChart({ products }: ProfitTrendChartProps) {
             fontSize={12}
             tickFormatter={(v) => formatCurrency(v, currency)}
           />
-          <Tooltip content={renderTooltip} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Tooltip content={renderTooltip as any} />
           <Area
             type="monotone"
             dataKey="profit"

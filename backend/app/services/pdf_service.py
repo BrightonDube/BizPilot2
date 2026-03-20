@@ -1,7 +1,7 @@
 import logging
 import os
 import asyncio
-from typing import Tuple, Dict, Any, List
+from typing import Tuple
 from uuid import UUID
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -18,7 +18,6 @@ from app.models.shift import Shift
 from app.models.user import User
 from app.models.business import Business
 from app.models.customer import Customer
-from app.models.supplier import Supplier
 
 logger = logging.getLogger(__name__)
 

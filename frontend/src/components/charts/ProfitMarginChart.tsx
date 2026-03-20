@@ -37,7 +37,7 @@ export function ProfitMarginChart({ products }: ProfitMarginChartProps) {
 
   const maxMargin = Math.max(0, ...products.map((p) => p.profit_margin))
 
-  const renderTooltip = ({ active, payload, label }: any) => {
+  const renderTooltip = ({ active, payload, label }: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     if (!active || !payload?.length) return null
     const value = toNumber(payload[0]?.value, 0)
 
@@ -61,7 +61,8 @@ export function ProfitMarginChart({ products }: ProfitMarginChartProps) {
             domain={[0, maxMargin + 10]}
             tickFormatter={(v) => `${v}%`}
           />
-          <Tooltip content={renderTooltip} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Tooltip content={renderTooltip as any} />
           <Bar
             dataKey="profit_margin"
             name="Profit Margin (%)"

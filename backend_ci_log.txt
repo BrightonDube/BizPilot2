@@ -1,0 +1,1411 @@
+Backend CI	Set up job	∩╗┐2026-03-17T13:06:18.6024681Z Current runner version: '2.332.0'
+Backend CI	Set up job	2026-03-17T13:06:18.6051452Z ##[group]Runner Image Provisioner
+Backend CI	Set up job	2026-03-17T13:06:18.6052770Z Hosted Compute Agent
+Backend CI	Set up job	2026-03-17T13:06:18.6053361Z Version: 20260213.493
+Backend CI	Set up job	2026-03-17T13:06:18.6054011Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+Backend CI	Set up job	2026-03-17T13:06:18.6054865Z Build Date: 2026-02-13T00:28:41Z
+Backend CI	Set up job	2026-03-17T13:06:18.6055582Z Worker ID: {157e2f60-e7d2-4eac-bd4f-e903acd508b1}
+Backend CI	Set up job	2026-03-17T13:06:18.6056308Z Azure Region: westus3
+Backend CI	Set up job	2026-03-17T13:06:18.6056943Z ##[endgroup]
+Backend CI	Set up job	2026-03-17T13:06:18.6058454Z ##[group]Operating System
+Backend CI	Set up job	2026-03-17T13:06:18.6059082Z Ubuntu
+Backend CI	Set up job	2026-03-17T13:06:18.6059692Z 24.04.3
+Backend CI	Set up job	2026-03-17T13:06:18.6060215Z LTS
+Backend CI	Set up job	2026-03-17T13:06:18.6060730Z ##[endgroup]
+Backend CI	Set up job	2026-03-17T13:06:18.6061281Z ##[group]Runner Image
+Backend CI	Set up job	2026-03-17T13:06:18.6062091Z Image: ubuntu-24.04
+Backend CI	Set up job	2026-03-17T13:06:18.6062678Z Version: 20260309.50.1
+Backend CI	Set up job	2026-03-17T13:06:18.6063736Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260309.50/images/ubuntu/Ubuntu2404-Readme.md
+Backend CI	Set up job	2026-03-17T13:06:18.6065457Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260309.50
+Backend CI	Set up job	2026-03-17T13:06:18.6066473Z ##[endgroup]
+Backend CI	Set up job	2026-03-17T13:06:18.6067606Z ##[group]GITHUB_TOKEN Permissions
+Backend CI	Set up job	2026-03-17T13:06:18.6069549Z Contents: read
+Backend CI	Set up job	2026-03-17T13:06:18.6070190Z Metadata: read
+Backend CI	Set up job	2026-03-17T13:06:18.6070760Z Packages: read
+Backend CI	Set up job	2026-03-17T13:06:18.6071268Z ##[endgroup]
+Backend CI	Set up job	2026-03-17T13:06:18.6073782Z Secret source: Actions
+Backend CI	Set up job	2026-03-17T13:06:18.6074534Z Prepare workflow directory
+Backend CI	Set up job	2026-03-17T13:06:18.6499378Z Prepare all required actions
+Backend CI	Set up job	2026-03-17T13:06:18.6537776Z Getting action download info
+Backend CI	Set up job	2026-03-17T13:06:19.1089035Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Backend CI	Set up job	2026-03-17T13:06:19.2693585Z Download action repository 'actions/setup-python@v6' (SHA:a309ff8b426b58ec0e2a45f0f869d46889d02405)
+Backend CI	Set up job	2026-03-17T13:06:19.4494267Z Complete job name: Backend CI
+Backend CI	Checkout code	∩╗┐2026-03-17T13:06:19.5262628Z ##[group]Run actions/checkout@v4
+Backend CI	Checkout code	2026-03-17T13:06:19.5263666Z with:
+Backend CI	Checkout code	2026-03-17T13:06:19.5264147Z   repository: BrightonDube/BizPilot2
+Backend CI	Checkout code	2026-03-17T13:06:19.5264950Z   token: ***
+Backend CI	Checkout code	2026-03-17T13:06:19.5265360Z   ssh-strict: true
+Backend CI	Checkout code	2026-03-17T13:06:19.5265784Z   ssh-user: git
+Backend CI	Checkout code	2026-03-17T13:06:19.5266198Z   persist-credentials: true
+Backend CI	Checkout code	2026-03-17T13:06:19.5266677Z   clean: true
+Backend CI	Checkout code	2026-03-17T13:06:19.5267115Z   sparse-checkout-cone-mode: true
+Backend CI	Checkout code	2026-03-17T13:06:19.5267624Z   fetch-depth: 1
+Backend CI	Checkout code	2026-03-17T13:06:19.5268049Z   fetch-tags: false
+Backend CI	Checkout code	2026-03-17T13:06:19.5268472Z   show-progress: true
+Backend CI	Checkout code	2026-03-17T13:06:19.5268927Z   lfs: false
+Backend CI	Checkout code	2026-03-17T13:06:19.5269316Z   submodules: false
+Backend CI	Checkout code	2026-03-17T13:06:19.5269747Z   set-safe-directory: true
+Backend CI	Checkout code	2026-03-17T13:06:19.5270434Z env:
+Backend CI	Checkout code	2026-03-17T13:06:19.5270847Z   PYTHON_VERSION: 3.12
+Backend CI	Checkout code	2026-03-17T13:06:19.5271288Z   NODE_VERSION: 20
+Backend CI	Checkout code	2026-03-17T13:06:19.5271703Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:19.6378943Z Syncing repository: BrightonDube/BizPilot2
+Backend CI	Checkout code	2026-03-17T13:06:19.6380809Z ##[group]Getting Git version info
+Backend CI	Checkout code	2026-03-17T13:06:19.6381667Z Working directory is '/home/runner/work/BizPilot2/BizPilot2'
+Backend CI	Checkout code	2026-03-17T13:06:19.6383045Z [command]/usr/bin/git version
+Backend CI	Checkout code	2026-03-17T13:06:19.6520376Z git version 2.53.0
+Backend CI	Checkout code	2026-03-17T13:06:19.6549364Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:19.6565271Z Temporarily overriding HOME='/home/runner/work/_temp/ac870e1f-8006-4d70-81de-d87f16a8229a' before making global git config changes
+Backend CI	Checkout code	2026-03-17T13:06:19.6567924Z Adding repository directory to the temporary git global config as a safe directory
+Backend CI	Checkout code	2026-03-17T13:06:19.6570992Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BizPilot2/BizPilot2
+Backend CI	Checkout code	2026-03-17T13:06:19.6621596Z Deleting the contents of '/home/runner/work/BizPilot2/BizPilot2'
+Backend CI	Checkout code	2026-03-17T13:06:19.6626627Z ##[group]Initializing the repository
+Backend CI	Checkout code	2026-03-17T13:06:19.6631294Z [command]/usr/bin/git init /home/runner/work/BizPilot2/BizPilot2
+Backend CI	Checkout code	2026-03-17T13:06:19.6797110Z hint: Using 'master' as the name for the initial branch. This default branch name
+Backend CI	Checkout code	2026-03-17T13:06:19.6799020Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Backend CI	Checkout code	2026-03-17T13:06:19.6801140Z hint: to use in all of your new repositories, which will suppress this warning,
+Backend CI	Checkout code	2026-03-17T13:06:19.6802734Z hint: call:
+Backend CI	Checkout code	2026-03-17T13:06:19.6803417Z hint:
+Backend CI	Checkout code	2026-03-17T13:06:19.6804300Z hint: 	git config --global init.defaultBranch <name>
+Backend CI	Checkout code	2026-03-17T13:06:19.6805357Z hint:
+Backend CI	Checkout code	2026-03-17T13:06:19.6806324Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Backend CI	Checkout code	2026-03-17T13:06:19.6807952Z hint: 'development'. The just-created branch can be renamed via this command:
+Backend CI	Checkout code	2026-03-17T13:06:19.6809409Z hint:
+Backend CI	Checkout code	2026-03-17T13:06:19.6810197Z hint: 	git branch -m <name>
+Backend CI	Checkout code	2026-03-17T13:06:19.6811125Z hint:
+Backend CI	Checkout code	2026-03-17T13:06:19.6812581Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Backend CI	Checkout code	2026-03-17T13:06:19.6814637Z Initialized empty Git repository in /home/runner/work/BizPilot2/BizPilot2/.git/
+Backend CI	Checkout code	2026-03-17T13:06:19.6817971Z [command]/usr/bin/git remote add origin https://github.com/BrightonDube/BizPilot2
+Backend CI	Checkout code	2026-03-17T13:06:19.6857826Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:19.6859354Z ##[group]Disabling automatic garbage collection
+Backend CI	Checkout code	2026-03-17T13:06:19.6862146Z [command]/usr/bin/git config --local gc.auto 0
+Backend CI	Checkout code	2026-03-17T13:06:19.6897513Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:19.6898931Z ##[group]Setting up auth
+Backend CI	Checkout code	2026-03-17T13:06:19.6905729Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Backend CI	Checkout code	2026-03-17T13:06:19.6941666Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Backend CI	Checkout code	2026-03-17T13:06:19.7368357Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Backend CI	Checkout code	2026-03-17T13:06:19.7401080Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Backend CI	Checkout code	2026-03-17T13:06:19.7640541Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Backend CI	Checkout code	2026-03-17T13:06:19.7682056Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Backend CI	Checkout code	2026-03-17T13:06:19.7923890Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Backend CI	Checkout code	2026-03-17T13:06:19.7960118Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:19.7961563Z ##[group]Fetching the repository
+Backend CI	Checkout code	2026-03-17T13:06:19.7970676Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +32e8f30cd15853b812a6f45731877567364a71b1:refs/remotes/pull/478/merge
+Backend CI	Checkout code	2026-03-17T13:06:21.3692312Z From https://github.com/BrightonDube/BizPilot2
+Backend CI	Checkout code	2026-03-17T13:06:21.3694259Z  * [new ref]         32e8f30cd15853b812a6f45731877567364a71b1 -> pull/478/merge
+Backend CI	Checkout code	2026-03-17T13:06:21.3729664Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:21.3731043Z ##[group]Determining the checkout info
+Backend CI	Checkout code	2026-03-17T13:06:21.3733099Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:21.3737006Z [command]/usr/bin/git sparse-checkout disable
+Backend CI	Checkout code	2026-03-17T13:06:21.3783347Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Backend CI	Checkout code	2026-03-17T13:06:21.3813254Z ##[group]Checking out the ref
+Backend CI	Checkout code	2026-03-17T13:06:21.3817451Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/478/merge
+Backend CI	Checkout code	2026-03-17T13:06:21.5909020Z Note: switching to 'refs/remotes/pull/478/merge'.
+Backend CI	Checkout code	2026-03-17T13:06:21.5912061Z 
+Backend CI	Checkout code	2026-03-17T13:06:21.5912558Z You are in 'detached HEAD' state. You can look around, make experimental
+Backend CI	Checkout code	2026-03-17T13:06:21.5913494Z changes and commit them, and you can discard any commits you make in this
+Backend CI	Checkout code	2026-03-17T13:06:21.5914392Z state without impacting any branches by switching back to a branch.
+Backend CI	Checkout code	2026-03-17T13:06:21.5914941Z 
+Backend CI	Checkout code	2026-03-17T13:06:21.5915414Z If you want to create a new branch to retain commits you create, you may
+Backend CI	Checkout code	2026-03-17T13:06:21.5916309Z do so (now or later) by using -c with the switch command. Example:
+Backend CI	Checkout code	2026-03-17T13:06:21.5916879Z 
+Backend CI	Checkout code	2026-03-17T13:06:21.5917099Z   git switch -c <new-branch-name>
+Backend CI	Checkout code	2026-03-17T13:06:21.5917788Z 
+Backend CI	Checkout code	2026-03-17T13:06:21.5918002Z Or undo this operation with:
+Backend CI	Checkout code	2026-03-17T13:06:21.5918302Z 
+Backend CI	Checkout code	2026-03-17T13:06:21.5918485Z   git switch -
+Backend CI	Checkout code	2026-03-17T13:06:21.5918755Z 
+Backend CI	Checkout code	2026-03-17T13:06:21.5919157Z Turn off this advice by setting config variable advice.detachedHead to false
+Backend CI	Checkout code	2026-03-17T13:06:21.5919757Z 
+Backend CI	Checkout code	2026-03-17T13:06:21.5920376Z HEAD is now at 32e8f30 Merge e86192f3e884855e2132eab942cbc3775867c455 into 8405159965b218b7a36ff9bab8cb6704453e9b72
+Backend CI	Checkout code	2026-03-17T13:06:21.5932909Z ##[endgroup]
+Backend CI	Checkout code	2026-03-17T13:06:21.5973831Z [command]/usr/bin/git log -1 --format=%H
+Backend CI	Checkout code	2026-03-17T13:06:21.5998387Z 32e8f30cd15853b812a6f45731877567364a71b1
+Backend CI	Set up Python	∩╗┐2026-03-17T13:06:21.6249443Z ##[group]Run actions/setup-python@v6
+Backend CI	Set up Python	2026-03-17T13:06:21.6249813Z with:
+Backend CI	Set up Python	2026-03-17T13:06:21.6250062Z   python-version: 3.12
+Backend CI	Set up Python	2026-03-17T13:06:21.6250326Z   cache: pip
+Backend CI	Set up Python	2026-03-17T13:06:21.6250605Z   cache-dependency-path: backend/requirements.txt
+Backend CI	Set up Python	2026-03-17T13:06:21.6250958Z   check-latest: false
+Backend CI	Set up Python	2026-03-17T13:06:21.6251367Z   token: ***
+Backend CI	Set up Python	2026-03-17T13:06:21.6251633Z   update-environment: true
+Backend CI	Set up Python	2026-03-17T13:06:21.6252239Z   allow-prereleases: false
+Backend CI	Set up Python	2026-03-17T13:06:21.6252530Z   freethreaded: false
+Backend CI	Set up Python	2026-03-17T13:06:21.6252769Z env:
+Backend CI	Set up Python	2026-03-17T13:06:21.6253000Z   PYTHON_VERSION: 3.12
+Backend CI	Set up Python	2026-03-17T13:06:21.6253254Z   NODE_VERSION: 20
+Backend CI	Set up Python	2026-03-17T13:06:21.6253486Z ##[endgroup]
+Backend CI	Set up Python	2026-03-17T13:06:21.7520879Z ##[group]Installed versions
+Backend CI	Set up Python	2026-03-17T13:06:21.7846390Z Successfully set up CPython (3.12.13)
+Backend CI	Set up Python	2026-03-17T13:06:21.7847394Z ##[endgroup]
+Backend CI	Set up Python	2026-03-17T13:06:21.8251457Z [command]/opt/hostedtoolcache/Python/3.12.13/x64/bin/pip cache dir
+Backend CI	Set up Python	2026-03-17T13:06:23.1000329Z /home/runner/.cache/pip
+Backend CI	Set up Python	2026-03-17T13:06:23.3286247Z Cache hit for: setup-python-Linux-x64-24.04-Ubuntu-python-3.12.13-pip-9388202ee1194e881590b631839f0e9959a854a068cf087ee308518b967733cd
+Backend CI	Set up Python	2026-03-17T13:06:24.6221242Z Received 46137344 of 56783515 (81.3%), 44.0 MBs/sec
+Backend CI	Set up Python	2026-03-17T13:06:24.7443549Z Received 56783515 of 56783515 (100.0%), 48.2 MBs/sec
+Backend CI	Set up Python	2026-03-17T13:06:24.7444903Z Cache Size: ~54 MB (56783515 B)
+Backend CI	Set up Python	2026-03-17T13:06:24.7482763Z [command]/usr/bin/tar -xf /home/runner/work/_temp/33ad1223-ee28-4fd1-b58b-e8f4dbf3a830/cache.tzst -P -C /home/runner/work/BizPilot2/BizPilot2 --use-compress-program unzstd
+Backend CI	Set up Python	2026-03-17T13:06:24.8760668Z Cache restored successfully
+Backend CI	Set up Python	2026-03-17T13:06:24.8881203Z Cache restored from key: setup-python-Linux-x64-24.04-Ubuntu-python-3.12.13-pip-9388202ee1194e881590b631839f0e9959a854a068cf087ee308518b967733cd
+Backend CI	Install dependencies	∩╗┐2026-03-17T13:06:24.9114687Z ##[group]Run python -m pip install --upgrade pip
+Backend CI	Install dependencies	2026-03-17T13:06:24.9115138Z [36;1mpython -m pip install --upgrade pip[0m
+Backend CI	Install dependencies	2026-03-17T13:06:24.9115457Z [36;1mpip install -r requirements.txt[0m
+Backend CI	Install dependencies	2026-03-17T13:06:24.9115726Z [36;1mpip install ruff mypy[0m
+Backend CI	Install dependencies	2026-03-17T13:06:24.9173249Z shell: /usr/bin/bash -e {0}
+Backend CI	Install dependencies	2026-03-17T13:06:24.9173511Z env:
+Backend CI	Install dependencies	2026-03-17T13:06:24.9173689Z   PYTHON_VERSION: 3.12
+Backend CI	Install dependencies	2026-03-17T13:06:24.9173902Z   NODE_VERSION: 20
+Backend CI	Install dependencies	2026-03-17T13:06:24.9174169Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Install dependencies	2026-03-17T13:06:24.9174619Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+Backend CI	Install dependencies	2026-03-17T13:06:24.9175051Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Install dependencies	2026-03-17T13:06:24.9175430Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Install dependencies	2026-03-17T13:06:24.9175804Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Install dependencies	2026-03-17T13:06:24.9176171Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+Backend CI	Install dependencies	2026-03-17T13:06:24.9176521Z ##[endgroup]
+Backend CI	Install dependencies	2026-03-17T13:06:26.1354353Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages (26.0.1)
+Backend CI	Install dependencies	2026-03-17T13:06:26.7538810Z Collecting alembic==1.18.2 (from -r requirements.txt (line 1))
+Backend CI	Install dependencies	2026-03-17T13:06:26.7553336Z   Using cached alembic-1.18.2-py3-none-any.whl.metadata (7.2 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:26.7701200Z Collecting annotated-doc==0.0.4 (from -r requirements.txt (line 2))
+Backend CI	Install dependencies	2026-03-17T13:06:26.7713547Z   Using cached annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:26.7881995Z Collecting annotated-types==0.7.0 (from -r requirements.txt (line 3))
+Backend CI	Install dependencies	2026-03-17T13:06:26.7898248Z   Using cached annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:26.8106528Z Collecting anyio==4.12.1 (from -r requirements.txt (line 4))
+Backend CI	Install dependencies	2026-03-17T13:06:26.8118640Z   Using cached anyio-4.12.1-py3-none-any.whl.metadata (4.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:26.8545852Z Collecting bcrypt==5.0.0 (from -r requirements.txt (line 5))
+Backend CI	Install dependencies	2026-03-17T13:06:26.8559935Z   Using cached bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:26.8761023Z Collecting cachetools==6.2.2 (from -r requirements.txt (line 6))
+Backend CI	Install dependencies	2026-03-17T13:06:26.8773278Z   Using cached cachetools-6.2.2-py3-none-any.whl.metadata (5.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:26.8968298Z Collecting certifi==2026.1.4 (from -r requirements.txt (line 7))
+Backend CI	Install dependencies	2026-03-17T13:06:26.8980203Z   Using cached certifi-2026.1.4-py3-none-any.whl.metadata (2.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:26.9998113Z Collecting charset-normalizer==3.4.4 (from -r requirements.txt (line 8))
+Backend CI	Install dependencies	2026-03-17T13:06:27.0011639Z   Using cached charset_normalizer-3.4.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (37 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.0240215Z Collecting click==8.3.1 (from -r requirements.txt (line 9))
+Backend CI	Install dependencies	2026-03-17T13:06:27.0252391Z   Using cached click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.0418634Z Collecting dnspython==2.8.0 (from -r requirements.txt (line 10))
+Backend CI	Install dependencies	2026-03-17T13:06:27.0430746Z   Using cached dnspython-2.8.0-py3-none-any.whl.metadata (5.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.0626965Z Collecting ecdsa==0.19.1 (from -r requirements.txt (line 11))
+Backend CI	Install dependencies	2026-03-17T13:06:27.0639222Z   Using cached ecdsa-0.19.1-py2.py3-none-any.whl.metadata (29 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.0819741Z Collecting email-validator==2.3.0 (from -r requirements.txt (line 12))
+Backend CI	Install dependencies	2026-03-17T13:06:27.0832041Z   Using cached email_validator-2.3.0-py3-none-any.whl.metadata (26 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.1234073Z Collecting fastapi==0.128.0 (from -r requirements.txt (line 13))
+Backend CI	Install dependencies	2026-03-17T13:06:27.1247227Z   Using cached fastapi-0.128.0-py3-none-any.whl.metadata (30 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.1601747Z Collecting google-auth==2.47.0 (from -r requirements.txt (line 14))
+Backend CI	Install dependencies	2026-03-17T13:06:27.1614790Z   Using cached google_auth-2.47.0-py3-none-any.whl.metadata (6.4 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.2872785Z Collecting greenlet==3.3.0 (from -r requirements.txt (line 15))
+Backend CI	Install dependencies	2026-03-17T13:06:27.2887873Z   Using cached greenlet-3.3.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (4.1 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.3044608Z Collecting h11==0.16.0 (from -r requirements.txt (line 16))
+Backend CI	Install dependencies	2026-03-17T13:06:27.3057141Z   Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.3260321Z Collecting httpcore==1.0.9 (from -r requirements.txt (line 17))
+Backend CI	Install dependencies	2026-03-17T13:06:27.3273853Z   Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.3504793Z Collecting httpx==0.28.1 (from -r requirements.txt (line 18))
+Backend CI	Install dependencies	2026-03-17T13:06:27.3518522Z   Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.3695654Z Collecting idna==3.11 (from -r requirements.txt (line 19))
+Backend CI	Install dependencies	2026-03-17T13:06:27.3707687Z   Using cached idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.3861243Z Collecting iniconfig==2.3.0 (from -r requirements.txt (line 20))
+Backend CI	Install dependencies	2026-03-17T13:06:27.3873601Z   Using cached iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.4055028Z Collecting Mako==1.3.10 (from -r requirements.txt (line 21))
+Backend CI	Install dependencies	2026-03-17T13:06:27.4067579Z   Using cached mako-1.3.10-py3-none-any.whl.metadata (2.9 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.4600337Z Collecting MarkupSafe==3.0.3 (from -r requirements.txt (line 22))
+Backend CI	Install dependencies	2026-03-17T13:06:27.4614768Z   Using cached markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.4806025Z Collecting packaging==25.0 (from -r requirements.txt (line 23))
+Backend CI	Install dependencies	2026-03-17T13:06:27.4818272Z   Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.4975387Z Collecting passlib==1.7.4 (from -r requirements.txt (line 24))
+Backend CI	Install dependencies	2026-03-17T13:06:27.4987200Z   Using cached passlib-1.7.4-py2.py3-none-any.whl.metadata (1.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.5149061Z Collecting pluggy==1.6.0 (from -r requirements.txt (line 25))
+Backend CI	Install dependencies	2026-03-17T13:06:27.5160697Z   Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.5787495Z Collecting psycopg2-binary==2.9.11 (from -r requirements.txt (line 26))
+Backend CI	Install dependencies	2026-03-17T13:06:27.5802147Z   Using cached psycopg2_binary-2.9.11-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.6001729Z Collecting psycopg==3.2.4 (from psycopg[binary]==3.2.4->-r requirements.txt (line 27))
+Backend CI	Install dependencies	2026-03-17T13:06:27.6014115Z   Using cached psycopg-3.2.4-py3-none-any.whl.metadata (4.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.6389438Z Collecting pyasn1==0.6.1 (from -r requirements.txt (line 28))
+Backend CI	Install dependencies	2026-03-17T13:06:27.6401482Z   Using cached pyasn1-0.6.1-py3-none-any.whl.metadata (8.4 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.6625204Z Collecting pyasn1_modules==0.4.2 (from -r requirements.txt (line 29))
+Backend CI	Install dependencies	2026-03-17T13:06:27.6636994Z   Using cached pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.7676169Z Collecting pydantic==2.12.5 (from -r requirements.txt (line 30))
+Backend CI	Install dependencies	2026-03-17T13:06:27.7688925Z   Using cached pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:27.7896418Z Collecting pydantic-settings==2.12.0 (from -r requirements.txt (line 31))
+Backend CI	Install dependencies	2026-03-17T13:06:27.7908307Z   Using cached pydantic_settings-2.12.0-py3-none-any.whl.metadata (3.4 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.4197841Z Collecting pydantic_core==2.41.5 (from -r requirements.txt (line 32))
+Backend CI	Install dependencies	2026-03-17T13:06:28.4212278Z   Using cached pydantic_core-2.41.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.4423206Z Collecting Pygments==2.19.2 (from -r requirements.txt (line 33))
+Backend CI	Install dependencies	2026-03-17T13:06:28.4439853Z   Using cached pygments-2.19.2-py3-none-any.whl.metadata (2.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.4738394Z Collecting pytest==9.0.2 (from -r requirements.txt (line 34))
+Backend CI	Install dependencies	2026-03-17T13:06:28.4751099Z   Using cached pytest-9.0.2-py3-none-any.whl.metadata (7.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.4971722Z Collecting pytest-asyncio==1.3.0 (from -r requirements.txt (line 35))
+Backend CI	Install dependencies	2026-03-17T13:06:28.4984357Z   Using cached pytest_asyncio-1.3.0-py3-none-any.whl.metadata (4.1 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.5172401Z Collecting pytest-cov==7.0.0 (from -r requirements.txt (line 36))
+Backend CI	Install dependencies	2026-03-17T13:06:28.5184214Z   Using cached pytest_cov-7.0.0-py3-none-any.whl.metadata (31 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.5787283Z Collecting python-dateutil==2.9.0 (from -r requirements.txt (line 37))
+Backend CI	Install dependencies	2026-03-17T13:06:28.5800101Z   Using cached python_dateutil-2.9.0-py2.py3-none-any.whl.metadata (8.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.5984862Z Collecting python-dotenv==1.2.1 (from -r requirements.txt (line 38))
+Backend CI	Install dependencies	2026-03-17T13:06:28.5997095Z   Using cached python_dotenv-1.2.1-py3-none-any.whl.metadata (25 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.6172505Z Collecting python-jose==3.5.0 (from -r requirements.txt (line 39))
+Backend CI	Install dependencies	2026-03-17T13:06:28.6184641Z   Using cached python_jose-3.5.0-py2.py3-none-any.whl.metadata (5.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.6349131Z Collecting python-multipart==0.0.20 (from -r requirements.txt (line 40))
+Backend CI	Install dependencies	2026-03-17T13:06:28.6361258Z   Using cached python_multipart-0.0.20-py3-none-any.whl.metadata (1.8 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.6737642Z Collecting PyYAML==6.0.3 (from -r requirements.txt (line 41))
+Backend CI	Install dependencies	2026-03-17T13:06:28.6750933Z   Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.7010618Z Collecting requests==2.32.5 (from -r requirements.txt (line 42))
+Backend CI	Install dependencies	2026-03-17T13:06:28.7024104Z   Using cached requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.7203560Z Collecting rsa==4.9.1 (from -r requirements.txt (line 43))
+Backend CI	Install dependencies	2026-03-17T13:06:28.7215117Z   Using cached rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.7378083Z Collecting six==1.17.0 (from -r requirements.txt (line 44))
+Backend CI	Install dependencies	2026-03-17T13:06:28.7389868Z   Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:28.9818661Z Collecting SQLAlchemy==2.0.45 (from -r requirements.txt (line 45))
+Backend CI	Install dependencies	2026-03-17T13:06:28.9833061Z   Using cached sqlalchemy-2.0.45-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.0316357Z Collecting asyncpg==0.30.0 (from -r requirements.txt (line 46))
+Backend CI	Install dependencies	2026-03-17T13:06:29.0330416Z   Using cached asyncpg-0.30.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.0 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.0619667Z Collecting starlette==0.41.3 (from -r requirements.txt (line 47))
+Backend CI	Install dependencies	2026-03-17T13:06:29.0633935Z   Using cached starlette-0.41.3-py3-none-any.whl.metadata (6.0 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.0787124Z Collecting typing-inspection==0.4.2 (from -r requirements.txt (line 48))
+Backend CI	Install dependencies	2026-03-17T13:06:29.0799286Z   Using cached typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.0990460Z Collecting typing_extensions==4.15.0 (from -r requirements.txt (line 49))
+Backend CI	Install dependencies	2026-03-17T13:06:29.1004013Z   Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.1229216Z Collecting urllib3==2.6.2 (from -r requirements.txt (line 50))
+Backend CI	Install dependencies	2026-03-17T13:06:29.1242659Z   Using cached urllib3-2.6.2-py3-none-any.whl.metadata (6.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.1501650Z Collecting uvicorn==0.38.0 (from -r requirements.txt (line 51))
+Backend CI	Install dependencies	2026-03-17T13:06:29.1515266Z   Using cached uvicorn-0.38.0-py3-none-any.whl.metadata (6.8 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.1736280Z Collecting gunicorn==23.0.0 (from -r requirements.txt (line 52))
+Backend CI	Install dependencies	2026-03-17T13:06:29.1748991Z   Using cached gunicorn-23.0.0-py3-none-any.whl.metadata (4.4 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.1913822Z Collecting slowapi==0.1.9 (from -r requirements.txt (line 53))
+Backend CI	Install dependencies	2026-03-17T13:06:29.1926874Z   Using cached slowapi-0.1.9-py3-none-any.whl.metadata (3.0 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.2158170Z Collecting limits==5.6.0 (from -r requirements.txt (line 54))
+Backend CI	Install dependencies	2026-03-17T13:06:29.2171464Z   Using cached limits-5.6.0-py3-none-any.whl.metadata (10 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.2376887Z Collecting openpyxl==3.1.5 (from -r requirements.txt (line 55))
+Backend CI	Install dependencies	2026-03-17T13:06:29.2390539Z   Using cached openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.2539898Z Collecting user-agents==2.2.0 (from -r requirements.txt (line 56))
+Backend CI	Install dependencies	2026-03-17T13:06:29.2552553Z   Using cached user_agents-2.2.0-py3-none-any.whl.metadata (7.9 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.4720139Z Collecting hypothesis==6.122.3 (from -r requirements.txt (line 57))
+Backend CI	Install dependencies	2026-03-17T13:06:29.4734764Z   Using cached hypothesis-6.122.3-py3-none-any.whl.metadata (6.0 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.5033431Z Collecting apscheduler==3.10.4 (from -r requirements.txt (line 58))
+Backend CI	Install dependencies	2026-03-17T13:06:29.5047348Z   Using cached APScheduler-3.10.4-py3-none-any.whl.metadata (5.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.6700704Z Collecting cryptography==44.0.0 (from -r requirements.txt (line 59))
+Backend CI	Install dependencies	2026-03-17T13:06:29.6714851Z   Using cached cryptography-44.0.0-cp39-abi3-manylinux_2_28_x86_64.whl.metadata (5.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.6899365Z Collecting itsdangerous==2.2.0 (from -r requirements.txt (line 60))
+Backend CI	Install dependencies	2026-03-17T13:06:29.6912119Z   Using cached itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.7188930Z Collecting redis==5.2.1 (from -r requirements.txt (line 61))
+Backend CI	Install dependencies	2026-03-17T13:06:29.7202576Z   Using cached redis-5.2.1-py3-none-any.whl.metadata (9.1 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.7387769Z Collecting jinja2==3.1.5 (from -r requirements.txt (line 62))
+Backend CI	Install dependencies	2026-03-17T13:06:29.7399913Z   Using cached jinja2-3.1.5-py3-none-any.whl.metadata (2.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:29.7627520Z Collecting weasyprint==61.2 (from -r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:29.7640408Z   Using cached weasyprint-61.2-py3-none-any.whl.metadata (3.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.3141751Z Collecting coverage>=7.10.6 (from coverage[toml]>=7.10.6->pytest-cov==7.0.0->-r requirements.txt (line 36))
+Backend CI	Install dependencies	2026-03-17T13:06:30.3890901Z   Downloading coverage-7.13.5-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (8.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.4344453Z Collecting deprecated>=1.2 (from limits==5.6.0->-r requirements.txt (line 54))
+Backend CI	Install dependencies	2026-03-17T13:06:30.4357068Z   Using cached deprecated-1.3.1-py2.py3-none-any.whl.metadata (5.9 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.4523791Z Collecting et-xmlfile (from openpyxl==3.1.5->-r requirements.txt (line 55))
+Backend CI	Install dependencies	2026-03-17T13:06:30.4535140Z   Using cached et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.4704602Z Collecting ua-parser>=0.10.0 (from user-agents==2.2.0->-r requirements.txt (line 56))
+Backend CI	Install dependencies	2026-03-17T13:06:30.4716190Z   Using cached ua_parser-1.0.1-py3-none-any.whl.metadata (5.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.4908802Z Collecting attrs>=22.2.0 (from hypothesis==6.122.3->-r requirements.txt (line 57))
+Backend CI	Install dependencies	2026-03-17T13:06:30.4921037Z   Using cached attrs-25.4.0-py3-none-any.whl.metadata (10 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.5095637Z Collecting sortedcontainers<3.0.0,>=2.1.0 (from hypothesis==6.122.3->-r requirements.txt (line 57))
+Backend CI	Install dependencies	2026-03-17T13:06:30.5107604Z   Using cached sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.5519922Z Collecting pytz (from apscheduler==3.10.4->-r requirements.txt (line 58))
+Backend CI	Install dependencies	2026-03-17T13:06:30.5533623Z   Using cached pytz-2026.1.post1-py2.py3-none-any.whl.metadata (22 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.5745479Z Collecting tzlocal!=3.*,>=2.0 (from apscheduler==3.10.4->-r requirements.txt (line 58))
+Backend CI	Install dependencies	2026-03-17T13:06:30.5757469Z   Using cached tzlocal-5.3.1-py3-none-any.whl.metadata (7.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.6732229Z Collecting cffi>=1.12 (from cryptography==44.0.0->-r requirements.txt (line 59))
+Backend CI	Install dependencies	2026-03-17T13:06:30.6746153Z   Using cached cffi-2.0.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.6955672Z Collecting pydyf>=0.8.0 (from weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:30.6967969Z   Using cached pydyf-0.12.1-py3-none-any.whl.metadata (2.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.7130659Z Collecting html5lib>=1.1 (from weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:30.7143908Z   Using cached html5lib-1.1-py2.py3-none-any.whl.metadata (16 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.7317031Z Collecting tinycss2>=1.0.0 (from weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:30.7329149Z   Using cached tinycss2-1.5.1-py3-none-any.whl.metadata (3.0 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.7488287Z Collecting cssselect2>=0.1 (from weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:30.7500226Z   Using cached cssselect2-0.9.0-py3-none-any.whl.metadata (2.9 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.7668901Z Collecting Pyphen>=0.9.1 (from weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:30.7680882Z   Using cached pyphen-0.17.2-py3-none-any.whl.metadata (3.2 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:30.9585790Z Collecting Pillow>=9.1.0 (from weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:30.9600106Z   Using cached pillow-12.1.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.1076810Z Collecting fonttools>=4.0.0 (from fonttools[woff]>=4.0.0->weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:31.1090916Z   Using cached fonttools-4.62.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (117 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.3629708Z Collecting psycopg-binary==3.2.4 (from psycopg[binary]==3.2.4->-r requirements.txt (line 27))
+Backend CI	Install dependencies	2026-03-17T13:06:31.3645592Z   Using cached psycopg_binary-3.2.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.8 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.3837108Z Collecting pycparser (from cffi>=1.12->cryptography==44.0.0->-r requirements.txt (line 59))
+Backend CI	Install dependencies	2026-03-17T13:06:31.3850231Z   Using cached pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.4028377Z Collecting webencodings (from cssselect2>=0.1->weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:31.4041630Z   Using cached webencodings-0.5.1-py2.py3-none-any.whl.metadata (2.1 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.5656464Z Collecting wrapt<3,>=1.10 (from deprecated>=1.2->limits==5.6.0->-r requirements.txt (line 54))
+Backend CI	Install dependencies	2026-03-17T13:06:31.5672280Z   Using cached wrapt-2.1.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (7.4 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6062342Z Collecting brotli>=1.0.1 (from fonttools[woff]>=4.0.0->weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:31.6075718Z   Using cached brotli-1.2.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.1 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6519279Z Collecting zopfli>=0.1.4 (from fonttools[woff]>=4.0.0->weasyprint==61.2->-r requirements.txt (line 63))
+Backend CI	Install dependencies	2026-03-17T13:06:31.6533055Z   Using cached zopfli-0.4.1-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6760310Z Collecting ua-parser-builtins (from ua-parser>=0.10.0->user-agents==2.2.0->-r requirements.txt (line 56))
+Backend CI	Install dependencies	2026-03-17T13:06:31.6771464Z   Using cached ua_parser_builtins-202603-py3-none-any.whl.metadata (1.8 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6852381Z Using cached alembic-1.18.2-py3-none-any.whl (261 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6865850Z Using cached annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6878498Z Using cached annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6890052Z Using cached anyio-4.12.1-py3-none-any.whl (113 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6902605Z Using cached bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6915821Z Using cached cachetools-6.2.2-py3-none-any.whl (11 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6927336Z Using cached certifi-2026.1.4-py3-none-any.whl (152 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6942549Z Using cached charset_normalizer-3.4.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (153 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6953239Z Using cached click-8.3.1-py3-none-any.whl (108 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6965435Z Using cached dnspython-2.8.0-py3-none-any.whl (331 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6979004Z Using cached ecdsa-0.19.1-py2.py3-none-any.whl (150 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.6991372Z Using cached email_validator-2.3.0-py3-none-any.whl (35 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7003256Z Using cached fastapi-0.128.0-py3-none-any.whl (103 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7015070Z Using cached starlette-0.41.3-py3-none-any.whl (73 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7026876Z Using cached google_auth-2.47.0-py3-none-any.whl (234 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7039773Z Using cached rsa-4.9.1-py3-none-any.whl (34 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7051666Z Using cached greenlet-3.3.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (609 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7067260Z Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7078900Z Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7090937Z Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7103220Z Using cached idna-3.11-py3-none-any.whl (71 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7114615Z Using cached iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7125402Z Using cached mako-1.3.10-py3-none-any.whl (78 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7137739Z Using cached markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7149285Z Using cached packaging-25.0-py3-none-any.whl (66 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7160990Z Using cached passlib-1.7.4-py2.py3-none-any.whl (525 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7176257Z Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7188148Z Using cached psycopg2_binary-2.9.11-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.2 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7229148Z Using cached psycopg-3.2.4-py3-none-any.whl (198 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7241564Z Using cached pyasn1-0.6.1-py3-none-any.whl (83 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7253898Z Using cached pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7266309Z Using cached pydantic-2.12.5-py3-none-any.whl (463 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7280745Z Using cached pydantic_settings-2.12.0-py3-none-any.whl (51 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7292973Z Using cached pydantic_core-2.41.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7319292Z Using cached pygments-2.19.2-py3-none-any.whl (1.2 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7340104Z Using cached pytest-9.0.2-py3-none-any.whl (374 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7353932Z Using cached pytest_asyncio-1.3.0-py3-none-any.whl (15 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7365317Z Using cached pytest_cov-7.0.0-py3-none-any.whl (22 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7376934Z Using cached python_dateutil-2.9.0-py2.py3-none-any.whl (230 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7389799Z Using cached python_dotenv-1.2.1-py3-none-any.whl (21 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7401114Z Using cached python_jose-3.5.0-py2.py3-none-any.whl (34 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7413651Z Using cached python_multipart-0.0.20-py3-none-any.whl (24 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7426110Z Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7443090Z Using cached requests-2.32.5-py3-none-any.whl (64 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7454800Z Using cached urllib3-2.6.2-py3-none-any.whl (131 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7466841Z Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7478847Z Using cached sqlalchemy-2.0.45-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7515268Z Using cached asyncpg-0.30.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.6 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7552948Z Using cached typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7564821Z Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7576598Z Using cached uvicorn-0.38.0-py3-none-any.whl (68 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7588311Z Using cached gunicorn-23.0.0-py3-none-any.whl (85 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7599962Z Using cached slowapi-0.1.9-py3-none-any.whl (14 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7611096Z Using cached limits-5.6.0-py3-none-any.whl (60 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7623527Z Using cached openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7636501Z Using cached user_agents-2.2.0-py3-none-any.whl (9.6 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7647919Z Using cached hypothesis-6.122.3-py3-none-any.whl (475 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7662513Z Using cached APScheduler-3.10.4-py3-none-any.whl (59 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7674580Z Using cached cryptography-44.0.0-cp39-abi3-manylinux_2_28_x86_64.whl (4.2 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7715636Z Using cached itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7727753Z Using cached redis-5.2.1-py3-none-any.whl (261 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7741177Z Using cached jinja2-3.1.5-py3-none-any.whl (134 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7753618Z Using cached weasyprint-61.2-py3-none-any.whl (271 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7767197Z Using cached psycopg_binary-3.2.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.3 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7809825Z Using cached sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7821240Z Using cached attrs-25.4.0-py3-none-any.whl (67 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7833883Z Using cached cffi-2.0.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (219 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.7936708Z Downloading coverage-7.13.5-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (254 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8370391Z Using cached cssselect2-0.9.0-py3-none-any.whl (15 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8382155Z Using cached deprecated-1.3.1-py2.py3-none-any.whl (11 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8394237Z Using cached wrapt-2.1.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (121 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8407079Z Using cached fonttools-4.62.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.0 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8454071Z Using cached brotli-1.2.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8475227Z Using cached html5lib-1.1-py2.py3-none-any.whl (112 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8487890Z Using cached pillow-12.1.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.0 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8550520Z Using cached pydyf-0.12.1-py3-none-any.whl (8.0 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8563497Z Using cached pyphen-0.17.2-py3-none-any.whl (2.1 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8589503Z Using cached tinycss2-1.5.1-py3-none-any.whl (28 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8601071Z Using cached tzlocal-5.3.1-py3-none-any.whl (18 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8612470Z Using cached ua_parser-1.0.1-py3-none-any.whl (31 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8624275Z Using cached webencodings-0.5.1-py2.py3-none-any.whl (11 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8636277Z Using cached zopfli-0.4.1-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (829 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8653382Z Using cached et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8665312Z Using cached pycparser-3.0-py3-none-any.whl (48 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8676931Z Using cached pytz-2026.1.post1-py2.py3-none-any.whl (510 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:31.8691568Z Using cached ua_parser_builtins-202603-py3-none-any.whl (89 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:32.1294083Z Installing collected packages: webencodings, sortedcontainers, pytz, passlib, brotli, zopfli, wrapt, urllib3, ua-parser-builtins, tzlocal, typing_extensions, tinycss2, six, redis, PyYAML, python-multipart, python-dotenv, Pyphen, Pygments, pydyf, pycparser, pyasn1, psycopg2-binary, psycopg-binary, pluggy, Pillow, packaging, MarkupSafe, itsdangerous, iniconfig, idna, h11, greenlet, fonttools, et-xmlfile, dnspython, coverage, click, charset-normalizer, certifi, cachetools, bcrypt, attrs, asyncpg, annotated-types, annotated-doc, uvicorn, ua-parser, typing-inspection, SQLAlchemy, rsa, requests, python-dateutil, pytest, pydantic_core, pyasn1_modules, psycopg, openpyxl, Mako, jinja2, hypothesis, httpcore, html5lib, gunicorn, email-validator, ecdsa, deprecated, cssselect2, cffi, apscheduler, anyio, weasyprint, user-agents, starlette, python-jose, pytest-cov, pytest-asyncio, pydantic, limits, httpx, google-auth, cryptography, alembic, slowapi, pydantic-settings, fastapi
+Backend CI	Install dependencies	2026-03-17T13:06:40.8844781Z 
+Backend CI	Install dependencies	2026-03-17T13:06:40.8919078Z Successfully installed Mako-1.3.10 MarkupSafe-3.0.3 Pillow-12.1.1 PyYAML-6.0.3 Pygments-2.19.2 Pyphen-0.17.2 SQLAlchemy-2.0.45 alembic-1.18.2 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.12.1 apscheduler-3.10.4 asyncpg-0.30.0 attrs-25.4.0 bcrypt-5.0.0 brotli-1.2.0 cachetools-6.2.2 certifi-2026.1.4 cffi-2.0.0 charset-normalizer-3.4.4 click-8.3.1 coverage-7.13.5 cryptography-44.0.0 cssselect2-0.9.0 deprecated-1.3.1 dnspython-2.8.0 ecdsa-0.19.1 email-validator-2.3.0 et-xmlfile-2.0.0 fastapi-0.128.0 fonttools-4.62.1 google-auth-2.47.0 greenlet-3.3.0 gunicorn-23.0.0 h11-0.16.0 html5lib-1.1 httpcore-1.0.9 httpx-0.28.1 hypothesis-6.122.3 idna-3.11 iniconfig-2.3.0 itsdangerous-2.2.0 jinja2-3.1.5 limits-5.6.0 openpyxl-3.1.5 packaging-25.0 passlib-1.7.4 pluggy-1.6.0 psycopg-3.2.4 psycopg-binary-3.2.4 psycopg2-binary-2.9.11 pyasn1-0.6.1 pyasn1_modules-0.4.2 pycparser-3.0 pydantic-2.12.5 pydantic-settings-2.12.0 pydantic_core-2.41.5 pydyf-0.12.1 pytest-9.0.2 pytest-asyncio-1.3.0 pytest-cov-7.0.0 python-dateutil-2.9.0 python-dotenv-1.2.1 python-jose-3.5.0 python-multipart-0.0.20 pytz-2026.1.post1 redis-5.2.1 requests-2.32.5 rsa-4.9.1 six-1.17.0 slowapi-0.1.9 sortedcontainers-2.4.0 starlette-0.41.3 tinycss2-1.5.1 typing-inspection-0.4.2 typing_extensions-4.15.0 tzlocal-5.3.1 ua-parser-1.0.1 ua-parser-builtins-202603 urllib3-2.6.2 user-agents-2.2.0 uvicorn-0.38.0 weasyprint-61.2 webencodings-0.5.1 wrapt-2.1.2 zopfli-0.4.1
+Backend CI	Install dependencies	2026-03-17T13:06:42.5502192Z Collecting ruff
+Backend CI	Install dependencies	2026-03-17T13:06:42.6235048Z   Downloading ruff-0.15.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:42.7444930Z Collecting mypy
+Backend CI	Install dependencies	2026-03-17T13:06:42.7548461Z   Downloading mypy-1.19.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.2 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:42.7607689Z Requirement already satisfied: typing_extensions>=4.6.0 in /opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages (from mypy) (4.15.0)
+Backend CI	Install dependencies	2026-03-17T13:06:42.7748150Z Collecting mypy_extensions>=1.0.0 (from mypy)
+Backend CI	Install dependencies	2026-03-17T13:06:42.7850178Z   Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:42.8046841Z Collecting pathspec>=0.9.0 (from mypy)
+Backend CI	Install dependencies	2026-03-17T13:06:42.8147146Z   Downloading pathspec-1.0.4-py3-none-any.whl.metadata (13 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:42.9251618Z Collecting librt>=0.6.2 (from mypy)
+Backend CI	Install dependencies	2026-03-17T13:06:42.9352524Z   Downloading librt-0.8.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (1.3 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:42.9498044Z Downloading ruff-0.15.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.3 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:43.0370934Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 11.3/11.3 MB 164.7 MB/s  0:00:00
+Backend CI	Install dependencies	2026-03-17T13:06:43.0473205Z Downloading mypy-1.19.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (13.6 MB)
+Backend CI	Install dependencies	2026-03-17T13:06:43.1027606Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 13.6/13.6 MB 252.9 MB/s  0:00:00
+Backend CI	Install dependencies	2026-03-17T13:06:43.1129520Z Downloading librt-0.8.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (224 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:43.1263360Z Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:43.1395775Z Downloading pathspec-1.0.4-py3-none-any.whl (55 kB)
+Backend CI	Install dependencies	2026-03-17T13:06:43.2590093Z Installing collected packages: ruff, pathspec, mypy_extensions, librt, mypy
+Backend CI	Install dependencies	2026-03-17T13:06:44.8966667Z 
+Backend CI	Install dependencies	2026-03-17T13:06:44.9033765Z Successfully installed librt-0.8.1 mypy-1.19.1 mypy_extensions-1.1.0 pathspec-1.0.4 ruff-0.15.6
+Backend CI	Lint with Ruff	∩╗┐2026-03-17T13:06:45.0315837Z ##[group]Run ruff check app/
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0316148Z [36;1mruff check app/[0m
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0365541Z shell: /usr/bin/bash -e {0}
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0365792Z env:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0365970Z   PYTHON_VERSION: 3.12
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0366181Z   NODE_VERSION: 20
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0366442Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0366866Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0367297Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0367682Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0368052Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0368419Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.0368727Z ##[endgroup]
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1449374Z F401 [*] `typing.Optional` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1451591Z  --> app/api/floor_plan.py:1:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1453771Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1455521Z 1 | from typing import List, Optional
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1457390Z   |                          ^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1459248Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1461206Z 3 | from fastapi import APIRouter, Depends, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1463378Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1465159Z help: Remove unused import: `typing.Optional`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1466928Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1467338Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1467701Z   --> app/api/floor_plan.py:16:34
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1467978Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1468755Z 15 | async def check_manager_role(current_user=Depends(deps.get_current_active_user), business_id: str = Depends(deps.get_current_business_ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1469423Z 16 |     if current_user.is_superadmin: return current_user
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1470638Z    |                                  ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1471608Z 17 |     business_user = (await db.execute(select(BusinessUser).options(selectinload(BusinessUser.role)).filter(BusinessUser.user_id == curΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1472821Z 18 |     if not business_user or not business_user.role or business_user.role.name.lower() not in ["admin", "manager"]: raise HTTPExceptionΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1473393Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1473487Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1473597Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1473882Z   --> app/api/floor_plan.py:18:114
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1474118Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1474333Z 16 |     if current_user.is_superadmin: return current_user
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1475350Z 17 |     business_user = (await db.execute(select(BusinessUser).options(selectinload(BusinessUser.role)).filter(BusinessUser.user_id == curΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1476265Z 18 |     if not business_user or not business_user.role or business_user.role.name.lower() not in ["admin", "manager"]: raise HTTPExceptionΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1476896Z    |                                                                                                                  ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1477242Z 19 |     return current_user
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1477452Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1477537Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1477652Z F401 [*] `typing.Optional` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1477930Z  --> app/api/pos.py:1:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1478249Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1478428Z 1 | from typing import List, Optional
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1478674Z   |                          ^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1478917Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1479226Z 3 | from fastapi import APIRouter, Depends, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1479548Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1479754Z help: Remove unused import: `typing.Optional`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1479960Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1480090Z F401 [*] `fastapi.HTTPException` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1480405Z  --> app/api/pos.py:3:41
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1480636Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1480820Z 1 | from typing import List, Optional
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1481069Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1481562Z 3 | from fastapi import APIRouter, Depends, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1482209Z   |                                         ^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1482534Z 4 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1482835Z 5 | from app.api import deps
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1483039Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1483207Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1483344Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1483455Z F401 [*] `fastapi.status` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1483726Z  --> app/api/pos.py:3:56
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1483927Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1484106Z 1 | from typing import List, Optional
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1484344Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1484645Z 3 | from fastapi import APIRouter, Depends, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1485003Z   |                                                        ^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1485313Z 4 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1485684Z 5 | from app.api import deps
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1486011Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1486285Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1486509Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1486717Z F401 [*] `fastapi.HTTPException` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1487196Z  --> app/api/webhooks.py:3:41
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1487561Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1487834Z 1 | from typing import List
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1488173Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1488660Z 3 | from fastapi import APIRouter, Depends, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1489225Z   |                                         ^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1490410Z 4 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1490997Z 5 | from pydantic import BaseModel, HttpUrl
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1491446Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1491741Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1492111Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1492229Z F401 [*] `fastapi.status` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1492529Z  --> app/api/webhooks.py:3:56
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1492762Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1492930Z 1 | from typing import List
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1493154Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1493451Z 3 | from fastapi import APIRouter, Depends, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1493806Z   |                                                        ^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1494124Z 4 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1494440Z 5 | from pydantic import BaseModel, HttpUrl
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1494692Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1495026Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1495174Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1495291Z F401 [*] `pydantic.HttpUrl` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1495585Z  --> app/api/webhooks.py:5:33
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1495816Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1496060Z 3 | from fastapi import APIRouter, Depends, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1496436Z 4 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1496745Z 5 | from pydantic import BaseModel, HttpUrl
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1497003Z   |                                 ^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1497228Z 6 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1497419Z 7 | from app.core.database import get_db
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1497664Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1497859Z help: Remove unused import: `pydantic.HttpUrl`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1498061Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1498195Z F401 [*] `app.models.base.utc_now` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1498531Z  --> app/models/restaurant_table.py:8:40
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1498775Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1498975Z 6 | from sqlalchemy.orm import relationship
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1499222Z 7 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1499420Z 8 | from app.models.base import BaseModel, utc_now
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1499710Z   |                                        ^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1499948Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1500159Z help: Remove unused import: `app.models.base.utc_now`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1500380Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1500488Z F401 [*] `sqlalchemy.Text` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1501011Z  --> app/models/webhook.py:1:80
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1501228Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1501548Z 1 | from sqlalchemy import Column, String, Boolean, Integer, DateTime, ForeignKey, Text, func
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1502196Z   |                                                                                ^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1502571Z 2 | from sqlalchemy.dialects.postgresql import UUID, JSONB
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1502896Z 3 | from sqlalchemy.orm import relationship
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1503142Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1503309Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1503450Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1503559Z F401 [*] `sqlalchemy.func` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1503825Z  --> app/models/webhook.py:1:86
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1504044Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1504367Z 1 | from sqlalchemy import Column, String, Boolean, Integer, DateTime, ForeignKey, Text, func
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1504829Z   |                                                                                      ^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1505214Z 2 | from sqlalchemy.dialects.postgresql import UUID, JSONB
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1505546Z 3 | from sqlalchemy.orm import relationship
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1505787Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1505955Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1506094Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1506174Z F401 [*] `uuid` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1506423Z  --> app/models/webhook.py:4:8
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1506640Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1506862Z 2 | from sqlalchemy.dialects.postgresql import UUID, JSONB
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1507192Z 3 | from sqlalchemy.orm import relationship
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1507437Z 4 | import uuid
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1507613Z   |        ^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1507780Z 5 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1507955Z 6 | from app.models.base import BaseModel
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1508197Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1508370Z help: Remove unused import: `uuid`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1508532Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1508627Z F401 [*] `typing.List` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1508892Z  --> app/schemas/cashup.py:1:30
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1509109Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1509284Z 1 | from typing import Optional, List
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1509521Z   |                              ^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1509751Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1510014Z 3 | from pydantic import BaseModel, Field, ConfigDict
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1510285Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1510469Z help: Remove unused import: `typing.List`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1510648Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1510759Z F401 [*] `typing.Optional` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1511178Z  --> app/services/cashup_service.py:1:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1511423Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1511595Z 1 | from typing import List, Optional
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1512053Z   |                          ^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1512397Z 2 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1512636Z 3 | from datetime import datetime, timezone
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1512892Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1513091Z help: Remove unused import: `typing.Optional`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1513304Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1513410Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1513701Z   --> app/services/cashup_service.py:18:21
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1513946Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1514423Z 16 |     async def generate_waiter_cashup(shift_id: UUID, waiter_id: UUID, business_id: UUID, db: AsyncSession) -> WaiterCashupResponse:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1515381Z 17 |         shift = (await db.execute(select(Shift).filter(Shift.id == shift_id, Shift.business_id == business_id, Shift.user_id == waiterΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1516137Z 18 |         if not shift: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shift not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1516589Z    |                     ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1516839Z 19 |         if shift.status != ShiftStatus.COMPLETED:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1517464Z 20 |             if (await db.execute(select(func.count(Order.id)).filter(Order.business_id == business_id, Order.user_id == waiter_id, OrdΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1517986Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1518228Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1518333Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1518621Z   --> app/services/cashup_service.py:22:112
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1518868Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1519434Z 20 | ΓÇª         if (await db.execute(select(func.count(Order.id)).filter(Order.business_id == business_id, Order.user_id == waiter_id, OrderΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1520276Z 21 | ΓÇª             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Shift has open orders")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1521126Z 22 | ΓÇª     if (await db.execute(select(WaiterCashup).filter(WaiterCashup.shift_id == shift_id))).scalars().first(): raise HTTPException(staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1522090Z    |                                                                                                              ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1522811Z 23 | ΓÇª     start_time, end_time = shift.actual_start, shift.actual_end or datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1523673Z 24 | ΓÇª     totals = (await db.execute(select(func.sum(PaymentTransaction.amount).label("total_amount"), func.sum(PaymentTransaction.tip_amoΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1524259Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1524348Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1524462Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1524748Z   --> app/services/cashup_service.py:28:57
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1524999Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1525319Z 26 | ΓÇª     cash_collected, card_collected = Decimal("0.00"), Decimal("0.00")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1525701Z 27 | ΓÇª     for row in breakdown:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1526209Z 28 | ΓÇª         if row.method_type == PaymentMethodType.CASH: cash_collected = Decimal(str(row.sum_amount))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1526679Z    |                                                       ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1527215Z 29 | ΓÇª         elif row.method_type == PaymentMethodType.CARD: card_collected = Decimal(str(row.sum_amount))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1528064Z 30 | ΓÇª     new_cashup = WaiterCashup(business_id=business_id, shift_id=shift_id, waiter_id=waiter_id, status="pending", total_sales=DecimalΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1528628Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1528720Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1528835Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1529129Z   --> app/services/cashup_service.py:29:59
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1529379Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1529600Z 27 | ΓÇª     for row in breakdown:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1530099Z 28 | ΓÇª         if row.method_type == PaymentMethodType.CASH: cash_collected = Decimal(str(row.sum_amount))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1530810Z 29 | ΓÇª         elif row.method_type == PaymentMethodType.CARD: card_collected = Decimal(str(row.sum_amount))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1531431Z    |                                                         ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1532287Z 30 | ΓÇª     new_cashup = WaiterCashup(business_id=business_id, shift_id=shift_id, waiter_id=waiter_id, status="pending", total_sales=DecimalΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1533023Z 31 | ΓÇª     db.add(new_cashup); await db.commit(); await db.refresh(new_cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1533362Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1533458Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1533572Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1533872Z   --> app/services/cashup_service.py:31:27
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1534119Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1534542Z 29 | ΓÇª         elif row.method_type == PaymentMethodType.CARD: card_collected = Decimal(str(row.sum_amount))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1535376Z 30 | ΓÇª     new_cashup = WaiterCashup(business_id=business_id, shift_id=shift_id, waiter_id=waiter_id, status="pending", total_sales=DecimalΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1536080Z 31 | ΓÇª     db.add(new_cashup); await db.commit(); await db.refresh(new_cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1536441Z    |                         ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1536775Z 32 | ΓÇª     return WaiterCashupResponse.model_validate(new_cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1537089Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1537172Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1537302Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1537597Z   --> app/services/cashup_service.py:31:46
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1537836Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1538402Z 29 | ΓÇª         elif row.method_type == PaymentMethodType.CARD: card_collected = Decimal(str(row.sum_amount))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1539245Z 30 | ΓÇª     new_cashup = WaiterCashup(business_id=business_id, shift_id=shift_id, waiter_id=waiter_id, status="pending", total_sales=DecimalΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1539942Z 31 | ΓÇª     db.add(new_cashup); await db.commit(); await db.refresh(new_cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1540300Z    |                                            ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1540682Z 32 | ΓÇª     return WaiterCashupResponse.model_validate(new_cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1541001Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1541089Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1541193Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1541478Z   --> app/services/cashup_service.py:37:22
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1541725Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1542370Z 35 |     async def approve_cashup(cashup_id: UUID, approved_by: UUID, business_id: UUID, db: AsyncSession) -> WaiterCashupResponse:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1543270Z 36 |         cashup = (await db.execute(select(WaiterCashup).filter(WaiterCashup.id == cashup_id, WaiterCashup.business_id == business_id))ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1544048Z 37 |         if not cashup: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cashup not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1544508Z    |                      ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1545063Z 38 |         if cashup.waiter_id == approved_by: raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot approve own caΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1545859Z 39 |         cashup.status, cashup.approved_by, cashup.approved_at = "approved", approved_by, datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1546355Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1546440Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1546553Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1546846Z   --> app/services/cashup_service.py:38:43
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1547095Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1547674Z 36 | ΓÇª     cashup = (await db.execute(select(WaiterCashup).filter(WaiterCashup.id == cashup_id, WaiterCashup.business_id == business_id))).ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1548535Z 37 | ΓÇª     if not cashup: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cashup not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1549402Z 38 | ΓÇª     if cashup.waiter_id == approved_by: raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot approve own cashΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1549969Z    |                                         ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1550545Z 39 | ΓÇª     cashup.status, cashup.approved_by, cashup.approved_at = "approved", approved_by, datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1551275Z 40 | ΓÇª     await db.commit(); await db.refresh(cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1551549Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1551637Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1551756Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1552282Z   --> app/services/cashup_service.py:40:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1552535Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1553123Z 38 | ΓÇª     if cashup.waiter_id == approved_by: raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot approve own cashΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1554018Z 39 | ΓÇª     cashup.status, cashup.approved_by, cashup.approved_at = "approved", approved_by, datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1554588Z 40 | ΓÇª     await db.commit(); await db.refresh(cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1554870Z    |                        ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1555192Z 41 | ΓÇª     return WaiterCashupResponse.model_validate(cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1555485Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1555576Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1555680Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1555969Z   --> app/services/cashup_service.py:46:22
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1556213Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1556769Z 44 |     async def reject_cashup(cashup_id: UUID, rejected_by: UUID, business_id: UUID, data: CashupRejectRequest, db: AsyncSession) -> WaiΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1557683Z 45 |         cashup = (await db.execute(select(WaiterCashup).filter(WaiterCashup.id == cashup_id, WaiterCashup.business_id == business_id))ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1558593Z 46 |         if not cashup: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cashup not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1559059Z    |                      ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1559394Z 47 |         cashup.status, cashup.rejection_reason = "rejected", data.rejection_reason
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1559821Z 48 |         await db.commit(); await db.refresh(cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1560085Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1560170Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1560279Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1560581Z   --> app/services/cashup_service.py:48:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1560826Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1561196Z 46 |         if not cashup: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cashup not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1562021Z 47 |         cashup.status, cashup.rejection_reason = "rejected", data.rejection_reason
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1562584Z 48 |         await db.commit(); await db.refresh(cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1562862Z    |                          ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1563144Z 49 |         return WaiterCashupResponse.model_validate(cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1563442Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1563528Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1563636Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1563915Z   --> app/services/cashup_service.py:58:22
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1564163Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1564534Z 56 |     async def get_cashup(cashup_id: UUID, business_id: UUID, db: AsyncSession) -> WaiterCashupResponse:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1565371Z 57 |         cashup = (await db.execute(select(WaiterCashup).filter(WaiterCashup.id == cashup_id, WaiterCashup.business_id == business_id))ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1566136Z 58 |         if not cashup: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cashup not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1566598Z    |                      ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1566870Z 59 |         return WaiterCashupResponse.model_validate(cashup)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1567167Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1567257Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1567367Z F401 [*] `sqlalchemy.update` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1567672Z  --> app/services/floor_plan_service.py:4:32
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1567926Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1568101Z 2 | from typing import List, Optional
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1568353Z 3 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1568616Z 4 | from sqlalchemy import select, update, delete, func
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1568903Z   |                                ^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1569184Z 5 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1588240Z 6 | from sqlalchemy.orm import selectinload
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1588547Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1588737Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1588892Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1589016Z F401 [*] `sqlalchemy.func` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1589335Z  --> app/services/floor_plan_service.py:4:48
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1589604Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1589792Z 2 | from typing import List, Optional
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1590048Z 3 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1590332Z 4 | from sqlalchemy import select, update, delete, func
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1590651Z   |                                                ^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1590961Z 5 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1591271Z 6 | from sqlalchemy.orm import selectinload
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1591536Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1591717Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1592088Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1592205Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1592516Z   --> app/services/floor_plan_service.py:24:22
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1592779Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1593039Z 22 | ΓÇª     if redis_client:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1593346Z 23 | ΓÇª         cached = await redis_client.get(cache_key)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1593810Z 24 | ΓÇª         if cached: return FloorPlanResponse.model_validate_json(cached)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1594165Z    |                    ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1594787Z 25 | ΓÇª     stmt = select(FloorPlan).filter(FloorPlan.business_id == business_id, FloorPlan.is_active == True).order_by(FloorPlan.sort_orderΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1595677Z 26 | ΓÇª     floor_plan = (await db.execute(stmt)).scalars().first()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1595986Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1596076Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1596312Z E712 Avoid equality comparisons to `True`; use `FloorPlan.is_active:` for truth checks
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1596759Z   --> app/services/floor_plan_service.py:25:79
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1597024Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1597277Z 23 | ΓÇª         cached = await redis_client.get(cache_key)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1597724Z 24 | ΓÇª         if cached: return FloorPlanResponse.model_validate_json(cached)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1598486Z 25 | ΓÇª     stmt = select(FloorPlan).filter(FloorPlan.business_id == business_id, FloorPlan.is_active == True).order_by(FloorPlan.sort_orderΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1599127Z    |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1599569Z 26 | ΓÇª     floor_plan = (await db.execute(stmt)).scalars().first()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1600227Z 27 | ΓÇª     if not floor_plan: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active floor plan found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1600731Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1600920Z help: Replace with `FloorPlan.is_active`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1601101Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1601206Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1601502Z   --> app/services/floor_plan_service.py:27:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1601760Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1602471Z 25 | ΓÇª     stmt = select(FloorPlan).filter(FloorPlan.business_id == business_id, FloorPlan.is_active == True).order_by(FloorPlan.sort_orderΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1603135Z 26 | ΓÇª     floor_plan = (await db.execute(stmt)).scalars().first()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1603825Z 27 | ΓÇª     if not floor_plan: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active floor plan found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1604338Z    |                        ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1604978Z 28 | ΓÇª     order_stmt = select(Order).filter(Order.business_id == business_id, Order.status.in_([OrderStatus.PENDING, OrderStatus.PROCESSINΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1605690Z 29 | ΓÇª     active_orders = (await db.execute(order_stmt)).scalars().all()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1606019Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1606106Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1606216Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1606504Z   --> app/services/floor_plan_service.py:33:24
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1606763Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1607468Z 31 | ΓÇª     tables_response = [FloorPlanTableResponse(id=t.id, business_id=t.business_id, floor_plan_id=t.floor_plan_id, name=t.name, sectioΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1608426Z 32 | ΓÇª     response = FloorPlanResponse(id=floor_plan.id, business_id=floor_plan.business_id, name=floor_plan.name, is_active=floor_plan.isΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1609219Z 33 | ΓÇª     if redis_client: await redis_client.setex(cache_key, 30, response.model_dump_json())
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1609634Z    |                      ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1609887Z 34 | ΓÇª     return response
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1610085Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1610180Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1610282Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1610594Z   --> app/services/floor_plan_service.py:41:22
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1610852Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1611050Z 39 | ΓÇª     if redis_client:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1611355Z 40 | ΓÇª         cached = await redis_client.get(cache_key)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1612212Z 41 | ΓÇª         if cached: return [TableStatusResponse.model_validate(item) for item in json.loads(cached)]
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1612735Z    |                    ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1613347Z 42 | ΓÇª     table_ids = (await db.execute(select(FloorPlanTable.id).filter(FloorPlanTable.business_id == business_id))).scalars().all()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1614296Z 43 | ΓÇª     active_orders = (await db.execute(select(Order).filter(Order.business_id == business_id, Order.status.in_([OrderStatus.PENDING, ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1614847Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1615087Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1615191Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1615485Z   --> app/services/floor_plan_service.py:46:24
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1615739Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1616040Z 44 | ΓÇª     order_map = {order.table_id: order for order in active_orders}
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1616775Z 45 | ΓÇª     status_list = [TableStatusResponse(table_id=tid, status="occupied" if order_map.get(tid) else "available", waiter_id=None, coverΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1617676Z 46 | ΓÇª     if redis_client: await redis_client.setex(cache_key, 10, json.dumps([s.model_dump(mode='json') for s in status_list]))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1618190Z    |                      ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1618426Z 47 | ΓÇª     return status_list
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1618636Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1618722Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1618841Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1619143Z   --> app/services/floor_plan_service.py:52:23
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1619405Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1619830Z 50 |     async def create_floor_plan(data: FloorPlanCreate, business_id: UUID, db: AsyncSession) -> FloorPlanResponse:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1620423Z 51 |         new_fp = FloorPlan(**data.model_dump(), business_id=business_id)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1620848Z 52 |         db.add(new_fp); await db.commit(); await db.refresh(new_fp)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1621176Z    |                       ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1621449Z 53 |         return FloorPlanResponse.model_validate(new_fp)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1621738Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1622054Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1622174Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1622490Z   --> app/services/floor_plan_service.py:52:42
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1622742Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1623156Z 50 |     async def create_floor_plan(data: FloorPlanCreate, business_id: UUID, db: AsyncSession) -> FloorPlanResponse:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1623751Z 51 |         new_fp = FloorPlan(**data.model_dump(), business_id=business_id)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1624173Z 52 |         db.add(new_fp); await db.commit(); await db.refresh(new_fp)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1624502Z    |                                          ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1624811Z 53 |         return FloorPlanResponse.model_validate(new_fp)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1625101Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1625189Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1625290Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1625584Z   --> app/services/floor_plan_service.py:58:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1625838Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1626309Z 56 |     async def update_floor_plan(floor_plan_id: UUID, data: FloorPlanUpdate, business_id: UUID, db: AsyncSession) -> FloorPlanResponse:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1627385Z 57 |         floor_plan = (await db.execute(select(FloorPlan).filter(FloorPlan.id == floor_plan_id, FloorPlan.business_id == business_id)))ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1628183Z 58 |         if not floor_plan: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Floor plan not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1628677Z    |                          ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1629049Z 59 |         for k, v in data.model_dump(exclude_unset=True).items(): setattr(floor_plan, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1629497Z 60 |         await db.commit(); await db.refresh(floor_plan)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1629779Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1629866Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1629974Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1630262Z   --> app/services/floor_plan_service.py:59:64
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1630525Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1631091Z 57 | ΓÇª     floor_plan = (await db.execute(select(FloorPlan).filter(FloorPlan.id == floor_plan_id, FloorPlan.business_id == business_id))).sΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1632171Z 58 | ΓÇª     if not floor_plan: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Floor plan not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1632891Z 59 | ΓÇª     for k, v in data.model_dump(exclude_unset=True).items(): setattr(floor_plan, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1633319Z    |                                                              ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1633847Z 60 | ΓÇª     await db.commit(); await db.refresh(floor_plan)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1634251Z 61 | ΓÇª     return FloorPlanResponse.model_validate(floor_plan)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1634556Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1634644Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1634765Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1635077Z   --> app/services/floor_plan_service.py:60:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1635330Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1635741Z 58 |         if not floor_plan: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Floor plan not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1636386Z 59 |         for k, v in data.model_dump(exclude_unset=True).items(): setattr(floor_plan, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1636825Z 60 |         await db.commit(); await db.refresh(floor_plan)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1637122Z    |                          ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1637407Z 61 |         return FloorPlanResponse.model_validate(floor_plan)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1637707Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1637793Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1637902Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1638200Z   --> app/services/floor_plan_service.py:65:147
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1638460Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1638623Z 63 | ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1639113Z 64 | ΓÇªreate, business_id: UUID, db: AsyncSession, redis_client: Optional[Redis] = None) -> FloorPlanTableResponse:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1640018Z 65 | ΓÇªplan_id, FloorPlan.business_id == business_id))).scalars().first(): raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detailΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1640620Z    |                                                                    ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1640958Z 66 | ΓÇª_id, business_id=business_id)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1641200Z 67 | ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1641359Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1641447Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1641561Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1641982Z   --> app/services/floor_plan_service.py:67:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1642245Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1642807Z 65 | ΓÇª     if not (await db.execute(select(FloorPlan).filter(FloorPlan.id == floor_plan_id, FloorPlan.business_id == business_id))).scalarsΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1643657Z 66 | ΓÇª     new_table = FloorPlanTable(**data.model_dump(), floor_plan_id=floor_plan_id, business_id=business_id)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1644270Z 67 | ΓÇª     db.add(new_table); await db.commit(); await db.refresh(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1644619Z    |                        ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1645226Z 68 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1646066Z 69 | ΓÇª     return FloorPlanTableResponse.model_validate(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1646421Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1646509Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1646621Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1646929Z   --> app/services/floor_plan_service.py:67:45
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1647188Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1647740Z 65 | ΓÇª     if not (await db.execute(select(FloorPlan).filter(FloorPlan.id == floor_plan_id, FloorPlan.business_id == business_id))).scalarsΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1648580Z 66 | ΓÇª     new_table = FloorPlanTable(**data.model_dump(), floor_plan_id=floor_plan_id, business_id=business_id)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1649185Z 67 | ΓÇª     db.add(new_table); await db.commit(); await db.refresh(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1649537Z    |                                           ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1650171Z 68 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1650860Z 69 | ΓÇª     return FloorPlanTableResponse.model_validate(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1651180Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1651267Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1651376Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1651659Z   --> app/services/floor_plan_service.py:68:24
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1652173Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1652649Z 66 | ΓÇª     new_table = FloorPlanTable(**data.model_dump(), floor_plan_id=floor_plan_id, business_id=business_id)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1653406Z 67 | ΓÇª     db.add(new_table); await db.commit(); await db.refresh(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1654133Z 68 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1654682Z    |                      ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1655025Z 69 | ΓÇª     return FloorPlanTableResponse.model_validate(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1655335Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1655436Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1655547Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1655851Z   --> app/services/floor_plan_service.py:68:89
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1656106Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1656583Z 66 | ΓÇª     new_table = FloorPlanTable(**data.model_dump(), floor_plan_id=floor_plan_id, business_id=business_id)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1657182Z 67 | ΓÇª     db.add(new_table); await db.commit(); await db.refresh(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1657906Z 68 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1658511Z    |                                                                                       ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1658977Z 69 | ΓÇª     return FloorPlanTableResponse.model_validate(new_table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1659292Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1659379Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1659487Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1659769Z   --> app/services/floor_plan_service.py:74:21
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1660033Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1660551Z 72 |     async def update_floor_plan_table(floor_plan_id: UUID, table_id: UUID, data: FloorPlanTableUpdate, business_id: UUID, db: AsyncSesΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1661453Z 73 |         table = (await db.execute(select(FloorPlanTable).filter(FloorPlanTable.id == table_id, FloorPlanTable.floor_plan_id == floor_pΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1662331Z 74 |         if not table: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1662803Z    |                     ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1663136Z 75 |         for k, v in data.model_dump(exclude_unset=True).items(): setattr(table, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1663564Z 76 |         await db.commit(); await db.refresh(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1663837Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1663928Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1664038Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1664324Z   --> app/services/floor_plan_service.py:75:64
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1664758Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1665336Z 73 | ΓÇª     table = (await db.execute(select(FloorPlanTable).filter(FloorPlanTable.id == table_id, FloorPlanTable.floor_plan_id == floor_plaΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1666167Z 74 | ΓÇª     if not table: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1666804Z 75 | ΓÇª     for k, v in data.model_dump(exclude_unset=True).items(): setattr(table, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1667213Z    |                                                              ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1667580Z 76 | ΓÇª     await db.commit(); await db.refresh(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1668242Z 77 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1668782Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1668874Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1668987Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1669289Z   --> app/services/floor_plan_service.py:76:26
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1669548Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1669988Z 74 | ΓÇª     if not table: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1670619Z 75 | ΓÇª     for k, v in data.model_dump(exclude_unset=True).items(): setattr(table, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1671067Z 76 | ΓÇª     await db.commit(); await db.refresh(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1671343Z    |                        ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1672055Z 77 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1672859Z 78 | ΓÇª     return FloorPlanTableResponse.model_validate(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1673157Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1673250Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1673351Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1673639Z   --> app/services/floor_plan_service.py:77:24
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1673888Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1674227Z 75 | ΓÇª     for k, v in data.model_dump(exclude_unset=True).items(): setattr(table, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1674686Z 76 | ΓÇª     await db.commit(); await db.refresh(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1675352Z 77 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1675900Z    |                      ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1676230Z 78 | ΓÇª     return FloorPlanTableResponse.model_validate(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1676535Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1676630Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1676742Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1677047Z   --> app/services/floor_plan_service.py:77:89
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1677306Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1677644Z 75 | ΓÇª     for k, v in data.model_dump(exclude_unset=True).items(): setattr(table, k, v)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1678094Z 76 | ΓÇª     await db.commit(); await db.refresh(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1678761Z 77 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1679372Z    |                                                                                       ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1679787Z 78 | ΓÇª     return FloorPlanTableResponse.model_validate(table)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1680090Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1680176Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1680283Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1680573Z   --> app/services/floor_plan_service.py:83:21
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1680832Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1681342Z 81 |     async def delete_floor_plan_table(floor_plan_id: UUID, table_id: UUID, business_id: UUID, db: AsyncSession, redis_client: OptionalΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1682737Z 82 |         table = (await db.execute(select(FloorPlanTable).filter(FloorPlanTable.id == table_id, FloorPlanTable.floor_plan_id == floor_pΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1683569Z 83 |         if not table: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1684032Z    |                     ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1684444Z 84 |         await db.delete(table); await db.commit()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1685101Z 85 |         if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_sΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1685629Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1685727Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1685842Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1686155Z   --> app/services/floor_plan_service.py:84:31
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1686415Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1686991Z 82 | ΓÇª     table = (await db.execute(select(FloorPlanTable).filter(FloorPlanTable.id == table_id, FloorPlanTable.floor_plan_id == floor_plaΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1687833Z 83 | ΓÇª     if not table: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1688372Z 84 | ΓÇª     await db.delete(table); await db.commit()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1688642Z    |                             ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1689264Z 85 | ΓÇª     if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_staΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1689810Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1689897Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1690005Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1690292Z   --> app/services/floor_plan_service.py:85:24
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1690548Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1690918Z 83 |         if not table: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1691532Z 84 |         await db.delete(table); await db.commit()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1692437Z 85 |         if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_sΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1692995Z    |                        ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1693201Z 86 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1693358Z 87 |     @staticmethod
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1693548Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1693636Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1693754Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1694066Z   --> app/services/floor_plan_service.py:85:89
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1694319Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1694692Z 83 |         if not table: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1695175Z 84 |         await db.delete(table); await db.commit()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1695806Z 85 |         if redis_client: await redis_client.delete(f"bizpilot:floor_plan:{business_id}"); await redis_client.delete(f"bizpilot:table_sΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1696410Z    |                                                                                         ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1696711Z 86 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1696868Z 87 |     @staticmethod
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1697053Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1697139Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1697255Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1697550Z   --> app/services/floor_plan_service.py:91:31
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1697806Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1698424Z 89 | ΓÇª     await db.execute(delete(FloorPlanSectionAssignment).filter(FloorPlanSectionAssignment.business_id == business_id, FloorPlanSectiΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1699454Z 90 | ΓÇª     new_assignment = FloorPlanSectionAssignment(business_id=business_id, section_name=section_name, waiter_id=waiter_id, floor_plan_ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1700223Z 91 | ΓÇª     db.add(new_assignment); await db.commit(); await db.refresh(new_assignment)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1700607Z    |                             ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1701013Z 92 | ΓÇª     return SectionAssignmentResponse.model_validate(new_assignment)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1701359Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1701452Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1701564Z E702 Multiple statements on one line (semicolon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1702001Z   --> app/services/floor_plan_service.py:91:50
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1702264Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1702869Z 89 | ΓÇª     await db.execute(delete(FloorPlanSectionAssignment).filter(FloorPlanSectionAssignment.business_id == business_id, FloorPlanSectiΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1704034Z 90 | ΓÇª     new_assignment = FloorPlanSectionAssignment(business_id=business_id, section_name=section_name, waiter_id=waiter_id, floor_plan_ΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1704789Z 91 | ΓÇª     db.add(new_assignment); await db.commit(); await db.refresh(new_assignment)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1705186Z    |                                                ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1705603Z 92 | ΓÇª     return SectionAssignmentResponse.model_validate(new_assignment)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1705956Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1706044Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1706151Z F401 [*] `typing.Dict` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1706426Z  --> app/services/pdf_service.py:4:27
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1706669Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1706829Z 2 | import os
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1707003Z 3 | import asyncio
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1707225Z 4 | from typing import Tuple, Dict, Any, List
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1707497Z   |                           ^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1707723Z 5 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1707950Z 6 | from datetime import datetime
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1708182Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1708354Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1708492Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1708588Z F401 [*] `typing.Any` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1708859Z  --> app/services/pdf_service.py:4:33
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1709093Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1709246Z 2 | import os
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1709421Z 3 | import asyncio
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1709637Z 4 | from typing import Tuple, Dict, Any, List
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1710023Z   |                                 ^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1710262Z 5 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1710480Z 6 | from datetime import datetime
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1710698Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1710872Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1711009Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1711111Z F401 [*] `typing.List` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1711382Z  --> app/services/pdf_service.py:4:38
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1711614Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1711891Z 2 | import os
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1712073Z 3 | import asyncio
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1712281Z 4 | from typing import Tuple, Dict, Any, List
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1712552Z   |                                      ^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1712798Z 5 | from uuid import UUID
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1713014Z 6 | from datetime import datetime
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1713239Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1713408Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1713546Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1713695Z F401 [*] `app.models.supplier.Supplier` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1714034Z   --> app/services/pdf_service.py:21:33
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1714278Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1714476Z 19 | from app.models.business import Business
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1714762Z 20 | from app.models.customer import Customer
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1715055Z 21 | from app.models.supplier import Supplier
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1715319Z    |                                 ^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1715543Z 22 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1715726Z 23 | logger = logging.getLogger(__name__)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1715974Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1716207Z help: Remove unused import: `app.models.supplier.Supplier`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1716459Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1716571Z F401 [*] `sqlalchemy.update` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1716871Z   --> app/services/webhook_service.py:12:32
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1717124Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1717333Z 11 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1717650Z 12 | from sqlalchemy import select, update
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1717915Z    |                                ^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1718230Z 13 | from fastapi import BackgroundTasks, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1718539Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1718743Z help: Remove unused import: `sqlalchemy.update`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1718944Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1719066Z F401 [*] `fastapi.HTTPException` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1719375Z   --> app/services/webhook_service.py:13:38
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1719620Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1719824Z 11 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1720249Z 12 | from sqlalchemy import select, update
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1720581Z 13 | from fastapi import BackgroundTasks, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1720917Z    |                                      ^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1721160Z 14 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1721430Z 15 | from app.models.webhook import WebhookSubscription, WebhookDelivery
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1721877Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1722043Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1722192Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1722291Z F401 [*] `fastapi.status` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1722578Z   --> app/services/webhook_service.py:13:53
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1722819Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1723024Z 11 | from sqlalchemy.ext.asyncio import AsyncSession
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1723325Z 12 | from sqlalchemy import select, update
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1723651Z 13 | from fastapi import BackgroundTasks, HTTPException, status
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1723983Z    |                                                     ^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1724242Z 14 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1724512Z 15 | from app.models.webhook import WebhookSubscription, WebhookDelivery
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1724853Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1725024Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1725162Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1725438Z E712 Avoid equality comparisons to `True`; use `WebhookSubscription.is_active:` for truth checks
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1725902Z   --> app/services/webhook_service.py:33:9
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1726267Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1726468Z 31 |     stmt = select(WebhookSubscription).where(
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1726813Z 32 |         WebhookSubscription.business_id == business_id,
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1727144Z 33 |         WebhookSubscription.is_active == True,
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1727430Z    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1727759Z 34 |         WebhookSubscription.events.contains([event_type])
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1728056Z 35 |     )
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1728216Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1728429Z help: Replace with `WebhookSubscription.is_active`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1728640Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1728757Z F401 [*] `unittest.mock.patch` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1729049Z  --> app/tests/test_cashup_service.py:4:49
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1729299Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1729522Z 2 | from datetime import datetime, timezone, timedelta
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1729808Z 3 | import pytest
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1730069Z 4 | from unittest.mock import AsyncMock, MagicMock, patch
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1730397Z   |                                                 ^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1730669Z 5 | from fastapi import HTTPException
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1730927Z 6 | from decimal import Decimal
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1731147Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1731352Z help: Remove unused import: `unittest.mock.patch`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1731568Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1731695Z F401 [*] `app.models.order.Order` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1732108Z   --> app/tests/test_cashup_service.py:9:30
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1732365Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1732576Z  7 | from app.models.waiter_cashup import WaiterCashup
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1732911Z  8 | from app.models.shift import Shift, ShiftStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1733233Z  9 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1733508Z    |                              ^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1734021Z 10 | from app.models.payment import PaymentTransaction, PaymentTransactionStatus, PaymentMethod, PaymentMethodType
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1734614Z 11 | from app.services.cashup_service import CashupService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1734914Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1735078Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1735219Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1735363Z F401 [*] `app.models.order.OrderStatus` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1735696Z   --> app/tests/test_cashup_service.py:9:37
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1735939Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1736149Z  7 | from app.models.waiter_cashup import WaiterCashup
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1736479Z  8 | from app.models.shift import Shift, ShiftStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1736919Z  9 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1737209Z    |                                     ^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1737725Z 10 | from app.models.payment import PaymentTransaction, PaymentTransactionStatus, PaymentMethod, PaymentMethodType
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1738303Z 11 | from app.services.cashup_service import CashupService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1738594Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1738769Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1738904Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1739089Z F401 [*] `app.models.payment.PaymentTransaction` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1739457Z   --> app/tests/test_cashup_service.py:10:32
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1739712Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1739917Z  8 | from app.models.shift import Shift, ShiftStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1740231Z  9 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1740769Z 10 | from app.models.payment import PaymentTransaction, PaymentTransactionStatus, PaymentMethod, PaymentMethodType
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1741306Z    |                                ^^^^^^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1741619Z 11 | from app.services.cashup_service import CashupService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1742074Z 12 | from app.schemas.cashup import CashupRejectRequest
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1742357Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1742526Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1742659Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1742857Z F401 [*] `app.models.payment.PaymentTransactionStatus` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1743443Z   --> app/tests/test_cashup_service.py:10:52
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1743694Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1743898Z  8 | from app.models.shift import Shift, ShiftStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1744215Z  9 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1744759Z 10 | from app.models.payment import PaymentTransaction, PaymentTransactionStatus, PaymentMethod, PaymentMethodType
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1745313Z    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1745663Z 11 | from app.services.cashup_service import CashupService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1746024Z 12 | from app.schemas.cashup import CashupRejectRequest
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1746310Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1746480Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1746615Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1746772Z F401 [*] `app.models.payment.PaymentMethod` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1747124Z   --> app/tests/test_cashup_service.py:10:78
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1747378Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1747577Z  8 | from app.models.shift import Shift, ShiftStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1747896Z  9 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1748437Z 10 | from app.models.payment import PaymentTransaction, PaymentTransactionStatus, PaymentMethod, PaymentMethodType
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1749007Z    |                                                                              ^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1749373Z 11 | from app.services.cashup_service import CashupService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1749734Z 12 | from app.schemas.cashup import CashupRejectRequest
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1750015Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1750177Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1750317Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1750418Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1750706Z   --> app/tests/test_cashup_service.py:18:49
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1750950Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1751115Z 16 |     mock = AsyncMock()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1751340Z 17 |     async def mock_refresh(obj):
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1751673Z 18 |         if hasattr(obj, 'id') and obj.id is None: obj.id = uuid.uuid4()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1752128Z    |                                                 ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1752585Z 19 |         if hasattr(obj, 'created_at') and obj.created_at is None: obj.created_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1753043Z 20 |     mock.refresh = mock_refresh
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1753267Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1753357Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1753461Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1753865Z   --> app/tests/test_cashup_service.py:19:65
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1754112Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1754277Z 17 |     async def mock_refresh(obj):
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1754592Z 18 |         if hasattr(obj, 'id') and obj.id is None: obj.id = uuid.uuid4()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1755125Z 19 |         if hasattr(obj, 'created_at') and obj.created_at is None: obj.created_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1755602Z    |                                                                 ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1755885Z 20 |     mock.refresh = mock_refresh
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1756121Z 21 |     return mock
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1756333Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1756429Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1756530Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1756815Z   --> app/tests/test_cashup_service.py:38:45
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1757059Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1757592Z 36 |     mock_shift = Shift(id=SHIFT_ID, business_id=BIZ_ID, user_id=WAITER_ID, status=ShiftStatus.IN_PROGRESS, actual_start=NOW - timedeltΓÇª
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1758429Z 37 |     db.execute.side_effect = [AsyncMock(scalars=lambda: MagicMock(first=lambda: mock_shift)), AsyncMock(scalar=lambda: 1)]
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1759230Z 38 |     with pytest.raises(HTTPException) as exc: await CashupService.generate_waiter_cashup(SHIFT_ID, WAITER_ID, BIZ_ID, db)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1759771Z    |                                             ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1760161Z 39 |     assert exc.value.status_code == 400
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1760408Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1760493Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1760616Z F401 [*] `unittest.mock.patch` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1760922Z  --> app/tests/test_floor_plan_service.py:4:49
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1761178Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1761367Z 2 | from datetime import datetime, timezone
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1761619Z 3 | import pytest
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1761984Z 4 | from unittest.mock import AsyncMock, MagicMock, patch
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1762317Z   |                                                 ^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1762591Z 5 | from fastapi import HTTPException
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1763042Z 6 | from app.models.restaurant_table import FloorPlan, FloorPlanTable, FloorPlanSectionAssignment
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1763485Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1763696Z help: Remove unused import: `unittest.mock.patch`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1763904Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1764135Z F401 [*] `app.models.restaurant_table.FloorPlanSectionAssignment` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1764584Z  --> app/tests/test_floor_plan_service.py:6:68
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1764841Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1765060Z 4 | from unittest.mock import AsyncMock, MagicMock, patch
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1765373Z 5 | from fastapi import HTTPException
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1765811Z 6 | from app.models.restaurant_table import FloorPlan, FloorPlanTable, FloorPlanSectionAssignment
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1766311Z   |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1766656Z 7 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1767023Z 8 | from app.services.floor_plan_service import FloorPlanService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1767340Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1767648Z help: Remove unused import: `app.models.restaurant_table.FloorPlanSectionAssignment`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1767990Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1768115Z F401 [*] `app.models.order.Order` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1768434Z  --> app/tests/test_floor_plan_service.py:7:30
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1768695Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1768870Z 5 | from fastapi import HTTPException
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1769315Z 6 | from app.models.restaurant_table import FloorPlan, FloorPlanTable, FloorPlanSectionAssignment
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1769809Z 7 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1770089Z   |                              ^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1770403Z 8 | from app.services.floor_plan_service import FloorPlanService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1770797Z 9 | from app.schemas.floor_plan import FloorPlanTableCreate
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1771221Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1771387Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1771531Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1771675Z F401 [*] `app.models.order.OrderStatus` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1772112Z  --> app/tests/test_floor_plan_service.py:7:37
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1772365Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1772546Z 5 | from fastapi import HTTPException
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1772989Z 6 | from app.models.restaurant_table import FloorPlan, FloorPlanTable, FloorPlanSectionAssignment
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1773479Z 7 | from app.models.order import Order, OrderStatus
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1773776Z   |                                     ^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1774105Z 8 | from app.services.floor_plan_service import FloorPlanService
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1774488Z 9 | from app.schemas.floor_plan import FloorPlanTableCreate
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1774776Z   |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1774944Z help: Remove unused import
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1775081Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1775195Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1775490Z   --> app/tests/test_floor_plan_service.py:15:49
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1775751Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1775922Z 13 |     mock = AsyncMock()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1776137Z 14 |     async def mock_refresh(obj):
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1776461Z 15 |         if hasattr(obj, 'id') and obj.id is None: obj.id = uuid.uuid4()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1776815Z    |                                                 ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1777409Z 16 |         if hasattr(obj, 'created_at') and obj.created_at is None: obj.created_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1778059Z 17 |         if hasattr(obj, 'updated_at') and obj.updated_at is None: obj.updated_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1778501Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1778588Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1778697Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1778987Z   --> app/tests/test_floor_plan_service.py:16:65
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1779257Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1779429Z 14 |     async def mock_refresh(obj):
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1779755Z 15 |         if hasattr(obj, 'id') and obj.id is None: obj.id = uuid.uuid4()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1780276Z 16 |         if hasattr(obj, 'created_at') and obj.created_at is None: obj.created_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1780752Z    |                                                                 ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1781227Z 17 |         if hasattr(obj, 'updated_at') and obj.updated_at is None: obj.updated_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1781679Z 18 |     mock.refresh = mock_refresh
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1782013Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1782104Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1782206Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1782498Z   --> app/tests/test_floor_plan_service.py:17:65
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1782752Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1782991Z 15 |         if hasattr(obj, 'id') and obj.id is None: obj.id = uuid.uuid4()
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1783516Z 16 |         if hasattr(obj, 'created_at') and obj.created_at is None: obj.created_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1784151Z 17 |         if hasattr(obj, 'updated_at') and obj.updated_at is None: obj.updated_at = datetime.now(timezone.utc)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1784623Z    |                                                                 ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1784905Z 18 |     mock.refresh = mock_refresh
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1785137Z 19 |     return mock
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1785320Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1785410Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1785511Z E701 Multiple statements on one line (colon)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1785810Z   --> app/tests/test_floor_plan_service.py:63:45
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1786077Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1786330Z 61 | async def test_floor_plan_returns_404_for_different_business(db):
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1786822Z 62 |     db.execute.return_value = AsyncMock(scalars=lambda: MagicMock(first=lambda: None))
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1787442Z 63 |     with pytest.raises(HTTPException) as exc: await FloorPlanService.get_active_floor_plan(BIZ_ID, db)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1788033Z    |                                             ^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1788309Z 64 |     assert exc.value.status_code == 404
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1788557Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1788644Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1788797Z F401 [*] `app.models.invoice.InvoiceItem` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1789131Z   --> app/tests/test_pdf.py:14:41
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1789360Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1789529Z 12 |     generate_purchase_order_pdf
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1789784Z 13 | )
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1790017Z 14 | from app.models.invoice import Invoice, InvoiceItem
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1790333Z    |                                         ^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1790618Z 15 | from app.models.business import Business
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1790901Z 16 | from app.models.user import User
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1791142Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1791381Z help: Remove unused import: `app.models.invoice.InvoiceItem`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1791638Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1791875Z F401 [*] `app.models.order.OrderItem` imported but unused
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1792193Z   --> app/tests/test_pdf.py:18:37
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1792413Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1792597Z 16 | from app.models.user import User
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1792860Z 17 | from app.models.shift import Shift
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1793148Z 18 | from app.models.order import Order, OrderItem
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1793432Z    |                                     ^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1793840Z 19 |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1794005Z 20 | @pytest.fixture
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1794187Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1794411Z help: Remove unused import: `app.models.order.OrderItem`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1794635Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1794799Z F841 Local variable `mock_deliver` is assigned to but never used
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1795141Z   --> app/tests/test_webhooks.py:35:67
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1795379Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1795582Z 33 |     mock_db.execute.return_value = mock_result
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1795846Z 34 |     
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1796145Z 35 |     with patch("app.services.webhook_service.deliver_webhook") as mock_deliver:
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1796568Z    |                                                                   ^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1796978Z 36 |         await trigger_webhook_event(event_type, payload, business_id, mock_db)
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1797325Z    |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1797555Z help: Remove assignment to unused variable `mock_deliver`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1797786Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1798012Z E712 Avoid equality comparisons to `False`; use `not sub.is_active:` for false checks
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1798424Z    --> app/tests/test_webhooks.py:182:16
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1798672Z     |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1798866Z 181 |         assert delivery.status == "failed"
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1799223Z 182 |         assert sub.is_active == False # Deactivated after many failures
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1799570Z     |                ^^^^^^^^^^^^^^^^^^^^^^
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1799805Z     |
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1800000Z help: Replace with `not sub.is_active`
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1800171Z 
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1800244Z Found 85 errors.
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1800627Z [*] 34 fixable with the `--fix` option (4 hidden fixes can be enabled with the `--unsafe-fixes` option).
+Backend CI	Lint with Ruff	2026-03-17T13:06:45.1811727Z ##[error]Process completed with exit code 1.
+Backend CI	Post Checkout code	∩╗┐2026-03-17T13:06:45.1926565Z Post job cleanup.
+Backend CI	Post Checkout code	2026-03-17T13:06:45.2916526Z [command]/usr/bin/git version
+Backend CI	Post Checkout code	2026-03-17T13:06:45.2954833Z git version 2.53.0
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3007483Z Temporarily overriding HOME='/home/runner/work/_temp/61e1d179-b3cf-4692-a3f7-9eeb6a12ff04' before making global git config changes
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3064388Z Adding repository directory to the temporary git global config as a safe directory
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3065340Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/BizPilot2/BizPilot2
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3066457Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3093332Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3347514Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3370599Z http.https://github.com/.extraheader
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3383609Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3415043Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3672916Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Backend CI	Post Checkout code	2026-03-17T13:06:45.3711693Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Backend CI	Complete job	∩╗┐2026-03-17T13:06:45.4094868Z Cleaning up orphan processes
+Backend CI	Complete job	2026-03-17T13:06:45.4396364Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

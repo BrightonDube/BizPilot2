@@ -1,0 +1,7 @@
+Backend CI	fail	30s	https://github.com/BrightonDube/BizPilot2/actions/runs/23195650909/job/67403201448	
+Frontend CI	fail	39s	https://github.com/BrightonDube/BizPilot2/actions/runs/23195650909/job/67403201429	
+Vercel	fail	0	https://vercel.com/brightondubes-projects/biz-pilot2-frontend/2fmS8tao9rwTN3fzKVZ1arjY5Pnk	Deployment has failed
+Migration Safety Check	pass	45s	https://github.com/BrightonDube/BizPilot2/actions/runs/23195650909/job/67403201458	
+Shared Types Check	pass	8s	https://github.com/BrightonDube/BizPilot2/actions/runs/23195650909/job/67403201447	
+Vercel Preview Comments	pass	0	https://vercel.com/github	
+CodeRabbit	pending	0		Review in progress

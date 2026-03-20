@@ -1,13 +1,12 @@
 import uuid
 from datetime import datetime, timezone, timedelta
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
 from decimal import Decimal
 from app.models.waiter_cashup import WaiterCashup
 from app.models.shift import Shift, ShiftStatus
-from app.models.order import Order, OrderStatus
-from app.models.payment import PaymentTransaction, PaymentTransactionStatus, PaymentMethod, PaymentMethodType
+from app.models.payment import PaymentMethodType
 from app.services.cashup_service import CashupService
 from app.schemas.cashup import CashupRejectRequest
 
@@ -15,8 +14,10 @@ from app.schemas.cashup import CashupRejectRequest
 def db():
     mock = AsyncMock()
     async def mock_refresh(obj):
-        if hasattr(obj, 'id') and obj.id is None: obj.id = uuid.uuid4()
-        if hasattr(obj, 'created_at') and obj.created_at is None: obj.created_at = datetime.now(timezone.utc)
+        if hasattr(obj, 'id') and obj.id is None:
+            obj.id = uuid.uuid4()
+        if hasattr(obj, 'created_at') and obj.created_at is None:
+            obj.created_at = datetime.now(timezone.utc)
     mock.refresh = mock_refresh
     return mock
 
@@ -35,7 +36,8 @@ async def test_generate_cashup_aggregates_all_shift_orders_correctly(db):
 async def test_generate_cashup_fails_when_shift_has_open_orders(db):
     mock_shift = Shift(id=SHIFT_ID, business_id=BIZ_ID, user_id=WAITER_ID, status=ShiftStatus.IN_PROGRESS, actual_start=NOW - timedelta(hours=4))
     db.execute.side_effect = [AsyncMock(scalars=lambda: MagicMock(first=lambda: mock_shift)), AsyncMock(scalar=lambda: 1)]
-    with pytest.raises(HTTPException) as exc: await CashupService.generate_waiter_cashup(SHIFT_ID, WAITER_ID, BIZ_ID, db)
+    with pytest.raises(HTTPException) as exc:
+        await CashupService.generate_waiter_cashup(SHIFT_ID, WAITER_ID, BIZ_ID, db)
     assert exc.value.status_code == 400
 
 @pytest.mark.asyncio

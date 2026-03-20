@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
-from app.models.restaurant_table import FloorPlan, FloorPlanTable, FloorPlanSectionAssignment
-from app.models.order import Order, OrderStatus
+from app.models.restaurant_table import FloorPlan, FloorPlanTable
 from app.services.floor_plan_service import FloorPlanService
 from app.schemas.floor_plan import FloorPlanTableCreate
 
@@ -12,9 +11,12 @@ from app.schemas.floor_plan import FloorPlanTableCreate
 def db():
     mock = AsyncMock()
     async def mock_refresh(obj):
-        if hasattr(obj, 'id') and obj.id is None: obj.id = uuid.uuid4()
-        if hasattr(obj, 'created_at') and obj.created_at is None: obj.created_at = datetime.now(timezone.utc)
-        if hasattr(obj, 'updated_at') and obj.updated_at is None: obj.updated_at = datetime.now(timezone.utc)
+        if hasattr(obj, 'id') and obj.id is None:
+            obj.id = uuid.uuid4()
+        if hasattr(obj, 'created_at') and obj.created_at is None:
+            obj.created_at = datetime.now(timezone.utc)
+        if hasattr(obj, 'updated_at') and obj.updated_at is None:
+            obj.updated_at = datetime.now(timezone.utc)
     mock.refresh = mock_refresh
     return mock
 
@@ -60,7 +62,8 @@ async def test_floor_plan_cache_invalidated_after_table_created(db, redis_client
 @pytest.mark.asyncio
 async def test_floor_plan_returns_404_for_different_business(db):
     db.execute.return_value = AsyncMock(scalars=lambda: MagicMock(first=lambda: None))
-    with pytest.raises(HTTPException) as exc: await FloorPlanService.get_active_floor_plan(BIZ_ID, db)
+    with pytest.raises(HTTPException) as exc:
+        await FloorPlanService.get_active_floor_plan(BIZ_ID, db)
     assert exc.value.status_code == 404
 
 @pytest.mark.asyncio
