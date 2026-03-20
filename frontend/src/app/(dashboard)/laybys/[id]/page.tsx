@@ -38,7 +38,6 @@ export default function LaybyDetailPage() {
   }, [refetch, layby, addToast]);
 
   const canRecordPayment = layby && (layby.status === 'ACTIVE' || layby.status === 'OVERDUE');
->>>>>>> origin/main
 
   if (isLoading) {
     return (
