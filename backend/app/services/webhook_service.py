@@ -30,7 +30,7 @@ async def trigger_webhook_event(
     # events column is JSONB list, so we use contains
     stmt = select(WebhookSubscription).where(
         WebhookSubscription.business_id == business_id,
-        WebhookSubscription.is_active == True,
+        WebhookSubscription.is_active,
         WebhookSubscription.events.contains([event_type])
     )
     result = await db.execute(stmt)

@@ -18,12 +18,10 @@ interface OrderHistoryItem {
 }
 
 interface OrderStatusHistory {
-  id: string;
   old_status: string | null;
   new_status: string;
-  reason: string | null;
+  reason?: string;
   changed_at: string;
-  changed_by: string;
 }
 
 const STATUS_BADGES: Record<string, string> = {
@@ -64,6 +62,7 @@ export default function OrderHistoryPage(): React.ReactElement {
   const fetchOrders = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const params: Record<string, any> = { page, per_page: perPage };
       if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;

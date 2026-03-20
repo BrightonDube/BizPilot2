@@ -13,9 +13,11 @@ from app.services.floor_plan_service import FloorPlanService
 router = APIRouter()
 
 async def check_manager_role(current_user=Depends(deps.get_current_active_user), business_id: str = Depends(deps.get_current_business_id), db: AsyncSession = Depends(deps.get_db)):
-    if current_user.is_superadmin: return current_user
+    if current_user.is_superadmin:
+        return current_user
     business_user = (await db.execute(select(BusinessUser).options(selectinload(BusinessUser.role)).filter(BusinessUser.user_id == current_user.id, BusinessUser.business_id == UUID(business_id)))).scalars().first()
-    if not business_user or not business_user.role or business_user.role.name.lower() not in ["admin", "manager"]: raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Requires manager or admin role")
+    if not business_user or not business_user.role or business_user.role.name.lower() not in ["admin", "manager"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Requires manager or admin role")
     return current_user
 
 @router.get("/active", response_model=FloorPlanResponse)

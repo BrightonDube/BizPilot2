@@ -47,6 +47,7 @@
     "**/*.test.tsx",
     "**/__tests__/**",
     "test-*.js",
-    "quick-*.js"
+    "quick-*.js",
+    "e2e/**/*"
   ]
 }
