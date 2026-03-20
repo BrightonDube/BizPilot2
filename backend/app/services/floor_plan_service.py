@@ -1,7 +1,7 @@
 import json
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
@@ -22,7 +22,7 @@ class FloorPlanService:
         if redis_client:
             cached = await redis_client.get(cache_key)
             if cached: return FloorPlanResponse.model_validate_json(cached)
-        stmt = select(FloorPlan).filter(FloorPlan.business_id == business_id, FloorPlan.is_active == True).order_by(FloorPlan.sort_order.asc()).options(selectinload(FloorPlan.floor_plan_tables))
+        stmt = select(FloorPlan).filter(FloorPlan.business_id == business_id, FloorPlan.is_active).order_by(FloorPlan.sort_order.asc()).options(selectinload(FloorPlan.floor_plan_tables))
         floor_plan = (await db.execute(stmt)).scalars().first()
         if not floor_plan: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active floor plan found")
         order_stmt = select(Order).filter(Order.business_id == business_id, Order.status.in_([OrderStatus.PENDING, OrderStatus.PROCESSING]), Order.table_id.isnot(None))

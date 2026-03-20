@@ -19,7 +19,7 @@ from hypothesis import strategies as st
 from app.models.layby import Layby, LaybyStatus, PaymentFrequency
 from app.models.layby_item import LaybyItem
 from app.models.layby_schedule import LaybySchedule, ScheduleStatus
-from app.models.layby_payment import LaybyPayment, PaymentStatus, PaymentType
+from app.models.layby_payment import LaybyPayment, PaymentStatus
 from app.services.layby_service import LaybyService
 
 
@@ -185,7 +185,7 @@ class TestLaybyBalanceInvariantAfterPayment:
         business_id = uuid4()
         customer_id = uuid4()
         layby_id = uuid4()
-        user_id = uuid4()
+        uuid4()
         
         # Calculate deposit and initial balance
         deposit_amount = (total_amount * deposit_percentage / Decimal("100")).quantize(Decimal("0.01"))
@@ -263,8 +263,6 @@ class TestLaybyBalanceInvariantAfterPayment:
                 continue
             
             # Record state before payment
-            balance_before = layby.balance_due
-            paid_before = layby.amount_paid
             
             # Simulate payment processing (what make_payment does)
             layby.amount_paid += actual_payment
@@ -532,7 +530,7 @@ class TestStatusTransitionOnFullPayment:
         business_id = uuid4()
         customer_id = uuid4()
         layby_id = uuid4()
-        user_id = uuid4()
+        uuid4()
         
         # Calculate deposit and initial balance
         deposit_amount = (total_amount * deposit_percentage / Decimal("100")).quantize(Decimal("0.01"))
@@ -621,7 +619,6 @@ class TestStatusTransitionOnFullPayment:
             
             # Record state before payment
             balance_before = layby.balance_due
-            status_before = layby.status
             
             # Simulate payment processing (what make_payment does)
             layby.amount_paid += payment_amount
@@ -712,7 +709,7 @@ class TestStatusTransitionOnFullPayment:
         business_id = uuid4()
         customer_id = uuid4()
         layby_id = uuid4()
-        user_id = uuid4()
+        uuid4()
         
         # Calculate deposit and initial balance
         deposit_amount = (total_amount * deposit_percentage / Decimal("100")).quantize(Decimal("0.01"))
@@ -759,7 +756,7 @@ class TestStatusTransitionOnFullPayment:
             f"Status must be READY_FOR_COLLECTION after full payment, got {layby.status}"
         
         assert not layby.can_make_payment, \
-            f"can_make_payment must be False after full payment"
+            "can_make_payment must be False after full payment"
         
         assert layby.amount_paid == layby.total_amount, \
             f"Amount paid should equal total amount: paid={layby.amount_paid}, total={layby.total_amount}"
@@ -793,7 +790,7 @@ class TestStatusTransitionOnFullPayment:
         business_id = uuid4()
         customer_id = uuid4()
         layby_id = uuid4()
-        user_id = uuid4()
+        uuid4()
         
         # Calculate deposit and initial balance
         deposit_amount = (total_amount * deposit_percentage / Decimal("100")).quantize(Decimal("0.01"))
@@ -821,7 +818,7 @@ class TestStatusTransitionOnFullPayment:
         assert layby.balance_due > Decimal("0")
         
         # Attempt to pay more than the balance (simulating what make_payment does)
-        attempted_payment = initial_balance + overpayment_amount
+        initial_balance + overpayment_amount
         
         # The service should clamp this to the balance (or reject it)
         # For this test, we'll simulate the rejection behavior
@@ -847,7 +844,7 @@ class TestStatusTransitionOnFullPayment:
             f"Status must be READY_FOR_COLLECTION after full payment, got {layby.status}"
         
         assert not layby.can_make_payment, \
-            f"can_make_payment must be False after full payment"
+            "can_make_payment must be False after full payment"
 
 
 
@@ -1371,7 +1368,7 @@ class TestPaymentScheduleSumConsistency:
         end_date = start_date + timedelta(days=duration_days)
         
         # Create the layby
-        layby = service.create_layby(
+        service.create_layby(
             business_id=business_id,
             customer_id=customer_id,
             items=items,
@@ -1434,7 +1431,7 @@ class TestPaymentScheduleSumConsistency:
         # Verify the last installment absorbs rounding remainder correctly
         if len(schedule_entries) > 1:
             # Calculate what the standard installment amount would be
-            standard_installment = (balance_due / Decimal(str(len(schedule_entries)))).quantize(Decimal("0.01"))
+            (balance_due / Decimal(str(len(schedule_entries)))).quantize(Decimal("0.01"))
             
             # Sum of all but last installment
             sum_except_last = sum(entry.amount_due for entry in schedule_entries[:-1])

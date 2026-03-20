@@ -1,7 +1,5 @@
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from app.core.database import get_sync_db
 from app.models.subscription_tier import SubscriptionTier
 from sqlalchemy import text
 

@@ -9,8 +9,8 @@ from typing import List, Dict, Any, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-from fastapi import BackgroundTasks, HTTPException, status
+from sqlalchemy import select
+from fastapi import BackgroundTasks
 
 from app.models.webhook import WebhookSubscription, WebhookDelivery
 
@@ -30,7 +30,7 @@ async def trigger_webhook_event(
     # events column is JSONB list, so we use contains
     stmt = select(WebhookSubscription).where(
         WebhookSubscription.business_id == business_id,
-        WebhookSubscription.is_active == True,
+        WebhookSubscription.is_active,
         WebhookSubscription.events.contains([event_type])
     )
     result = await db.execute(stmt)

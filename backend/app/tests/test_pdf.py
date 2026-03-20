@@ -11,11 +11,11 @@ from app.services.pdf_service import (
     generate_cashup_pdf,
     generate_purchase_order_pdf
 )
-from app.models.invoice import Invoice, InvoiceItem
+from app.models.invoice import Invoice
 from app.models.business import Business
 from app.models.user import User
 from app.models.shift import Shift
-from app.models.order import Order, OrderItem
+from app.models.order import Order
 
 @pytest.fixture
 def mock_db():

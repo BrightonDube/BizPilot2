@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'shared'))
 
-import pytest
 from sqlalchemy import text
 from app.core.database import get_sync_db
 from app.models.subscription_tier import SubscriptionTier

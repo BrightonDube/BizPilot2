@@ -1,7 +1,5 @@
-import sys
 import os
 import uuid
-import pytest
 from fastapi.testclient import TestClient
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
@@ -58,7 +56,7 @@ def run():
         response = client.get("/api/v1/subscriptions/tiers")
         print("STATUS:", response.status_code)
         print("BODY:", response.json())
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
 

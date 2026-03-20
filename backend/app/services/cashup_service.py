@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 from datetime import datetime, timezone
 from sqlalchemy import select, func
