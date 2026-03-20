@@ -40,7 +40,7 @@ export function InventoryStatusChart({ inventory }: InventoryStatusChartProps) {
     { name: 'Out of Stock', value: outOfStock, color: chartTheme.colors.danger },
   ]
 
-  const renderTooltip = ({ active, payload }: any) => {
+  const renderTooltip = ({ active, payload }: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     if (!active || !payload?.length) return null
     const item = payload[0]
     const value = toNumber(item?.value, 0)
