@@ -1,34 +1,19 @@
 import os
 import uuid
 from fastapi.testclient import TestClient
-<<<<<<< HEAD
-
-os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
-os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
-
 from sqlalchemy import create_engine
 from app.models.base import Base
-engine = create_engine("sqlite:///./test.db")
-Base.metadata.create_all(engine)
-
-=======
-from sqlalchemy import create_engine
-from app.models.base import Base
->>>>>>> origin/main
 from app.main import app
 from app.core.database import SessionLocal, get_sync_db
 from app.models.subscription_tier import SubscriptionTier
 from shared.pricing_config import SUBSCRIPTION_TIERS
 
-<<<<<<< HEAD
-=======
 os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 
 engine = create_engine("sqlite:///./test.db")
 Base.metadata.create_all(engine)
 
->>>>>>> origin/main
 def override_get_db():
     db = SessionLocal()
     try:
