@@ -5,16 +5,17 @@ Revises: 035_add_account_transactions
 Create Date: 2026-01-21
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '036_add_account_payments'
 down_revision = '035_add_account_transactions'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create account_payments and payment_allocations tables.
@@ -57,9 +58,10 @@ def upgrade() -> None:
         sa.Column('notes', sa.Text(), nullable=True),
         
         # Audit trail (Requirement 4.6)
-        # Track who received the payment
         sa.Column('received_by', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
@@ -90,6 +92,8 @@ def upgrade() -> None:
         
         # Timestamp for allocation order tracking (Requirement 4.4)
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
@@ -167,7 +171,6 @@ def upgrade() -> None:
         'payment_allocations',
         ['payment_id', 'transaction_id']
     )
-
 
 def downgrade() -> None:
     """Drop account_payments and payment_allocations tables and their indexes."""

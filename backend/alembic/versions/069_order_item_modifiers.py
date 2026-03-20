@@ -20,6 +20,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from alembic import op
 
+
 # ---------------------------------------------------------------------------
 # Alembic revision identifiers
 # ---------------------------------------------------------------------------
@@ -27,7 +28,6 @@ revision = "069_order_item_modifiers"
 down_revision = "068_combo_deals"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     op.create_table(
@@ -125,7 +125,6 @@ def upgrade() -> None:
         ["parent_modifier_id"],
         postgresql_where=sa.text("parent_modifier_id IS NOT NULL"),
     )
-
 
 def downgrade() -> None:
     op.drop_index(

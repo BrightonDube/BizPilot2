@@ -5,17 +5,17 @@ Revises: 058_tax_configuration
 Create Date: 2025-01-29 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '059_notifications'
 down_revision: Union[str, None] = '058_tax_configuration'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create new enum types
@@ -108,7 +108,6 @@ def upgrade() -> None:
         sa.UniqueConstraint('user_id'),
     )
     op.create_index('ix_notification_preferences_user_id', 'notification_preferences', ['user_id'])
-
 
 def downgrade() -> None:
     # Drop notification_preferences

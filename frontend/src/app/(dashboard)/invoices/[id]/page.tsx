@@ -185,9 +185,11 @@ export default function InvoiceDetailPage() {
         return
       }
 
-      const response = await apiClient.get(`/invoices/${invoiceId}/pdf`, {
-        responseType: 'blob',
+      // Use new PDF export system (Requirement 060)
+      const response = await apiClient.get(`/pdf/invoice/${invoiceId}`, {
+        responseType: 'blob'
       })
+
 
       const blob = new Blob([response.data], { type: 'application/pdf' })
       const url = window.URL.createObjectURL(blob)

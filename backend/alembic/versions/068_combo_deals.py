@@ -22,6 +22,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from alembic import op
 
+
 # ---------------------------------------------------------------------------
 # Alembic revision identifiers
 # ---------------------------------------------------------------------------
@@ -29,7 +30,6 @@ revision = "068_combo_deals"
 down_revision = "067_staff_targets"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # ------------------------------------------------------------------
@@ -178,7 +178,6 @@ def upgrade() -> None:
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table("combo_components")

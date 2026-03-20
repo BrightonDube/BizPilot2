@@ -16,11 +16,11 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from alembic import op
 
+
 revision = "071_nested_modifiers"
 down_revision = "070_modifier_availability"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     op.add_column(
@@ -46,7 +46,6 @@ def upgrade() -> None:
         ["parent_modifier_id"],
         postgresql_where=sa.text("parent_modifier_id IS NOT NULL"),
     )
-
 
 def downgrade() -> None:
     op.drop_index(

@@ -155,7 +155,7 @@ export default function StaffTargetsClient(): React.ReactElement {
       ]);
       setTargets(targetsRes.data.items ?? targetsRes.data);
       setTemplates(templatesRes.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load targets"); }
     } finally {
       setLoading(false);
@@ -169,7 +169,7 @@ export default function StaffTargetsClient(): React.ReactElement {
         params: { metric },
       });
       setLeaderboard(res.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load leaderboard"); }
     } finally {
       setLoading(false);
@@ -181,7 +181,7 @@ export default function StaffTargetsClient(): React.ReactElement {
     try {
       const res = await apiClient.get("/api/staff-targets/incentives");
       setIncentives(res.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to load incentives"); }
     } finally {
       setLoading(false);
@@ -217,7 +217,7 @@ export default function StaffTargetsClient(): React.ReactElement {
         notes: "",
       });
       loadTargets();
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to create target"); }
     }
   };
@@ -226,7 +226,7 @@ export default function StaffTargetsClient(): React.ReactElement {
     try {
       await apiClient.delete(`/api/staff-targets/${id}`);
       loadTargets();
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) { setError(err.response?.data?.detail || err.message); } else if (err instanceof Error) { setError(err.message); } else { setError("Failed to delete target"); }
     }
   };

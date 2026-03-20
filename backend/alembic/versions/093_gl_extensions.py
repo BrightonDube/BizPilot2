@@ -17,12 +17,12 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
 # revision identifiers
 revision = "093_gl_extensions"
 down_revision = "092_integrations"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # -- gl_account_balances: period-level balance cache ----------------
@@ -83,7 +83,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_gl_audit_business", "gl_audit_log", ["business_id"])
     op.create_index("ix_gl_audit_entity", "gl_audit_log", ["entity_type", "entity_id"])
-
 
 def downgrade() -> None:
     op.drop_table("gl_audit_log")

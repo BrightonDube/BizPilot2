@@ -11,15 +11,15 @@ the customer originally saw vs what was subsequently changed, which
 is critical for dispute resolution and compliance.
 """
 
-revision = "087_proforma_revisions"
-down_revision = "086_tags"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "087_proforma_revisions"
+down_revision = "086_tags"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -58,7 +58,6 @@ def upgrade() -> None:
             name="uq_proforma_revisions_proforma_number",
         ),
     )
-
 
 def downgrade() -> None:
     op.drop_table("proforma_invoice_revisions")

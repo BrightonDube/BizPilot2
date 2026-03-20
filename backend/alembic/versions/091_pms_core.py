@@ -15,11 +15,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
 revision = "091_pms_core"
 down_revision = "090_partners"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # ------------------------------------------------------------------
@@ -233,7 +233,6 @@ def upgrade() -> None:
         sa.Column("ip_address", sa.String(45), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
-
 
 def downgrade() -> None:
     op.drop_table("pms_audit_logs")

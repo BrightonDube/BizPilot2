@@ -9,18 +9,18 @@ Revises: 012_add_paid_partial_to_paymentstatus
 Create Date: 2026-01-14 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '013_drop_payments_table'
 down_revision: Union[str, None] = '012_add_paid_partial'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Drop the payments table
@@ -30,7 +30,6 @@ def upgrade() -> None:
     # Use raw SQL to drop enums since SQLAlchemy doesn't always handle this well
     op.execute("DROP TYPE IF EXISTS paymentstatus CASCADE")
     op.execute("DROP TYPE IF EXISTS paymentmethod CASCADE")
-
 
 def downgrade() -> None:
     # Recreate enums

@@ -5,18 +5,17 @@ Revises: 49bdc7531641
 Create Date: 2026-01-15 23:28:57.491844
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '298dd1eda420'
 down_revision: Union[str, None] = '49bdc7531641'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create job_execution_logs table (using string for status to avoid enum issues)
@@ -39,7 +38,6 @@ def upgrade() -> None:
     
     # Create index on job_name
     op.create_index('ix_job_execution_logs_job_name', 'job_execution_logs', ['job_name'])
-
 
 def downgrade() -> None:
     # Drop index

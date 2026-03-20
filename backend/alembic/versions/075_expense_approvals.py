@@ -10,15 +10,15 @@ A join table with a unique constraint on (request_id, approval_level) enforces
 exactly one decision per tier while allowing any number of approval levels.
 """
 
-revision = "075_expense_approvals"
-down_revision = "074_dashboard_templates_shares"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "075_expense_approvals"
+down_revision = "074_dashboard_templates_shares"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -45,7 +45,6 @@ def upgrade() -> None:
     op.create_index("ix_expense_approvals_request_id", "expense_approvals", ["request_id"])
     op.create_index("ix_expense_approvals_approver_id", "expense_approvals", ["approver_id"])
     op.create_index("ix_expense_approvals_status", "expense_approvals", ["status"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_expense_approvals_status")

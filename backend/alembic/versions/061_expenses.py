@@ -5,17 +5,17 @@ Revises: 060_gift_cards
 Create Date: 2025-01-30 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '061_expenses'
 down_revision: Union[str, None] = '060_gift_cards'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # WHY create_type=False: We manually create the enum below, so we must prevent
@@ -70,7 +70,6 @@ def upgrade() -> None:
     op.create_index('ix_expenses_business_id', 'expenses', ['business_id'])
     op.create_index('ix_expenses_category_id', 'expenses', ['category_id'])
     op.create_index('ix_expenses_submitted_by', 'expenses', ['submitted_by'])
-
 
 def downgrade() -> None:
     op.drop_index('ix_expenses_submitted_by', table_name='expenses')

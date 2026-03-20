@@ -22,7 +22,6 @@ down_revision = "096_loyalty_and_location_ext"
 branch_labels = None
 depends_on = None
 
-
 def upgrade() -> None:
     # ------------------------------------------------------------------
     # Cash disbursements — track actual cash handover events
@@ -100,7 +99,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_fund_reconciliations_fund_id", "fund_reconciliations", ["fund_id"])
     op.create_index("ix_fund_reconciliations_date", "fund_reconciliations", ["reconciliation_date"])
-
 
 def downgrade() -> None:
     op.drop_table("fund_reconciliations")

@@ -13,11 +13,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
 revision = "096_loyalty_and_location_ext"
 down_revision = "095_sync_queue"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # -- reward_catalog: redeemable loyalty rewards ---------------------
@@ -99,7 +99,6 @@ def upgrade() -> None:
         "uq_user_location_access", "user_location_access",
         ["user_id", "location_id"],
     )
-
 
 def downgrade() -> None:
     op.drop_table("user_location_access")

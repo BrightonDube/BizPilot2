@@ -5,17 +5,17 @@ Revises: 051_automated_reorder
 Create Date: 2025-01-26 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '053_online_ordering'
 down_revision: Union[str, None] = '052_custom_dashboards'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create enums
@@ -94,7 +94,6 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table('online_order_items')

@@ -12,15 +12,15 @@ deliveries table avoids bloating the main table and allows efficient
 queries for real-time tracking vs auditing.
 """
 
-revision = "083_delivery_tracking"
-down_revision = "082_driver_shifts"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "083_delivery_tracking"
+down_revision = "082_driver_shifts"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     # -- delivery_tracking: time-series of status/location updates ----------
@@ -68,7 +68,6 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-
 
 def downgrade() -> None:
     op.drop_table("delivery_proofs")

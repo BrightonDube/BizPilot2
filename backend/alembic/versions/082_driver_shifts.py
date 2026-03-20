@@ -11,15 +11,15 @@ labour cost vs delivery revenue.  Without scheduled shifts, the system
 can only react to driver availability rather than plan capacity.
 """
 
-revision = "082_driver_shifts"
-down_revision = "081_reservations"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
+revision = "082_driver_shifts"
+down_revision = "081_reservations"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -58,7 +58,6 @@ def upgrade() -> None:
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table("driver_shifts")

@@ -5,18 +5,18 @@ Revises:
 Create Date: 2024-01-01 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '001_initial_schema'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create users table
@@ -106,7 +106,6 @@ def upgrade() -> None:
     # Create indexes
     op.create_index('ix_business_users_user_id', 'business_users', ['user_id'])
     op.create_index('ix_business_users_business_id', 'business_users', ['business_id'])
-
 
 def downgrade() -> None:
     op.drop_index('ix_business_users_business_id', table_name='business_users')

@@ -39,7 +39,8 @@ class TestSubscriptionPricingConsistency:
     @pytest.fixture
     def db_session(self):
         """Get database session."""
-        db = next(get_sync_db())
+        from app.core.database import SessionLocal
+        db = SessionLocal()
         yield db
         db.close()
 
@@ -67,7 +68,8 @@ class TestSubscriptionPricingConsistency:
 
     def setup_method(self):
         """Set up test data before each test."""
-        db = next(get_sync_db())
+        from app.core.database import SessionLocal
+        db = SessionLocal()
         try:
             from sqlalchemy import text
             db.execute(text(

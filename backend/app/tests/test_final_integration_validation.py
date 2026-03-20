@@ -33,7 +33,8 @@ class TestFinalIntegration:
     @pytest.fixture
     def db_session(self):
         """Database session fixture"""
-        db = next(get_sync_db())
+        from app.core.database import SessionLocal
+        db = SessionLocal()
         yield db
         db.close()
 

@@ -10,15 +10,15 @@ Users frequently re-run the same inventory reports with identical filters
 setup and enables scheduled report emails to reference a stored config.
 """
 
-revision = "077_inventory_report_configs"
-down_revision = "076_gl_account_mappings"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "077_inventory_report_configs"
+down_revision = "076_gl_account_mappings"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -43,7 +43,6 @@ def upgrade() -> None:
     op.create_index("ix_inventory_report_configs_business_id", "inventory_report_configs", ["business_id"])
     op.create_index("ix_inventory_report_configs_created_by", "inventory_report_configs", ["created_by_id"])
     op.create_index("ix_inventory_report_configs_report_type", "inventory_report_configs", ["report_type"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_inventory_report_configs_report_type")

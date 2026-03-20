@@ -5,19 +5,18 @@ Revises: 018_add_notifications
 Create Date: 2026-01-15 22:30:32.367874
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '49bdc7531641'
 down_revision: Union[str, None] = '018_add_notifications'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create favorite_products table
@@ -54,11 +53,9 @@ def upgrade() -> None:
         postgresql_where=sa.text('deleted_at IS NULL')
     )
 
-
 def downgrade() -> None:
     op.drop_index('ix_favorite_products_unique', table_name='favorite_products')
     op.drop_index('ix_favorite_products_user_id', table_name='favorite_products')
     op.drop_index('ix_favorite_products_product_id', table_name='favorite_products')
     op.drop_index('ix_favorite_products_business_id', table_name='favorite_products')
     op.drop_table('favorite_products')
-

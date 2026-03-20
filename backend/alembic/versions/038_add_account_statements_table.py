@@ -5,16 +5,17 @@ Revises: 037_add_account_write_offs, 037_add_collection_activities
 Create Date: 2026-01-21
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '038_add_account_statements'
 down_revision = ('037_add_account_write_offs', '037_add_collection_activities')
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create account_statements table for customer account statement generation.
@@ -76,6 +77,8 @@ def upgrade() -> None:
         
         # Audit timestamp
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
@@ -154,7 +157,6 @@ def upgrade() -> None:
         ['account_id'],
         postgresql_where=sa.text('sent_at IS NULL')
     )
-
 
 def downgrade() -> None:
     """Drop account_statements table and its indexes."""

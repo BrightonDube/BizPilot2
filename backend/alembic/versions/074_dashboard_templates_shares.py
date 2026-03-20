@@ -23,7 +23,6 @@ down_revision = "073_bulk_operations"
 branch_labels = None
 depends_on = None
 
-
 def upgrade() -> None:
     # ── Dashboard Templates ─────────────────────────────────────────
     op.create_table(
@@ -74,7 +73,6 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table("dashboard_export_schedules")

@@ -5,16 +5,17 @@ Revises: 024_add_layby_items
 Create Date: 2026-01-17
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '025_add_layby_schedules'
 down_revision = '024_add_layby_items'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create layby_schedules table for tracking payment installments.
@@ -72,7 +73,6 @@ def upgrade() -> None:
     op.create_index('idx_layby_schedules_layby', 'layby_schedules', ['layby_id'])
     # Index for finding schedules by due date (for reminder queries)
     op.create_index('idx_layby_schedules_due', 'layby_schedules', ['due_date'])
-
 
 def downgrade() -> None:
     """Drop layby_schedules table and its indexes."""

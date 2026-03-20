@@ -5,17 +5,18 @@ Revises: 015_add_product_suppliers
 Create Date: 2026-01-14
 
 """
-from typing import Sequence, Union
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = "016_add_time_entry_and_pos"
 down_revision: Union[str, None] = "015_add_product_suppliers"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create time entry type enum
@@ -146,7 +147,6 @@ def upgrade() -> None:
     op.add_column('users', sa.Column('pin_code_hash', sa.String(255), nullable=True))
     op.add_column('users', sa.Column('biometric_enabled', sa.Boolean(), nullable=True, default=False))
     op.add_column('users', sa.Column('biometric_public_key', sa.Text(), nullable=True))
-
 
 def downgrade() -> None:
     # Drop pin_code columns from users

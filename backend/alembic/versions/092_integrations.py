@@ -14,11 +14,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
 revision = "092_integrations"
 down_revision = "091_pms_core"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # ------------------------------------------------------------------
@@ -146,7 +146,6 @@ def upgrade() -> None:
         ["business_id", "entity_type", "bizpilot_id"],
         unique=True,
     )
-
 
 def downgrade() -> None:
     op.drop_index("ix_woo_sync_entity", table_name="woo_sync_maps")

@@ -6,18 +6,17 @@ Create Date: 2025-12-22 00:00:00.000000
 
 """
 
-from typing import Sequence, Union
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 
+from typing import Sequence, Union
+
 revision: str = "009_ai_chat_and_user_settings"
 down_revision: Union[str, None] = "008_fix_inventory_tx"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     bind = op.get_bind()
@@ -100,7 +99,6 @@ END $$;
             sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         )
         op.create_index("ix_ai_messages_conversation_id", "ai_messages", ["conversation_id"])
-
 
 def downgrade() -> None:
     bind = op.get_bind()

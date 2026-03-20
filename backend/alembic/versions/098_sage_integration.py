@@ -22,7 +22,6 @@ down_revision = "097_petty_cash_ext"
 branch_labels = None
 depends_on = None
 
-
 def upgrade() -> None:
     # ------------------------------------------------------------------
     # sage_connections — OAuth connection state per business
@@ -111,7 +110,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_sage_sync_queue_business_status", "sage_sync_queue", ["business_id", "status"])
     op.create_index("ix_sage_sync_queue_next_retry", "sage_sync_queue", ["next_retry_at"])
-
 
 def downgrade() -> None:
     op.drop_table("sage_sync_queue")

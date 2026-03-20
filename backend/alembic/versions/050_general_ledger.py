@@ -5,17 +5,17 @@ Revises: 049_crm_core
 Create Date: 2025-01-21 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from typing import Sequence, Union
+
 revision: str = '050_general_ledger'
 down_revision: Union[str, None] = '049_crm_core'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Create enums
@@ -96,7 +96,6 @@ def upgrade() -> None:
         sa.Column('closed_by_id', sa.dialects.postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id'), nullable=True),
         sa.Column('closed_at', sa.DateTime(timezone=True), nullable=True),
     )
-
 
 def downgrade() -> None:
     op.drop_table('fiscal_periods')

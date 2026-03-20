@@ -10,15 +10,15 @@ Within a floor plan, tables are often grouped into sections (e.g. "Window",
 specific areas and filter table views.  A section belongs to one floor plan.
 """
 
-revision = "080_sections"
-down_revision = "079_floor_plans"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+
+revision = "080_sections"
+down_revision = "079_floor_plans"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     op.create_table(
@@ -43,7 +43,6 @@ def upgrade() -> None:
     op.add_column("restaurant_tables", sa.Column("section_id", UUID(as_uuid=True), sa.ForeignKey("sections.id"), nullable=True))
     op.create_index("ix_restaurant_tables_floor_plan_id", "restaurant_tables", ["floor_plan_id"])
     op.create_index("ix_restaurant_tables_section_id", "restaurant_tables", ["section_id"])
-
 
 def downgrade() -> None:
     op.drop_index("ix_restaurant_tables_section_id")

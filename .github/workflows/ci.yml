@@ -18,6 +18,20 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bizpilot
+          POSTGRES_PASSWORD: bizpilot
+          POSTGRES_DB: bizpilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U bizpilot -d bizpilot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
     steps:
       - name: Checkout code
@@ -43,9 +57,15 @@ jobs:
         run: mypy app/ --ignore-missing-imports
         continue-on-error: true
 
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://bizpilot:bizpilot@localhost:5432/bizpilot
+        run: python -m alembic upgrade head
+
       - name: Run tests
         env:
           SECRET_KEY: test-secret-key-for-ci-testing-only
+          DATABASE_URL: postgresql://bizpilot:bizpilot@localhost:5432/bizpilot
         run: pytest app/tests/ -v --tb=short --cov --cov-report=term-missing --cov-report=xml --cov-fail-under=50
 
   migrations:

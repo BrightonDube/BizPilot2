@@ -5,18 +5,18 @@ Revises: 009_ai_chat_and_user_settings
 Create Date: 2025-12-31 01:23:43.949325
 
 """
-from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = 'd21cfee4a049'
 down_revision: Union[str, None] = '009_ai_chat_and_user_settings'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     op.create_table(
@@ -47,11 +47,8 @@ def upgrade() -> None:
     op.create_index(op.f('ix_suppliers_email'), 'suppliers', ['email'], unique=False)
     op.create_index(op.f('ix_suppliers_name'), 'suppliers', ['name'], unique=False)
 
-
-
 def downgrade() -> None:
     op.drop_index(op.f('ix_suppliers_name'), table_name='suppliers')
     op.drop_index(op.f('ix_suppliers_email'), table_name='suppliers')
     op.drop_index(op.f('ix_suppliers_business_id'), table_name='suppliers')
     op.drop_table('suppliers')
-

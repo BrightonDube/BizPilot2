@@ -6,10 +6,12 @@ Create Date: 2026-03-12
 
 """
 
-from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+
+from typing import Sequence, Union
 
 revision: str = "a1b2c3d4e5f6"
 down_revision: Union[str, tuple[str, ...], None] = (
@@ -18,7 +20,6 @@ down_revision: Union[str, tuple[str, ...], None] = (
 )
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     op.create_table(
@@ -69,7 +70,6 @@ def upgrade() -> None:
         "agent_logs",
         [sa.text("created_at DESC")],
     )
-
 
 def downgrade() -> None:
     op.drop_index("idx_agent_logs_created_at", table_name="agent_logs")

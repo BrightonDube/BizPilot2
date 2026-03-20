@@ -17,7 +17,6 @@ down_revision = '039_add_feat_defs'
 branch_labels = None
 depends_on = None
 
-
 def upgrade() -> None:
     uuid_type = sa.String(length=36).with_variant(postgresql.UUID(as_uuid=True), 'postgresql')
     
@@ -87,7 +86,6 @@ def upgrade() -> None:
         'report_delivery_logs',
         ['created_at'],
     )
-
 
 def downgrade() -> None:
     op.drop_index('idx_report_delivery_logs_created_at', table_name='report_delivery_logs')

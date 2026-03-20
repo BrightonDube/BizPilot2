@@ -25,6 +25,7 @@ class EmailService:
         to_email: str,
         subject: str,
         body_text: str,
+        body_html: Optional[str] = None,
         attachments: Optional[Iterable[EmailAttachment]] = None,
         reply_to: Optional[str] = None,
     ) -> None:
@@ -39,6 +40,8 @@ class EmailService:
             msg["Reply-To"] = reply_to
 
         msg.set_content(body_text)
+        if body_html:
+            msg.add_alternative(body_html, subtype="html")
 
         for att in attachments or []:
             ctype = att.content_type

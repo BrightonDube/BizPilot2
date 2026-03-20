@@ -138,10 +138,16 @@ async def generate_cashup_pdf(shift_id: UUID, business_id: UUID, db: AsyncSessio
     )
     business = result_biz.scalars().first()
     
+    from app.models.waiter_cashup import WaiterCashup
+    result_cashup = await db.execute(select(WaiterCashup).where(WaiterCashup.shift_id == shift_id))
+    cashup = result_cashup.scalars().first()
+
     context = {
         "shift": shift,
+        "cashup": cashup,
         "waiter": user,
         "business": business,
+        "currency_symbol": "R",
         "generated_at": datetime.now()
     }
     

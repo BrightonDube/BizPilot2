@@ -5,16 +5,17 @@ Revises: 034_add_customer_accounts
 Create Date: 2026-01-21
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '035_add_account_transactions'
 down_revision = '034_add_customer_accounts'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create account_transactions table for tracking all account activity.
@@ -64,6 +65,8 @@ def upgrade() -> None:
         # Audit trail (Requirement 2.6, 4.6)
         sa.Column('created_by', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
@@ -123,7 +126,6 @@ def upgrade() -> None:
         'account_transactions',
         ['created_at']
     )
-
 
 def downgrade() -> None:
     """Drop account_transactions table and its indexes."""

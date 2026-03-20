@@ -11,15 +11,15 @@ branding, user management, and billing — all isolated from the
 direct B2B tenant model.
 """
 
-revision = "090_partners"
-down_revision = "089_digital_signage"
-branch_labels = None
-depends_on = None
-
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
+revision = "090_partners"
+down_revision = "089_digital_signage"
+branch_labels = None
+depends_on = None
 
 def upgrade() -> None:
     # -- partners: reseller/partner organisations --------------------------
@@ -165,7 +165,6 @@ def upgrade() -> None:
         ),
         sa.UniqueConstraint("partner_id", "user_id", name="uq_partner_users_partner_user"),
     )
-
 
 def downgrade() -> None:
     op.drop_table("partner_users")

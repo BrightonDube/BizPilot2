@@ -6,11 +6,11 @@ Create Date: 2025-12-19 00:00:00.000000
 
 """
 
-from typing import Sequence, Union
-
 from alembic import op
 import sqlalchemy as sa
 
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '008_fix_inventory_tx'
@@ -18,12 +18,10 @@ down_revision: Union[str, None] = '007_prod_ingredients'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-
 def _has_column(bind, table_name: str, column_name: str) -> bool:
     insp = sa.inspect(bind)
     cols = insp.get_columns(table_name)
     return any(c['name'] == column_name for c in cols)
-
 
 def upgrade() -> None:
     bind = op.get_bind()
@@ -110,7 +108,6 @@ def upgrade() -> None:
                 WHERE created_at IS NULL AND performed_at IS NOT NULL
                 """
             )
-
 
 def downgrade() -> None:
     bind = op.get_bind()

@@ -18,6 +18,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from alembic import op
 
+
 # ---------------------------------------------------------------------------
 # Alembic revision identifiers
 # ---------------------------------------------------------------------------
@@ -25,7 +26,6 @@ revision = "070_modifier_availability"
 down_revision = "069_order_item_modifiers"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     op.create_table(
@@ -116,7 +116,6 @@ def upgrade() -> None:
         "modifier_availability",
         ["modifier_id", "day_of_week", "location_id"],
     )
-
 
 def downgrade() -> None:
     op.drop_index(

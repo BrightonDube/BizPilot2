@@ -5,16 +5,17 @@ Revises: f1a2b3c4d5e6
 Create Date: 2026-03-13 14:45:00.000000
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = 'df4f520ae4d7'
 down_revision = 'f1a2b3c4d5e6'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # -- webhook_subscriptions ------------------------------------------------
@@ -56,7 +57,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_webhook_deliveries_business_id'), 'webhook_deliveries', ['business_id'], unique=False)
     op.create_index(op.f('ix_webhook_deliveries_subscription_id'), 'webhook_deliveries', ['subscription_id'], unique=False)
-
 
 def downgrade() -> None:
     op.drop_index(op.f('ix_webhook_deliveries_subscription_id'), table_name='webhook_deliveries')

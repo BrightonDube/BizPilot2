@@ -5,16 +5,17 @@ Revises: 033_add_device_registry
 Create Date: 2026-01-21
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '034_add_customer_accounts'
 down_revision = '033_add_device_registry'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create customer_accounts table for managing customer credit accounts.
@@ -78,6 +79,7 @@ def upgrade() -> None:
         # Audit timestamps
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
@@ -100,7 +102,6 @@ def upgrade() -> None:
     
     # Composite index for business + status queries (common in dashboards)
     op.create_index('idx_customer_accounts_business_status', 'customer_accounts', ['business_id', 'status'])
-
 
 def downgrade() -> None:
     """Drop customer_accounts table and its indexes."""

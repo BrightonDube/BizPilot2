@@ -14,11 +14,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
 revision = "095_sync_queue"
 down_revision = "094_month_end_extensions"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # -- sync_queue: pending operations from offline clients ------------
@@ -57,7 +57,6 @@ def upgrade() -> None:
         "uq_sync_metadata_entity", "sync_metadata",
         ["business_id", "device_id", "entity_type"],
     )
-
 
 def downgrade() -> None:
     op.drop_table("sync_metadata")

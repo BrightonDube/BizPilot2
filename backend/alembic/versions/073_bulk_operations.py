@@ -14,12 +14,12 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+
 # --- Alembic revision metadata ---------------------------------------------------
 revision = "073_bulk_operations"
 down_revision = "072_reorder_grn_audit"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # ── bulk_operations ──────────────────────────────────────────────────
@@ -109,7 +109,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_bulk_templates_business_id", "bulk_templates", ["business_id"])
     op.create_index("ix_bulk_templates_operation_type", "bulk_templates", ["operation_type"])
-
 
 def downgrade() -> None:
     op.drop_table("bulk_templates")

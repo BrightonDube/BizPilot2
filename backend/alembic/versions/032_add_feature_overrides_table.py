@@ -5,16 +5,17 @@ Revises: 031_add_business_subscription
 Create Date: 2026-01-20
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '032_add_feature_overrides'
 down_revision = '031_add_business_subscription'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create feature_overrides table for SuperAdmin custom feature configurations.
@@ -65,7 +66,6 @@ def upgrade() -> None:
     
     # Create index for looking up overrides by business_id (most common query)
     op.create_index('idx_feature_overrides_business_id', 'feature_overrides', ['business_id'])
-
 
 def downgrade() -> None:
     """Drop feature_overrides table and its indexes."""

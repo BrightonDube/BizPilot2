@@ -5,16 +5,17 @@ Revises: 027_add_layby_audit
 Create Date: 2026-01-17
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '028_add_layby_notifications'
 down_revision = '027_add_layby_audit'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create layby_notifications table for tracking customer notifications.
@@ -89,7 +90,6 @@ def upgrade() -> None:
     
     # Create index for filtering by creation date (useful for reporting)
     op.create_index('idx_layby_notifications_created', 'layby_notifications', ['created_at'])
-
 
 def downgrade() -> None:
     """Drop layby_notifications table and its indexes."""

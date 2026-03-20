@@ -1,0 +1,11 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+    <h2>New Invoice: {{ invoice_number }}</h2>
+    <p>Dear {{ customer_name }},</p>
+    <p>Please find your invoice for the amount of <strong>{{ currency_symbol }}{{ amount }}</strong>. Details are attached below.</p>
+    <p>
+        <a href="{{ invoice_url }}" class="button">View & Pay Invoice</a>
+    </p>
+    <p>If you have any questions, feel free to contact us.</p>
+{% endblock %}

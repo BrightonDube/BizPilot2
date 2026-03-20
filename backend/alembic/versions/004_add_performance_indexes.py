@@ -5,16 +5,16 @@ Revises: 8f1e3ca8b3e8
 Create Date: 2024-12-17
 
 """
-from typing import Sequence, Union
 
 from alembic import op
+
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
 revision: str = '004_performance_indexes'
 down_revision: Union[str, None] = '8f1e3ca8b3e8'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     # Composite index for orders queries filtered by business_id + created_at
@@ -58,7 +58,6 @@ def upgrade() -> None:
         ['user_id', 'status'],
         if_not_exists=True
     )
-
 
 def downgrade() -> None:
     op.drop_index('ix_business_users_user_status', table_name='business_users')

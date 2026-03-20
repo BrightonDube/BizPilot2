@@ -5,16 +5,17 @@ Revises: 036_add_account_payments
 Create Date: 2026-01-21
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '037_add_collection_activities'
 down_revision = '036_add_account_payments'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Create collection_activities table.
@@ -72,6 +73,8 @@ def upgrade() -> None:
         # Track who performed the collection activity
         sa.Column('performed_by', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.text('now()')),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         
         # Constraints
         sa.PrimaryKeyConstraint('id'),
@@ -157,7 +160,6 @@ def upgrade() -> None:
         'collection_activities',
         ['promise_date', 'outcome']
     )
-
 
 def downgrade() -> None:
     """Drop collection_activities table and its indexes."""

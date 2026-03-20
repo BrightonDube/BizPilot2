@@ -70,6 +70,12 @@ class User(BaseModel):
     biometric_enabled = Column(Boolean, default=False, nullable=True)
     biometric_public_key = Column(String, nullable=True)  # For WebAuthn/fingerprint
 
+    # 2FA fields
+    totp_secret = Column(String(255), nullable=True)  # encrypted at rest
+    totp_enabled = Column(Boolean, default=False, nullable=False)
+    totp_backup_codes = Column(JSONType, nullable=True)  # array of hashed backup codes
+    totp_enrolled_at = Column(DateTime, nullable=True)
+
     # Relationships
     business_users = relationship("BusinessUser", back_populates="user", cascade="all, delete-orphan")
     owned_organizations = relationship("Organization", back_populates="owner")

@@ -5,16 +5,17 @@ Revises: 017_add_sessions
 Create Date: 2026-01-15
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision = '018_add_notifications'
 down_revision = '017_add_sessions'
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     # Create notifications table (enums will be created automatically by SQLAlchemy if needed)
@@ -47,7 +48,6 @@ def upgrade() -> None:
     op.create_index('ix_notifications_notification_type', 'notifications', ['notification_type'])
     op.create_index('ix_notifications_is_read', 'notifications', ['is_read'])
     op.create_index('ix_notifications_created_at', 'notifications', ['created_at'])
-
 
 def downgrade() -> None:
     op.drop_index('ix_notifications_created_at', table_name='notifications')

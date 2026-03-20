@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 from app.core.database import get_sync_db
-from app.api.deps import get_current_active_user, get_current_business_id
+from app.api.deps import get_current_active_user, get_current_business_id, get_redis
 from app.models.user import User
 from app.models.product import Product, ProductStatus, ProductCategory
 from app.models.customer import Customer
@@ -88,94 +88,101 @@ async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     db=Depends(get_sync_db),
+    redis=Depends(get_redis)
 ):
     """
     Get dashboard statistics for the current user's business.
     """
+    from app.services.cache_service import get_cached_or_fetch
     
-    # Calculate date ranges
-    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    month_start = today.replace(day=1)
+    cache_key = f"bizpilot:dashboard:{business_id}:stats"
     
-    # Total revenue (all time - from paid orders)
-    total_revenue_result = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
-        Order.business_id == business_id,
-    ).scalar()
-    
-    # Total orders
-    total_orders = db.query(Order).filter(
-        Order.business_id == business_id
-    ).count()
-    
-    # Total customers
-    total_customers = db.query(Customer).filter(
-        Customer.business_id == business_id
-    ).count()
-    
-    # Total products
-    total_products = db.query(Product).filter(
-        Product.business_id == business_id,
-        Product.status == ProductStatus.ACTIVE
-    ).count()
-    
-    # Orders today
-    orders_today = db.query(Order).filter(
-        Order.business_id == business_id,
-        Order.created_at >= today
-    ).count()
-    
-    # Revenue today
-    revenue_today_result = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
-        Order.business_id == business_id,
-        Order.created_at >= today
-    ).scalar()
-    
-    # Orders this month
-    orders_this_month = db.query(Order).filter(
-        Order.business_id == business_id,
-        Order.created_at >= month_start
-    ).count()
-    
-    # Revenue this month
-    revenue_this_month_result = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
-        Order.business_id == business_id,
-        Order.created_at >= month_start
-    ).scalar()
-    
-    # Pending invoices
-    pending_invoices = db.query(Invoice).filter(
-        Invoice.business_id == business_id,
-        Invoice.status.in_([InvoiceStatus.DRAFT, InvoiceStatus.SENT, InvoiceStatus.VIEWED, InvoiceStatus.PARTIAL])
-    ).count()
-    
-    # Pending invoice amount
-    pending_invoice_amount_result = db.query(func.coalesce(func.sum(Invoice.total - Invoice.amount_paid), 0)).filter(
-        Invoice.business_id == business_id,
-        Invoice.status.in_([InvoiceStatus.DRAFT, InvoiceStatus.SENT, InvoiceStatus.VIEWED, InvoiceStatus.PARTIAL])
-    ).scalar()
-    
-    # Low stock products
-    low_stock_products = db.query(Product).filter(
-        Product.business_id == business_id,
-        Product.status == ProductStatus.ACTIVE,
-        Product.track_inventory.is_(True),
-        Product.quantity <= Product.low_stock_threshold
-    ).count()
-    
-    return DashboardStats(
-        total_revenue=float(total_revenue_result or 0),
-        total_orders=total_orders,
-        total_customers=total_customers,
-        total_products=total_products,
-        orders_today=orders_today,
-        revenue_today=float(revenue_today_result or 0),
-        orders_this_month=orders_this_month,
-        revenue_this_month=float(revenue_this_month_result or 0),
-        pending_invoices=pending_invoices,
-        pending_invoice_amount=float(pending_invoice_amount_result or 0),
-        low_stock_products=low_stock_products,
-        currency="ZAR"
-    )
+    async def fetch_stats():
+        # Calculate date ranges
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        month_start = today.replace(day=1)
+        
+        # Total revenue (all time - from paid orders)
+        total_revenue_result = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
+            Order.business_id == business_id,
+        ).scalar()
+        
+        # Total orders
+        total_orders = db.query(Order).filter(
+            Order.business_id == business_id
+        ).count()
+        
+        # Total customers
+        total_customers = db.query(Customer).filter(
+            Customer.business_id == business_id
+        ).count()
+        
+        # Total products
+        total_products = db.query(Product).filter(
+            Product.business_id == business_id,
+            Product.status == ProductStatus.ACTIVE
+        ).count()
+        
+        # Orders today
+        orders_today = db.query(Order).filter(
+            Order.business_id == business_id,
+            Order.created_at >= today
+        ).count()
+        
+        # Revenue today
+        revenue_today_result = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
+            Order.business_id == business_id,
+            Order.created_at >= today
+        ).scalar()
+        
+        # Orders this month
+        orders_this_month = db.query(Order).filter(
+            Order.business_id == business_id,
+            Order.created_at >= month_start
+        ).count()
+        
+        # Revenue this month
+        revenue_this_month_result = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
+            Order.business_id == business_id,
+            Order.created_at >= month_start
+        ).scalar()
+        
+        # Pending invoices
+        pending_invoices = db.query(Invoice).filter(
+            Invoice.business_id == business_id,
+            Invoice.status.in_([InvoiceStatus.DRAFT, InvoiceStatus.SENT, InvoiceStatus.VIEWED, InvoiceStatus.PARTIAL])
+        ).count()
+        
+        # Pending invoice amount
+        pending_invoice_amount_result = db.query(func.coalesce(func.sum(Invoice.total - Invoice.amount_paid), 0)).filter(
+            Invoice.business_id == business_id,
+            Invoice.status.in_([InvoiceStatus.DRAFT, InvoiceStatus.SENT, InvoiceStatus.VIEWED, InvoiceStatus.PARTIAL])
+        ).scalar()
+        
+        # Low stock products
+        low_stock_products = db.query(Product).filter(
+            Product.business_id == business_id,
+            Product.status == ProductStatus.ACTIVE,
+            Product.track_inventory.is_(True),
+            Product.quantity <= Product.low_stock_threshold
+        ).count()
+        
+        return DashboardStats(
+            total_revenue=float(total_revenue_result or 0),
+            total_orders=total_orders,
+            total_customers=total_customers,
+            total_products=total_products,
+            orders_today=orders_today,
+            revenue_today=float(revenue_today_result or 0),
+            orders_this_month=orders_this_month,
+            revenue_this_month=float(revenue_this_month_result or 0),
+            pending_invoices=pending_invoices,
+            pending_invoice_amount=float(pending_invoice_amount_result or 0),
+            low_stock_products=low_stock_products,
+            currency="ZAR"
+        )
+
+    return await get_cached_or_fetch(cache_key, fetch_stats, 300, redis, response_model=DashboardStats)
 
 
 @router.get("/recent-orders", response_model=List[RecentOrder])

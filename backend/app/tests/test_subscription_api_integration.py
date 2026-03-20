@@ -12,6 +12,7 @@ Requirements: 1.2, 1.3
 import pytest
 import sys
 import os
+import uuid
 from fastapi.testclient import TestClient
 
 # Add shared module to path
@@ -19,10 +20,39 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'share
 from pricing_config import SUBSCRIPTION_TIERS
 
 from app.main import app
-
+from app.core.database import get_sync_db
+from sqlalchemy import text
+from app.models.subscription_tier import SubscriptionTier
 
 class TestSubscriptionAPIIntegration:
     """Integration tests for subscription API endpoints."""
+
+    def setup_method(self):
+        """Set up test data before each test."""
+        from app.core.database import SessionLocal
+        db = SessionLocal()
+        try:
+            db.execute(text("TRUNCATE TABLE subscription_tiers CASCADE"))
+            for tier_config in SUBSCRIPTION_TIERS:
+                tier = SubscriptionTier(
+                    id=uuid.uuid4(),
+                    name=tier_config.name,
+                    display_name=tier_config.display_name,
+                    description=tier_config.description,
+                    price_monthly_cents=tier_config.price_monthly_cents,
+                    price_yearly_cents=tier_config.price_yearly_cents,
+                    currency=tier_config.currency,
+                    sort_order=tier_config.sort_order,
+                    is_default=tier_config.is_default,
+                    is_active=tier_config.is_active,
+                    is_custom_pricing=tier_config.is_custom_pricing,
+                    features=tier_config.features,
+                    feature_flags=tier_config.feature_flags
+                )
+                db.add(tier)
+            db.commit()
+        finally:
+            db.close()
 
     @pytest.fixture
     def client(self):

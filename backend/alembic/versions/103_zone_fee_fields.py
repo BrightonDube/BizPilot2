@@ -9,11 +9,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+
 revision = "103_zone_fee_fields"
 down_revision = "102_pf_approval_audit"
 branch_labels = None
 depends_on = None
-
 
 def upgrade() -> None:
     """Add zone type, boundary, fee calculation fields to delivery_zones."""
@@ -52,7 +52,6 @@ def upgrade() -> None:
     for col_name, col_def in driver_new.items():
         if col_name not in driver_cols:
             op.add_column("drivers", col_def)
-
 
 def downgrade() -> None:
     """Remove added columns."""
