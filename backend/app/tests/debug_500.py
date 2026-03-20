@@ -1,21 +1,18 @@
-import sys
 import os
 import uuid
-import pytest
 from fastapi.testclient import TestClient
-
-os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
-os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
-
 from sqlalchemy import create_engine
 from app.models.base import Base
-engine = create_engine("sqlite:///./test.db")
-Base.metadata.create_all(engine)
-
 from app.main import app
 from app.core.database import SessionLocal, get_sync_db
 from app.models.subscription_tier import SubscriptionTier
 from shared.pricing_config import SUBSCRIPTION_TIERS
+
+os.environ.setdefault("SECRET_KEY", "test-secret-key-32-bytes-minimum")
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
+
+engine = create_engine("sqlite:///./test.db")
+Base.metadata.create_all(engine)
 
 def override_get_db():
     db = SessionLocal()
@@ -58,7 +55,7 @@ def run():
         response = client.get("/api/v1/subscriptions/tiers")
         print("STATUS:", response.status_code)
         print("BODY:", response.json())
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
 

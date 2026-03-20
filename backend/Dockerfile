@@ -5,6 +5,12 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    libpango-1.0-0 \
+    libharfbuzz-subset0 \
+    libpangoft2-1.0-0 \
+    libffi-dev \
+    libjpeg-dev \
+    libopenjp2-7-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

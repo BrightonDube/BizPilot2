@@ -45,9 +45,11 @@ export function AIChatPage() {
     loading,
     error,
     businessSummary,
+    pendingAction,
     createNewConversation,
     deleteConversation,
     sendMessage,
+    confirmAction,
   } = useAIChat()
 
   const [input, setInput] = useState('')
@@ -182,6 +184,15 @@ export function AIChatPage() {
                       m.is_user ? 'bg-blue-600 text-white' : 'bg-gray-900/50 border border-gray-700 text-gray-100'
                     }`}
                   >
+                    {/* Show message type indicator for agent messages */}
+                    {!m.is_user && m.type && (
+                      <div className="text-xs text-gray-400 mb-1">
+                        {m.type === 'plan' && '📋 Plan:'}
+                        {m.type === 'hitl_request' && '⚠️ Action Required:'}
+                        {m.type === 'tool_result' && '✅ Result:'}
+                        {m.type === 'response' && ''}
+                      </div>
+                    )}
                     <p className="text-sm whitespace-pre-wrap">{m.content}</p>
                   </div>
                 </motion.div>
@@ -204,6 +215,33 @@ export function AIChatPage() {
 
             <div ref={messagesEndRef} />
           </div>
+
+          {/* HITL Confirmation Dialog */}
+          {pendingAction && (
+            <div className="border-t border-gray-700 p-4 bg-yellow-900/20">
+              <div className="mb-3">
+                <p className="text-sm font-medium text-yellow-300">The AI wants to perform an action:</p>
+                <p className="text-sm text-gray-200 mt-1">{pendingAction.description}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => confirmAction(true)}
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Approve
+                </Button>
+                <Button
+                  onClick={() => confirmAction(false)}
+                  disabled={loading}
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700 flex gap-3">
             <div className="flex-1">

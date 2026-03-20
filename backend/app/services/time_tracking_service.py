@@ -12,6 +12,15 @@ from app.models.business_time_settings import BusinessTimeSettings
 from app.models.business_user import BusinessUser
 
 
+def _make_aware(dt: datetime) -> datetime:
+    """Ensure datetime is UTC-aware. If naive, assume it is UTC."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 class TimeTrackingService:
     """Service for managing time tracking operations."""
 
@@ -85,6 +94,8 @@ class TimeTrackingService:
             active_entry.auto_clock_out_reason = reason or "Auto clocked out at day end"
             active_entry.hours_worked = settings.auto_clock_out_penalty_hours
             active_entry.net_hours = settings.auto_clock_out_penalty_hours
+            if hasattr(active_entry, 'penalty_hours'):
+                 active_entry.penalty_hours = Decimal("0.00")
         else:
             # Calculate actual hours
             self._calculate_hours(active_entry)
@@ -206,8 +217,10 @@ class TimeTrackingService:
             
             gross_hours = sum(entry.hours_worked or Decimal("0") for entry in entries)
             break_hours = sum(entry.break_duration or Decimal("0") for entry in entries)
+            penalty_hours = sum(entry.penalty_hours if hasattr(entry, 'penalty_hours') and entry.penalty_hours else Decimal("0") for entry in entries)
             net_hours = sum(entry.net_hours or Decimal("0") for entry in entries)
             entry_count = len([e for e in entries if e.clock_out])  # Only completed entries
+            auto_clockout_count = len([e for e in entries if getattr(e, 'is_auto_clocked_out', False)])
             
             report.append({
                 "user_id": str(user.id),
@@ -215,8 +228,10 @@ class TimeTrackingService:
                 "email": user.email,
                 "total_hours": float(gross_hours),
                 "break_hours": float(break_hours),
+                "penalty_hours": float(penalty_hours),
                 "net_hours": float(net_hours),
                 "entries": entry_count,
+                "auto_clockout_count": auto_clockout_count,
                 "entries_data": entries
             })
         
@@ -309,16 +324,25 @@ class TimeTrackingService:
         if not entry.clock_in or not entry.clock_out:
             return
         
+        # Ensure both datetimes are UTC-aware
+        clock_in = _make_aware(entry.clock_in)
+        clock_out = _make_aware(entry.clock_out)
+        
         # Calculate total hours
-        total_seconds = (entry.clock_out - entry.clock_in).total_seconds()
+        total_seconds = (clock_out - clock_in).total_seconds()
         entry.hours_worked = Decimal(str(total_seconds)) / Decimal("3600")
         
         # Calculate break duration if not manually set
         if entry.break_start and entry.break_end and not entry.break_duration:
             self._calculate_break_duration(entry)
+            
+        penalty_hours = entry.penalty_hours if hasattr(entry, 'penalty_hours') and entry.penalty_hours else Decimal("0")
         
         # Calculate net hours
-        entry.net_hours = entry.hours_worked - (entry.break_duration or Decimal("0"))
+        entry.net_hours = entry.hours_worked - (entry.break_duration or Decimal("0")) - penalty_hours
+        
+        if entry.net_hours < Decimal("0"):
+            entry.net_hours = Decimal("0")
         
         # Round to 2 decimal places
         entry.hours_worked = entry.hours_worked.quantize(Decimal("0.01"))
@@ -327,7 +351,11 @@ class TimeTrackingService:
     def _calculate_break_duration(self, entry: TimeEntry) -> None:
         """Calculate break duration for a time entry."""
         if entry.break_start and entry.break_end:
-            break_seconds = (entry.break_end - entry.break_start).total_seconds()
+            # Ensure both datetimes are UTC-aware
+            break_start = _make_aware(entry.break_start)
+            break_end = _make_aware(entry.break_end)
+            
+            break_seconds = (break_end - break_start).total_seconds()
             entry.break_duration = (Decimal(str(break_seconds)) / Decimal("3600")).quantize(Decimal("0.01"))
 
     def _calculate_current_hours(self, entry: TimeEntry) -> Decimal:
@@ -336,17 +364,21 @@ class TimeTrackingService:
             return Decimal("0")
         
         now = datetime.now(timezone.utc)
-        total_seconds = (now - entry.clock_in).total_seconds()
+        clock_in = _make_aware(entry.clock_in)
+        
+        total_seconds = (now - clock_in).total_seconds()
         
         # Subtract break time if on break
         break_seconds = 0
         if entry.break_start:
+            break_start = _make_aware(entry.break_start)
             if entry.break_end:
                 # Break completed
-                break_seconds = (entry.break_end - entry.break_start).total_seconds()
+                break_end = _make_aware(entry.break_end)
+                break_seconds = (break_end - break_start).total_seconds()
             else:
                 # Currently on break
-                break_seconds = (now - entry.break_start).total_seconds()
+                break_seconds = (now - break_start).total_seconds()
         
         net_seconds = max(0, total_seconds - break_seconds)
         hours = Decimal(str(net_seconds)) / Decimal("3600")

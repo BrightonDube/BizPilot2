@@ -1,4 +1,3 @@
-import pytest
 
 class TestSetup:
     def setup_method(self):

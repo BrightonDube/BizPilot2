@@ -105,6 +105,14 @@ class RedisManager:
             # Explicitly passing ssl=ssl_context can sometimes cause issues with 
             # underlying connection classes in certain environments.
             
+            # Remove ssl= parameter from the query string if present,
+            # as it causes "unexpected keyword argument 'ssl'" error in redis-py >= 5.x
+            import re
+            redis_url = re.sub(r'([?&])ssl=[^&]*(&?)', lambda m: m.group(1) if m.group(2) else '', redis_url, flags=re.IGNORECASE)
+            if redis_url.endswith('?') or redis_url.endswith('&'):
+                redis_url = redis_url[:-1]
+            redis_url = redis_url.replace("?&", "?")
+            
             self._redis = await aioredis.from_url(
                 redis_url,
                 **connection_kwargs

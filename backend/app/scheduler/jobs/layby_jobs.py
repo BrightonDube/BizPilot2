@@ -133,7 +133,9 @@ def layby_overdue_check_job() -> None:
                     db.commit()
                     updated += 1
 
-                days_overdue = (now - entry.due_date).days
+                # Convert date to datetime for calculation
+                due_datetime = datetime.combine(entry.due_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+                days_overdue = (now - due_datetime).days
 
                 # Only send notice once per week per layby
                 recent_notice = (

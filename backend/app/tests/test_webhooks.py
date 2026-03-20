@@ -32,7 +32,7 @@ async def test_trigger_webhook_event_creates_delivery_records_for_matching_subsc
     mock_result.scalars.return_value.all.return_value = [sub]
     mock_db.execute.return_value = mock_result
     
-    with patch("app.services.webhook_service.deliver_webhook") as mock_deliver:
+    with patch("app.services.webhook_service.deliver_webhook"):
         await trigger_webhook_event(event_type, payload, business_id, mock_db)
         
         # Verify delivery record was added
@@ -179,4 +179,4 @@ async def test_deliver_webhook_marks_failed_after_max_attempts(mock_db):
         await deliver_webhook(delivery_id, mock_db)
         
         assert delivery.status == "failed"
-        assert sub.is_active == False # Deactivated after many failures
+        assert not sub.is_active # Deactivated after many failures
