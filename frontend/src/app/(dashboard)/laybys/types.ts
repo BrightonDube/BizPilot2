@@ -174,3 +174,44 @@ export interface LaybyListResponse {
   /** Total number of pages available */
   pages: number;
 }
+
+/**
+ * The set of payment methods accepted for a layby payment.
+ * Matches the backend PaymentMethod enum exactly.
+ */
+export type LaybyPaymentMethod = 'cash' | 'card' | 'eft' | 'store_credit';
+
+/**
+ * Request body sent to the backend when recording a layby payment.
+ */
+export interface RecordLaybyPaymentRequest {
+  /** Payment amount in ZAR. Must be > 0 and <= outstanding balance. */
+  amount: number;
+  /** How the customer is paying. */
+  payment_method: LaybyPaymentMethod;
+  /** Optional operator notes about this payment. Max 255 characters. */
+  reference?: string;
+}
+
+/**
+ * Response from the backend after successfully recording a payment.
+ * Contains the updated payment record.
+ */
+export interface RecordLaybyPaymentResponse {
+  /** Unique identifier for the payment */
+  id: string;
+  /** Payment amount */
+  amount: number;
+  /** Payment method used */
+  payment_method: string;
+  /** Payment type (deposit, installment, final) */
+  payment_type: string;
+  /** Payment status */
+  status: string;
+  /** Optional payment reference */
+  payment_reference?: string;
+  /** Optional notes */
+  notes?: string;
+  /** When the payment was created */
+  created_at: string;
+}

@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useLaybyDetail } from '../hooks/useLaybyDetail';
 import { LaybyDetailHeader } from '../components/LaybyDetailHeader';
@@ -10,12 +11,33 @@ import { LaybyItemsTable } from '../components/LaybyItemsTable';
 import { LaybyPaymentSchedule } from '../components/LaybyPaymentSchedule';
 import { LaybyPaymentHistory } from '../components/LaybyPaymentHistory';
 import { LaybyAuditTrail } from '../components/LaybyAuditTrail';
+import { RecordPaymentModal } from '../components/RecordPaymentModal';
+import { Toast, showToast } from '../utils/toast';
 
 export default function LaybyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
   const { layby, isLoading, error, notFound, refetch } = useLaybyDetail(id);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = useCallback((type: 'success' | 'error', message: string) => {
+    const toast = showToast(type, message);
+    setToasts((prev) => [...prev, toast]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+    }, 5000);
+  }, []);
+
+  const handlePaymentRecorded = useCallback(async () => {
+    setIsPaymentModalOpen(false);
+    await refetch();
+    const amount = layby?.balance_due || 0;
+    addToast('success', `Payment recorded successfully`);
+  }, [refetch, layby, addToast]);
+
+  const canRecordPayment = layby && (layby.status === 'ACTIVE' || layby.status === 'OVERDUE');
 
   if (isLoading) {
     return (
@@ -65,12 +87,23 @@ export default function LaybyDetailPage() {
 
   return (
     <div className="space-y-6">
-      <LaybyDetailHeader
-        referenceNumber={layby.reference_number}
-        customerName={layby.customer_name}
-        status={layby.status}
-        createdAt={layby.created_at}
-      />
+      <div className="flex items-center justify-between">
+        <LaybyDetailHeader
+          referenceNumber={layby.reference_number}
+          customerName={layby.customer_name}
+          status={layby.status}
+          createdAt={layby.created_at}
+        />
+        {canRecordPayment && (
+          <Button
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+          >
+            <DollarSign className="w-4 h-4 mr-2" />
+            Record Payment
+          </Button>
+        )}
+      </div>
 
       <LaybyFinancialSummary
         totalAmount={layby.total_amount}
@@ -86,6 +119,32 @@ export default function LaybyDetailPage() {
       <LaybyPaymentHistory payments={layby.payments || []} />
 
       <LaybyAuditTrail auditTrail={layby.audit_trail || []} />
+
+      {canRecordPayment && (
+        <RecordPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          laybyId={id}
+          outstandingBalance={layby.balance_due}
+          onPaymentRecorded={handlePaymentRecorded}
+        />
+      )}
+
+      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`px-4 py-3 rounded-lg shadow-lg border ${
+              toast.type === 'success'
+                ? 'bg-green-900/90 border-green-500/50 text-green-100'
+                : 'bg-red-900/90 border-red-500/50 text-red-100'
+            }`}
+          >
+            <p className="font-medium">{toast.type === 'success' ? 'Success' : 'Error'}</p>
+            <p className="text-sm mt-1">{toast.message}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
