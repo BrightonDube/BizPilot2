@@ -1,13 +1,12 @@
 import uuid
 from datetime import datetime, timezone, timedelta
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
 from decimal import Decimal
 from app.models.waiter_cashup import WaiterCashup
 from app.models.shift import Shift, ShiftStatus
-from app.models.order import Order, OrderStatus
-from app.models.payment import PaymentTransaction, PaymentTransactionStatus, PaymentMethod, PaymentMethodType
+from app.models.payment import PaymentMethodType
 from app.services.cashup_service import CashupService
 from app.schemas.cashup import CashupRejectRequest
 

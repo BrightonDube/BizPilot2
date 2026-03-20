@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
-from app.models.restaurant_table import FloorPlan, FloorPlanTable, FloorPlanSectionAssignment
-from app.models.order import Order, OrderStatus
+from app.models.restaurant_table import FloorPlan, FloorPlanTable
 from app.services.floor_plan_service import FloorPlanService
 from app.schemas.floor_plan import FloorPlanTableCreate
 

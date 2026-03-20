@@ -1,7 +1,7 @@
 import json
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
