@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { GripVertical, MessageSquare, Send, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -143,10 +143,10 @@ export function GlobalAIChat() {
     // This would require guest chat implementation which is out of scope
   };
 
-  // Clamp modal position to viewport when opened/resized so it stays fully visible
-  // eslint-disable-next-line react-compiler/react-compiler
-  useEffect(() => {
+  // Clamp modal position to viewport when opened/resized
+  useLayoutEffect(() => {
     if (!open || typeof window === 'undefined') return;
+    
     const viewportPadding = 12;
     const headerFooterAllowance = 80;
     const width = Math.min(size.width, window.innerWidth - viewportPadding * 2);
