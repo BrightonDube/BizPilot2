@@ -144,12 +144,14 @@ export function GlobalAIChat() {
   };
 
   // Clamp modal position to viewport when opened/resized so it stays fully visible
+  // eslint-disable-next-line react-compiler/react-compiler
   useEffect(() => {
     if (!open || typeof window === 'undefined') return;
     const viewportPadding = 12;
-    const headerFooterAllowance = 80; // leave a buffer so input/footer stays visible
+    const headerFooterAllowance = 80;
     const width = Math.min(size.width, window.innerWidth - viewportPadding * 2);
     const height = Math.min(size.height, window.innerHeight - headerFooterAllowance - viewportPadding * 2);
+    
     setPosition((prev) => ({
       x: Math.max(viewportPadding, Math.min(prev.x, window.innerWidth - width - viewportPadding)),
       y: Math.max(MOBILE_NAV_CLEARANCE, Math.min(prev.y, window.innerHeight - height - viewportPadding)),
