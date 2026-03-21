@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from app.api.agents import router as agents_router
+from app.api.ai import router as ai_router
 from app.api.auth import router as auth_router
 from app.api.oauth import router as oauth_router
 from app.api.business import router as business_router
@@ -87,6 +88,9 @@ router = APIRouter()
 
 # Agent system router (auth-protected via check_feature in each endpoint)
 router.include_router(agents_router)
+
+# AI chat router (unified system for widget and /ai page)
+router.include_router(ai_router)
 
 # Include auth routes
 router.include_router(auth_router)
