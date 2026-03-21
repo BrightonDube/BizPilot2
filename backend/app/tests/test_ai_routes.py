@@ -31,9 +31,9 @@ def test_get_conversations_requires_authentication(client: TestClient):
 
 
 def test_post_conversations_requires_authentication(client: TestClient):
-    """POST /api/v1/ai/conversations should return 401 without auth."""
+    """POST /api/v1/ai/conversations should return 403 without auth (requires business context)."""
     response = client.post("/api/v1/ai/conversations")
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 
 def test_ai_endpoints_are_registered():
