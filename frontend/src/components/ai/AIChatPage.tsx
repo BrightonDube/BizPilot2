@@ -89,7 +89,7 @@ export function AIChatPage() {
                   <button
                     key={q.id}
                     onClick={() => sendMessage(q.prompt)}
-                    disabled={loading}
+                    disabled={isLoading}
                     className="text-left p-3 rounded-lg border border-gray-700 hover:border-purple-500/50 hover:bg-gray-800/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="text-sm text-gray-200">{q.text}</span>
