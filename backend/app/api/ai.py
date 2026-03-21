@@ -12,7 +12,7 @@ These endpoints unify the widget and /ai page to use the same conversation syste
 """
 
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -141,8 +141,7 @@ async def send_conversation_message(
     Send a message in a conversation.
     Bridges to the existing /agents/chat endpoint.
     """
-    from app.api.agents import agent_chat, AgentChatRequest
-    from app.models.user_settings import AIDataSharingLevel
+    from app.api.agents import AgentChatRequest
     
     # Call the existing agent chat endpoint
     agent_request = AgentChatRequest(
