@@ -141,20 +141,11 @@ async def send_conversation_message(
     Send a message in a conversation.
     Bridges to the existing /agents/chat endpoint.
     """
-    from app.api.agents import AgentChatRequest
-    
-    # Call the existing agent chat endpoint
-    agent_request = AgentChatRequest(
-        message=request.content,
-        session_id=None,  # Let agent generate new session
-        conversation_id=conversation_id,
-    )
-    
     # Get sharing level
     ai_service = AIService(db)
     settings = ai_service.get_or_create_user_settings(current_user.id)
     
-    # Call agent
+    # Call agent directly
     from app.agents.tasks.chat_agent import ChatAgent
     agent = ChatAgent(db)
     result = await agent.run(
