@@ -17,7 +17,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from unittest.mock import patch, MagicMock, AsyncMock
 from app.main import app
-from app.core.database import get_sync_db
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.models.subscription_tier import SubscriptionTier
 from app.models.subscription_transaction import SubscriptionTransaction, TransactionStatus, TransactionType
