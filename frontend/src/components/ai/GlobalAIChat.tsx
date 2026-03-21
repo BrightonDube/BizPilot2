@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { GripVertical, MessageSquare, Send, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -142,21 +142,6 @@ export function GlobalAIChat() {
     // For marketing/guest context, handle locally (not implemented in this fix)
     // This would require guest chat implementation which is out of scope
   };
-
-  // Clamp modal position to viewport when opened/resized
-  useLayoutEffect(() => {
-    if (!open || typeof window === 'undefined') return;
-    
-    const viewportPadding = 12;
-    const headerFooterAllowance = 80;
-    const width = Math.min(size.width, window.innerWidth - viewportPadding * 2);
-    const height = Math.min(size.height, window.innerHeight - headerFooterAllowance - viewportPadding * 2);
-    
-    setPosition((prev) => ({
-      x: Math.max(viewportPadding, Math.min(prev.x, window.innerWidth - width - viewportPadding)),
-      y: Math.max(MOBILE_NAV_CLEARANCE, Math.min(prev.y, window.innerHeight - height - viewportPadding)),
-    }));
-  }, [open, size.height, size.width]);
 
   // Re-clamp on window resize
   useEffect(() => {
