@@ -1,60 +1,51 @@
 /**
- * BizPilot Mobile POS — useCategories Hook
- *
- * Provides category data for the POS category tabs.
- *
- * Why a separate hook for categories?
- * Categories change infrequently (unlike products which update with stock).
- * This hook can aggressively cache and only refresh on sync.
+ * useCategories.ts — Fetch categories from API
  */
 
-import { useState, useMemo, useCallback } from "react";
-import type { MobileCategory } from "@/types";
+import { useState, useEffect } from "react";
+import type { POSCategory } from "@/types/pos";
 
-// ---------------------------------------------------------------------------
-// Mock data (replaced by WatermelonDB when connected)
-// ---------------------------------------------------------------------------
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
-const MOCK_CATEGORIES: MobileCategory[] = [
-  { id: "food", name: "Food", color: "#22c55e", icon: "restaurant", parentId: null, sortOrder: 1, isActive: true, createdAt: Date.now(), updatedAt: Date.now(), remoteId: "food", syncedAt: Date.now(), isDirty: false },
-  { id: "drinks", name: "Drinks", color: "#f59e0b", icon: "cafe", parentId: null, sortOrder: 2, isActive: true, createdAt: Date.now(), updatedAt: Date.now(), remoteId: "drinks", syncedAt: Date.now(), isDirty: false },
-  { id: "desserts", name: "Desserts", color: "#ec4899", icon: "ice-cream", parentId: null, sortOrder: 3, isActive: true, createdAt: Date.now(), updatedAt: Date.now(), remoteId: "desserts", syncedAt: Date.now(), isDirty: false },
-  { id: "specials", name: "Specials", color: "#8b5cf6", icon: "star", parentId: null, sortOrder: 4, isActive: true, createdAt: Date.now(), updatedAt: Date.now(), remoteId: "specials", syncedAt: Date.now(), isDirty: false },
-];
-
-// ---------------------------------------------------------------------------
-// Hook interface
-// ---------------------------------------------------------------------------
-
-interface UseCategoriesReturn {
-  /** All active categories sorted by sortOrder */
-  categories: MobileCategory[];
-  /** Whether data is loading */
-  loading: boolean;
-  /** Error message if fetch failed */
+interface UseCategoriesResult {
+  categories: POSCategory[];
+  isLoading: boolean;
   error: string | null;
-  /** Reload categories from database */
-  refresh: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
+/** Fetch all categories for product filtering */
+export function useCategories(): UseCategoriesResult {
+  const [categories, setCategories] = useState<POSCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export function useCategories(): UseCategoriesReturn {
-  const [loading, setLoading] = useState(false);
-  const [error] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/categories?limit=100`);
+        if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`);
 
-  const categories = useMemo(() => {
-    return [...MOCK_CATEGORIES]
-      .filter((c) => c.isActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+        const data = await res.json();
+        const items = data.items || [];
+
+        const mapped: POSCategory[] = items.map((c: Record<string, unknown>) => ({
+          id: c.id as string,
+          name: c.name as string,
+          icon: null,
+          color: c.color as string | null,
+          sort_order: (c.sort_order as number) || 0,
+        }));
+
+        setCategories(mapped);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Unknown error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
-  const refresh = useCallback(() => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 100);
-  }, []);
-
-  return { categories, loading, error, refresh };
+  return { categories, isLoading, error };
 }

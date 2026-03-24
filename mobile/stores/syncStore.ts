@@ -1,28 +1,30 @@
 /**
- * BizPilot Mobile POS — Sync Status Zustand Store
+ * BizPilot Mobile POS — Sync Zustand Store
  *
  * Tracks synchronization state for the offline-first engine.
- * Components use this to show sync indicators and pending counts.
- *
- * Why a dedicated sync store?
- * Sync status affects multiple unrelated UI areas — the status
- * bar badge, the settings screen, the manual sync button.
- * A Zustand store lets each consume only the slice it needs.
  */
 
 import { create } from "zustand";
-import type { SyncStatus } from "@/types";
 
-interface SyncStore {
-  status: SyncStatus;
-  lastSyncAt: number | null;
-  pendingChanges: number;
+interface SyncState {
   isOnline: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  lastSyncAt: number | null;
+  syncError: string | null;
+
+  // Aliases for compatibility
+  pendingChanges: number;
   lastError: string | null;
 
-  // Actions
-  setStatus: (status: SyncStatus) => void;
+  // Mandated Actions
   setOnline: (isOnline: boolean) => void;
+  startSync: () => void;
+  finishSync: (result: { success: boolean; pushed: number; pulled: number; error?: string }) => void;
+  setSyncError: (error: string | null) => void;
+
+  // Compatibility Actions
+  setStatus: (status: any) => void;
   setLastSync: (timestamp: number) => void;
   setPendingChanges: (count: number) => void;
   setError: (error: string | null) => void;
@@ -30,22 +32,41 @@ interface SyncStore {
   decrementPending: (by?: number) => void;
 }
 
-export const useSyncStore = create<SyncStore>((set, get) => ({
-  status: "idle",
-  lastSyncAt: null,
-  pendingChanges: 0,
+export const useSyncStore = create<SyncState>((set) => ({
   isOnline: true,
+  isSyncing: false,
+  pendingCount: 0,
+  lastSyncAt: null,
+  syncError: null,
+  
+  // Initialize aliases
+  pendingChanges: 0,
   lastError: null,
 
-  setStatus: (status) => set({ status }),
   setOnline: (isOnline) => set({ isOnline }),
+  
+  startSync: () => set({ isSyncing: true, syncError: null, lastError: null }),
+
+  finishSync: (result) => set((state) => ({
+    isSyncing: false,
+    lastSyncAt: result.success ? Date.now() : state.lastSyncAt,
+    syncError: result.error || null,
+    lastError: result.error || null,
+  })),
+
+  setSyncError: (error) => set({ syncError: error, lastError: error }),
+
+  // Compatibility implementations
+  setStatus: (status) => set({ isSyncing: status === "syncing" }),
   setLastSync: (timestamp) => set({ lastSyncAt: timestamp }),
-  setPendingChanges: (count) => set({ pendingChanges: count }),
-  setError: (error) => set({ lastError: error }),
-
-  incrementPending: () =>
-    set({ pendingChanges: get().pendingChanges + 1 }),
-
-  decrementPending: (by = 1) =>
-    set({ pendingChanges: Math.max(0, get().pendingChanges - by) }),
+  setPendingChanges: (count) => set({ pendingCount: count, pendingChanges: count }),
+  setError: (error) => set({ syncError: error, lastError: error }),
+  incrementPending: () => set((state) => ({ 
+    pendingCount: state.pendingCount + 1,
+    pendingChanges: state.pendingChanges + 1
+  })),
+  decrementPending: (by = 1) => set((state) => ({ 
+    pendingCount: Math.max(0, state.pendingCount - by),
+    pendingChanges: Math.max(0, state.pendingChanges - by)
+  })),
 }));

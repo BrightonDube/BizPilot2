@@ -1,200 +1,63 @@
 /**
- * BizPilot Mobile POS — ProductCard Component
- *
- * Individual product tile displayed in the POS product grid.
- * Designed for large touch targets on tablets and phones.
- *
- * Why a separate component instead of inline in ProductGrid?
- * React.memo optimization: ProductCard only re-renders when its
- * own props change. In a grid of 100+ products, this prevents
- * the entire grid from re-rendering when one product updates.
- *
- * Why 100dp minimum height?
- * Apple HIG recommends 44pt minimum touch targets. A 100dp card
- * provides a comfortable tap area even for users with large fingers
- * in a fast-paced POS environment.
+ * ProductCard.tsx — Single product tile for POS grid
  */
 
-import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
-import { formatCurrency } from "@/utils/formatters";
-import { Badge } from "@/components/ui";
+import { View, Text, Pressable, Image } from "react-native";
+import * as Haptics from "expo-haptics";
+import type { POSProduct } from "@/types/pos";
+import { useCartStore } from "@/stores/cartStore";
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
-export interface ProductCardProps {
-  /** Unique product identifier */
-  id: string;
-  /** Product display name */
-  name: string;
-  /** Selling price */
-  price: number;
-  /** Optional product image URL */
-  imageUrl?: string | null;
-  /** Current stock quantity (used for out-of-stock indicator) */
-  stockQuantity?: number;
-  /** Whether this product tracks inventory */
-  trackInventory?: boolean;
-  /** Whether the product is active/available for sale */
-  isActive?: boolean;
-  /** Callback when the card is tapped */
-  onPress: (productId: string) => void;
+interface ProductCardProps {
+  product: POSProduct;
+  onPress: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 /**
- * A single product tile for the POS grid.
- * Shows product name, price, image (if available), and stock status.
+ * Product card with touch feedback and haptic response
+ * Minimum touch target: 100x100 points
  */
-const ProductCard: React.FC<ProductCardProps> = React.memo(
-  function ProductCard({
-    id,
-    name,
-    price,
-    imageUrl,
-    stockQuantity = 0,
-    trackInventory = false,
-    isActive = true,
-    onPress,
-  }) {
-    const isOutOfStock = trackInventory && stockQuantity <= 0;
-    const isLowStock = trackInventory && stockQuantity > 0 && stockQuantity <= 5;
-    const isDisabled = !isActive || isOutOfStock;
+export function ProductCard({ product, onPress }: ProductCardProps) {
+  const addItem = useCartStore((s) => s.addItem);
+  const isOutOfStock = !product.is_in_stock;
 
-    return (
-      <Pressable
-        onPress={() => {
-          if (!isDisabled) {
-            onPress(id);
-          }
-        }}
-        disabled={isDisabled}
-        style={({ pressed }) => [
-          styles.container,
-          pressed && !isDisabled && styles.containerPressed,
-          isDisabled && styles.containerDisabled,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={`${name}, ${formatCurrency(price)}${
-          isOutOfStock ? ", out of stock" : ""
-        }`}
-        accessibilityState={{ disabled: isDisabled }}
-      >
-        {/* Product image or placeholder */}
-        {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.image}
-            contentFit="cover"
-            transition={200}
-            accessibilityLabel={`${name} image`}
-          />
+  const handlePress = async () => {
+    if (isOutOfStock) return;
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    addItem({
+      productId: product.id,
+      productName: product.name,
+      unitPrice: product.price,
+    });
+    onPress();
+  };
+
+  return (
+    <Pressable
+      testID={`product-${product.id}`}
+      onPress={handlePress}
+      disabled={isOutOfStock}
+      className={`min-w-[100] min-h-[100] m-1 rounded-lg overflow-hidden bg-white border border-gray-200 ${
+        isOutOfStock ? "opacity-40" : ""
+      }`}
+    >
+      <View className="w-full h-24 bg-gray-100 justify-center items-center">
+        {product.image_url ? (
+          <Image source={{ uri: product.image_url }} className="w-full h-full" resizeMode="cover" />
         ) : (
-          <View style={styles.imagePlaceholder}>
-            <Ionicons
-              name="cube-outline"
-              size={28}
-              color={isDisabled ? "#4b5563" : "#6b7280"}
-            />
-          </View>
+          <Text className="text-3xl">📦</Text>
         )}
-
-        {/* Product name */}
-        <Text
-          style={[styles.name, isDisabled && styles.nameDisabled]}
-          numberOfLines={2}
-        >
-          {name}
-        </Text>
-
-        {/* Price */}
-        <Text style={[styles.price, isDisabled && styles.priceDisabled]}>
-          {formatCurrency(price)}
-        </Text>
-
-        {/* Stock indicators */}
         {isOutOfStock && (
-          <View style={styles.badgeContainer}>
-            <Badge label="Out of stock" variant="danger" />
+          <View className="absolute bottom-0 left-0 right-0 bg-red-500 py-1">
+            <Text className="text-white text-xs text-center font-medium">Out of Stock</Text>
           </View>
         )}
-        {isLowStock && (
-          <View style={styles.badgeContainer}>
-            <Badge label={`${stockQuantity} left`} variant="warning" />
-          </View>
-        )}
-      </Pressable>
-    );
-  }
-);
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#374151",
-    borderRadius: 12,
-    padding: 12,
-    margin: 4,
-    flex: 1,
-    minHeight: 120,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#4b5563",
-  },
-  containerPressed: {
-    backgroundColor: "#4b5563",
-    transform: [{ scale: 0.97 }],
-  },
-  containerDisabled: {
-    opacity: 0.5,
-  },
-  image: {
-    width: 56,
-    height: 56,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  imagePlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 8,
-    backgroundColor: "#1f2937",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  name: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  nameDisabled: {
-    color: "#6b7280",
-  },
-  price: {
-    color: "#3b82f6",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  priceDisabled: {
-    color: "#4b5563",
-  },
-  badgeContainer: {
-    marginTop: 6,
-  },
-});
-
-export default ProductCard;
+      </View>
+      <View className="p-2">
+        <Text numberOfLines={2} className="text-sm font-medium text-gray-800">
+          {product.name}
+        </Text>
+        <Text className="text-sm font-bold text-emerald-600 mt-1">R{product.price.toFixed(2)}</Text>
+      </View>
+    </Pressable>
+  );
+}

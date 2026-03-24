@@ -1,68 +1,71 @@
 /**
  * BizPilot Mobile POS — Core Type Definitions
- *
- * Shared types for the mobile POS application. These mirror the
- * backend schemas but are optimized for offline-first mobile use.
- *
- * Why separate from shared/?
- * Mobile types include sync metadata (isDirty, syncedAt, remoteId)
- * that only exist on the client side. The shared/ package has
- * server-canonical types; these extend them for offline use.
  */
 
-// ---------------------------------------------------------------------------
-// Sync metadata — every syncable entity carries these fields
-// ---------------------------------------------------------------------------
-
 export interface SyncMetadata {
-  /** Server-side UUID, null if created offline and not yet synced */
-  remoteId: string | null;
-  /** Timestamp of last successful sync (epoch ms) */
-  syncedAt: number | null;
-  /** True if the record has local changes not yet pushed to server */
-  isDirty: boolean;
+  remoteId?: string | null;
+  syncedAt?: number | null;
+  isDirty?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Product
-// ---------------------------------------------------------------------------
+export interface Product extends SyncMetadata {
+  id?: string;
+  name?: string;
+  price?: number;
+  category_id?: string;
+  is_available?: boolean;
+  discount?: number;
+  quantity?: number;
+  // Compatibility
+  productId?: string;
+  productName?: string;
+  unitPrice?: number;
+}
 
-export interface MobileProduct extends SyncMetadata {
+export interface Customer extends SyncMetadata {
   id: string;
   name: string;
-  sku: string | null;
-  barcode: string | null;
-  description: string | null;
-  price: number;
-  costPrice: number | null;
-  categoryId: string;
-  imageUrl: string | null;
-  isActive: boolean;
-  trackInventory: boolean;
-  stockQuantity: number;
-  createdAt: number;
-  updatedAt: number;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  loyaltyPoints?: number;
+  totalSpent?: number;
+  visitCount?: number;
+  updatedAt?: number;
+  createdAt?: number;
 }
 
-// ---------------------------------------------------------------------------
-// Category
-// ---------------------------------------------------------------------------
-
-export interface MobileCategory extends SyncMetadata {
+export interface MobileUser {
   id: string;
-  name: string;
-  color: string | null;
-  icon: string | null;
-  parentId: string | null;
-  sortOrder: number;
-  isActive: boolean;
-  createdAt: number;
-  updatedAt: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  pinHash?: string | null;
 }
 
-// ---------------------------------------------------------------------------
-// Order
-// ---------------------------------------------------------------------------
+export interface CartItem {
+  id?: string;
+  productId?: string;
+  productName?: string;
+  name?: string;
+  quantity: number;
+  unitPrice: number;
+  price?: number;
+  discount: number;
+  notes?: string | null;
+  remoteId?: string | null;
+  total?: number;
+  createdAt?: number;
+  syncedAt?: number | null;
+  isDirty?: boolean;
+}
+
+export interface MobileOrderItem extends CartItem {
+  id: string;
+  orderId?: string;
+}
 
 export type OrderStatus =
   | "draft"
@@ -71,185 +74,114 @@ export type OrderStatus =
   | "cancelled"
   | "refunded"
   | "partial"
-  | "voided";
-
-export type PaymentStatus = "pending" | "paid" | "partial" | "refunded";
+  | "voided"
+  | "new"
+  | "preparing"
+  | "ready"
+  | "delivered";
 
 export interface MobileOrder extends SyncMetadata {
   id: string;
-  orderNumber: string;
-  customerId: string | null;
+  total: number;
   status: OrderStatus;
-  subtotal: number;
-  taxAmount: number;
-  discountAmount: number;
-  total: number;
-  paymentMethod: string | null;
-  paymentStatus: PaymentStatus;
-  notes: string | null;
-  createdBy: string;
-  createdAt: number;
-  updatedAt: number;
+  discount?: number;
+  discountAmount?: number;
+  orderNumber?: string;
+  customerId?: string | null;
+  createdAt?: number;
+  updatedAt?: number;
+  subtotal?: number;
+  taxAmount?: number;
+  voidReason?: string;
+  voidedBy?: string;
+  paymentMethod?: string | null;
+  paymentStatus?: string | null;
+  items?: any[];
+  statusHistory?: any[];
+  orderType?: string;
+  tableId?: string;
+  notes?: string | null;
+  createdBy?: string;
+  amountTendered?: number;
+  change?: number;
+  cartDiscount?: number;
+  vatRate?: number;
+  taxInclusive?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Order Item
-// ---------------------------------------------------------------------------
-
-export interface MobileOrderItem {
-  id: string;
-  remoteId: string | null;
-  orderId: string;
-  productId: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  total: number;
-  notes: string | null;
-  createdAt: number;
-  syncedAt: number | null;
-  isDirty: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// Customer
-// ---------------------------------------------------------------------------
-
-export interface MobileCustomer extends SyncMetadata {
+export interface TableRecord {
   id: string;
   name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  notes: string | null;
-  loyaltyPoints: number;
-  totalSpent: number;
-  visitCount: number;
-  createdAt: number;
-  updatedAt: number;
+  capacity: number;
+  status: "available" | "occupied" | "reserved" | "dirty";
+  activeOrderId: string | null;
+  statusChangedAt: string;
 }
 
-// ---------------------------------------------------------------------------
-// User (POS operator)
-// ---------------------------------------------------------------------------
+export interface ManagedOrder extends MobileOrder {
+  orderType: string;
+  tableId?: string;
+  statusHistory: Array<{
+    timestamp: string;
+    status: OrderStatus;
+    changedBy: string;
+  }>;
+}
 
-export type UserRole = "admin" | "manager" | "cashier" | "waiter";
-
-export interface MobileUser {
+export interface KDSOrder {
   id: string;
-  remoteId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  pinHash: string | null;
-  role: UserRole;
-  isActive: boolean;
-  createdAt: number;
-  updatedAt: number;
-  syncedAt: number | null;
+  displayNumber: string;
+  orderType: string;
+  tableName?: string;
+  items: KDSOrderItem[];
+  sentAt: string;
+  priority: number;
 }
 
-// ---------------------------------------------------------------------------
-// Settings (key-value local config)
-// ---------------------------------------------------------------------------
-
-export interface MobileSetting {
+export interface KDSOrderItem {
   id: string;
-  key: string;
-  value: string;
-  updatedAt: number;
-}
-
-// ---------------------------------------------------------------------------
-// Sync Queue Entry
-// ---------------------------------------------------------------------------
-
-export type SyncAction = "create" | "update" | "delete";
-
-export interface SyncQueueEntry {
-  id: string;
-  entityType: string;
-  entityId: string;
-  action: SyncAction;
-  /** JSON-serialized payload */
-  payload: string;
-  attempts: number;
-  lastError: string | null;
-  createdAt: number;
-  processedAt: number | null;
-}
-
-// ---------------------------------------------------------------------------
-// Cart (in-memory, not persisted to WatermelonDB)
-// ---------------------------------------------------------------------------
-
-export interface CartItem {
-  productId: string;
-  productName: string;
+  orderId: string;
+  name: string;
   quantity: number;
-  unitPrice: number;
-  discount: number;
-  notes: string | null;
+  modifiers: string[];
+  category: string;
+  status: "pending" | "preparing" | "ready" | "delivered";
+  stationId: string;
 }
 
-export interface Cart {
-  items: CartItem[];
-  customerId: string | null;
-  discount: number;
-  notes: string;
+export interface KDSStation {
+  id: string;
+  name: string;
+  categories: string[];
 }
-
-// ---------------------------------------------------------------------------
-// Sync state
-// ---------------------------------------------------------------------------
 
 export type SyncStatus = "idle" | "syncing" | "error";
 
 export interface SyncState {
-  status: SyncStatus;
-  lastSyncAt: number | null;
-  pendingChanges: number;
   isOnline: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  lastSyncAt: number | null;
+  syncError: string | null;
+  // Aliases for compatibility
+  pendingChanges: number;
   lastError: string | null;
 }
 
-// ---------------------------------------------------------------------------
-// Auth state
-// ---------------------------------------------------------------------------
-
 export interface AuthState {
-  isAuthenticated: boolean;
   user: MobileUser | null;
   token: string | null;
-  refreshToken: string | null;
-  pinUser: MobileUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  pinUser?: MobileUser | null;
 }
 
-// ---------------------------------------------------------------------------
-// API response wrappers
-// ---------------------------------------------------------------------------
+export { Product as MobileProduct, Customer as MobileCustomer };
 
-export interface ApiListResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  per_page: number;
-  pages: number;
+export interface LoyaltyTransaction {
+  type: "expired" | "earned" | "redeemed" | "adjusted";
+  points: number;
+  createdAt?: number;
 }
 
-export interface SyncPullResponse<T> {
-  changes: T[];
-  timestamp: number;
-  hasMore: boolean;
-}
-
-export interface SyncPushResponse {
-  accepted: number;
-  rejected: number;
-  conflicts: Array<{
-    entityId: string;
-    serverVersion: number;
-    resolution: string;
-  }>;
-}
+export interface OrderItem extends MobileOrderItem {}
