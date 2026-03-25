@@ -8,7 +8,7 @@ from unittest.mock import Mock, MagicMock
 
 from app.scheduler.services.notification_creation import NotificationCreationService
 from app.models.invoice import Invoice, InvoiceStatus
-from app.models.notification import Notification, NotificationType
+
 from app.models.customer import Customer
 
 
