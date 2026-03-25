@@ -127,17 +127,18 @@ describe('AI Context Switching and Authentication Tests', () => {
       );
 
       render(<GlobalAIChat />);
-      
+
       const { triggerButton, guestInput, sendButton } = getCommonElements(screen);
       fireEvent.click(triggerButton());
 
       await sendMessage(guestInput(), sendButton(), 'What features does BizPilot have?');
 
+      // GlobalAIChat now routes all contexts through agentChatService which calls /agents/chat
       await waitFor(() => {
-        expect(mockApiClient.post).toHaveBeenCalledWith('/ai/guest-chat', {
+        expect(mockApiClient.post).toHaveBeenCalledWith('/agents/chat', {
           message: 'What features does BizPilot have?',
           conversation_id: null,
-          session_id: TEST_CONSTANTS.SESSION_ID
+          history: []
         });
       });
     });
@@ -149,16 +150,18 @@ describe('AI Context Switching and Authentication Tests', () => {
       );
 
       render(<GlobalAIChat />);
-      
+
       const { triggerButton, businessInput, sendButton } = getCommonElements(screen);
       fireEvent.click(triggerButton());
 
       await sendMessage(businessInput(), sendButton(), 'Show me my sales data');
 
+      // GlobalAIChat now routes all contexts through agentChatService which calls /agents/chat
       await waitFor(() => {
-        expect(mockApiClient.post).toHaveBeenCalledWith('/ai/chat', {
+        expect(mockApiClient.post).toHaveBeenCalledWith('/agents/chat', {
           message: 'Show me my sales data',
-          conversation_id: null
+          conversation_id: null,
+          history: []
         });
       });
     });
@@ -212,8 +215,8 @@ describe('AI Context Switching and Authentication Tests', () => {
       expect(screen.getByText('AI Assistant')).toBeInTheDocument();
     });
 
-    // Verify the API endpoints would be different per context
-    // (business context uses /ai/chat, marketing uses /ai/guest-chat)
+    // Verify the API endpoints: both contexts now use /agents/chat via agentChatService
+    // but show different UI (business vs marketing placeholder)
     expect(screen.getByPlaceholderText(/Ask about sales, inventory/)).toBeInTheDocument();
   }
 
@@ -254,10 +257,12 @@ describe('AI Context Switching and Authentication Tests', () => {
 
       await sendMessage(businessInput(), sendButton(), 'Test business message');
 
+      // GlobalAIChat now routes all contexts through agentChatService which calls /agents/chat
       await waitFor(() => {
-        expect(mockApiClient.post).toHaveBeenCalledWith('/ai/chat', {
+        expect(mockApiClient.post).toHaveBeenCalledWith('/agents/chat', {
           message: 'Test business message',
-          conversation_id: null
+          conversation_id: null,
+          history: []
         });
       });
     });

@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_sync_db
-from app.api.deps import get_current_business_id, check_feature, get_optional_current_user
+from app.api.deps import get_current_business_id, check_feature, get_optional_current_user, get_optional_business_id
 from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
 from app.services.ai_service import AIService
@@ -105,50 +105,69 @@ Never make up specific pricing — direct users to the pricing page at bizpilotp
 async def agent_chat(
     request: AgentChatRequest,
     current_user: Optional[User] = Depends(get_optional_current_user),
-    business_id: str = Depends(get_current_business_id),
+    business_id: Optional[str] = Depends(get_optional_business_id),
     db: Session = Depends(get_sync_db),
 ) -> AgentResponse:
     """
     Send a message to the agent system.
+    Supports public/guest mode (unauthenticated) and authenticated business mode.
+    Errors from the AI backend are returned as type='error' responses, not HTTP 500.
     """
     session_id = _make_session_id(request.session_id)
-    
+
+    # ---- Public / guest mode (not logged in) --------------------------------
     if current_user is None:
         from app.core.ai_models import execute_fast_task
-        messages = [
-            {"role": "system", "content": PUBLIC_AGENT_PROMPT},
-            {"role": "user", "content": request.message}
-        ]
-        response = await execute_fast_task(messages=messages)
-        
-        return AgentResponse(
-            type="response",
-            message=response.content.strip(),
+        try:
+            messages = [
+                {"role": "system", "content": PUBLIC_AGENT_PROMPT},
+                {"role": "user", "content": request.message},
+            ]
+            response = await execute_fast_task(messages=messages)
+            return AgentResponse(
+                type="response",
+                message=response.content.strip(),
+                session_id=session_id,
+                pending=False,
+                conversation_id=request.conversation_id,
+            )
+        except Exception as exc:
+            logger.error("Public agent chat error: %s", exc, exc_info=True)
+            return AgentResponse(
+                type="error",
+                message="AI is temporarily unavailable. Please try again later.",
+                session_id=session_id,
+                pending=False,
+            )
+
+    # ---- Authenticated business mode ----------------------------------------
+    try:
+        sharing_level = _get_sharing_level(db, current_user)
+        agent = ChatAgent(db)
+        result = await agent.run(
+            user=current_user,
+            message=request.message,
+            history=[],
+            sharing_level=sharing_level,
             session_id=session_id,
-            pending=False,
+            business_id=business_id or "",
+            plan_confirmed=True,
+        )
+        return AgentResponse(
+            type=result.get("type", "response"),
+            message=result.get("plan") or result.get("message", ""),
+            session_id=session_id,
+            pending=result.get("pending", False),
             conversation_id=request.conversation_id,
         )
-
-    sharing_level = _get_sharing_level(db, current_user)
-
-    agent = ChatAgent(db)
-    result = await agent.run(
-        user=current_user,
-        message=request.message,
-        history=[],
-        sharing_level=sharing_level,
-        session_id=session_id,
-        business_id=business_id,
-        plan_confirmed=True, # We no longer generate plans
-    )
-
-    return AgentResponse(
-        type=result.get("type", "response"),
-        message=result.get("plan") or result.get("message", ""),
-        session_id=session_id,
-        pending=result.get("pending", False),
-        conversation_id=request.conversation_id,
-    )
+    except Exception as exc:
+        logger.error("Agent chat error for user %s: %s", current_user.id, exc, exc_info=True)
+        return AgentResponse(
+            type="error",
+            message="I encountered an error processing your request. Please try again.",
+            session_id=session_id,
+            pending=False,
+        )
 
 
 @router.post("/chat/confirm", response_model=AgentResponse)

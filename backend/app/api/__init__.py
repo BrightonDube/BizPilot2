@@ -82,11 +82,15 @@ from app.api.pdf import router as pdf_router
 from app.api.webhooks import router as webhooks_router
 from app.api.two_factor import router as two_factor_router
 from app.api.collections import router as collections_router
+from app.api.ai import router as ai_router
 
 router = APIRouter()
 
 # Agent system router (auth-protected via check_feature in each endpoint)
 router.include_router(agents_router)
+
+# AI conversation persistence router
+router.include_router(ai_router)
 
 # Include auth routes
 router.include_router(auth_router)
