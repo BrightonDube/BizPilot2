@@ -245,6 +245,16 @@ class TestLoyaltyExpiryEndpoints:
         app.dependency_overrides[get_sync_db] = mock_db  # loyalty.py uses get_sync_db
         return TestClient(app, headers={"Authorization": "Bearer test-token"})
 
+    def teardown_method(self, method):
+        """Clean up dependency overrides after each test to prevent leaking into other tests."""
+        from app.main import app
+        from app.api.deps import get_current_active_user, get_current_business_id, get_db
+        from app.core.database import get_sync_db
+        app.dependency_overrides.pop(get_current_active_user, None)
+        app.dependency_overrides.pop(get_current_business_id, None)
+        app.dependency_overrides.pop(get_db, None)
+        app.dependency_overrides.pop(get_sync_db, None)
+
     def test_expiring_soon_endpoint_exists(self):
         client = self._get_client()
         resp = client.get("/api/v1/loyalty/expiring-soon")
