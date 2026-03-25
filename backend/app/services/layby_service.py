@@ -451,45 +451,45 @@ class LaybyService:
         )
         self.db.add(payment)
 
-        # Flush to detect DB constraint violations early
-        self.db.flush()
-
-        # Update layby totals
-        layby.amount_paid += amount
-        layby.balance_due -= amount
-
-        # Determine next payment info
-        next_sched = (
-            self.db.query(LaybySchedule)
-            .filter(
-                LaybySchedule.layby_id == str(layby_id),
-                LaybySchedule.status.in_([ScheduleStatus.PENDING.value, ScheduleStatus.PARTIAL.value, ScheduleStatus.OVERDUE.value]),
-            )
-            .order_by(LaybySchedule.installment_number)
-            .first()
-        )
-        if next_sched:
-            layby.next_payment_date = next_sched.due_date
-            layby.next_payment_amount = next_sched.amount_due - next_sched.amount_paid
-        else:
-            layby.next_payment_date = None
-            layby.next_payment_amount = None
-
-        # Status transition
-        if layby.balance_due <= Decimal("0.00"):
-            layby.status = LaybyStatus.READY_FOR_COLLECTION
-
-        # Audit
-        self._create_audit(
-            layby_id=layby.id,
-            action="payment",
-            performed_by=processed_by,
-            old_value={"balance_due": str(old_balance), "status": old_status},
-            new_value={"balance_due": str(layby.balance_due), "status": layby.status.value},
-            details=f"Payment of R{amount:.2f} via {payment_method}",
-        )
-
         try:
+            # Flush to detect DB constraint violations early
+            self.db.flush()
+
+            # Update layby totals
+            layby.amount_paid += amount
+            layby.balance_due -= amount
+
+            # Determine next payment info
+            next_sched = (
+                self.db.query(LaybySchedule)
+                .filter(
+                    LaybySchedule.layby_id == str(layby_id),
+                    LaybySchedule.status.in_([ScheduleStatus.PENDING.value, ScheduleStatus.PARTIAL.value, ScheduleStatus.OVERDUE.value]),
+                )
+                .order_by(LaybySchedule.installment_number)
+                .first()
+            )
+            if next_sched:
+                layby.next_payment_date = next_sched.due_date
+                layby.next_payment_amount = next_sched.amount_due - next_sched.amount_paid
+            else:
+                layby.next_payment_date = None
+                layby.next_payment_amount = None
+
+            # Status transition
+            if layby.balance_due <= Decimal("0.00"):
+                layby.status = LaybyStatus.READY_FOR_COLLECTION
+
+            # Audit
+            self._create_audit(
+                layby_id=layby.id,
+                action="payment",
+                performed_by=processed_by,
+                old_value={"balance_due": str(old_balance), "status": old_status},
+                new_value={"balance_due": str(layby.balance_due), "status": layby.status.value},
+                details=f"Payment of R{amount:.2f} via {payment_method}",
+            )
+
             self.db.commit()
         except Exception:
             self.db.rollback()
