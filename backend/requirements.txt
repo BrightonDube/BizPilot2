@@ -44,7 +44,7 @@ requests==2.32.5
 rsa==4.9.1
 six==1.17.0
 SQLAlchemy==2.0.45
-asyncpg==0.30.0
+asyncpg==0.31.0
 starlette==0.41.3
 typing-inspection==0.4.2
 typing_extensions==4.15.0
