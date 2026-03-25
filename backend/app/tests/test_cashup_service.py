@@ -13,15 +13,43 @@ from app.schemas.cashup import CashupRejectRequest
 @pytest.fixture
 def db():
     mock = AsyncMock()
+    now = datetime.now(timezone.utc)
     async def mock_refresh(obj):
         if hasattr(obj, 'id') and obj.id is None:
             obj.id = uuid.uuid4()
         if hasattr(obj, 'created_at') and obj.created_at is None:
-            obj.created_at = datetime.now(timezone.utc)
+            obj.created_at = now
+        if hasattr(obj, 'updated_at') and obj.updated_at is None:
+            obj.updated_at = now
+        if hasattr(obj, 'generated_at') and obj.generated_at is None:
+            obj.generated_at = now
+        if hasattr(obj, 'shift_id') and obj.shift_id is None:
+            obj.shift_id = SHIFT_ID
     mock.refresh = mock_refresh
     return mock
 
 BIZ_ID, WAITER_ID, SHIFT_ID, NOW = uuid.uuid4(), uuid.uuid4(), uuid.uuid4(), datetime.now(timezone.utc)
+
+def make_cashup(**kwargs):
+    """Create a WaiterCashup with all required fields populated."""
+    defaults = dict(
+        id=uuid.uuid4(),
+        business_id=BIZ_ID,
+        waiter_id=WAITER_ID,
+        shift_id=SHIFT_ID,
+        status="pending",
+        total_sales=Decimal("0.00"),
+        total_tips=Decimal("0.00"),
+        cash_collected=Decimal("0.00"),
+        card_collected=Decimal("0.00"),
+        cover_count=0,
+        tables_served=0,
+        generated_at=NOW,
+        created_at=NOW,
+        updated_at=NOW,
+    )
+    defaults.update(kwargs)
+    return WaiterCashup(**defaults)
 
 @pytest.mark.asyncio
 async def test_generate_cashup_aggregates_all_shift_orders_correctly(db):
@@ -42,14 +70,14 @@ async def test_generate_cashup_fails_when_shift_has_open_orders(db):
 
 @pytest.mark.asyncio
 async def test_approve_cashup_changes_status(db):
-    mock_cashup = WaiterCashup(id=uuid.uuid4(), business_id=BIZ_ID, waiter_id=WAITER_ID, status="pending", total_sales=Decimal("100.00"))
+    mock_cashup = make_cashup(total_sales=Decimal("100.00"))
     db.execute.return_value = AsyncMock(scalars=lambda: MagicMock(first=lambda: mock_cashup))
     result = await CashupService.approve_cashup(mock_cashup.id, uuid.uuid4(), BIZ_ID, db)
     assert result.status == "approved"
 
 @pytest.mark.asyncio
 async def test_reject_cashup_requires_reason(db):
-    mock_cashup = WaiterCashup(id=uuid.uuid4(), business_id=BIZ_ID, waiter_id=WAITER_ID, status="pending")
+    mock_cashup = make_cashup()
     db.execute.return_value = AsyncMock(scalars=lambda: MagicMock(first=lambda: mock_cashup))
     result = await CashupService.reject_cashup(mock_cashup.id, uuid.uuid4(), BIZ_ID, CashupRejectRequest(rejection_reason="Discrepancy in cash"), db)
     assert result.status == "rejected"
