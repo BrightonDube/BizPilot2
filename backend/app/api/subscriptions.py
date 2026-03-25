@@ -62,7 +62,7 @@ async def list_available_tiers(
     Used on pricing page and tier selection during registration.
     """
     tiers = db.query(SubscriptionTier).filter(
-        SubscriptionTier.is_active == True,
+        SubscriptionTier.is_active.is_(True),
         SubscriptionTier.deleted_at.is_(None)
     ).order_by(SubscriptionTier.sort_order).all()
     

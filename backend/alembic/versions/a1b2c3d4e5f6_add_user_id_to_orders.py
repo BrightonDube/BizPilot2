@@ -1,6 +1,6 @@
 """Add user_id to orders table
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: c1d2e3f4a5b6
 Revises: 04c9537675e7
 Create Date: 2025-01-15 00:00:00.000000
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "a1b2c3d4e5f6"
+revision: str = "c1d2e3f4a5b6"
 down_revision: Union[str, None] = "04c9537675e7"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
