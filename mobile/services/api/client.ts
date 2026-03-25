@@ -1,156 +1,98 @@
 /**
  * BizPilot Mobile POS — API Client
  *
- * Axios-based HTTP client with authentication interceptors,
- * retry logic, and request cancellation.
- *
- * Why Axios instead of fetch?
- * - Request/response interceptors for automatic token injection
- * - Built-in timeout support
- * - Automatic JSON parsing
- * - Easier error handling with status codes
- * - Consistent with the web app's API client
+ * Axios-based HTTP client with authentication interceptors and standardized error handling.
  */
 
-import axios, {
-  AxiosInstance,
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from "axios";
-import {
-  API_BASE_URL,
-  API_TIMEOUT_MS,
-  API_MAX_RETRIES,
-  API_RETRY_DELAY_MS,
-} from "@/utils/constants";
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
+import { getSecureItem, deleteSecureItem } from "@/services/auth/SecureStorage";
+import { router } from "expo-router";
 
-// ---------------------------------------------------------------------------
-// Token accessor — set by AuthService after login
-// ---------------------------------------------------------------------------
+// Base URL from environment variable
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
-/**
- * Why a module-level variable instead of importing SecureStore directly?
- * The API client should not depend on SecureStore (circular dependency).
- * AuthService sets these after login; the interceptor reads them.
- */
 let accessToken: string | null = null;
 let refreshTokenValue: string | null = null;
 let onTokenRefresh: (() => Promise<string | null>) | null = null;
 
+/**
+ * Update the in-memory access token.
+ */
 export function setAccessToken(token: string | null): void {
   accessToken = token;
 }
 
+/**
+ * Update the in-memory refresh token.
+ */
 export function setRefreshToken(token: string | null): void {
   refreshTokenValue = token;
 }
 
-export function setTokenRefresher(
-  refresher: (() => Promise<string | null>) | null
-): void {
+/**
+ * Set the function to call when a token needs to be refreshed.
+ */
+export function setTokenRefresher(refresher: (() => Promise<string | null>) | null): void {
   onTokenRefresh = refresher;
 }
 
-// ---------------------------------------------------------------------------
-// Axios instance
-// ---------------------------------------------------------------------------
-
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: API_TIMEOUT_MS,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
 });
 
-// ---------------------------------------------------------------------------
-// Request interceptor — inject auth token
-// ---------------------------------------------------------------------------
-
+// Request interceptor: Attach JWT from SecureStore or memory
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    if (accessToken && config.headers) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+  async (config: InternalAxiosRequestConfig) => {
+    const token = accessToken || (await getSecureItem("auth_token"));
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ---------------------------------------------------------------------------
-// Response interceptor — handle 401 with token refresh
-// ---------------------------------------------------------------------------
-
+// Response interceptor: Handle 401 and errors
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // If 401 and we haven't already retried, attempt token refresh
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      onTokenRefresh
-    ) {
-      originalRequest._retry = true;
-      const newToken = await onTokenRefresh();
-      if (newToken) {
-        accessToken = newToken;
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return apiClient(originalRequest);
+    // 1. On 401: Try refresh or clear token and redirect to login
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (onTokenRefresh) {
+        originalRequest._retry = true;
+        const newToken = await onTokenRefresh();
+        if (newToken) {
+          accessToken = newToken;
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          }
+          return apiClient(originalRequest);
+        }
       }
+
+      await deleteSecureItem("auth_token");
+      setAccessToken(null);
+      router.replace("/(auth)/login");
+      return Promise.reject(new Error("Session expired. Please login again."));
     }
 
-    return Promise.reject(error);
+    // 2. On network error:
+    if (!error.response && error.message === "Network Error") {
+      throw new Error("No internet connection");
+    }
+
+    // 3. On other errors: throw with message from response body
+    const apiMessage = (error.response?.data as any)?.detail || error.message;
+    throw new Error(apiMessage);
   }
 );
-
-// ---------------------------------------------------------------------------
-// Retry utility for transient failures
-// ---------------------------------------------------------------------------
-
-/**
- * Execute an API call with exponential backoff retry.
- *
- * Why exponential backoff?
- * Hammering a struggling server with immediate retries makes
- * the problem worse. Doubling the delay gives the server time
- * to recover and prevents thundering herd issues.
- *
- * @param fn - The async function to retry
- * @param retries - Maximum retry attempts (default: API_MAX_RETRIES)
- */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  retries: number = API_MAX_RETRIES
-): Promise<T> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error as Error;
-      const axiosError = error as AxiosError;
-
-      // Don't retry client errors (4xx) except 408 (timeout) and 429 (rate limit)
-      const status = axiosError.response?.status;
-      if (status && status >= 400 && status < 500 && status !== 408 && status !== 429) {
-        throw error;
-      }
-
-      if (attempt < retries) {
-        const delay = API_RETRY_DELAY_MS * Math.pow(2, attempt);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
-    }
-  }
-
-  throw lastError;
-}
 
 export { apiClient };
 export default apiClient;

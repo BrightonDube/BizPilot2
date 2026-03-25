@@ -61,6 +61,9 @@ export interface ProductSuggestion {
   confidence: number;
   /** The cart item that triggered this suggestion */
   triggeredBy: string;
+  /** Compatibility fields */
+  productId?: string;
+  productName?: string;
 }
 
 /** Suggestion metrics for tracking acceptance rate */

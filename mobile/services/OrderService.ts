@@ -48,7 +48,7 @@ export interface CreateOrderInput {
   /** Change given back to the customer */
   change: number;
   /** Order notes */
-  notes: string;
+  notes: string | null;
   /** ID of the user (cashier) creating the order */
   createdBy: string;
   /** VAT rate override (defaults to SA 15%) */

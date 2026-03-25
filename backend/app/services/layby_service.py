@@ -168,7 +168,7 @@ class LaybyService:
 
         # Validate deposit against config minimum
         if config:
-            min_deposit = total_amount * (config.min_deposit_percentage / Decimal("100"))
+            min_deposit = (total_amount * (config.min_deposit_percentage / Decimal("100"))).quantize(Decimal("0.01"))
             if deposit_amount < min_deposit:
                 raise ValueError(
                     f"Deposit must be at least {config.min_deposit_percentage}% "
@@ -408,6 +408,15 @@ class LaybyService:
             .all()
         )
 
+        # Save original state for in-memory rollback on commit/flush failure
+        orig_amount_paid = layby.amount_paid
+        orig_balance_due = layby.balance_due
+        orig_status = layby.status
+        orig_schedule_states = [
+            {"obj": s, "amount_paid": s.amount_paid, "status": s.status, "paid_at": s.paid_at}
+            for s in schedules
+        ]
+
         target_schedule_id = None
         for sched in schedules:
             if remaining <= Decimal("0.00"):
@@ -442,42 +451,61 @@ class LaybyService:
         )
         self.db.add(payment)
 
-        # Update layby totals
-        layby.amount_paid += amount
-        layby.balance_due -= amount
+        try:
+            # Flush to detect DB constraint violations early
+            self.db.flush()
 
-        # Determine next payment info
-        next_sched = (
-            self.db.query(LaybySchedule)
-            .filter(
-                LaybySchedule.layby_id == str(layby_id),
-                LaybySchedule.status.in_([ScheduleStatus.PENDING.value, ScheduleStatus.PARTIAL.value, ScheduleStatus.OVERDUE.value]),
+            # Update layby totals
+            layby.amount_paid += amount
+            layby.balance_due -= amount
+
+            # Determine next payment info
+            next_sched = (
+                self.db.query(LaybySchedule)
+                .filter(
+                    LaybySchedule.layby_id == str(layby_id),
+                    LaybySchedule.status.in_([ScheduleStatus.PENDING.value, ScheduleStatus.PARTIAL.value, ScheduleStatus.OVERDUE.value]),
+                )
+                .order_by(LaybySchedule.installment_number)
+                .first()
             )
-            .order_by(LaybySchedule.installment_number)
-            .first()
-        )
-        if next_sched:
-            layby.next_payment_date = next_sched.due_date
-            layby.next_payment_amount = next_sched.amount_due - next_sched.amount_paid
-        else:
-            layby.next_payment_date = None
-            layby.next_payment_amount = None
+            if next_sched:
+                layby.next_payment_date = next_sched.due_date
+                layby.next_payment_amount = next_sched.amount_due - next_sched.amount_paid
+            else:
+                layby.next_payment_date = None
+                layby.next_payment_amount = None
 
-        # Status transition
-        if layby.balance_due <= Decimal("0.00"):
-            layby.status = LaybyStatus.READY_FOR_COLLECTION
+            # Status transition
+            if layby.balance_due <= Decimal("0.00"):
+                layby.status = LaybyStatus.READY_FOR_COLLECTION
 
-        # Audit
-        self._create_audit(
-            layby_id=layby.id,
-            action="payment",
-            performed_by=processed_by,
-            old_value={"balance_due": str(old_balance), "status": old_status},
-            new_value={"balance_due": str(layby.balance_due), "status": layby.status.value},
-            details=f"Payment of R{amount:.2f} via {payment_method}",
-        )
+            # Audit
+            self._create_audit(
+                layby_id=layby.id,
+                action="payment",
+                performed_by=processed_by,
+                old_value={"balance_due": str(old_balance), "status": old_status},
+                new_value={"balance_due": str(layby.balance_due), "status": layby.status.value},
+                details=f"Payment of R{amount:.2f} via {payment_method}",
+            )
 
-        self.db.commit()
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            # Mark payment record as failed so no stale COMPLETED record exists
+            payment.status = PaymentStatus.FAILED
+            # Restore in-memory layby state
+            layby.amount_paid = orig_amount_paid
+            layby.balance_due = orig_balance_due
+            layby.status = orig_status
+            # Restore in-memory schedule states
+            for state in orig_schedule_states:
+                state["obj"].amount_paid = state["amount_paid"]
+                state["obj"].status = state["status"]
+                state["obj"].paid_at = state["paid_at"]
+            raise
+
         self.db.refresh(payment)
         return payment
 

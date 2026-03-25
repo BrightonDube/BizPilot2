@@ -150,11 +150,13 @@ async def test_deliver_webhook_retries_on_failure_with_exponential_backoff(mock_
     delivery.attempt_count = 1
     delivery.status = "pending"
     
-    mock_db.execute.return_value.first.return_value = (delivery, sub)
-    
+    result_mock = MagicMock()
+    result_mock.first.return_value = (delivery, sub)
+    mock_db.execute = AsyncMock(return_value=result_mock)
+
     with patch("httpx.AsyncClient.post", side_effect=Exception("Connection error")):
         await deliver_webhook(delivery_id, mock_db)
-        
+
         assert delivery.status == "pending" # remains pending for retry
         assert delivery.next_retry_at is not None
         assert delivery.attempt_count == 2
@@ -173,10 +175,12 @@ async def test_deliver_webhook_marks_failed_after_max_attempts(mock_db):
     delivery.attempt_count = 6 # Max is 5 in our implementation
     delivery.status = "pending"
     
-    mock_db.execute.return_value.first.return_value = (delivery, sub)
-    
+    result_mock = MagicMock()
+    result_mock.first.return_value = (delivery, sub)
+    mock_db.execute = AsyncMock(return_value=result_mock)
+
     with patch("httpx.AsyncClient.post", side_effect=Exception("Connection error")):
         await deliver_webhook(delivery_id, mock_db)
-        
+
         assert delivery.status == "failed"
         assert not sub.is_active # Deactivated after many failures

@@ -1,0 +1,1135 @@
+
+> mobile@1.0.0 typecheck
+> tsc --noEmit
+
+__tests__/bulkOperationsService.test.ts(43,9): error TS7022: 'op' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+__tests__/bulkOperationsService.test.ts(60,9): error TS7023: 'progressPercent' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+__tests__/bulkOperationsService.test.ts(64,9): error TS7023: 'isCancellable' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+__tests__/bulkOperationsService.test.ts(67,9): error TS7023: 'params' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+__tests__/bulkOperationsService.test.ts(74,9): error TS7023: 'errors' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+__tests__/bulkOperationsService.test.ts(159,17): error TS2339: Property 'write' does not exist on type 'Mock<unknown, any[], unknown>'.
+__tests__/bulkOperationsService.test.ts(160,17): error TS2339: Property 'get' does not exist on type 'Mock<unknown, any[], unknown>'.
+__tests__/bulkOperationsService.test.ts(171,17): error TS2339: Property 'write' does not exist on type 'Mock<unknown, any[], unknown>'.
+__tests__/changeTracker.test.ts(112,10): error TS2352: Conversion of type 'Model' to type 'ModelStub' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'isDirty' is missing in type 'Model' but required in type 'ModelStub'.
+__tests__/customerCrmPBT.test.ts(56,5): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+__tests__/customerService.test.ts(42,5): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+__tests__/emailReceiptService.test.ts(30,3): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+__tests__/featureGatePermissions.test.tsx(44,62): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+__tests__/featureGatePermissions.test.tsx(202,7): error TS2322: Type 'string' is not assignable to type 'null'.
+__tests__/inventoryConsistencyPBT.test.ts(99,9): error TS2345: Argument of type '{ productId: string | undefined; quantity: number; }[]' is not assignable to parameter of type '{ productId: string; quantity: number; }[]'.
+  Type '{ productId: string | undefined; quantity: number; }' is not assignable to type '{ productId: string; quantity: number; }'.
+    Types of property 'productId' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+__tests__/loyaltyOrderIntegrationPBT.test.ts(43,3): error TS2322: Type '{ type: "expired" | "earned" | "redeemed" | "adjusted"; points: number; }[]' is not assignable to type 'LoyaltyTransaction[]'.
+  Property 'createdAt' is missing in type '{ type: "expired" | "earned" | "redeemed" | "adjusted"; points: number; }' but required in type 'LoyaltyTransaction'.
+__tests__/loyaltyOrderIntegrationPBT.test.ts(159,13): error TS2322: Type '{ type: "earned"; points: number; }[]' is not assignable to type 'LoyaltyTransaction[]'.
+  Property 'createdAt' is missing in type '{ type: "earned"; points: number; }' but required in type 'LoyaltyTransaction'.
+__tests__/nutritionalInfoService.test.ts(245,44): error TS2345: Argument of type '({ recipeId: string; recipeName: string; allergens: ("gluten" | "milk")[]; allergenSources: never[]; } | { recipeId: string; recipeName: string; allergens: readonly []; allergenSources: never[]; } | { recipeId: string; recipeName: string; allergens: "peanuts"[]; allergenSources: never[]; })[]' is not assignable to parameter of type 'RecipeAllergenSummary[]'.
+  Type '{ recipeId: string; recipeName: string; allergens: ("gluten" | "milk")[]; allergenSources: never[]; } | { recipeId: string; recipeName: string; allergens: readonly []; allergenSources: never[]; } | { recipeId: string; recipeName: string; allergens: "peanuts"[]; allergenSources: never[]; }' is not assignable to type 'RecipeAllergenSummary'.
+    Type '{ recipeId: string; recipeName: string; allergens: readonly []; allergenSources: never[]; }' is not assignable to type 'RecipeAllergenSummary'.
+      Types of property 'allergens' are incompatible.
+        The type 'readonly []' is 'readonly' and cannot be assigned to the mutable type 'Allergen[]'.
+__tests__/nutritionalInfoService.test.ts(263,36): error TS2345: Argument of type '{ recipeId: string; recipeName: string; allergens: readonly []; allergenSources: never[]; }' is not assignable to parameter of type 'RecipeAllergenSummary'.
+  Types of property 'allergens' are incompatible.
+    The type 'readonly []' is 'readonly' and cannot be assigned to the mutable type 'Allergen[]'.
+__tests__/nutritionalInfoService.test.ts(274,36): error TS2345: Argument of type '{ recipeId: string; recipeName: string; allergens: readonly []; allergenSources: never[]; }' is not assignable to parameter of type 'RecipeAllergenSummary'.
+  Types of property 'allergens' are incompatible.
+    The type 'readonly []' is 'readonly' and cannot be assigned to the mutable type 'Allergen[]'.
+__tests__/nutritionalInfoService.test.ts(307,36): error TS2345: Argument of type '{ recipeId: string; recipeName: string; allergens: readonly []; allergenSources: never[]; }' is not assignable to parameter of type 'RecipeAllergenSummary'.
+  Types of property 'allergens' are incompatible.
+    The type 'readonly []' is 'readonly' and cannot be assigned to the mutable type 'Allergen[]'.
+__tests__/nutritionalInfoService.test.ts(401,58): error TS2345: Argument of type '{ recipeId: string; recipeName: string; allergens: readonly []; allergenSources: never[]; }' is not assignable to parameter of type 'RecipeAllergenSummary'.
+  Types of property 'allergens' are incompatible.
+    The type 'readonly []' is 'readonly' and cannot be assigned to the mutable type 'Allergen[]'.
+__tests__/offlineCustomerSearch.test.ts(150,33): error TS18048: 'c.visitCount' is possibly 'undefined'.
+__tests__/offlinePersistencePBT.test.ts(149,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Customer'.
+__tests__/offlinePersistencePBT.test.ts(156,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Customer'.
+__tests__/offlinePersistencePBT.test.ts(180,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Customer'.
+__tests__/orderManagementUI.test.tsx(152,7): error TS2739: Type '{ name: string; quantity: number; unitPrice: number; }' is missing the following properties from type 'OrderItem': id, productId
+__tests__/orderManagementUI.test.tsx(153,7): error TS2739: Type '{ name: string; quantity: number; unitPrice: number; }' is missing the following properties from type 'OrderItem': id, productId
+__tests__/orderManagementUI.test.tsx(213,7): error TS2353: Object literal may only specify known properties, and 'statusHistory' does not exist in type 'Partial<ManagedOrder>'.
+__tests__/orderManagementUI.test.tsx(218,7): error TS2353: Object literal may only specify known properties, and 'statusHistory' does not exist in type 'Partial<ManagedOrder>'.
+__tests__/orderService.test.ts(55,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+  Types of property 'notes' are incompatible.
+    Type 'null' is not assignable to type 'string'.
+__tests__/orderService.test.ts(63,28): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(64,28): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(69,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(77,32): error TS2345: Argument of type '{ cartDiscount: number; items: CartItem[]; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+  Types of property 'notes' are incompatible.
+    Type 'null' is not assignable to type 'string'.
+__tests__/orderService.test.ts(84,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(89,32): error TS2345: Argument of type '{ customerId: string; items: CartItem[]; cartDiscount: number; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+  Types of property 'notes' are incompatible.
+    Type 'null' is not assignable to type 'string'.
+__tests__/orderService.test.ts(94,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(99,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(100,25): error TS2339: Property 'createdBy' does not exist on type 'MobileOrder'.
+__tests__/orderService.test.ts(104,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(112,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(120,32): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(131,34): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(137,34): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(144,34): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/orderService.test.ts(150,34): error TS2345: Argument of type '{ items: CartItem[]; cartDiscount: number; customerId: null; paymentMethod: "cash"; amountTendered: number; change: number; notes: null; createdBy: string; }' is not assignable to parameter of type 'CreateOrderInput'.
+__tests__/pmsQueuePBT.test.ts(77,5): error TS2322: Type 'null' is not assignable to type 'string'.
+__tests__/priceCalculator.test.ts(57,38): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(61,36): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(65,35): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(69,34): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(73,43): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(81,38): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(100,44): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(104,19): error TS2339: Property 'itemCount' does not exist on type 'CartTotals'.
+__tests__/priceCalculator.test.ts(108,52): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(115,19): error TS2339: Property 'itemCount' does not exist on type 'CartTotals'.
+__tests__/priceCalculator.test.ts(119,55): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(128,19): error TS2339: Property 'itemCount' does not exist on type 'CartTotals'.
+__tests__/priceCalculator.test.ts(132,52): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(144,59): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(241,49): error TS2554: Expected 1 arguments, but got 3.
+__tests__/priceCalculator.test.ts(259,49): error TS2554: Expected 1 arguments, but got 3.
+__tests__/receiptService.test.ts(45,5): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+__tests__/shiftService.test.ts(208,7): error TS2322: Type 'PinAttemptState' is not assignable to type '{ attempts: number; lockedAt: null; }'.
+  Types of property 'lockedAt' are incompatible.
+    Type 'string | null' is not assignable to type 'null'.
+      Type 'string' is not assignable to type 'null'.
+__tests__/signageExtended.test.tsx(34,22): error TS2322: Type '({ id: string; name: string; type: "image"; url: string; status: "ready"; size: number; uploadedAt: string; } | { id: string; name: string; type: "video"; url: string; status: "ready"; size: number; uploadedAt: string; })[]' is not assignable to type 'MediaItem[]'.
+  Type '{ id: string; name: string; type: "image"; url: string; status: "ready"; size: number; uploadedAt: string; } | { id: string; name: string; type: "video"; url: string; status: "ready"; size: number; uploadedAt: string; }' is not assignable to type 'MediaItem'.
+    Type '{ id: string; name: string; type: "image"; url: string; status: "ready"; size: number; uploadedAt: string; }' is missing the following properties from type 'MediaItem': fileSize, resolution, thumbnailUrl
+__tests__/signageExtended.test.tsx(44,22): error TS2322: Type '({ id: string; name: string; type: "image"; url: string; status: "ready"; size: number; uploadedAt: string; } | { id: string; name: string; type: "video"; url: string; status: "ready"; size: number; uploadedAt: string; })[]' is not assignable to type 'MediaItem[]'.
+__tests__/signageExtended.test.tsx(80,37): error TS2322: Type '{ sections: { id: string; name: string; items: { name: string; price: number; description: string; isHighlighted: boolean; }[]; }[]; boardName: string; onUpdateBoardName: Mock<any, any, any>; onAddSection: Mock<...>; ... 6 more ...; onPreview: Mock<...>; }' is not assignable to type 'MenuBoardEditorProps'.
+  Types of property 'sections' are incompatible.
+    Type '{ id: string; name: string; items: { name: string; price: number; description: string; isHighlighted: boolean; }[]; }[]' is not assignable to type 'MenuBoardSection[]'.
+      Property 'title' is missing in type '{ id: string; name: string; items: { name: string; price: number; description: string; isHighlighted: boolean; }[]; }' but required in type 'MenuBoardSection'.
+__tests__/signageExtended.test.tsx(90,8): error TS2322: Type '{ onAddSection: Mock<any, any, any>; sections: { id: string; name: string; items: { name: string; price: number; description: string; isHighlighted: boolean; }[]; }[]; boardName: string; onUpdateBoardName: Mock<...>; ... 6 more ...; onPreview: Mock<...>; }' is not assignable to type 'MenuBoardEditorProps'.
+  Types of property 'sections' are incompatible.
+    Type '{ id: string; name: string; items: { name: string; price: number; description: string; isHighlighted: boolean; }[]; }[]' is not assignable to type 'MenuBoardSection[]'.
+__tests__/signageExtended.test.tsx(99,8): error TS2322: Type '{ onSave: Mock<any, any, any>; sections: { id: string; name: string; items: { name: string; price: number; description: string; isHighlighted: boolean; }[]; }[]; boardName: string; onUpdateBoardName: Mock<...>; ... 6 more ...; onPreview: Mock<...>; }' is not assignable to type 'MenuBoardEditorProps'.
+  Types of property 'sections' are incompatible.
+    Type '{ id: string; name: string; items: { name: string; price: number; description: string; isHighlighted: boolean; }[]; }[]' is not assignable to type 'MenuBoardSection[]'.
+__tests__/signageExtended.test.tsx(183,37): error TS2322: Type '{ campaigns: ({ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; } | { id: string; name: string; status: "draft"; ... 4 more ...; impressions: number; })[]; onCampaignPress: Mock<...>; onCreateCampaign: Mock<...>; onBack:...' is not assignable to type 'CampaignTimelineProps'.
+  Types of property 'campaigns' are incompatible.
+    Type '({ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; } | { id: string; name: string; status: "draft"; ... 4 more ...; impressions: number; })[]' is not assignable to type 'Campaign[]'.
+      Type '{ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; } | { id: string; name: string; status: "draft"; ... 4 more ...; impressions: number; }' is not assignable to type 'Campaign'.
+        Property 'displaysCount' is missing in type '{ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; }' but required in type 'Campaign'.
+__tests__/signageExtended.test.tsx(191,8): error TS2322: Type '{ isLoading: true; campaigns: ({ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; } | { id: string; name: string; ... 5 more ...; impressions: number; })[]; onCampaignPress: Mock<...>; onCreateCampaign: Mock<...>; onBack:...' is not assignable to type 'CampaignTimelineProps'.
+  Types of property 'campaigns' are incompatible.
+    Type '({ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; } | { id: string; name: string; status: "draft"; ... 4 more ...; impressions: number; })[]' is not assignable to type 'Campaign[]'.
+__tests__/signageExtended.test.tsx(199,8): error TS2322: Type '{ onCampaignPress: Mock<any, any, any>; campaigns: ({ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; } | { ...; })[]; onCreateCampaign: Mock<...>; onBack: Mock<...>; }' is not assignable to type 'CampaignTimelineProps'.
+  Types of property 'campaigns' are incompatible.
+    Type '({ id: string; name: string; status: "active"; startDate: string; endDate: string; displayCount: number; contentCount: number; impressions: number; } | { id: string; name: string; status: "draft"; ... 4 more ...; impressions: number; })[]' is not assignable to type 'Campaign[]'.
+__tests__/signageExtended.test.tsx(225,37): error TS2322: Type '{ displayMetrics: { displayId: string; displayName: string; impressions: number; uptimePercentage: number; avgViewDuration: number; }[]; dailyMetrics: { date: string; impressions: number; }[]; totalImpressions: number; averageUptime: number; activeDisplaysCount: number; period: string; onPeriodChange: Mock<...>; }' is not assignable to type 'AnalyticsChartsProps'.
+  Types of property 'dailyMetrics' are incompatible.
+    Type '{ date: string; impressions: number; }[]' is not assignable to type 'DailyMetric[]'.
+      Property 'uniqueViewers' is missing in type '{ date: string; impressions: number; }' but required in type 'DailyMetric'.
+__tests__/signageExtended.test.tsx(234,8): error TS2322: Type '{ onPeriodChange: Mock<any, any, any>; displayMetrics: { displayId: string; displayName: string; impressions: number; uptimePercentage: number; avgViewDuration: number; }[]; dailyMetrics: { ...; }[]; totalImpressions: number; averageUptime: number; activeDisplaysCount: number; period: string; }' is not assignable to type 'AnalyticsChartsProps'.
+  Types of property 'dailyMetrics' are incompatible.
+    Type '{ date: string; impressions: number; }[]' is not assignable to type 'DailyMetric[]'.
+__tests__/signageExtended.test.tsx(242,8): error TS2322: Type '{ isLoading: true; displayMetrics: { displayId: string; displayName: string; impressions: number; uptimePercentage: number; avgViewDuration: number; }[]; dailyMetrics: { date: string; impressions: number; }[]; ... 4 more ...; onPeriodChange: Mock<...>; }' is not assignable to type 'AnalyticsChartsProps'.
+  Types of property 'dailyMetrics' are incompatible.
+    Type '{ date: string; impressions: number; }[]' is not assignable to type 'DailyMetric[]'.
+__tests__/smartCartAssistant.test.ts(27,5): error TS2353: Object literal may only specify known properties, and 'sku' does not exist in type 'Product'.
+__tests__/smartCartAssistant.test.ts(52,46): error TS2353: Object literal may only specify known properties, and 'isActive' does not exist in type 'Partial<Product>'.
+__tests__/smartCartAssistant.test.ts(53,40): error TS2353: Object literal may only specify known properties, and 'stockQuantity' does not exist in type 'Partial<Product>'.
+__tests__/splitPaymentPBT.test.ts(32,8): error TS2305: Module '"@/services/PaymentService"' has no exported member 'SplitPaymentLine'.
+__tests__/staffReportsIntegration.test.ts(148,69): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/staffReportsIntegration.test.ts(149,69): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/staffReportsIntegration.test.ts(150,69): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/staffReportsIntegration.test.ts(152,65): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/staffReportsIntegration.test.ts(153,65): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/staffReportsIntegration.test.ts(154,65): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/staffReportsIntegration.test.ts(157,71): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/staffReportsIntegration.test.ts(158,71): error TS2353: Object literal may only specify known properties, and 'action' does not exist in type 'ActivityEntry'.
+__tests__/suggestionLatencyPBT.test.ts(73,7): error TS2353: Object literal may only specify known properties, and 'isActive' does not exist in type 'Partial<Product>'.
+__tests__/syncIdempotencyPBT.test.ts(59,51): error TS2554: Expected 1 arguments, but got 2.
+__tests__/syncIdempotencyPBT.test.ts(60,51): error TS2554: Expected 1 arguments, but got 2.
+__tests__/syncIdempotencyPBT.test.ts(94,49): error TS2554: Expected 1 arguments, but got 2.
+__tests__/syncIdempotencyPBT.test.ts(95,49): error TS2554: Expected 1 arguments, but got 2.
+__tests__/syncIdempotencyPBT.test.ts(109,49): error TS2554: Expected 1 arguments, but got 2.
+__tests__/syncIdempotencyPBT.test.ts(110,49): error TS2554: Expected 1 arguments, but got 2.
+__tests__/syncIdempotencyPBT.test.ts(150,35): error TS2554: Expected 1 arguments, but got 2.
+__tests__/syncIntegration.test.ts(123,23): error TS2305: Module '"@/services/sync/SyncService"' has no exported member 'isSyncing'.
+__tests__/syncIntegration.test.ts(124,15): error TS2305: Module '"@/services/sync/SyncService"' has no exported member 'SyncProgressCallback'.
+__tests__/syncIntegration.test.ts(387,49): error TS7031: Binding element 'phase' implicitly has an 'any' type.
+__tests__/syncIntegration.test.ts(391,23): error TS2554: Expected 0 arguments, but got 1.
+__tests__/syncQueue.test.ts(41,13): error TS7022: 'entry' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+__tests__/syncQueue.test.ts(94,9): error TS7022: 'entry' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+__tests__/syncRules.test.ts(97,27): error TS2345: Argument of type '{ productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; }[]' is not assignable to parameter of type 'CartItem[]'.
+  Property 'discount' is missing in type '{ productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; }' but required in type 'CartItem'.
+__tests__/syncRules.test.ts(119,40): error TS2345: Argument of type '{ productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; }[]' is not assignable to parameter of type 'CartItem[]'.
+  Property 'discount' is missing in type '{ productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; }' but required in type 'CartItem'.
+__tests__/syncRules.test.ts(144,40): error TS2345: Argument of type '{ productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; }[]' is not assignable to parameter of type 'CartItem[]'.
+  Property 'discount' is missing in type '{ productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; }' but required in type 'CartItem'.
+__tests__/syncService.test.ts(61,51): error TS2322: Type 'string | null' is not assignable to type 'null'.
+  Type 'string' is not assignable to type 'null'.
+__tests__/syncService.test.ts(75,3): error TS2305: Module '"@/services/sync/SyncService"' has no exported member 'forceFullSync'.
+__tests__/syncService.test.ts(76,3): error TS2305: Module '"@/services/sync/SyncService"' has no exported member 'isSyncing'.
+__tests__/tagComponents.test.tsx(199,9): error TS2322: Type 'Tag[]' is not assignable to type 'import("/mnt/d/Downloads/Personal_Projects/BizPilot2/mobile/components/tags/TagManager").Tag[]'.
+  Type 'Tag' is not assignable to type 'import("/mnt/d/Downloads/Personal_Projects/BizPilot2/mobile/components/tags/TagManager").Tag'.
+    Types of property 'createdAt' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+__tests__/testUtils.ts(23,3): error TS2305: Module '"@/types"' has no exported member 'MobileCategory'.
+__tests__/testUtils.ts(62,5): error TS2353: Object literal may only specify known properties, and 'sku' does not exist in type 'Product'.
+__tests__/testUtils.ts(162,5): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+app/(auth)/login.tsx(60,11): error TS2353: Object literal may only specify known properties, and 'remoteId' does not exist in type 'MobileUser'.
+app/(tabs)/bulk-operations.tsx(261,11): error TS2339: Property 'currentUser' does not exist on type 'AuthState'.
+app/(tabs)/bulk-operations.tsx(443,11): error TS2339: Property 'currentUser' does not exist on type 'AuthState'.
+app/(tabs)/customers.tsx(150,31): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/customers.tsx(174,21): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 5, '(vd: VarDate): Date', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'VarDate'.
+      Type 'undefined' is not assignable to type 'VarDate'.
+  Overload 3 of 5, '(value: string | number): Date', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'string | number'.
+app/(tabs)/dashboard.tsx(215,11): error TS2339: Property 'currentUser' does not exist on type 'AuthState'.
+app/(tabs)/index.tsx(52,17): error TS2345: Argument of type '"/(tabs)/payment"' is not assignable to parameter of type 'RelativePathString | ExternalPathString | "/" | `/?${string}` | `/#${string}` | "/_sitemap" | `/_sitemap?${string}` | `/_sitemap#${string}` | "/(auth)/login" | `/(auth)/login?${string}` | ... 63 more ... | { ...; }'.
+app/(tabs)/orders.tsx(96,31): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/orders.tsx(140,29): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/orders.tsx(156,29): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/orders.tsx(163,29): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/orders.tsx(167,10): error TS18048: 'order.discountAmount' is possibly 'undefined'.
+app/(tabs)/orders.tsx(171,32): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/orders.tsx(187,16): error TS2339: Property 'notes' does not exist on type 'MobileOrder'.
+app/(tabs)/orders.tsx(190,52): error TS2339: Property 'notes' does not exist on type 'MobileOrder'.
+app/(tabs)/orders.tsx(227,33): error TS18048: 'o.orderNumber' is possibly 'undefined'.
+app/(tabs)/products.tsx(52,13): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+app/(tabs)/products.tsx(54,17): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+app/(tabs)/products.tsx(70,25): error TS2339: Property 'isActive' does not exist on type 'Product'.
+app/(tabs)/products.tsx(73,24): error TS2339: Property 'sku' does not exist on type 'Product'.
+app/(tabs)/products.tsx(73,46): error TS2339: Property 'sku' does not exist on type 'Product'.
+app/(tabs)/products.tsx(74,24): error TS2339: Property 'barcode' does not exist on type 'Product'.
+app/(tabs)/products.tsx(74,49): error TS2339: Property 'barcode' does not exist on type 'Product'.
+app/(tabs)/products.tsx(81,24): error TS2339: Property 'trackInventory' does not exist on type 'Product'.
+app/(tabs)/products.tsx(82,27): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+app/(tabs)/products.tsx(83,32): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+app/(tabs)/products.tsx(91,29): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/products.tsx(110,15): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+app/(tabs)/products.tsx(112,19): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+app/(tabs)/products.tsx(120,18): error TS2339: Property 'description' does not exist on type 'Product'.
+app/(tabs)/products.tsx(121,59): error TS2339: Property 'description' does not exist on type 'Product'.
+app/(tabs)/products.tsx(128,60): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/(tabs)/products.tsx(131,18): error TS2339: Property 'costPrice' does not exist on type 'Product'.
+app/(tabs)/products.tsx(135,39): error TS2339: Property 'costPrice' does not exist on type 'Product'.
+app/(tabs)/products.tsx(140,18): error TS2339: Property 'costPrice' does not exist on type 'Product'.
+app/(tabs)/products.tsx(145,19): error TS18048: 'product.price' is possibly 'undefined'.
+app/(tabs)/products.tsx(145,43): error TS2339: Property 'costPrice' does not exist on type 'Product'.
+app/(tabs)/products.tsx(145,56): error TS18048: 'product.price' is possibly 'undefined'.
+app/(tabs)/products.tsx(157,53): error TS2339: Property 'sku' does not exist on type 'Product'.
+app/(tabs)/products.tsx(162,53): error TS2339: Property 'barcode' does not exist on type 'Product'.
+app/(tabs)/products.tsx(168,28): error TS2339: Property 'isActive' does not exist on type 'Product'.
+app/(tabs)/products.tsx(169,30): error TS2339: Property 'isActive' does not exist on type 'Product'.
+app/(tabs)/products.tsx(178,22): error TS2339: Property 'trackInventory' does not exist on type 'Product'.
+app/(tabs)/products.tsx(179,28): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+app/(tabs)/products.tsx(187,31): error TS2339: Property 'updatedAt' does not exist on type 'Product'.
+app/(tabs)/products.tsx(209,21): error TS2339: Property 'loading' does not exist on type 'UseProductsResult'.
+app/(tabs)/products.tsx(209,56): error TS2345: Argument of type '{ categoryId: string | undefined; searchQuery: string; }' is not assignable to parameter of type 'string'.
+app/(tabs)/products.tsx(297,9): error TS2769: No overload matches this call.
+  Overload 2 of 2, '(props: FlatListProps<Product>, context: any): FlatList<Product>', gave the following error.
+    Type 'POSProduct[]' is not assignable to type 'ArrayLike<Product>'.
+  Overload 2 of 2, '(props: FlatListProps<Product>, context: any): FlatList<Product>', gave the following error.
+    Type '(item: MobileProduct) => string | undefined' is not assignable to type '(item: Product, index: number) => string'.
+app/(tabs)/settings.tsx(194,34): error TS2339: Property 'status' does not exist on type 'SyncState'.
+app/(tabs)/settings.tsx(196,29): error TS2339: Property 'status' does not exist on type 'SyncState'.
+app/(tabs)/settings.tsx(198,33): error TS2339: Property 'status' does not exist on type 'SyncState'.
+components/accounts/AccountDetailScreen.tsx(121,44): error TS2345: Argument of type 'Date' is not assignable to parameter of type 'string'.
+components/accounts/CollectionsQueueView.tsx(120,3): error TS2820: Type '"handshake-outline"' is not assignable to type '"warning" | "push" | "map" | "filter" | "at" | "create" | "barcode" | "cash" | "options" | "link" | "unlink" | "document" | "text" | "body" | "settings" | "key" | "cart" | "sync" | ... 1319 more ... | "woman-sharp"'. Did you mean '"bandage-outline"'?
+components/accounts/CollectionsQueueView.tsx(419,25): error TS2820: Type '"handshake-outline"' is not assignable to type '"warning" | "push" | "map" | "filter" | "at" | "create" | "barcode" | "cash" | "options" | "link" | "unlink" | "document" | "text" | "body" | "settings" | "key" | "cart" | "sync" | ... 1320 more ... | undefined'. Did you mean '"bandage-outline"'?
+components/common/ManualSyncButton.tsx(38,42): error TS2339: Property 'status' does not exist on type 'SyncState'.
+components/common/SyncErrorAlert.tsx(36,42): error TS2339: Property 'status' does not exist on type 'SyncState'.
+components/common/SyncStatus.tsx(21,40): error TS2339: Property 'status' does not exist on type 'SyncState'.
+components/integrations/AccountMappingView.tsx(133,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(148,15): error TS2322: Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/AccountMappingView.tsx(149,15): error TS2322: Type 'false | ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/AccountMappingView.tsx(152,13): error TS2769: No overload matches this call.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'false | ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/AccountMappingView.tsx(189,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(191,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(192,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(193,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(196,25): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/AccountMappingView.tsx(197,27): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/AccountMappingView.tsx(202,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(206,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(215,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(218,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(221,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(226,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(236,9): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(251,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/AccountMappingView.tsx(305,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(311,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(318,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(320,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(330,13): error TS2322: Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+components/integrations/AccountMappingView.tsx(335,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(336,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(337,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(342,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(346,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(361,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(370,13): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(376,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/AccountMappingView.tsx(394,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: FlatListProps<AccountMapping>): FlatList<AccountMapping>', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: FlatListProps<AccountMapping>, context: any): FlatList<AccountMapping>', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(399,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(412,13): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/AccountMappingView.tsx(424,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SageConnectionPanel.tsx(111,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+      Type 'TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+        Type 'TextStyle' is not assignable to type 'ViewStyle'.
+          Types of property 'cursor' are incompatible.
+            Type 'string | undefined' is not assignable to type 'CursorValue | undefined'.
+              Type 'string' is not assignable to type 'CursorValue | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(112,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SageConnectionPanel.tsx(113,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type 'ViewStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+        Type 'ViewStyle' is not assignable to type 'TextStyle'.
+          Types of property 'userSelect' are incompatible.
+            Type 'string | undefined' is not assignable to type '"text" | "all" | "auto" | "none" | "contain" | undefined'.
+              Type 'string' is not assignable to type '"text" | "all" | "auto" | "none" | "contain" | undefined'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SageConnectionPanel.tsx(132,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+        Type 'TextStyle' is not assignable to type 'ViewStyle'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SageConnectionPanel.tsx(135,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SageConnectionPanel.tsx(136,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+      Type 'ViewStyle' is not assignable to type 'StyleProp<TextStyle>'.
+        Type 'ViewStyle' is not assignable to type 'TextStyle'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SageConnectionPanel.tsx(170,7): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+      Type '(ViewStyle | TextStyle)[]' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>'.
+        The types returned by 'pop()' are incompatible between these types.
+          Type 'ViewStyle | TextStyle | undefined' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+            Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SageConnectionPanel.tsx(176,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SageConnectionPanel.tsx(215,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(217,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(218,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(220,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SageConnectionPanel.tsx(227,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(233,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SageConnectionPanel.tsx(238,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(244,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SageConnectionPanel.tsx(249,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ActivityIndicatorProps): ActivityIndicator', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ActivityIndicatorProps, context: any): ActivityIndicator', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(256,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(268,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(274,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SageConnectionPanel.tsx(279,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SageConnectionPanel.tsx(281,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(159,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(174,15): error TS2322: Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SyncLogViewer.tsx(175,15): error TS2322: Type 'false | ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SyncLogViewer.tsx(178,13): error TS2769: No overload matches this call.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'false | ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SyncLogViewer.tsx(219,7): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (false | ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (false | ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(false | ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+      Type '(false | ViewStyle | TextStyle)[]' is not assignable to type 'RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>>'.
+        The types returned by 'pop()' are incompatible between these types.
+          Type 'false | ViewStyle | TextStyle | undefined' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+            Type 'TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SyncLogViewer.tsx(225,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(226,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(230,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SyncLogViewer.tsx(234,25): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/SyncLogViewer.tsx(239,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(249,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(250,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(254,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(255,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(261,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(267,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(308,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(314,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(322,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(324,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(339,13): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(344,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(354,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(356,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(366,13): error TS2322: Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type 'TextStyle' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+    Type 'TextStyle' is not assignable to type 'ViewStyle'.
+components/integrations/SyncLogViewer.tsx(370,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/SyncLogViewer.tsx(371,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/SyncLogViewer.tsx(397,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: FlatListProps<SyncLogEntry>): FlatList<SyncLogEntry>', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: FlatListProps<SyncLogEntry>, context: any): FlatList<SyncLogEntry>', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(117,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(118,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/WooCommercePanel.tsx(119,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/WooCommercePanel.tsx(139,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(141,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/WooCommercePanel.tsx(142,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/WooCommercePanel.tsx(174,7): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(180,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/WooCommercePanel.tsx(214,7): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(220,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/WooCommercePanel.tsx(261,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(263,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(264,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(266,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/WooCommercePanel.tsx(273,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(279,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/WooCommercePanel.tsx(286,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(292,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/WooCommercePanel.tsx(297,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ActivityIndicatorProps): ActivityIndicator', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ActivityIndicatorProps, context: any): ActivityIndicator', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(304,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(332,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/WooCommercePanel.tsx(333,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(361,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(367,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/WooCommercePanel.tsx(372,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/WooCommercePanel.tsx(374,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(113,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(114,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/XeroConnectionPanel.tsx(115,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/XeroConnectionPanel.tsx(134,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/XeroConnectionPanel.tsx(137,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/XeroConnectionPanel.tsx(138,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/XeroConnectionPanel.tsx(172,7): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(178,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/integrations/XeroConnectionPanel.tsx(217,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(219,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(220,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(222,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/XeroConnectionPanel.tsx(229,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(235,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/XeroConnectionPanel.tsx(240,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(246,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/XeroConnectionPanel.tsx(251,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ActivityIndicatorProps): ActivityIndicator', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ActivityIndicatorProps, context: any): ActivityIndicator', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(258,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(284,13): error TS2322: Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle> | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>)'.
+  Type '({ pressed }: PressableStateCallbackType) => (ViewStyle | TextStyle)[]' is not assignable to type '(state: PressableStateCallbackType) => StyleProp<ViewStyle>'.
+    Type '(ViewStyle | TextStyle)[]' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(290,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/XeroConnectionPanel.tsx(301,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(307,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextProps): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+  Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/integrations/XeroConnectionPanel.tsx(312,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/integrations/XeroConnectionPanel.tsx(314,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type 'ViewStyle | TextStyle' is not assignable to type 'StyleProp<ViewStyle>'.
+components/laybys/LaybyReports.tsx(268,23): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '{ width: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Types of property 'width' are incompatible.
+        Type 'string' is not assignable to type 'DimensionValue | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '{ width: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Types of property 'width' are incompatible.
+        Type 'string' is not assignable to type 'DimensionValue | undefined'.
+components/laybys/LaybyReports.tsx(280,23): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '{ width: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Types of property 'width' are incompatible.
+        Type 'string' is not assignable to type 'DimensionValue | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '{ width: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Types of property 'width' are incompatible.
+        Type 'string' is not assignable to type 'DimensionValue | undefined'.
+components/laybys/LaybyReports.tsx(292,23): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '{ width: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Types of property 'width' are incompatible.
+        Type 'string' is not assignable to type 'DimensionValue | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '{ width: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Types of property 'width' are incompatible.
+        Type 'string' is not assignable to type 'DimensionValue | undefined'.
+components/loyalty/LoyaltyCardModal.tsx(324,64): error TS2322: Type '{ children: (false | Element | null)[]; visible: boolean; onClose: () => void; title: string; size: string; }' is not assignable to type 'IntrinsicAttributes & ModalProps'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & ModalProps'.
+components/loyalty/RewardsCatalogModal.tsx(295,9): error TS2322: Type '{ children: Element[]; visible: boolean; onClose: () => void; title: string; size: string; }' is not assignable to type 'IntrinsicAttributes & ModalProps'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & ModalProps'.
+components/orders/OrderStatusTracker.tsx(113,49): error TS2339: Property 'orderType' does not exist on type 'ManagedOrder'.
+components/orders/OrderStatusTracker.tsx(168,24): error TS2339: Property 'statusHistory' does not exist on type 'ManagedOrder'.
+components/orders/OrderStatusTracker.tsx(169,24): error TS2339: Property 'statusHistory' does not exist on type 'ManagedOrder'.
+components/orders/OrderStatusTracker.tsx(176,36): error TS2339: Property 'statusHistory' does not exist on type 'ManagedOrder'.
+components/orders/OrderStatusTracker.tsx(189,16): error TS2339: Property 'statusHistory' does not exist on type 'ManagedOrder'.
+components/pos/CartItem.tsx(64,17): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItem.tsx(69,17): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItem.tsx(74,14): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItem.tsx(79,19): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItem.tsx(84,22): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItemRow.tsx(24,18): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItemRow.tsx(26,22): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItemRow.tsx(31,20): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItemRow.tsx(44,41): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartItemRow.tsx(45,29): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/CartPanel.tsx(67,11): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/CustomerSelector.tsx(94,29): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/FavoriteProducts.tsx(71,18): error TS2339: Property 'isActive' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(72,17): error TS2339: Property 'trackInventory' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(73,19): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(87,54): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/FavoriteProducts.tsx(88,16): error TS2339: Property 'trackInventory' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(88,42): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(112,59): error TS2339: Property 'isActive' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(117,21): error TS2339: Property 'trackInventory' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(117,47): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+components/pos/FavoriteProducts.tsx(155,52): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/Receipt.tsx(82,31): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/Receipt.tsx(117,35): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/Receipt.tsx(131,33): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/Receipt.tsx(135,14): error TS18048: 'order.discountAmount' is possibly 'undefined'.
+components/pos/Receipt.tsx(139,36): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/Receipt.tsx(147,33): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/RecentOrdersPanel.tsx(138,30): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/SearchResultsDropdown.tsx(79,13): error TS2339: Property 'trackInventory' does not exist on type 'Product'.
+components/pos/SearchResultsDropdown.tsx(79,39): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+components/pos/SearchResultsDropdown.tsx(94,20): error TS2339: Property 'sku' does not exist on type 'Product'.
+components/pos/SearchResultsDropdown.tsx(95,58): error TS2339: Property 'sku' does not exist on type 'Product'.
+components/pos/SearchResultsDropdown.tsx(97,20): error TS2339: Property 'barcode' does not exist on type 'Product'.
+components/pos/SearchResultsDropdown.tsx(99,24): error TS2339: Property 'barcode' does not exist on type 'Product'.
+components/pos/SearchResultsDropdown.tsx(106,27): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/SuggestionBanner.tsx(65,16): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/SuggestionBanner.tsx(70,17): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/SuggestionBanner.tsx(84,29): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/pos/SwipeableCartItem.tsx(50,30): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/pos/VoidOrderModal.tsx(173,25): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 5, '(vd: VarDate): Date', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'VarDate'.
+      Type 'undefined' is not assignable to type 'VarDate'.
+  Overload 3 of 5, '(value: string | number): Date', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+components/pos/index.ts(8,10): error TS2305: Module '"./ProductCard"' has no exported member 'default'.
+components/pos/index.ts(9,10): error TS2305: Module '"./ProductGrid"' has no exported member 'default'.
+components/pos/index.ts(10,10): error TS2305: Module '"./CategoryTabs"' has no exported member 'default'.
+components/pos/index.ts(14,10): error TS2305: Module '"./CartPanel"' has no exported member 'default'.
+components/pos/index.ts(30,15): error TS2724: '"./ProductCard"' has no exported member named 'ProductCardProps'. Did you mean 'ProductCard'?
+components/pos/index.ts(31,15): error TS2724: '"./ProductGrid"' has no exported member named 'ProductGridProps'. Did you mean 'ProductGrid'?
+components/pos/index.ts(32,15): error TS2724: '"./CategoryTabs"' has no exported member named 'CategoryTabsProps'. Did you mean 'CategoryTabs'?
+components/pos/index.ts(36,15): error TS2459: Module '"./CartPanel"' declares 'CartPanelProps' locally, but it is not exported.
+components/reports/DateRangePicker.tsx(220,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextInputProps): TextInput', gave the following error.
+    Type 'false | ViewStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+      Type 'ViewStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextInputProps, context: any): TextInput', gave the following error.
+    Type 'false | ViewStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/reports/DateRangePicker.tsx(235,15): error TS2322: Type 'ViewStyle' is not assignable to type 'StyleProp<TextStyle>'.
+components/reports/DateRangePicker.tsx(244,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextInputProps): TextInput', gave the following error.
+    Type 'false | ViewStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: TextInputProps, context: any): TextInput', gave the following error.
+    Type 'false | ViewStyle' is not assignable to type 'TextStyle | Falsy | RegisteredStyle<TextStyle> | RecursiveArray<TextStyle | Falsy | RegisteredStyle<TextStyle>> | readonly (TextStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+components/signage/MediaUploader.tsx(110,5): error TS2322: Type 'false | { borderColor: string; }' is not assignable to type 'ViewStyle'.
+  Type 'false' has no properties in common with type 'ViewStyle'.
+components/tables/TableOrderSummary.tsx(92,66): error TS2339: Property 'orderType' does not exist on type 'ManagedOrder'.
+components/tags/TagManager.tsx(188,22): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<"#3b82f6">'.
+components/tags/TagManager.tsx(364,22): error TS2339: Property 'product' does not exist on type '{ total: number; }'.
+components/tags/TagManager.tsx(370,22): error TS2339: Property 'customer' does not exist on type '{ total: number; }'.
+components/tags/TagManager.tsx(376,22): error TS2339: Property 'order' does not exist on type '{ total: number; }'.
+components/tags/TagManager.tsx(446,49): error TS2345: Argument of type '"#22c55e" | "#fbbf24" | "#ef4444" | "#3b82f6" | "#8b5cf6" | "#f97316" | "#14b8a6" | "#ec4899"' is not assignable to parameter of type 'SetStateAction<"#3b82f6">'.
+  Type '"#22c55e"' is not assignable to type 'SetStateAction<"#3b82f6">'.
+components/ui/CachedImage.tsx(125,9): error TS2322: Type '"memory-disk" | "memory" | "disk" | "no-cache"' is not assignable to type '"none" | "memory-disk" | "memory" | "disk" | null | undefined'.
+  Type '"no-cache"' is not assignable to type '"none" | "memory-disk" | "memory" | "disk" | null | undefined'.
+components/ui/Skeleton.tsx(88,9): error TS2322: Type '{ width: string | number; height: number; borderRadius: number; backgroundColor: string; }' is not assignable to type 'false | "" | ViewStyle | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | ... 11 more ... | undefined'.
+  Types of property 'width' are incompatible.
+    Type 'string | number' is not assignable to type 'DimensionValue | SharedValueDisableContravariance<number> | SharedValueDisableContravariance<AnimatedNode> | { ...; } | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | undefined'.
+      Type 'string' is not assignable to type 'DimensionValue | SharedValueDisableContravariance<number> | SharedValueDisableContravariance<AnimatedNode> | { ...; } | SharedValueDisableContravariance<...> | SharedValueDisableContravariance<...> | undefined'.
+hooks/useAuth.ts(45,11): error TS2353: Object literal may only specify known properties, and 'remoteId' does not exist in type 'MobileUser'.
+hooks/useAuth.ts(77,9): error TS2353: Object literal may only specify known properties, and 'remoteId' does not exist in type 'MobileUser'.
+hooks/useOfflineQueueProcessor.ts(217,50): error TS2345: Argument of type 'QueuedCharge' is not assignable to parameter of type 'PMSChargeQueueItem'.
+  Type 'QueuedCharge' is missing the following properties from type 'PMSChargeQueueItem': attempts, lastError
+hooks/useOrders.ts(20,200): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+hooks/useOrders.ts(21,196): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+hooks/useOrders.ts(22,199): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+hooks/useOrders.ts(23,199): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+hooks/useOrders.ts(24,203): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+hooks/useOrders.ts(75,27): error TS18048: 'b.createdAt' is possibly 'undefined'.
+hooks/useOrders.ts(75,41): error TS18048: 'a.createdAt' is possibly 'undefined'.
+hooks/useSync.ts(28,40): error TS2339: Property 'status' does not exist on type 'SyncState'.
+services/CustomerService.ts(126,18): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+services/CustomerService.ts(250,20): error TS18048: 'c.visitCount' is possibly 'undefined'.
+services/CustomerService.ts(251,21): error TS18048: 'b.updatedAt' is possibly 'undefined'.
+services/CustomerService.ts(251,35): error TS18048: 'a.updatedAt' is possibly 'undefined'.
+services/EmailReceiptService.ts(21,45): error TS2305: Module '"@/types"' has no exported member 'SyncQueueEntry'.
+services/EmailReceiptService.ts(21,61): error TS2305: Module '"@/types"' has no exported member 'SyncAction'.
+services/EmailReceiptService.ts(100,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/InventoryService.ts(24,40): error TS2305: Module '"@/types"' has no exported member 'SyncQueueEntry'.
+services/InventoryService.ts(24,56): error TS2305: Module '"@/types"' has no exported member 'SyncAction'.
+services/InventoryService.ts(82,36): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/InventoryService.ts(88,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/InventoryService.ts(198,36): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/InventoryService.ts(205,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/InventoryService.ts(206,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/LoyaltyService.ts(229,9): error TS2741: Property 'createdAt' is missing in type '{ type: "earned"; points: number; }' but required in type 'LoyaltyTransaction'.
+services/OrderService.ts(30,3): error TS2305: Module '"@/types"' has no exported member 'PaymentStatus'.
+services/OrderService.ts(149,5): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+services/OrderService.ts(180,5): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'MobileOrder'.
+services/OrderService.ts(181,13): error TS2339: Property 'notes' does not exist on type 'MobileOrder'.
+services/OrderService.ts(181,49): error TS2339: Property 'notes' does not exist on type 'MobileOrder'.
+services/PaymentService.ts(128,17): error TS2345: Argument of type '"payments"' is not assignable to parameter of type 'LogCategory'.
+services/PaymentService.ts(138,18): error TS2345: Argument of type '"payments"' is not assignable to parameter of type 'LogCategory'.
+services/ReceiptService.ts(120,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/ReceiptService.ts(125,5): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+services/ReceiptService.ts(175,48): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+services/ReceiptService.ts(188,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/ReceiptService.ts(194,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+services/ReceiptService.ts(195,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+services/ReceiptService.ts(197,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+services/SmartCartAssistant.ts(141,49): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/SmartCartAssistant.ts(150,32): error TS2339: Property 'isActive' does not exist on type 'Product'.
+services/SmartCartAssistant.ts(153,19): error TS2339: Property 'trackInventory' does not exist on type 'Product'.
+services/SmartCartAssistant.ts(153,45): error TS2339: Property 'stockQuantity' does not exist on type 'Product'.
+services/SmartCartAssistant.ts(162,11): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+services/api/customers.ts(7,21): error TS2614: Module '"./client"' has no exported member 'withRetry'. Did you mean to use 'import withRetry from "./client"' instead?
+services/api/customers.ts(8,15): error TS2305: Module '"@/types"' has no exported member 'ApiListResponse'.
+services/api/orders.ts(7,21): error TS2614: Module '"./client"' has no exported member 'withRetry'. Did you mean to use 'import withRetry from "./client"' instead?
+services/api/orders.ts(8,15): error TS2305: Module '"@/types"' has no exported member 'ApiListResponse'.
+services/api/products.ts(7,21): error TS2614: Module '"./client"' has no exported member 'withRetry'. Did you mean to use 'import withRetry from "./client"' instead?
+services/api/products.ts(8,15): error TS2305: Module '"@/types"' has no exported member 'ApiListResponse'.
+services/payment/YocoService.ts(162,31): error TS2307: Cannot find module '@yoco/react-native-pos' or its corresponding type declarations.
+services/sync/ChangeTracker.ts(31,15): error TS2305: Module '"@/types"' has no exported member 'SyncAction'.
+services/sync/ChangeTracker.ts(66,49): error TS2339: Property 'id' does not exist on type 'never'.
+services/sync/ChangeTracker.ts(72,23): error TS2339: Property 'id' does not exist on type 'never'.
+services/sync/SyncMetadata.ts(173,69): error TS2345: Argument of type 'EntitySyncMeta' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'EntitySyncMeta'.
+services/sync/SyncMetadata.ts(199,49): error TS2345: Argument of type 'SyncStats' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'SyncStats'.
+services/sync/SyncQueue.ts(16,15): error TS2305: Module '"@/types"' has no exported member 'SyncAction'.
+services/sync/SyncScheduler.ts(67,17): error TS2339: Property 'status' does not exist on type 'SyncState'.
+types/index.ts(172,10): error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+types/index.ts(172,36): error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.

@@ -213,7 +213,7 @@ class ProductService:
             ing.soft_delete()
 
         for i, ing in enumerate(ingredients):
-            ing_dict = ing.model_dump()
+            ing_dict = ing if isinstance(ing, dict) else ing.model_dump()
             if "sort_order" not in ing_dict or ing_dict["sort_order"] is None:
                 ing_dict["sort_order"] = i
             self.db.add(
