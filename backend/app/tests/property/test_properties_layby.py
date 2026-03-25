@@ -185,7 +185,7 @@ class TestLaybyBalanceInvariantAfterPayment:
         business_id = uuid4()
         customer_id = uuid4()
         layby_id = uuid4()
-        user_id = uuid4()
+        uuid4()
         
         # Calculate deposit and initial balance
         deposit_amount = (total_amount * deposit_percentage / Decimal("100")).quantize(Decimal("0.01"))
@@ -263,8 +263,6 @@ class TestLaybyBalanceInvariantAfterPayment:
                 continue
             
             # Record state before payment
-            balance_before = layby.balance_due
-            paid_before = layby.amount_paid
             
             # Simulate payment processing (what make_payment does)
             layby.amount_paid += actual_payment
@@ -532,7 +530,7 @@ class TestStatusTransitionOnFullPayment:
         business_id = uuid4()
         customer_id = uuid4()
         layby_id = uuid4()
-        user_id = uuid4()
+        uuid4()
         
         # Calculate deposit and initial balance
         deposit_amount = (total_amount * deposit_percentage / Decimal("100")).quantize(Decimal("0.01"))
@@ -621,7 +619,6 @@ class TestStatusTransitionOnFullPayment:
             
             # Record state before payment
             balance_before = layby.balance_due
-            status_before = layby.status
             
             # Simulate payment processing (what make_payment does)
             layby.amount_paid += payment_amount
