@@ -408,6 +408,15 @@ class LaybyService:
             .all()
         )
 
+        # Save original state for in-memory rollback on commit/flush failure
+        orig_amount_paid = layby.amount_paid
+        orig_balance_due = layby.balance_due
+        orig_status = layby.status
+        orig_schedule_states = [
+            {"obj": s, "amount_paid": s.amount_paid, "status": s.status, "paid_at": s.paid_at}
+            for s in schedules
+        ]
+
         target_schedule_id = None
         for sched in schedules:
             if remaining <= Decimal("0.00"):
@@ -427,11 +436,6 @@ class LaybyService:
                 sched.paid_at = datetime.now(timezone.utc)
             else:
                 sched.status = ScheduleStatus.PARTIAL
-
-        # Save original layby state for rollback on error
-        orig_amount_paid = layby.amount_paid
-        orig_balance_due = layby.balance_due
-        orig_status = layby.status
 
         # Create payment record
         payment = LaybyPayment(
@@ -493,6 +497,11 @@ class LaybyService:
             layby.amount_paid = orig_amount_paid
             layby.balance_due = orig_balance_due
             layby.status = orig_status
+            # Restore in-memory schedule states
+            for state in orig_schedule_states:
+                state["obj"].amount_paid = state["amount_paid"]
+                state["obj"].status = state["status"]
+                state["obj"].paid_at = state["paid_at"]
             raise
 
         self.db.refresh(payment)

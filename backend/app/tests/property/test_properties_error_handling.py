@@ -105,45 +105,38 @@ def test_error_isolation(invoices, error_indices):
     
     mock_session.query.side_effect = mock_query_side_effect
     
-    # Mock notification service
+    # Mock notification service - use notify_business_users (what the service actually calls)
     mock_notification_service = MagicMock()
     successful_notifications = []
     errors = []
-    
-    def mock_create_payment_overdue(**kwargs):
-        invoice_id = kwargs.get('invoice_id')
-        # Convert string invoice_id back to UUID for comparison
-        from uuid import UUID
-        invoice_uuid = UUID(invoice_id) if isinstance(invoice_id, str) else invoice_id
-        
-        if invoice_uuid in error_invoice_ids:
-            error = Exception(f"Simulated error for invoice {invoice_id}")
+
+    # Map error invoice business_ids for identification in the mock
+    error_business_ids = {str(mock_invoices[i].business_id) for i in error_indices if i < len(mock_invoices)}
+
+    def mock_notify_business_users(**kwargs):
+        biz_id = kwargs.get('business_id')
+        if biz_id in error_business_ids:
+            error = Exception(f"Simulated error for business {biz_id}")
             errors.append(error)
             raise error
-        
         notification = Mock()
         notification.id = uuid4()
-        notification.reference_id = invoice_id
         successful_notifications.append(notification)
-        return notification
-    
-    mock_notification_service.create_payment_overdue_notification.side_effect = mock_create_payment_overdue
-    
+
+    mock_notification_service.notify_business_users.side_effect = mock_notify_business_users
+
     # Execute: Process all invoices with error handling
     notification_creation_service = NotificationCreationService(mock_notification_service, mock_session)
-    
+
     for invoice in mock_invoices:
-        try:
-            days_overdue = (date.today() - invoice.due_date).days
-            notification_creation_service.create_overdue_notification(invoice, days_overdue)
-        except Exception:
-            # Error should be caught and logged, processing continues
-            pass
-    
+        days_overdue = (date.today() - invoice.due_date).days
+        # create_overdue_notification catches exceptions internally and returns bool
+        notification_creation_service.create_overdue_notification(invoice, days_overdue)
+
     # Verify: Some notifications were created (for non-error invoices)
     expected_successful = len(mock_invoices) - len(error_invoice_ids)
     assert len(successful_notifications) == expected_successful
-    
+
     # Verify: Errors were recorded
     assert len(errors) == len(error_invoice_ids)
 
@@ -252,21 +245,20 @@ def test_execution_logging_completeness(invoices, has_errors):
     
     mock_session.query.side_effect = mock_query_side_effect
     
-    # Mock notification service
+    # Mock notification service - use notify_business_users (what the service actually calls)
     mock_notification_service = MagicMock()
     successful_count = 0
     errors = []
-    
-    def mock_create_payment_overdue(**kwargs):
+
+    def mock_notify_business_users(**kwargs):
         nonlocal successful_count
         if has_errors and successful_count == 0:
             error = Exception("Simulated error")
             errors.append(error)
             raise error
         successful_count += 1
-        return Mock()
-    
-    mock_notification_service.create_payment_overdue_notification.side_effect = mock_create_payment_overdue
+
+    mock_notification_service.notify_business_users.side_effect = mock_notify_business_users
     
     # Create execution log
     execution_log = Mock(spec=JobExecutionLog)
