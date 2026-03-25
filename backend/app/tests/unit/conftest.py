@@ -2,15 +2,12 @@
 
 import pytest
 
-from app.core.database import get_sync_db
-
 
 @pytest.fixture(scope="function")
 def db_session():
     """Create a test database session using the actual database."""
-    # Use the sync database session for tests (works with both PostgreSQL and SQLite)
     from app.core.database import SessionLocal
-        db = SessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:

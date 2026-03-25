@@ -16,7 +16,6 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.core.database import get_sync_db
 from app.models.subscription_tier import SubscriptionTier, DEFAULT_TIERS
 from app.models.user import User, UserStatus, SubscriptionStatus
 from app.api.deps import get_current_active_user
