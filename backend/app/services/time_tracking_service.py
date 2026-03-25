@@ -92,10 +92,13 @@ class TimeTrackingService:
             settings = self.get_or_create_business_settings(business_id)
             active_entry.is_auto_clocked_out = True
             active_entry.auto_clock_out_reason = reason or "Auto clocked out at day end"
-            active_entry.hours_worked = settings.auto_clock_out_penalty_hours
-            active_entry.net_hours = settings.auto_clock_out_penalty_hours
+            actual_secs = (now - active_entry.clock_in).total_seconds()
+            actual_hours = Decimal(str(round(actual_secs / 3600, 2)))
+            paid_hours = settings.auto_clock_out_penalty_hours
+            active_entry.hours_worked = actual_hours
+            active_entry.net_hours = min(actual_hours, paid_hours)
             if hasattr(active_entry, 'penalty_hours'):
-                 active_entry.penalty_hours = Decimal("0.00")
+                active_entry.penalty_hours = max(Decimal("0.00"), actual_hours - paid_hours)
         else:
             # Calculate actual hours
             self._calculate_hours(active_entry)

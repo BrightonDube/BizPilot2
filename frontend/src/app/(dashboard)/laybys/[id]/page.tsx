@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2, AlertTriangle, DollarSign } from 'lucide-react';
+import { Loader2, AlertTriangle, DollarSign, PackageCheck, XCircle, CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useLaybyDetail } from '../hooks/useLaybyDetail';
 import { LaybyDetailHeader } from '../components/LaybyDetailHeader';
@@ -12,6 +12,9 @@ import { LaybyPaymentSchedule } from '../components/LaybyPaymentSchedule';
 import { LaybyPaymentHistory } from '../components/LaybyPaymentHistory';
 import { LaybyAuditTrail } from '../components/LaybyAuditTrail';
 import { RecordPaymentModal } from '../components/RecordPaymentModal';
+import { CollectLaybyModal } from '../components/CollectLaybyModal';
+import { CancelLaybyModal } from '../components/CancelLaybyModal';
+import { ExtendLaybyModal } from '../components/ExtendLaybyModal';
 import { Toast, showToast } from '../utils/toast';
 
 export default function LaybyDetailPage() {
@@ -20,6 +23,9 @@ export default function LaybyDetailPage() {
   const id = params.id as string;
   const { layby, isLoading, error, notFound, refetch } = useLaybyDetail(id);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((type: 'success' | 'error', message: string) => {
@@ -33,11 +39,31 @@ export default function LaybyDetailPage() {
   const handlePaymentRecorded = useCallback(async () => {
     setIsPaymentModalOpen(false);
     await refetch();
-    const amount = layby?.balance_due || 0;
-    addToast('success', `Payment recorded successfully`);
-  }, [refetch, layby, addToast]);
+    addToast('success', 'Payment recorded successfully');
+  }, [refetch, addToast]);
+
+  const handleCollected = useCallback(async () => {
+    setIsCollectModalOpen(false);
+    await refetch();
+    addToast('success', 'Layby marked as collected');
+  }, [refetch, addToast]);
+
+  const handleCancelled = useCallback(async () => {
+    setIsCancelModalOpen(false);
+    await refetch();
+    addToast('success', 'Layby has been cancelled');
+  }, [refetch, addToast]);
+
+  const handleExtended = useCallback(async () => {
+    setIsExtendModalOpen(false);
+    await refetch();
+    addToast('success', 'Layby end date extended successfully');
+  }, [refetch, addToast]);
 
   const canRecordPayment = layby && (layby.status === 'ACTIVE' || layby.status === 'OVERDUE');
+  const canCollect = layby && layby.status === 'READY_FOR_COLLECTION';
+  const canCancel = layby && (layby.status === 'ACTIVE' || layby.status === 'OVERDUE' || layby.status === 'READY_FOR_COLLECTION');
+  const canExtend = layby && (layby.status === 'ACTIVE' || layby.status === 'OVERDUE');
 
   if (isLoading) {
     return (
@@ -87,22 +113,53 @@ export default function LaybyDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <LaybyDetailHeader
           referenceNumber={layby.reference_number}
           customerName={layby.customer_name}
           status={layby.status}
           createdAt={layby.created_at}
         />
-        {canRecordPayment && (
-          <Button
-            onClick={() => setIsPaymentModalOpen(true)}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-          >
-            <DollarSign className="w-4 h-4 mr-2" />
-            Record Payment
-          </Button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {canRecordPayment && (
+            <Button
+              onClick={() => setIsPaymentModalOpen(true)}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            >
+              <DollarSign className="w-4 h-4 mr-2" />
+              Record Payment
+            </Button>
+          )}
+          {canCollect && (
+            <Button
+              onClick={() => setIsCollectModalOpen(true)}
+              className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
+            >
+              <PackageCheck className="w-4 h-4 mr-2" />
+              Mark Collected
+            </Button>
+          )}
+          {canExtend && (
+            <Button
+              onClick={() => setIsExtendModalOpen(true)}
+              variant="outline"
+              className="border-blue-500 text-blue-400 hover:bg-blue-950"
+            >
+              <CalendarPlus className="w-4 h-4 mr-2" />
+              Extend
+            </Button>
+          )}
+          {canCancel && (
+            <Button
+              onClick={() => setIsCancelModalOpen(true)}
+              variant="outline"
+              className="border-red-500 text-red-400 hover:bg-red-950"
+            >
+              <XCircle className="w-4 h-4 mr-2" />
+              Cancel Layby
+            </Button>
+          )}
+        </div>
       </div>
 
       <LaybyFinancialSummary
@@ -129,6 +186,31 @@ export default function LaybyDetailPage() {
           onPaymentRecorded={handlePaymentRecorded}
         />
       )}
+
+      <CollectLaybyModal
+        isOpen={isCollectModalOpen}
+        onClose={() => setIsCollectModalOpen(false)}
+        laybyId={id}
+        referenceNumber={layby.reference_number}
+        onCollected={handleCollected}
+      />
+
+      <CancelLaybyModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        laybyId={id}
+        referenceNumber={layby.reference_number}
+        onCancelled={handleCancelled}
+      />
+
+      <ExtendLaybyModal
+        isOpen={isExtendModalOpen}
+        onClose={() => setIsExtendModalOpen(false)}
+        laybyId={id}
+        referenceNumber={layby.reference_number}
+        currentEndDate={layby.end_date}
+        onExtended={handleExtended}
+      />
 
       <div className="fixed bottom-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (

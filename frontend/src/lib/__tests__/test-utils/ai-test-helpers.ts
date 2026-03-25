@@ -34,7 +34,9 @@ export const createMockAuthState = (overrides = {}) => ({
 });
 
 export const createMockApiResponse = (response: string, conversationId: string) => ({
-  data: { response, conversation_id: conversationId }
+  // agentChatService returns ChatResponse: { type, message, conversation_id }
+  // GlobalAIChat reads response.data.message and response.data.conversation_id
+  data: { type: 'message' as const, message: response, conversation_id: conversationId }
 });
 
 export const setupGuestContext = (mockUseAuthStore: jest.Mock, mockUseGuestAISession: jest.Mock) => {

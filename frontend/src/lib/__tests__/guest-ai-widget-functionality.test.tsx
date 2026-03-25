@@ -152,37 +152,41 @@ describe('Guest AI Widget Functionality Tests', () => {
   describe('Marketing-Focused AI Responses', () => {
     
     test('should send messages to guest AI endpoint', async () => {
+      // GlobalAIChat now routes all contexts through agentChatService which calls /agents/chat
       mockApiClient.post.mockResolvedValue({
         data: {
-          response: 'BizPilot is a comprehensive business management platform...',
+          type: 'message',
+          message: 'BizPilot is a comprehensive business management platform...',
           conversation_id: 'conv-123'
         }
       });
-      
+
       render(<GlobalAIChat />);
-      
+
       const triggerButton = screen.getByLabelText('Open AI Chat');
       fireEvent.click(triggerButton);
-      
+
       await waitFor(() => {
         const input = screen.getByPlaceholderText(/Ask about BizPilot features/);
         fireEvent.change(input, { target: { value: 'What features does BizPilot have?' } });
-        
+
         const sendButton = screen.getByRole('button', { name: /send/i });
         fireEvent.click(sendButton);
       });
-      
-      expect(mockApiClient.post).toHaveBeenCalledWith('/ai/guest-chat', {
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/agents/chat', {
         message: 'What features does BizPilot have?',
         conversation_id: null,
-        session_id: 'test-session-123'
+        history: []
       });
     });
 
     test('should display marketing-focused responses', async () => {
+      // agentChatService returns ChatResponse with message field, not response field
       mockApiClient.post.mockResolvedValue({
         data: {
-          response: 'BizPilot offers comprehensive POS, inventory management, customer tools, and smart analytics to help your business grow.',
+          type: 'message',
+          message: 'BizPilot offers comprehensive POS, inventory management, customer tools, and smart analytics to help your business grow.',
           conversation_id: 'conv-123'
         }
       });
@@ -211,10 +215,11 @@ describe('Guest AI Widget Functionality Tests', () => {
         ...mockUseGuestAISession(),
         trackAnalytics: mockTrackAnalytics
       } as any);
-      
+
       mockApiClient.post.mockResolvedValue({
         data: {
-          response: 'Marketing response',
+          type: 'message',
+          message: 'Marketing response',
           conversation_id: 'conv-123'
         }
       });
@@ -246,10 +251,11 @@ describe('Guest AI Widget Functionality Tests', () => {
         ...mockUseGuestAISession(),
         updateSessionActivity: mockUpdateSessionActivity
       } as any);
-      
+
       mockApiClient.post.mockResolvedValue({
         data: {
-          response: 'Marketing response',
+          type: 'message',
+          message: 'Marketing response',
           conversation_id: 'conv-123'
         }
       });
@@ -279,9 +285,11 @@ describe('Guest AI Widget Functionality Tests', () => {
   describe('Business Question Redirection', () => {
     
     test('should provide fallback response for business-specific questions', async () => {
+      // agentChatService returns ChatResponse with message field, not response field
       mockApiClient.post.mockResolvedValue({
         data: {
-          response: 'For detailed business analysis, please sign up for a free account to access full AI capabilities with your business data.',
+          type: 'message',
+          message: 'For detailed business analysis, please sign up for a free account to access full AI capabilities with your business data.',
           conversation_id: 'conv-123'
         }
       });
@@ -471,35 +479,38 @@ describe('Guest AI Widget Functionality Tests', () => {
         sessionTimeRemaining: 1800000
       } as any);
       
+      // agentChatService returns ChatResponse with message field, not response field
       mockApiClient.post.mockResolvedValue({
         data: {
-          response: 'BizPilot offers comprehensive business management tools including POS, inventory, and smart analytics.',
+          type: 'message',
+          message: 'BizPilot offers comprehensive business management tools including POS, inventory, and smart analytics.',
           conversation_id: 'conv-123'
         }
       });
-      
+
       render(<GlobalAIChat />);
-      
+
       const triggerButton = screen.getByLabelText('Open AI Chat');
       fireEvent.click(triggerButton);
-      
+
       await waitFor(() => {
         expect(screen.getByText('BizPilot Assistant')).toBeInTheDocument();
         expect(screen.getByText('Guest')).toBeInTheDocument();
       });
-      
+
       const input = screen.getByPlaceholderText(/Ask about BizPilot features/);
       fireEvent.change(input, { target: { value: 'What features does BizPilot offer?' } });
-      
+
       const sendButton = screen.getByRole('button', { name: /send/i });
       fireEvent.click(sendButton);
-      
-      expect(mockApiClient.post).toHaveBeenCalledWith('/ai/guest-chat', {
+
+      // GlobalAIChat now routes all contexts through agentChatService which calls /agents/chat
+      expect(mockApiClient.post).toHaveBeenCalledWith('/agents/chat', {
         message: 'What features does BizPilot offer?',
         conversation_id: null,
-        session_id: 'test-session-123'
+        history: []
       });
-      
+
       await waitFor(() => {
         expect(screen.getByText(/BizPilot offers comprehensive business management/)).toBeInTheDocument();
       });

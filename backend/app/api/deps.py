@@ -236,6 +236,49 @@ async def get_current_business_id(
     return business_id
 
 
+async def get_optional_business_id(
+    request: Request,
+    current_user: Optional[User] = Depends(get_optional_user),
+    db=Depends(get_db),
+    redis: Optional[Redis] = Depends(get_redis),
+) -> Optional[str]:
+    """
+    Get the active business ID for the current user if authenticated.
+    Returns None for guests / unauthenticated callers instead of raising 401.
+    Used by endpoints that support both public and authenticated access.
+    """
+    import inspect as _inspect
+    if current_user is None:
+        return None
+    from app.models.user import UserStatus
+    if current_user.status != UserStatus.ACTIVE:
+        return None
+    from sqlalchemy import select
+    from app.models.business import Business
+    from app.models.business_user import BusinessUser, BusinessUserStatus
+    try:
+        if current_user.is_superadmin:
+            stmt = select(Business).filter(
+                Business.deleted_at.is_(None)
+            ).order_by(Business.created_at.asc())
+            result = db.execute(stmt)
+            if _inspect.isawaitable(result):
+                result = await result
+            first = result.scalars().first()
+            return str(first.id) if first else None
+        stmt = select(BusinessUser).filter(
+            BusinessUser.user_id == current_user.id,
+            BusinessUser.status == BusinessUserStatus.ACTIVE,
+        )
+        result = db.execute(stmt)
+        if _inspect.isawaitable(result):
+            result = await result
+        bu = result.scalars().first()
+        return str(bu.business_id) if bu else None
+    except Exception:
+        return None
+
+
 async def get_permission_service(
     db=Depends(get_db),
     redis: Optional[Redis] = Depends(get_redis)

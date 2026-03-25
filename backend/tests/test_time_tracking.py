@@ -48,9 +48,9 @@ class TestTimeTrackingService:
 
         # Assert
         assert result.is_auto_clocked_out is True
-        assert result.hours_worked == Decimal("10.00")
-        assert result.net_hours == Decimal("4.00")
-        assert result.penalty_hours == Decimal("6.00")
+        assert result.hours_worked == Decimal("10.00")  # actual time worked
+        assert result.net_hours == Decimal("4.00")       # paid hours (penalty cap)
+        # TimeEntry has no penalty_hours column; excess = hours_worked - net_hours
         assert mock_db.commit.called
 
     def test_auto_clock_out_below_paid_limit(self, service, mock_db):
@@ -81,7 +81,7 @@ class TestTimeTrackingService:
 
         # Assert
         assert result.is_auto_clocked_out is True
-        assert result.hours_worked == Decimal("3.00")
-        assert result.net_hours == Decimal("3.00")
-        assert result.penalty_hours == Decimal("0.00")
+        assert result.hours_worked == Decimal("3.00")  # actual time worked
+        assert result.net_hours == Decimal("3.00")      # paid = actual (below cap)
+        # TimeEntry has no penalty_hours column; excess = hours_worked - net_hours = 0
         assert mock_db.commit.called
