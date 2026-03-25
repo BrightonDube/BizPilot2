@@ -179,7 +179,8 @@ class TestClockOut:
 
     def test_auto_clock_out_applies_penalty(self):
         svc, db = _svc()
-        entry = _entry()
+        # Use a relative clock_in so actual hours (10h) exceed the penalty cap (4h)
+        entry = _entry(clock_in=datetime.now(timezone.utc) - timedelta(hours=10))
         settings = _settings()
         # First query: find active entry; second query: find settings for auto-clock-out
         db.query.side_effect = _side_effect(
@@ -189,8 +190,8 @@ class TestClockOut:
         svc.clock_out(BIZ_ID, USR_ID, auto_clock_out=True, reason="day end")
         assert entry.is_auto_clocked_out is True
         assert entry.auto_clock_out_reason == "day end"
-        assert entry.hours_worked == Decimal("4.00")
-        assert entry.net_hours == Decimal("4.00")
+        assert entry.hours_worked == Decimal("10.00")  # actual time worked
+        assert entry.net_hours == Decimal("4.00")       # capped at penalty_hours
 
     def test_auto_clock_out_default_reason(self):
         svc, db = _svc()
