@@ -493,6 +493,8 @@ class LaybyService:
             self.db.commit()
         except Exception:
             self.db.rollback()
+            # Mark payment record as failed so no stale COMPLETED record exists
+            payment.status = PaymentStatus.FAILED
             # Restore in-memory layby state
             layby.amount_paid = orig_amount_paid
             layby.balance_due = orig_balance_due
