@@ -65,6 +65,7 @@ function AppLayoutInner({
   setCheckingBusiness: (v: boolean) => void;
 }) {
   const { isLoading } = useRequireAuth();
+  const isExpired = useSessionExpiry();
 
   const checkBusinessStatus = useCallback(async () => {
     try {
@@ -112,8 +113,6 @@ function AppLayoutInner({
     }
     return children;
   };
-
-  const isExpired = useSessionExpiry()
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
