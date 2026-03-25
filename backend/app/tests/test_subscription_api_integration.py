@@ -20,7 +20,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'share
 from pricing_config import SUBSCRIPTION_TIERS
 
 from app.main import app
-from app.core.database import get_sync_db
 from sqlalchemy import text
 from app.models.subscription_tier import SubscriptionTier
 
