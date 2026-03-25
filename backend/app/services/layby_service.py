@@ -168,7 +168,7 @@ class LaybyService:
 
         # Validate deposit against config minimum
         if config:
-            min_deposit = total_amount * (config.min_deposit_percentage / Decimal("100"))
+            min_deposit = (total_amount * (config.min_deposit_percentage / Decimal("100"))).quantize(Decimal("0.01"))
             if deposit_amount < min_deposit:
                 raise ValueError(
                     f"Deposit must be at least {config.min_deposit_percentage}% "
@@ -428,6 +428,11 @@ class LaybyService:
             else:
                 sched.status = ScheduleStatus.PARTIAL
 
+        # Save original layby state for rollback on error
+        orig_amount_paid = layby.amount_paid
+        orig_balance_due = layby.balance_due
+        orig_status = layby.status
+
         # Create payment record
         payment = LaybyPayment(
             layby_id=layby.id,
@@ -441,6 +446,9 @@ class LaybyService:
             processed_by=processed_by,
         )
         self.db.add(payment)
+
+        # Flush to detect DB constraint violations early
+        self.db.flush()
 
         # Update layby totals
         layby.amount_paid += amount
@@ -477,7 +485,16 @@ class LaybyService:
             details=f"Payment of R{amount:.2f} via {payment_method}",
         )
 
-        self.db.commit()
+        try:
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            # Restore in-memory layby state
+            layby.amount_paid = orig_amount_paid
+            layby.balance_due = orig_balance_due
+            layby.status = orig_status
+            raise
+
         self.db.refresh(payment)
         return payment
 

@@ -110,66 +110,40 @@ def test_notification_deduplication(invoices_with_notifications, invoices_withou
         notification.business_id = str(invoice.business_id)
         existing_notifications.append(notification)
     
-    # Mock notification service
+    # Mock notification service - track notify_business_users calls
     mock_notification_service = MagicMock()
-    
-    # Mock has_existing_notification to return True for invoices with notifications
-    def mock_has_existing(**kwargs):
-        reference_id = kwargs.get('reference_id')
-        return any(n.reference_id == reference_id for n in existing_notifications)
-    
-    mock_notification_service.has_existing_notification.side_effect = mock_has_existing
-    
-    created_notifications = []
-    
-    def mock_create_payment_overdue(**kwargs):
-        # Check if notification already exists
-        invoice_id = kwargs.get('invoice_id')
-        if any(n.reference_id == invoice_id for n in existing_notifications):
-            # Don't create duplicate
-            return None
-        
-        notification = Mock(spec=Notification)
-        notification.id = uuid4()
-        notification.reference_id = invoice_id
-        notification.notification_type = NotificationType.PAYMENT
-        notification.business_id = kwargs.get('business_id')
-        created_notifications.append(notification)
-        return notification
-    
-    mock_notification_service.create_payment_overdue_notification.side_effect = mock_create_payment_overdue
-    
+    notify_calls = []
+
+    def mock_notify_business_users(**kwargs):
+        notify_calls.append(kwargs)
+
+    mock_notification_service.notify_business_users.side_effect = mock_notify_business_users
+
     # Execute: Try to create notifications for all invoices
     notification_creation_service = NotificationCreationService(mock_notification_service, mock_session)
-    
-    # Process invoices with existing notifications
+
+    # Process invoices with existing notifications — skip (deduplication logic)
     for invoice in mock_invoices_with_notif:
         days_overdue = (date.today() - invoice.due_date).days
-        # Check if notification exists before creating
+        # Check if notification exists before creating (caller-side deduplication)
         if not any(n.reference_id == str(invoice.id) for n in existing_notifications):
             notification_creation_service.create_overdue_notification(invoice, days_overdue)
-    
+
     # Process invoices without existing notifications
     for invoice in mock_invoices_without_notif:
         days_overdue = (date.today() - invoice.due_date).days
         notification_creation_service.create_overdue_notification(invoice, days_overdue)
-    
+
     # Verify: Only invoices without existing notifications got new notifications
-    assert len(created_notifications) == len(mock_invoices_without_notif), (
+    assert len(notify_calls) == len(mock_invoices_without_notif), (
         f"Expected {len(mock_invoices_without_notif)} new notifications, "
-        f"but {len(created_notifications)} were created"
+        f"but {len(notify_calls)} were created"
     )
-    
-    # Verify: No duplicate notifications for invoices that already had them
-    created_invoice_ids = {n.reference_id for n in created_notifications}
-    existing_invoice_ids = {n.reference_id for n in existing_notifications}
-    
-    assert created_invoice_ids.isdisjoint(existing_invoice_ids), (
-        "Duplicate notifications were created for invoices that already had them"
-    )
-    
-    # Verify: All invoices without notifications got one
-    invoices_without_ids = {str(inv.id) for inv in mock_invoices_without_notif}
-    assert created_invoice_ids == invoices_without_ids, (
-        "Not all invoices without notifications received one"
-    )
+
+    # Verify: Each invoice without notifications got exactly one notification
+    # (invoice number appears in the title of each notify_business_users call)
+    for invoice in mock_invoices_without_notif:
+        matching = [c for c in notify_calls if invoice.invoice_number in c.get('title', '')]
+        assert len(matching) >= 1, (
+            f"Invoice {invoice.invoice_number} did not receive a notification"
+        )

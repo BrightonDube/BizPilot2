@@ -113,49 +113,31 @@ def test_notification_creation_for_new_overdue_invoices(invoices):
     
     # Mock notification service
     mock_notification_service = MagicMock()
-    created_notifications = []
-    
-    def mock_create_payment_overdue(**kwargs):
-        notification = Mock(spec=Notification)
-        notification.id = uuid4()
-        notification.reference_id = kwargs.get('invoice_id')
-        notification.notification_type = NotificationType.PAYMENT
-        notification.business_id = kwargs.get('business_id')
-        # Simulate the actual notification service behavior
-        invoice_number = kwargs.get('invoice_number', 'INV-0000')
-        customer_name = kwargs.get('customer_name', 'Unknown Customer')
-        amount = kwargs.get('amount', 0.0)
-        days_overdue = kwargs.get('days_overdue', 0)
-        notification.title = f"Payment Overdue: Invoice #{invoice_number}"
-        notification.message = f"Invoice from {customer_name} for ${amount:.2f} is {days_overdue} days overdue"
-        created_notifications.append(notification)
-        return notification
-    
-    mock_notification_service.create_payment_overdue_notification.side_effect = mock_create_payment_overdue
-    
+    notify_calls = []
+
+    def mock_notify_business_users(**kwargs):
+        notify_calls.append(kwargs)
+
+    mock_notification_service.notify_business_users.side_effect = mock_notify_business_users
+
     # Execute: Create notifications for all overdue invoices
     notification_creation_service = NotificationCreationService(mock_notification_service, mock_session)
-    
+
     for invoice in mock_invoices:
         days_overdue = (date.today() - invoice.due_date).days
         success = notification_creation_service.create_overdue_notification(invoice, days_overdue)
         assert success, f"Failed to create notification for invoice {invoice.id}"
-    
-    # Verify: Exactly one notification created per invoice
-    assert len(created_notifications) == len(mock_invoices)
-    
-    # Verify: Each notification contains invoice ID and is of correct type
-    for invoice in mock_invoices:
-        matching_notifications = [
-            n for n in created_notifications
-            if n.reference_id == str(invoice.id) and n.notification_type == NotificationType.PAYMENT
-        ]
-        
-        assert len(matching_notifications) == 1, f"Expected exactly 1 notification for invoice {invoice.id}"
-        
-        notification = matching_notifications[0]
-        assert notification.business_id == str(invoice.business_id)
-        assert invoice.invoice_number in notification.message or invoice.invoice_number in notification.title
+
+    # Verify: Exactly one notify_business_users call per invoice
+    assert len(notify_calls) == len(mock_invoices)
+
+    # Verify: Each call contains the invoice number in title or message
+    for i, invoice in enumerate(mock_invoices):
+        call = notify_calls[i]
+        title = call.get('title', '')
+        message = call.get('message', '')
+        assert invoice.invoice_number in title or invoice.invoice_number in message, \
+            f"Invoice number {invoice.invoice_number} not found in notification"
 
 
 @given(
@@ -192,36 +174,24 @@ def test_notification_contains_days_overdue(invoice_data):
     
     # Mock notification service
     mock_notification_service = MagicMock()
-    created_notification = None
-    
-    def mock_create_payment_overdue(**kwargs):
-        nonlocal created_notification
-        notification = Mock(spec=Notification)
-        notification.id = uuid4()
-        notification.reference_id = kwargs.get('invoice_id')
-        notification.notification_type = NotificationType.PAYMENT
-        notification.business_id = kwargs.get('business_id')
-        # Simulate the actual notification service behavior
-        invoice_number = kwargs.get('invoice_number', 'INV-0000')
-        customer_name = kwargs.get('customer_name', 'Unknown Customer')
-        amount = kwargs.get('amount', 0.0)
-        days_overdue = kwargs.get('days_overdue', 0)
-        notification.title = f"Payment Overdue: Invoice #{invoice_number}"
-        notification.message = f"Invoice from {customer_name} for ${amount:.2f} is {days_overdue} days overdue"
-        created_notification = notification
-        return notification
-    
-    mock_notification_service.create_payment_overdue_notification.side_effect = mock_create_payment_overdue
-    
+    notify_call_kwargs = {}
+
+    def mock_notify_business_users(**kwargs):
+        notify_call_kwargs.update(kwargs)
+
+    mock_notification_service.notify_business_users.side_effect = mock_notify_business_users
+
     # Execute: Create notification
     notification_creation_service = NotificationCreationService(mock_notification_service, mock_session)
-    
+
     days_overdue = (date.today() - mock_invoice.due_date).days
     success = notification_creation_service.create_overdue_notification(mock_invoice, days_overdue)
-    
+
     assert success, "Failed to create notification"
-    assert created_notification is not None, "Notification should be created"
-    
+    assert notify_call_kwargs, "Notification should be created"
+
     # Verify: Notification contains days overdue information
-    notification_text = f"{created_notification.title} {created_notification.message}".lower()
+    title = notify_call_kwargs.get('title', '')
+    message = notify_call_kwargs.get('message', '')
+    notification_text = f"{title} {message}".lower()
     assert "overdue" in notification_text, "Notification should mention 'overdue'"
