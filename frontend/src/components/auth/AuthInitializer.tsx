@@ -57,27 +57,18 @@ export function AuthInitializer() {
 
   /**
    * Handle session expiration.
-   * Uses hard navigation to prevent RSC/JSON response issues.
+   * Clears auth state and lets SessionExpiredModal (in AppLayout) handle navigation.
+   * The modal shows a "Sign In Again" button — no hard redirect needed.
    */
   const handleSessionExpired = useCallback(() => {
-    // Prevent multiple redirects
+    // Prevent multiple calls
     if (isRedirecting.current) return
     isRedirecting.current = true
-    
-    // Check for window to ensure SSR safety (though this is a client component)
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname + window.location.search
-      const loginUrl = `/auth/login?session_expired=true&next=${encodeURIComponent(currentPath)}`
-      
-      // Use hard navigation to prevent RSC issues - this ensures proper HTML response
-      window.location.href = loginUrl
-      
-      // Clear auth state in background (redirect will happen first)
-      logout().catch((err) => {
-        // Log for debugging but don't block - redirect is already in progress
-        console.debug('Logout during session expiration failed:', err)
-      })
-    }
+
+    // Clear auth state so the app knows the user is logged out
+    logout().catch((err) => {
+      console.debug('Logout during session expiration failed:', err)
+    })
   }, [logout])
 
   // Subscribe to session expiration events

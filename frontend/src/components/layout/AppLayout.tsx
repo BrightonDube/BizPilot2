@@ -17,6 +17,8 @@ import { AuthInitializer } from '@/components/auth/AuthInitializer';
 import { SessionInactivityManager } from '@/components/auth/SessionInactivityManager';
 import { FeatureGate, RequireAdmin } from '@/components/subscription/FeatureGate';
 import { ROUTE_FEATURES, FeatureFlag } from '@/hooks/useSubscription';
+import { SessionExpiredModal } from '@/components/SessionExpiredModal';
+import { useSessionExpiry } from '@/hooks/useSessionExpiry';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -111,8 +113,11 @@ function AppLayoutInner({
     return children;
   };
 
+  const isExpired = useSessionExpiry()
+
   return (
     <div className="min-h-screen bg-background text-foreground flex">
+      <SessionExpiredModal isOpen={isExpired} />
       <SessionInactivityManager />
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex">
