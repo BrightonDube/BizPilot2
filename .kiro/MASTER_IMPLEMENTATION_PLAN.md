@@ -1060,41 +1060,40 @@ User → Mobile (Expo) → WatermelonDB (offline) → Sync Engine → Backend �
 | 2 | Authentication & Authorization | 115/115 |
 | 3 | Automated Reordering | 103/103 |
 | 4 | Automated Report Emails | 107/107 |
-| 5 | Customer Management | 61/61 |
-| 6 | Inventory Management | 49/49 |
-| 7 | Invoice Management | 54/54 |
-| 8 | Marketing Pages Redesign | 33/33 |
-| 9 | Multi-Business Management | 64/64 |
-| 10 | Overdue Invoice Scheduler | 10/10 |
-| 11 | Pricing Consistency & Guest AI Widget | 34/34 |
-| 12 | Product Management | 65/65 |
-| 13 | Sales Reports | 59/59 |
-| 14 | Shift Management | 49/49 |
-| 15 | Staff Management | 69/69 |
-| 16 | Staff Reports | 82/82 |
-| 17 | Supplier Management | 71/71 |
-| 18 | Time & Attendance | 60/60 |
+| 5 | CRM Core | 63/63 ✅ Sprint 1 |
+| 6 | Customer Management | 61/61 |
+| 7 | Department-Based Team Roles | 64/64 ✅ Sprint 1 |
+| 8 | Inventory Management | 49/49 |
+| 9 | Invoice Management | 54/54 |
+| 10 | Loyalty Programs | 69/69 ✅ Sprint 1 |
+| 11 | Marketing Pages Redesign | 33/33 |
+| 12 | Mobile POS Foundation | 115/115 ✅ Sprint 1 |
+| 13 | Multi-Business Management | 64/64 |
+| 14 | Offline-First Sync Engine | 94/94 ✅ Sprint 1 |
+| 15 | Overdue Invoice Scheduler | 10/10 |
+| 16 | Pricing Consistency & Guest AI Widget | 34/34 |
+| 17 | Pricing Consistency Marketing | 112/112 ✅ Sprint 1 |
+| 18 | Product Management | 65/65 |
+| 19 | Recipe Management | 34/34 ✅ Sprint 1 |
+| 20 | Sales Reports | 59/59 |
+| 21 | Shift Management | 49/49 |
+| 22 | Staff Management | 69/69 |
+| 23 | Staff Profiles | 46/46 ✅ Sprint 1 |
+| 24 | Staff Reports | 82/82 |
+| 25 | Supplier Management | 71/71 |
+| 26 | Technical Debt Cleanup | 46/46 ✅ Sprint 1 |
+| 27 | Time & Attendance | 60/60 |
 
-**18 features fully complete** (1,169 tasks total)
+**27 features fully complete** (Sprint 1 closed 9 additional features)
 
 ### 3.2 What Is Partially Built (50-99%)
 
 | # | Feature | Completion | What Exists | What's Missing |
 |---|---------|-----------|-------------|----------------|
-| 1 | Pricing Consistency Marketing | 99% (111/112) | Nearly everything | 1 minor task |
-| 2 | Order Management | 93% (60/64) | Full order system | SlipApp printing integration (4 tasks) |
-| 3 | Layby Management | 90% (69/76) | Full layby system | Stock reservation link, integration tests |
-| 4 | CRM Core | 87% (55/63) | Core CRM | Test execution, deployment |
-| 5 | Offline-First Sync Engine | 87% (82/94) | Full sync engine | E2E integration tests |
-| 6 | Mobile POS Foundation | 86% (100/115) | Full mobile app | Build verification, tests, deployment |
-| 7 | POS Core | 84% (95/113) | Full POS | E2E testing, offline tests, analytics |
-| 8 | Technical Debt Cleanup | 82% (38/46) | Major cleanup done | 8 remaining cleanup items |
-| 9 | Recipe Management | 76% (26/34) | Core recipes | Test execution, deployment |
-| 10 | Customer Accounts | 68% (77/112) | Backend complete (2136-line service) | Statement PDF, email, collections UI, tests |
-| 11 | Dept-Based Team Roles | 65% (42/64) | Service + basic endpoints | Model expansion, more endpoints, UI |
-| 12 | Loyalty Programs | 63% (44/69) | Backend + strong mobile | Test execution, deployment |
-| 13 | Granular Permissions | 57% (53/92) | Service (564 lines) | API exposure, old schema migration |
-| 14 | Staff Profiles | 50% (23/46) | Implementation done | Test execution, deployment (15 tasks) |
+| 1 | Order Management | 93% (60/64) | Full order system | SlipApp SDK — deferred (SDK unavailable) |
+| 2 | POS Core | 84% (95/113) | Full POS | AI scheduler jobs, PII redaction, metrics — Sprint 1 in progress |
+| 3 | Customer Accounts | 68% (77/112) | Backend complete (2136-line service) | Statement PDF, email, collections — Sprint 1 in progress |
+| 4 | Granular Permissions | 57% (53/92) | Service (564 lines) | Feature_flags migration — Sprint 1 in progress |
 
 ### 3.3 What Is Partially Built (1-49%)
 
