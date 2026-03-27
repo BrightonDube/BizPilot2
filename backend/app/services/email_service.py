@@ -1,5 +1,6 @@
 """Email service for sending transactional emails."""
 
+import logging
 from dataclasses import dataclass
 from email.message import EmailMessage
 from typing import Iterable, Optional
@@ -7,6 +8,8 @@ import mimetypes
 import smtplib
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -29,6 +32,11 @@ class EmailService:
         attachments: Optional[Iterable[EmailAttachment]] = None,
         reply_to: Optional[str] = None,
     ) -> None:
+        """
+        Send an email via SMTP.
+        Requires SMTP_HOST, SMTP_PORT to be configured.
+        For authenticated SMTP, requires SMTP_USER and SMTP_PASSWORD.
+        """
         if settings.SMTP_USER and not settings.SMTP_PASSWORD:
             raise ValueError("SMTP_PASSWORD must be set when SMTP_USER is configured")
 
@@ -52,13 +60,34 @@ class EmailService:
             maintype, subtype = ctype.split("/", 1)
             msg.add_attachment(att.content, maintype=maintype, subtype=subtype, filename=att.filename)
 
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=settings.SMTP_TIMEOUT) as smtp:
-            if settings.SMTP_STARTTLS:
-                smtp.ehlo()
-                smtp.starttls()
-                smtp.ehlo()
+        try:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=settings.SMTP_TIMEOUT) as smtp:
+                if settings.SMTP_STARTTLS:
+                    smtp.ehlo()
+                    smtp.starttls()
+                    smtp.ehlo()
 
-            if settings.SMTP_USER:
-                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                if settings.SMTP_USER:
+                    smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
 
-            smtp.send_message(msg)
+                smtp.send_message(msg)
+                logger.info(f"Email sent successfully to {to_email} with subject: {subject}")
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(
+                f"SMTP authentication failed for {settings.SMTP_USER} on {settings.SMTP_HOST}:{settings.SMTP_PORT}. "
+                f"Check SMTP_USER and SMTP_PASSWORD environment variables. Error: {e}",
+                exc_info=True,
+            )
+            raise
+        except smtplib.SMTPException as e:
+            logger.error(
+                f"SMTP error sending email to {to_email}: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
+            raise
+        except Exception as e:
+            logger.error(
+                f"Unexpected error sending email to {to_email}: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
+            raise

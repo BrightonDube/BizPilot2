@@ -745,3 +745,29 @@ async def receive_purchase_order(
         inventory_updated=inventory_updated,
         message=message,
     )
+
+
+@router.patch("/{order_id}", response_model=OrderResponse)
+async def patch_order(
+    order_id: str,
+    data: OrderUpdate,
+    current_user: User = Depends(has_permission("orders:edit")),
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+):
+    """
+    Partially update an order via PATCH.
+    Behaves the same as PUT for consistency.
+    """
+    service = OrderService(db)
+    order = service.get_order(order_id, business_id)
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found",
+        )
+
+    order = service.update_order(order, data)
+    items = service.get_order_items(str(order.id))
+    return _order_to_response(order, items)
