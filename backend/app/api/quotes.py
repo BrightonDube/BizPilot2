@@ -524,6 +524,57 @@ async def list_revisions(
 # ── Helpers ───────────────────────────────────────────────────────────
 
 
+@router.get("/{quote_id}/pdf")
+async def download_quote_pdf(
+    quote_id: UUID,
+    business_id: str = Depends(get_current_business_id),
+    db=Depends(get_sync_db),
+    _user=Depends(get_current_active_user),
+):
+    """Download a proforma invoice / quote as a PDF."""
+    from fastapi.responses import Response
+    from decimal import Decimal as D
+    from app.core.pdf import build_quote_pdf
+
+    svc = ProformaService(db)
+    quote = svc.get_quote(str(quote_id), business_id)
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    items = [
+        {
+            "description": item.description or "",
+            "quantity": float(item.quantity),
+            "unit_price": float(item.unit_price),
+            "amount": float(item.line_total or 0),
+        }
+        for item in (quote.items or [])
+        if not getattr(item, "deleted_at", None)
+    ]
+
+    pdf_bytes = build_quote_pdf(
+        quote_number=quote.quote_number,
+        status=quote.status.value if hasattr(quote.status, "value") else str(quote.status),
+        business_name=str(business_id),
+        customer_name=None,
+        valid_until=quote.expiry_date,
+        items=items,
+        subtotal=quote.subtotal or D(0),
+        discount_amount=quote.discount_amount or D(0),
+        tax_amount=quote.tax_amount or D(0),
+        total=quote.total or D(0),
+        notes=quote.notes,
+        terms=quote.terms,
+        issue_date=quote.issue_date,
+    )
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=quote-{quote.quote_number}.pdf"},
+    )
+
+
 def _quote_to_response(quote) -> QuoteResponse:
     """Convert a ProformaInvoice model to the API response schema."""
     items = []
