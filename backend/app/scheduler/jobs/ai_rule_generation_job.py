@@ -11,7 +11,6 @@ offline devices can sync up-to-date suggestions on next connect.
 
 import logging
 from datetime import datetime, timedelta, timezone
-from collections import Counter
 
 from app.core.database import SessionLocal
 
