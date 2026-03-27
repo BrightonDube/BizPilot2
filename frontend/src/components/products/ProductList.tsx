@@ -305,7 +305,9 @@ export function ProductList() {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-100 mb-1">{product.name}</h3>
+                  <Link href={`/products/${product.id}`}>
+                    <h3 className="font-semibold text-blue-400 hover:text-blue-300 hover:underline cursor-pointer mb-1">{product.name}</h3>
+                  </Link>
                   <p className="text-sm text-gray-400">{product.sku && <span className="mr-2">SKU: {product.sku}</span>}</p>
                 </div>
                 <div className="flex space-x-1">
@@ -394,7 +396,9 @@ export function ProductList() {
                         <Package className="h-5 w-5 text-gray-400" />
                       </div>
                       <div>
-                        <span className="font-medium text-white">{product.name}</span>
+                        <Link href={`/products/${product.id}`}>
+                          <span className="font-medium text-blue-400 hover:text-blue-300 hover:underline cursor-pointer">{product.name}</span>
+                        </Link>
                         {product.description && <p className="text-xs text-gray-400 truncate max-w-xs">{product.description}</p>}
                       </div>
                     </div>
