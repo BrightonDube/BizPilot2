@@ -1,6 +1,8 @@
 'use client'
 
-import { Bot, Check, Download, Loader2, User, AlertTriangle, X } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Bot, Check, AlertTriangle, ExternalLink, Loader2, User, X } from 'lucide-react'
 import type { AIMessage } from '@/hooks/useAIChat'
 
 type Props = {
@@ -8,11 +10,8 @@ type Props = {
   index: number
 }
 
-export function AIMessageRenderer({ message: m, index }: Props) {
+export function AIMessageRenderer({ message: m }: Props) {
   const isUser = m.is_user
-
-  // Parse markdown-like tables from content
-  const hasTable = !isUser && m.content.includes('|') && m.content.includes('---')
 
   return (
     <div className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -39,12 +38,93 @@ export function AIMessageRenderer({ message: m, index }: Props) {
         )}
 
         {/* Content */}
-        {hasTable ? (
-          <div className="text-sm">
-            <MarkdownContent content={m.content} />
-          </div>
-        ) : (
+        {isUser ? (
           <p className="text-sm whitespace-pre-wrap">{m.content}</p>
+        ) : (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              strong: ({ children }) => (
+                <strong className="font-semibold">{children}</strong>
+              ),
+              em: ({ children }) => (
+                <em className="italic">{children}</em>
+              ),
+              code: ({ children, className }: { children?: React.ReactNode; className?: string }) => {
+                if (className?.includes('language-')) {
+                  return (
+                    <pre className="bg-gray-950 rounded-md p-3 my-2 overflow-x-auto text-sm">
+                      <code className="text-green-400 font-mono">{children}</code>
+                    </pre>
+                  )
+                }
+                return (
+                  <code className="bg-gray-950 text-green-400 font-mono text-xs px-1.5 py-0.5 rounded">
+                    {children}
+                  </code>
+                )
+              },
+              a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 underline hover:text-blue-300 inline-flex items-center gap-0.5 transition-colors"
+                  title={href}
+                >
+                  {children}
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </a>
+              ),
+              ul: ({ children }) => (
+                <ul className="list-disc list-inside space-y-0.5 my-2 pl-2 text-sm">{children}</ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="list-decimal list-inside space-y-0.5 my-2 pl-2 text-sm">{children}</ol>
+              ),
+              li: ({ children }) => (
+                <li className="leading-relaxed">{children}</li>
+              ),
+              p: ({ children }) => (
+                <p className="mb-2 last:mb-0 leading-relaxed text-sm">{children}</p>
+              ),
+              table: ({ children }) => (
+                <div className="overflow-x-auto my-3">
+                  <table className="min-w-full border border-gray-600 rounded-lg text-xs">
+                    {children}
+                  </table>
+                </div>
+              ),
+              thead: ({ children }) => (
+                <thead className="bg-gray-800">{children}</thead>
+              ),
+              th: ({ children }) => (
+                <th className="px-3 py-2 text-left font-medium border-b border-gray-600 text-gray-300">
+                  {children}
+                </th>
+              ),
+              td: ({ children }) => (
+                <td className="px-3 py-2 border-b border-gray-700/50 text-gray-200">{children}</td>
+              ),
+              h1: ({ children }) => (
+                <h1 className="text-base font-bold mt-3 mb-1">{children}</h1>
+              ),
+              h2: ({ children }) => (
+                <h2 className="text-sm font-semibold mt-3 mb-1">{children}</h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-sm font-medium mt-2 mb-1">{children}</h3>
+              ),
+              blockquote: ({ children }) => (
+                <blockquote className="border-l-2 border-blue-500 pl-3 my-2 text-gray-300 italic text-sm">
+                  {children}
+                </blockquote>
+              ),
+              hr: () => <hr className="border-gray-600 my-3" />,
+            }}
+          >
+            {m.content}
+          </ReactMarkdown>
         )}
       </div>
     </div>
@@ -65,7 +145,7 @@ function TypeBadge({ type, toolName }: { type: string; toolName?: string }) {
     },
     tool_result: {
       icon: <Check className="w-3 h-3" />,
-      label: toolName ? `${toolName}` : 'Tool Result',
+      label: toolName ?? 'Tool Result',
       className: 'bg-green-900/30 text-green-300 border-green-500/30',
     },
     error: {
@@ -90,97 +170,5 @@ function TypeBadge({ type, toolName }: { type: string; toolName?: string }) {
       {config.icon}
       {config.label}
     </span>
-  )
-}
-
-function MarkdownContent({ content }: { content: string }) {
-  // Simple markdown rendering for tables and bold text
-  const lines = content.split('\n')
-  const elements: React.ReactNode[] = []
-  let tableLines: string[] = []
-  let inTable = false
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const isTableLine = line.trim().startsWith('|') && line.trim().endsWith('|')
-    const isSeparator = /^\|[\s-:|]+\|$/.test(line.trim())
-
-    if (isTableLine || isSeparator) {
-      if (!inTable) inTable = true
-      tableLines.push(line)
-    } else {
-      if (inTable) {
-        elements.push(<SimpleTable key={`table-${i}`} lines={tableLines} />)
-        tableLines = []
-        inTable = false
-      }
-      if (line.trim()) {
-        elements.push(
-          <p key={i} className="whitespace-pre-wrap mb-1">
-            {renderInlineFormatting(line)}
-          </p>
-        )
-      }
-    }
-  }
-
-  if (inTable && tableLines.length > 0) {
-    elements.push(<SimpleTable key="table-end" lines={tableLines} />)
-  }
-
-  return <>{elements}</>
-}
-
-function renderInlineFormatting(text: string): React.ReactNode {
-  // Handle **bold** text
-  const parts = text.split(/(\*\*[^*]+\*\*)/)
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>
-    }
-    return part
-  })
-}
-
-function SimpleTable({ lines }: { lines: string[] }) {
-  const rows = lines
-    .filter((l) => !/^\|[\s-:|]+\|$/.test(l.trim()))
-    .map((l) =>
-      l
-        .split('|')
-        .filter(Boolean)
-        .map((cell) => cell.trim())
-    )
-
-  if (rows.length === 0) return null
-
-  const header = rows[0]
-  const body = rows.slice(1)
-
-  return (
-    <div className="overflow-x-auto my-2">
-      <table className="w-full text-xs border-collapse">
-        <thead>
-          <tr>
-            {header.map((cell, i) => (
-              <th key={i} className="text-left px-2 py-1 border-b border-gray-600 text-gray-300 font-medium">
-                {cell}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {body.map((row, i) => (
-            <tr key={i} className="hover:bg-gray-800/30">
-              {row.map((cell, j) => (
-                <td key={j} className="px-2 py-1 border-b border-gray-700/50 text-gray-200">
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   )
 }
