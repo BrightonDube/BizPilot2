@@ -274,6 +274,102 @@ def export_transactions_csv(
     )
 
 
+# ---------------------------------------------------------------------------
+# Cash Drawer Sessions
+# ---------------------------------------------------------------------------
+
+
+@router.get("/cash-drawer/current")
+def get_active_cash_drawer(
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_sync_db),
+    _user=Depends(get_current_active_user),
+):
+    """Return the currently open cash drawer session, or null."""
+    svc = PaymentService(db)
+    session = svc.get_active_session(UUID(business_id))
+    if not session:
+        return {"session": None}
+    return {
+        "session": {
+            "id": str(session.id),
+            "business_id": str(session.business_id),
+            "opened_by_id": str(session.opened_by_id),
+            "opening_float": float(session.opening_float),
+            "status": session.status,
+            "opened_at": session.opened_at.isoformat() if session.opened_at else None,
+            "notes": session.notes,
+        }
+    }
+
+
+@router.post("/cash-drawer/open", status_code=201)
+def open_cash_drawer(
+    body: dict,
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_sync_db),
+    current_user=Depends(get_current_active_user),
+):
+    """Open a new cash drawer session with a starting float."""
+    opening_float = body.get("opening_float")
+    if opening_float is None:
+        raise HTTPException(status_code=422, detail="opening_float is required")
+    try:
+        from decimal import Decimal
+        svc = PaymentService(db)
+        session = svc.open_cash_drawer(
+            business_id=UUID(business_id),
+            opened_by_id=current_user.id,
+            opening_float=Decimal(str(opening_float)),
+            notes=body.get("notes"),
+        )
+        db.commit()
+        return {
+            "id": str(session.id),
+            "status": session.status,
+            "opening_float": float(session.opening_float),
+            "opened_at": session.opened_at.isoformat() if session.opened_at else None,
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/cash-drawer/{session_id}/close")
+def close_cash_drawer(
+    session_id: UUID,
+    body: dict,
+    business_id: str = Depends(get_current_business_id),
+    db: Session = Depends(get_sync_db),
+    current_user=Depends(get_current_active_user),
+):
+    """Close a cash drawer session and record the closing float."""
+    closing_float = body.get("closing_float")
+    if closing_float is None:
+        raise HTTPException(status_code=422, detail="closing_float is required")
+    try:
+        from decimal import Decimal
+        svc = PaymentService(db)
+        session = svc.close_cash_drawer(
+            session_id=session_id,
+            business_id=UUID(business_id),
+            closed_by_id=current_user.id,
+            closing_float=Decimal(str(closing_float)),
+            notes=body.get("notes"),
+        )
+        db.commit()
+        return {
+            "id": str(session.id),
+            "status": session.status,
+            "opening_float": float(session.opening_float),
+            "closing_float": float(session.closing_float),
+            "expected_float": float(session.expected_float) if session.expected_float is not None else None,
+            "variance": float(session.variance) if session.variance is not None else None,
+            "closed_at": session.closed_at.isoformat() if session.closed_at else None,
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @router.get("/reports/export/json")
 def export_transactions_json(
     days: int = Query(30, ge=1, le=365),

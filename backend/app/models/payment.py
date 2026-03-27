@@ -118,3 +118,46 @@ class PaymentTransaction(BaseModel):
         comment="Links refund to original transaction",
     )
     processed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class CashDrawerStatus(str, enum.Enum):
+    """Status of a cash drawer session."""
+
+    OPEN = "open"
+    CLOSED = "closed"
+
+
+class CashDrawerSession(BaseModel):
+    """Tracks cash drawer open/close sessions for reconciliation.
+
+    Each POS shift should open a drawer with a float, then close it
+    with an actual count. The variance (expected - actual) flags
+    discrepancies for manager review.
+    """
+
+    __tablename__ = "cash_drawer_sessions"
+
+    business_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id"),
+        nullable=False,
+        index=True,
+    )
+    opened_by_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id"),
+        nullable=False,
+    )
+    closed_by_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id"),
+        nullable=True,
+    )
+    opening_float = Column(Numeric(12, 2), nullable=False, comment="Cash placed in drawer at open")
+    closing_float = Column(Numeric(12, 2), nullable=True, comment="Actual cash counted at close")
+    expected_float = Column(Numeric(12, 2), nullable=True, comment="Calculated: opening + cash sales - cash refunds")
+    variance = Column(Numeric(12, 2), nullable=True, comment="closing_float - expected_float (negative = short)")
+    notes = Column(String(500), nullable=True)
+    status = Column(String(20), default=CashDrawerStatus.OPEN.value, nullable=False)
+    opened_at = Column(DateTime(timezone=True), nullable=True)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
