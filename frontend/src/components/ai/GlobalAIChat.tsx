@@ -7,6 +7,9 @@ import { apiClient } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button, Input } from '@/components/ui';
 import { useGuestAISession } from '@/hooks/useGuestAISession';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { ExternalLink } from 'lucide-react';
 
 type ChatMessage = {
   id: string;
@@ -24,7 +27,7 @@ const MOBILE_NAV_CLEARANCE = MOBILE_NAV_HEIGHT + 5;
 import { sendMessage as sendAgentMessage } from '@/services/agentChatService';
 
 export function GlobalAIChat() {
-  const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
   const pathname = usePathname();
 
   // Determine AI context based on authentication status
@@ -108,11 +111,7 @@ export function GlobalAIChat() {
     };
   }, [isDragging]);
 
-  useEffect(() => {
-    if (!isInitialized) {
-      fetchUser();
-    }
-  }, [fetchUser, isInitialized]);
+  // Auth initialization is handled by AuthInitializer in the root layout.
 
   useEffect(() => {
     if (open) {
@@ -260,6 +259,11 @@ export function GlobalAIChat() {
     return null;
   }
 
+  // Never render on auth pages — prevents 401 calls and unwanted guest session init
+  if (pathname?.startsWith('/auth')) {
+    return null;
+  }
+
   // For marketing context, show on marketing pages even without authentication
   // For business context, require authentication
   if (aiContext === 'business' && !canUseChat) {
@@ -347,13 +351,46 @@ export function GlobalAIChat() {
                         className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
+                          className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                             m.role === 'user'
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-blue-600 text-white whitespace-pre-wrap'
                               : 'bg-slate-900 text-slate-100 border border-slate-800'
                           }`}
                         >
-                          {m.content}
+                          {m.role === 'user' ? m.content : (
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                                em: ({ children }) => <em className="italic">{children}</em>,
+                                code: ({ children, className: cn }: { children?: React.ReactNode; className?: string }) => {
+                                  if (cn?.includes('language-')) {
+                                    return <pre className="bg-slate-950 rounded p-2 my-1 overflow-x-auto"><code className="text-green-400 font-mono text-xs">{children}</code></pre>
+                                  }
+                                  return <code className="bg-slate-950 text-green-400 font-mono text-xs px-1 py-0.5 rounded">{children}</code>
+                                },
+                                a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+                                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 inline-flex items-center gap-0.5" title={href}>
+                                    {children}<ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                  </a>
+                                ),
+                                ul: ({ children }) => <ul className="list-disc list-inside my-1 pl-1 space-y-0.5">{children}</ul>,
+                                ol: ({ children }) => <ol className="list-decimal list-inside my-1 pl-1 space-y-0.5">{children}</ol>,
+                                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                                p: ({ children }) => <p className="mb-1 last:mb-0 leading-relaxed">{children}</p>,
+                                table: ({ children }) => <div className="overflow-x-auto my-2"><table className="min-w-full border border-slate-600 rounded text-xs">{children}</table></div>,
+                                thead: ({ children }) => <thead className="bg-slate-800">{children}</thead>,
+                                th: ({ children }) => <th className="px-2 py-1 text-left font-medium border-b border-slate-600">{children}</th>,
+                                td: ({ children }) => <td className="px-2 py-1 border-b border-slate-700/50">{children}</td>,
+                                h1: ({ children }) => <h1 className="text-sm font-bold mt-2 mb-1">{children}</h1>,
+                                h2: ({ children }) => <h2 className="text-sm font-semibold mt-2 mb-1">{children}</h2>,
+                                h3: ({ children }) => <h3 className="text-xs font-semibold mt-1 mb-0.5">{children}</h3>,
+                                blockquote: ({ children }) => <blockquote className="border-l-2 border-blue-500 pl-2 my-1 italic text-slate-300">{children}</blockquote>,
+                              }}
+                            >
+                              {m.content}
+                            </ReactMarkdown>
+                          )}
                         </div>
                       </div>
                     ))}
