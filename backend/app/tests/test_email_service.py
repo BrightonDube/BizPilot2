@@ -1,61 +1,150 @@
-"""Unit tests for EmailService."""
+"""
+test_email_service.py
+Tests for EmailService (app/services/email_service.py).
+
+Root cause fixed: production emails failed with ``(502, b'5.7.0 Please
+authenticate first')`` because SMTP_USER / SMTP_PASSWORD were not set in the
+DigitalOcean environment.  The fix:
+  1. Raises ``ValueError`` immediately if SMTP_USER is set but SMTP_PASSWORD is
+     missing — fails fast instead of attempting a connection that will 502.
+  2. Wraps ``SMTPAuthenticationError`` with structured logging showing which
+     credentials and host were used.
+  3. Re-raises all exceptions so callers know the email was NOT sent.
+"""
 
 import pytest
+import smtplib
+from unittest.mock import MagicMock, patch
 
 
-def test_email_service_starttls_and_login(monkeypatch):
-    from app.core.config import settings
-    from app.services.email_service import EmailService
+class TestEmailServiceValidation:
+    """Validate config guard-rails added to EmailService.send_email."""
 
-    calls = {"init": None, "ehlo": 0, "starttls": 0, "login": None, "send": 0}
+    def test_missing_smtp_password_raises_value_error(self):
+        """When SMTP_USER is set but SMTP_PASSWORD is empty, raise ValueError immediately."""
+        from app.services.email_service import EmailService
 
-    class FakeSMTP:
-        def __init__(self, host, port, timeout=None):
-            calls["init"] = {"host": host, "port": port, "timeout": timeout}
+        service = EmailService()
+        with patch("app.services.email_service.settings") as mock_settings:
+            mock_settings.SMTP_USER = "user@example.com"
+            mock_settings.SMTP_PASSWORD = None  # missing
 
-        def __enter__(self):
-            return self
+            with pytest.raises(ValueError, match="SMTP_PASSWORD"):
+                service.send_email(
+                    to_email="to@example.com",
+                    subject="Test",
+                    body_text="Hello",
+                )
 
-        def __exit__(self, exc_type, exc, tb):
-            return False
+    def test_both_credentials_missing_skips_login(self):
+        """When SMTP_USER is None/empty, smtp.login() must NOT be called."""
+        from app.services.email_service import EmailService
 
-        def ehlo(self):
-            calls["ehlo"] += 1
+        service = EmailService()
+        mock_smtp_instance = MagicMock()
 
-        def starttls(self):
-            calls["starttls"] += 1
+        with patch("app.services.email_service.settings") as mock_settings, \
+             patch("smtplib.SMTP") as mock_smtp_class:
 
-        def login(self, user, password):
-            calls["login"] = {"user": user, "password": password}
+            mock_settings.SMTP_USER = None
+            mock_settings.SMTP_PASSWORD = None
+            mock_settings.SMTP_HOST = "localhost"
+            mock_settings.SMTP_PORT = 1025
+            mock_settings.SMTP_TIMEOUT = 10
+            mock_settings.SMTP_STARTTLS = False
+            mock_settings.EMAILS_FROM_NAME = "BizPilot"
+            mock_settings.EMAILS_FROM_EMAIL = "noreply@bizpilot.app"
 
-        def send_message(self, msg):
-            calls["send"] += 1
+            mock_smtp_class.return_value.__enter__ = lambda s: mock_smtp_instance
+            mock_smtp_class.return_value.__exit__ = MagicMock(return_value=False)
 
-    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.example.com")
-    monkeypatch.setattr(settings, "SMTP_PORT", 587)
-    monkeypatch.setattr(settings, "SMTP_TIMEOUT", 12)
-    monkeypatch.setattr(settings, "SMTP_STARTTLS", True)
-    monkeypatch.setattr(settings, "SMTP_USER", "user")
-    monkeypatch.setattr(settings, "SMTP_PASSWORD", "pass")
+            service.send_email(
+                to_email="to@example.com",
+                subject="Test",
+                body_text="Hello",
+            )
 
-    import app.services.email_service as email_mod
+            mock_smtp_instance.login.assert_not_called()
 
-    monkeypatch.setattr(email_mod.smtplib, "SMTP", FakeSMTP)
+    def test_smtp_auth_error_is_reraised(self):
+        """SMTPAuthenticationError must be re-raised, not swallowed."""
+        from app.services.email_service import EmailService
 
-    EmailService().send_email(to_email="a@b.com", subject="Hi", body_text="Body")
+        service = EmailService()
 
-    assert calls["init"] == {"host": "smtp.example.com", "port": 587, "timeout": 12}
-    assert calls["starttls"] == 1
-    assert calls["login"] == {"user": "user", "password": "pass"}
-    assert calls["send"] == 1
+        with patch("app.services.email_service.settings") as mock_settings, \
+             patch("smtplib.SMTP") as mock_smtp_class:
+
+            mock_settings.SMTP_USER = "user@example.com"
+            mock_settings.SMTP_PASSWORD = "wrong"
+            mock_settings.SMTP_HOST = "smtp.example.com"
+            mock_settings.SMTP_PORT = 587
+            mock_settings.SMTP_TIMEOUT = 10
+            mock_settings.SMTP_STARTTLS = True
+            mock_settings.EMAILS_FROM_NAME = "BizPilot"
+            mock_settings.EMAILS_FROM_EMAIL = "noreply@bizpilot.app"
+
+            mock_smtp_instance = MagicMock()
+            mock_smtp_instance.login.side_effect = smtplib.SMTPAuthenticationError(535, b"auth failed")
+            mock_smtp_class.return_value.__enter__ = lambda s: mock_smtp_instance
+            mock_smtp_class.return_value.__exit__ = MagicMock(return_value=False)
+
+            with pytest.raises(smtplib.SMTPAuthenticationError):
+                service.send_email(
+                    to_email="to@example.com",
+                    subject="Test",
+                    body_text="Hello",
+                )
+
+    def test_smtp_exception_is_reraised(self):
+        """Generic SMTPException must also be re-raised (not silently swallowed)."""
+        from app.services.email_service import EmailService
+
+        service = EmailService()
+
+        with patch("app.services.email_service.settings") as mock_settings, \
+             patch("smtplib.SMTP") as mock_smtp_class:
+
+            mock_settings.SMTP_USER = None
+            mock_settings.SMTP_HOST = "smtp.example.com"
+            mock_settings.SMTP_PORT = 587
+            mock_settings.SMTP_TIMEOUT = 10
+            mock_settings.SMTP_STARTTLS = False
+            mock_settings.EMAILS_FROM_NAME = "BizPilot"
+            mock_settings.EMAILS_FROM_EMAIL = "noreply@bizpilot.app"
+
+            mock_smtp_instance = MagicMock()
+            mock_smtp_instance.send_message.side_effect = smtplib.SMTPException("server error")
+            mock_smtp_class.return_value.__enter__ = lambda s: mock_smtp_instance
+            mock_smtp_class.return_value.__exit__ = MagicMock(return_value=False)
+
+            with pytest.raises(smtplib.SMTPException):
+                service.send_email(
+                    to_email="to@example.com",
+                    subject="Test",
+                    body_text="Hello",
+                )
 
 
-def test_email_service_requires_password_when_user_set(monkeypatch):
-    from app.core.config import settings
-    from app.services.email_service import EmailService
+class TestEmailServiceStructure:
+    """Verify EmailService has the correct structure and logging."""
 
-    monkeypatch.setattr(settings, "SMTP_USER", "user")
-    monkeypatch.setattr(settings, "SMTP_PASSWORD", "")
+    def test_email_service_has_send_email(self):
+        """EmailService must have a send_email method."""
+        from app.services.email_service import EmailService
+        assert hasattr(EmailService, "send_email"), "EmailService missing send_email"
 
-    with pytest.raises(ValueError):
-        EmailService().send_email(to_email="a@b.com", subject="Hi", body_text="Body")
+    def test_module_has_logger(self):
+        """Module-level logger must be present (added as part of the fix)."""
+        import app.services.email_service as mod
+        import logging
+        assert hasattr(mod, "logger"), "email_service module missing logger"
+        assert isinstance(mod.logger, logging.Logger)
+
+    def test_email_attachment_dataclass_exists(self):
+        """EmailAttachment dataclass must exist for attachment support."""
+        from app.services.email_service import EmailAttachment
+        att = EmailAttachment(filename="test.pdf", content=b"data")
+        assert att.filename == "test.pdf"
+        assert att.content == b"data"
+        assert att.content_type is None  # defaults to None

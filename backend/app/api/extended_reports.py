@@ -19,7 +19,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_active_user, get_current_business_id
+from app.api.deps import get_current_active_user, get_current_business_id
+from app.core.database import get_sync_db
 from app.services.extended_report_service import ExtendedReportService
 
 
@@ -38,7 +39,7 @@ async def get_user_activity(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     business_id: UUID = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_sync_db),
     current_user=Depends(get_current_active_user),
 ):
     """
@@ -79,7 +80,7 @@ async def get_login_history(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     business_id: UUID = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_sync_db),
     current_user=Depends(get_current_active_user),
 ):
     """
@@ -121,7 +122,7 @@ async def export_excel(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     business_id: UUID = Depends(get_current_business_id),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_sync_db),
     current_user=Depends(get_current_active_user),
 ):
     """

@@ -450,6 +450,7 @@ async def create_order(
 
 
 @router.put("/{order_id}", response_model=OrderResponse)
+@router.patch("/{order_id}", response_model=OrderResponse)
 async def update_order(
     order_id: str,
     data: OrderUpdate,
@@ -457,16 +458,23 @@ async def update_order(
     business_id: str = Depends(get_current_business_id),
     db=Depends(get_sync_db),
 ):
-    """Update an order."""
+    """
+    Update an order.
+
+    Accepts both PUT (full replace) and PATCH (partial update) because the
+    frontend purchase-order status dropdown sends PATCH /orders/{id} and
+    the edit form sends PUT /orders/{id}.  Both are handled identically here
+    since OrderUpdate uses all-optional fields.
+    """
     service = OrderService(db)
     order = service.get_order(order_id, business_id)
-    
+
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Order not found",
         )
-    
+
     order = service.update_order(order, data)
     items = service.get_order_items(str(order.id))
     return _order_to_response(order, items)
