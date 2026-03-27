@@ -86,7 +86,7 @@ registry.register(AgentDefinition(
         "purchase orders with suppliers. Never submit without explicit approval."
     ),
     model_tier=AgentTier.BALANCED,
-    capabilities=["view orders", "create order drafts", "update order status"],
+    capabilities=["view orders", "create order drafts", "update order status", "reorder suggestions"],
     constraints=[
         "Never submit an order without HITL approval",
         "Never assume supplier, quantity, or price the user did not state",
@@ -95,7 +95,7 @@ registry.register(AgentDefinition(
     tools=[
         "get_orders", "get_order", "get_suppliers",
         "create_order_draft", "submit_order_draft", "update_order_status",
-        "get_inventory_summary",
+        "get_inventory_summary", "get_low_stock_items", "get_reorder_suggestions",
     ],
 ))
 
@@ -107,7 +107,7 @@ registry.register(AgentDefinition(
         "and produce PDF reports. Always state the period the data covers."
     ),
     model_tier=AgentTier.BALANCED,
-    capabilities=["daily sales", "weekly reports", "monthly reports", "PDF generation"],
+    capabilities=["daily sales", "weekly reports", "monthly reports", "PDF generation", "email reports"],
     constraints=[
         "Never generate a PDF without HITL approval",
         "Never report data from a different period than requested",
@@ -116,6 +116,8 @@ registry.register(AgentDefinition(
     tools=[
         "get_daily_sales", "get_weekly_report", "get_monthly_report",
         "get_product_performance", "get_inventory_summary", "generate_pdf_report",
+        "generate_and_email_report", "get_custom_report",
+        "send_report_email",
     ],
 ))
 
@@ -138,6 +140,8 @@ registry.register(AgentDefinition(
         "get_daily_sales", "get_monthly_report", "get_product_performance",
         "get_inventory_summary", "get_low_stock_items",
         "get_customers", "get_top_customers", "get_dashboard_kpis",
+        "get_invoice_stats", "get_overdue_invoices",
+        "get_expense_summary", "get_gl_balance", "get_customer_metrics",
     ],
     max_steps=8,
 ))
@@ -147,10 +151,10 @@ registry.register(AgentDefinition(
     name="operations_agent",
     role_description=(
         "You are the operations manager. You help optimise daily operations: "
-        "staff scheduling, section allocation, and floor planning."
+        "staff scheduling, POS, cash registers, and floor planning."
     ),
     model_tier=AgentTier.BALANCED,
-    capabilities=["staff summaries", "time entries", "operational planning"],
+    capabilities=["staff summaries", "time entries", "operational planning", "POS status", "cash register"],
     constraints=[
         "Never generate a final PDF without HITL approval",
         "Always show a draft before any final output",
@@ -159,5 +163,74 @@ registry.register(AgentDefinition(
     tools=[
         "get_daily_sales", "get_staff_summary", "get_time_entries",
         "get_inventory_summary", "generate_pdf_report",
+        "get_register_status", "get_cashup_summary", "get_shift_summary",
+        "get_laybys", "get_overdue_laybys",
+    ],
+))
+
+# --- Email / communications agent ---
+registry.register(AgentDefinition(
+    name="email_agent",
+    role_description=(
+        "You are the communications officer. You compose and send emails, "
+        "reports, and notifications. Always confirm before sending."
+    ),
+    model_tier=AgentTier.BALANCED,
+    capabilities=["send emails", "send reports", "send invoices", "send notifications"],
+    constraints=[
+        "Never send any email without HITL approval",
+        "Always show the recipient and content before sending",
+        "Never fabricate email addresses",
+    ],
+    tools=[
+        "send_report_email", "send_invoice_email", "send_custom_email",
+        "send_notification", "notify_all_staff",
+        "generate_pdf_report", "get_daily_sales", "get_monthly_report",
+        "get_invoice_stats",
+    ],
+))
+
+# --- Finance agent ---
+registry.register(AgentDefinition(
+    name="finance_agent",
+    role_description=(
+        "You are the finance officer. You manage accounts, expenses, petty cash, "
+        "and general ledger entries. Always confirm before creating entries."
+    ),
+    model_tier=AgentTier.BALANCED,
+    capabilities=["GL accounts", "expenses", "petty cash", "journal entries", "invoicing"],
+    constraints=[
+        "Never create a journal entry without HITL approval",
+        "Never record an expense without HITL approval",
+        "Always verify amounts before submission",
+    ],
+    tools=[
+        "get_gl_accounts", "get_gl_balance", "create_journal_entry",
+        "get_petty_cash_balance", "record_petty_cash",
+        "get_expense_summary", "create_expense",
+        "get_invoice_stats", "get_invoices", "get_overdue_invoices",
+        "create_invoice", "record_invoice_payment",
+    ],
+))
+
+# --- CRM agent ---
+registry.register(AgentDefinition(
+    name="crm_agent",
+    role_description=(
+        "You are the CRM manager. You manage customer relationships, segments, "
+        "loyalty tracking, and customer interactions."
+    ),
+    model_tier=AgentTier.BALANCED,
+    capabilities=["customer management", "segmentation", "interaction logging", "customer metrics"],
+    constraints=[
+        "Never create a customer without HITL approval",
+        "Never modify customer data without confirmation",
+        "Always verify customer details before changes",
+    ],
+    tools=[
+        "get_customers", "get_top_customers", "search_customers",
+        "create_customer", "update_customer",
+        "list_segments", "create_segment",
+        "log_interaction", "get_customer_metrics",
     ],
 ))

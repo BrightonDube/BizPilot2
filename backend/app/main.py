@@ -28,6 +28,7 @@ from app.scheduler.jobs.layby_jobs import (
     layby_overdue_check_job,
     layby_collection_reminder_job,
 )
+from app.scheduler.jobs.ai_rule_generation_job import ai_rule_generation_job
 
 # Configure logging for performance monitoring
 logging.basicConfig(level=logging.INFO)
@@ -435,6 +436,15 @@ async def startup_event():
             cron_expression='0 9 * * *',
             job_id='layby_collection_reminder',
             name='Layby Collection Reminder'
+        )
+
+        # Register AI rule generation job (daily at 4 AM UTC)
+        scheduler_manager.add_job(
+            ai_rule_generation_job,
+            trigger='cron',
+            cron_expression='0 4 * * *',
+            job_id='ai_rule_generation',
+            name='AI Rule Generation'
         )
 
         # Start scheduler

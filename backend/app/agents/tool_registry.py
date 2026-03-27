@@ -25,6 +25,9 @@ from app.agents.tools.order_tools import (
 from app.agents.tools.inventory_tools import (
     get_inventory_summary,
     get_low_stock_items,
+    adjust_stock,
+    get_inventory_value,
+    get_reorder_suggestions,
 )
 from app.agents.tools.metrics_tools import (
     get_weekly_report,
@@ -32,11 +35,60 @@ from app.agents.tools.metrics_tools import (
     get_product_performance,
     get_dashboard_kpis,
 )
-from app.agents.tools.customer_tools import get_customers, get_top_customers
+from app.agents.tools.customer_tools import (
+    get_customers,
+    get_top_customers,
+    search_customers,
+    create_customer,
+    update_customer,
+)
 from app.agents.tools.supplier_tools import get_suppliers
-from app.agents.tools.invoice_tools import get_invoice_stats, get_invoices
-from app.agents.tools.report_tools import generate_pdf_report
+from app.agents.tools.invoice_tools import (
+    get_invoice_stats,
+    get_invoices,
+    get_overdue_invoices,
+    create_invoice,
+    record_invoice_payment,
+)
+from app.agents.tools.report_tools import (
+    generate_pdf_report,
+    generate_and_email_report,
+    get_custom_report,
+)
 from app.agents.tools.staff_tools import get_staff_summary, get_time_entries
+from app.agents.tools.email_tools import (
+    send_report_email,
+    send_invoice_email,
+    send_custom_email,
+)
+from app.agents.tools.notification_tools import send_notification, notify_all_staff
+from app.agents.tools.finance_tools import (
+    get_gl_accounts,
+    get_gl_balance,
+    create_journal_entry,
+    get_petty_cash_balance,
+    record_petty_cash,
+    get_expense_summary,
+    create_expense,
+)
+from app.agents.tools.crm_tools import (
+    list_segments,
+    create_segment,
+    log_interaction,
+    get_customer_metrics,
+)
+from app.agents.tools.pos_tools import (
+    get_register_status,
+    get_cashup_summary,
+    get_shift_summary,
+)
+from app.agents.tools.layby_tools import (
+    get_laybys,
+    get_layby_details,
+    create_layby,
+    record_layby_payment,
+    get_overdue_laybys,
+)
 
 
 class ToolDefinition:
@@ -113,7 +165,7 @@ class ToolRegistry:
 # ---------------------------------------------------------------------------
 registry = ToolRegistry()
 
-# --- Sales tools ---
+# === Sales tools ===
 registry.register(ToolDefinition(
     name="get_daily_sales",
     description="Get a sales summary for a specific date (YYYY-MM-DD). Defaults to today.",
@@ -125,7 +177,7 @@ registry.register(ToolDefinition(
     risk_level=RiskLevel.LOW,
 ))
 
-# --- Order tools ---
+# === Order tools ===
 registry.register(ToolDefinition(
     name="get_orders",
     description="List recent purchase orders with status and totals.",
@@ -186,7 +238,7 @@ registry.register(ToolDefinition(
     hitl_description="Change order status — this updates the permanent order record.",
 ))
 
-# --- Inventory tools ---
+# === Inventory tools ===
 registry.register(ToolDefinition(
     name="get_inventory_summary",
     description="Get a summary of current inventory levels including low-stock count.",
@@ -207,7 +259,41 @@ registry.register(ToolDefinition(
     risk_level=RiskLevel.LOW,
 ))
 
-# --- Metrics / reporting tools ---
+registry.register(ToolDefinition(
+    name="adjust_stock",
+    description="Adjust stock quantity for a product. Positive adds, negative removes.",
+    parameters={"type": "object", "properties": {
+        "product_id": {"type": "string", "description": "Product ID to adjust"},
+        "adjustment": {"type": "integer", "description": "Quantity to adjust (positive=add, negative=remove)"},
+        "reason": {"type": "string", "description": "Reason for adjustment"},
+    }, "required": ["product_id", "adjustment", "reason"]},
+    handler=adjust_stock,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Adjust stock levels — this changes the inventory permanently.",
+))
+
+registry.register(ToolDefinition(
+    name="get_inventory_value",
+    description="Get the total value of current inventory.",
+    parameters={"type": "object", "properties": {}},
+    handler=get_inventory_value,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="get_reorder_suggestions",
+    description="Get reorder suggestions based on stock levels and sales velocity.",
+    parameters={"type": "object", "properties": {
+        "limit": {"type": "integer", "description": "Max suggestions to return (default 10)"}
+    }},
+    handler=get_reorder_suggestions,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+# === Metrics / reporting tools ===
 registry.register(ToolDefinition(
     name="get_weekly_report",
     description="Get a sales summary for a specific week. week_start is YYYY-MM-DD (Monday).",
@@ -253,7 +339,7 @@ registry.register(ToolDefinition(
     risk_level=RiskLevel.LOW,
 ))
 
-# --- Customer tools ---
+# === Customer tools ===
 registry.register(ToolDefinition(
     name="get_customers",
     description="List customers with basic info and purchase history.",
@@ -276,7 +362,48 @@ registry.register(ToolDefinition(
     risk_level=RiskLevel.LOW,
 ))
 
-# --- Supplier tools ---
+registry.register(ToolDefinition(
+    name="search_customers",
+    description="Search customers by name, email, or phone number.",
+    parameters={"type": "object", "properties": {
+        "query": {"type": "string", "description": "Search query"},
+        "limit": {"type": "integer", "description": "Max results (default 20)"},
+    }, "required": ["query"]},
+    handler=search_customers,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="create_customer",
+    description="Create a new customer record.",
+    parameters={"type": "object", "properties": {
+        "name": {"type": "string", "description": "Customer full name"},
+        "email": {"type": "string", "description": "Email address"},
+        "phone": {"type": "string", "description": "Phone number"},
+    }, "required": ["name"]},
+    handler=create_customer,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.MEDIUM,
+    hitl_description="Create a new customer record in the system.",
+))
+
+registry.register(ToolDefinition(
+    name="update_customer",
+    description="Update an existing customer's details.",
+    parameters={"type": "object", "properties": {
+        "customer_id": {"type": "string", "description": "Customer ID to update"},
+        "name": {"type": "string"},
+        "email": {"type": "string"},
+        "phone": {"type": "string"},
+    }, "required": ["customer_id"]},
+    handler=update_customer,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.MEDIUM,
+    hitl_description="Update customer details — this modifies the permanent record.",
+))
+
+# === Supplier tools ===
 registry.register(ToolDefinition(
     name="get_suppliers",
     description="List suppliers with contact info and payment terms.",
@@ -288,7 +415,7 @@ registry.register(ToolDefinition(
     risk_level=RiskLevel.LOW,
 ))
 
-# --- Invoice tools ---
+# === Invoice tools ===
 registry.register(ToolDefinition(
     name="get_invoice_stats",
     description="Get invoice statistics: total, outstanding, overdue counts and amounts.",
@@ -310,7 +437,46 @@ registry.register(ToolDefinition(
     risk_level=RiskLevel.LOW,
 ))
 
-# --- Report tools ---
+registry.register(ToolDefinition(
+    name="get_overdue_invoices",
+    description="List all overdue invoices with days overdue and amounts.",
+    parameters={"type": "object", "properties": {
+        "limit": {"type": "integer", "description": "Max invoices (default 20)"}
+    }},
+    handler=get_overdue_invoices,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="create_invoice",
+    description="Create a new invoice for a customer.",
+    parameters={"type": "object", "properties": {
+        "customer_id": {"type": "string", "description": "Customer to invoice"},
+        "items": {"type": "array", "items": {"type": "object"}, "description": "Line items"},
+        "notes": {"type": "string"},
+    }, "required": ["customer_id", "items"]},
+    handler=create_invoice,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Create a new invoice — this creates a permanent financial record.",
+))
+
+registry.register(ToolDefinition(
+    name="record_invoice_payment",
+    description="Record a payment against an existing invoice.",
+    parameters={"type": "object", "properties": {
+        "invoice_id": {"type": "string", "description": "Invoice to pay"},
+        "amount": {"type": "number", "description": "Payment amount in ZAR"},
+        "payment_method": {"type": "string", "description": "cash, card, eft, etc."},
+    }, "required": ["invoice_id", "amount"]},
+    handler=record_invoice_payment,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Record an invoice payment — this updates the financial ledger.",
+))
+
+# === Report tools ===
 registry.register(ToolDefinition(
     name="generate_pdf_report",
     description="Generate a downloadable PDF report. Requires user approval before execution.",
@@ -325,7 +491,35 @@ registry.register(ToolDefinition(
     hitl_description="Generate and store a PDF report file.",
 ))
 
-# --- Staff tools ---
+registry.register(ToolDefinition(
+    name="generate_and_email_report",
+    description="Generate a report and email it to the user.",
+    parameters={"type": "object", "properties": {
+        "report_type": {"type": "string", "description": "daily_sales | monthly_summary | inventory"},
+        "period_start": {"type": "string", "description": "YYYY-MM-DD"},
+        "period_end": {"type": "string", "description": "YYYY-MM-DD"},
+        "recipient_email": {"type": "string", "description": "Email to send to"},
+    }, "required": ["report_type", "period_start", "period_end", "recipient_email"]},
+    handler=generate_and_email_report,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Generate a report and email it — this sends an external email.",
+))
+
+registry.register(ToolDefinition(
+    name="get_custom_report",
+    description="Get a custom report with flexible date range and metrics.",
+    parameters={"type": "object", "properties": {
+        "metrics": {"type": "array", "items": {"type": "string"}, "description": "Metrics to include"},
+        "period_start": {"type": "string"},
+        "period_end": {"type": "string"},
+    }, "required": ["metrics", "period_start", "period_end"]},
+    handler=get_custom_report,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+# === Staff tools ===
 registry.register(ToolDefinition(
     name="get_staff_summary",
     description="Get a summary of staff performance and attendance for a period.",
@@ -347,6 +541,306 @@ registry.register(ToolDefinition(
         "limit": {"type": "integer"},
     }},
     handler=get_time_entries,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+# === Email tools ===
+registry.register(ToolDefinition(
+    name="send_report_email",
+    description="Send a report via email to a specified recipient.",
+    parameters={"type": "object", "properties": {
+        "recipient_email": {"type": "string", "description": "Email address to send to"},
+        "report_type": {"type": "string", "description": "Type of report to send"},
+        "subject": {"type": "string", "description": "Email subject line"},
+    }, "required": ["recipient_email", "report_type"]},
+    handler=send_report_email,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.CRITICAL,
+    hitl_description="Send a report email — this sends an external email.",
+))
+
+registry.register(ToolDefinition(
+    name="send_invoice_email",
+    description="Send an invoice to a customer via email.",
+    parameters={"type": "object", "properties": {
+        "invoice_id": {"type": "string", "description": "Invoice to send"},
+        "recipient_email": {"type": "string", "description": "Email to send to"},
+    }, "required": ["invoice_id", "recipient_email"]},
+    handler=send_invoice_email,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.CRITICAL,
+    hitl_description="Email an invoice to a customer — this sends an external email.",
+))
+
+registry.register(ToolDefinition(
+    name="send_custom_email",
+    description="Send a custom email with specified subject and body.",
+    parameters={"type": "object", "properties": {
+        "recipient_email": {"type": "string"},
+        "subject": {"type": "string"},
+        "body": {"type": "string"},
+    }, "required": ["recipient_email", "subject", "body"]},
+    handler=send_custom_email,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.CRITICAL,
+    hitl_description="Send a custom email — this sends an external email.",
+))
+
+# === Notification tools ===
+registry.register(ToolDefinition(
+    name="send_notification",
+    description="Send an in-app notification to a user.",
+    parameters={"type": "object", "properties": {
+        "message": {"type": "string", "description": "Notification message"},
+        "notification_type": {"type": "string", "description": "info, warning, or alert"},
+    }, "required": ["message"]},
+    handler=send_notification,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="notify_all_staff",
+    description="Send a notification to all staff members.",
+    parameters={"type": "object", "properties": {
+        "message": {"type": "string", "description": "Notification message"},
+        "notification_type": {"type": "string", "description": "info, warning, or alert"},
+    }, "required": ["message"]},
+    handler=notify_all_staff,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Notify all staff — this sends notifications to every team member.",
+))
+
+# === Finance tools ===
+registry.register(ToolDefinition(
+    name="get_gl_accounts",
+    description="List general ledger accounts with balances.",
+    parameters={"type": "object", "properties": {
+        "account_type": {"type": "string", "description": "Filter by type: asset, liability, equity, revenue, expense"}
+    }},
+    handler=get_gl_accounts,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="get_gl_balance",
+    description="Get the balance of a specific GL account.",
+    parameters={"type": "object", "properties": {
+        "account_id": {"type": "string", "description": "GL account ID"}
+    }, "required": ["account_id"]},
+    handler=get_gl_balance,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="create_journal_entry",
+    description="Create a journal entry in the general ledger.",
+    parameters={"type": "object", "properties": {
+        "description": {"type": "string"},
+        "debit_account_id": {"type": "string"},
+        "credit_account_id": {"type": "string"},
+        "amount": {"type": "number"},
+    }, "required": ["description", "debit_account_id", "credit_account_id", "amount"]},
+    handler=create_journal_entry,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Create a journal entry — this modifies the general ledger.",
+))
+
+registry.register(ToolDefinition(
+    name="get_petty_cash_balance",
+    description="Get the current petty cash balance.",
+    parameters={"type": "object", "properties": {}},
+    handler=get_petty_cash_balance,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="record_petty_cash",
+    description="Record a petty cash transaction.",
+    parameters={"type": "object", "properties": {
+        "amount": {"type": "number", "description": "Amount in ZAR"},
+        "description": {"type": "string"},
+        "transaction_type": {"type": "string", "description": "in or out"},
+    }, "required": ["amount", "description", "transaction_type"]},
+    handler=record_petty_cash,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Record petty cash — this modifies the cash balance.",
+))
+
+registry.register(ToolDefinition(
+    name="get_expense_summary",
+    description="Get a summary of expenses for a period.",
+    parameters={"type": "object", "properties": {
+        "period_start": {"type": "string", "description": "YYYY-MM-DD"},
+        "period_end": {"type": "string", "description": "YYYY-MM-DD"},
+    }},
+    handler=get_expense_summary,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="create_expense",
+    description="Record a new expense.",
+    parameters={"type": "object", "properties": {
+        "amount": {"type": "number"},
+        "category": {"type": "string"},
+        "description": {"type": "string"},
+        "date": {"type": "string", "description": "YYYY-MM-DD"},
+    }, "required": ["amount", "category", "description"]},
+    handler=create_expense,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Create an expense — this records a permanent financial transaction.",
+))
+
+# === CRM tools ===
+registry.register(ToolDefinition(
+    name="list_segments",
+    description="List customer segments with member counts.",
+    parameters={"type": "object", "properties": {}},
+    handler=list_segments,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="create_segment",
+    description="Create a new customer segment.",
+    parameters={"type": "object", "properties": {
+        "name": {"type": "string", "description": "Segment name"},
+        "criteria": {"type": "object", "description": "Segment criteria/filters"},
+    }, "required": ["name"]},
+    handler=create_segment,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.MEDIUM,
+    hitl_description="Create a customer segment — this organizes customers into groups.",
+))
+
+registry.register(ToolDefinition(
+    name="log_interaction",
+    description="Log a customer interaction (call, visit, email, etc.).",
+    parameters={"type": "object", "properties": {
+        "customer_id": {"type": "string"},
+        "interaction_type": {"type": "string", "description": "call, email, visit, note"},
+        "notes": {"type": "string"},
+    }, "required": ["customer_id", "interaction_type"]},
+    handler=log_interaction,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="get_customer_metrics",
+    description="Get customer metrics: lifetime value, frequency, recency.",
+    parameters={"type": "object", "properties": {
+        "customer_id": {"type": "string", "description": "Customer ID (optional for aggregate)"},
+    }},
+    handler=get_customer_metrics,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+# === POS tools ===
+registry.register(ToolDefinition(
+    name="get_register_status",
+    description="Get the current status of POS cash registers.",
+    parameters={"type": "object", "properties": {}},
+    handler=get_register_status,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="get_cashup_summary",
+    description="Get a cash-up summary for a register or shift.",
+    parameters={"type": "object", "properties": {
+        "register_id": {"type": "string", "description": "Register ID (optional)"},
+        "date": {"type": "string", "description": "Date in YYYY-MM-DD format"},
+    }},
+    handler=get_cashup_summary,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="get_shift_summary",
+    description="Get a summary of a POS shift.",
+    parameters={"type": "object", "properties": {
+        "shift_id": {"type": "string", "description": "Shift ID (optional for current)"},
+    }},
+    handler=get_shift_summary,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+# === Layby tools ===
+registry.register(ToolDefinition(
+    name="get_laybys",
+    description="List active laybys with status and payment progress.",
+    parameters={"type": "object", "properties": {
+        "status": {"type": "string", "description": "Filter by status (active, completed, cancelled)"},
+        "limit": {"type": "integer", "description": "Max results (default 20)"},
+    }},
+    handler=get_laybys,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="get_layby_details",
+    description="Get full details of a specific layby.",
+    parameters={"type": "object", "properties": {
+        "layby_id": {"type": "string", "description": "Layby ID to look up"}
+    }, "required": ["layby_id"]},
+    handler=get_layby_details,
+    action_type=ActionType.HOTL,
+    risk_level=RiskLevel.LOW,
+))
+
+registry.register(ToolDefinition(
+    name="create_layby",
+    description="Create a new layby arrangement for a customer.",
+    parameters={"type": "object", "properties": {
+        "customer_id": {"type": "string"},
+        "items": {"type": "array", "items": {"type": "object"}},
+        "deposit_amount": {"type": "number"},
+        "installment_count": {"type": "integer"},
+    }, "required": ["customer_id", "items", "deposit_amount"]},
+    handler=create_layby,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Create a layby agreement — this creates a binding payment plan.",
+))
+
+registry.register(ToolDefinition(
+    name="record_layby_payment",
+    description="Record a payment against an existing layby.",
+    parameters={"type": "object", "properties": {
+        "layby_id": {"type": "string"},
+        "amount": {"type": "number"},
+        "payment_method": {"type": "string", "description": "cash, card, eft"},
+    }, "required": ["layby_id", "amount"]},
+    handler=record_layby_payment,
+    action_type=ActionType.HITL,
+    risk_level=RiskLevel.HIGH,
+    hitl_description="Record a layby payment — this updates the payment schedule.",
+))
+
+registry.register(ToolDefinition(
+    name="get_overdue_laybys",
+    description="List laybys with overdue payments.",
+    parameters={"type": "object", "properties": {
+        "limit": {"type": "integer", "description": "Max results (default 20)"}
+    }},
+    handler=get_overdue_laybys,
     action_type=ActionType.HOTL,
     risk_level=RiskLevel.LOW,
 ))

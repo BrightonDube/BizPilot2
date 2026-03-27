@@ -12,11 +12,12 @@ Architecture:
 6. Observability - Logging for debugging and cost monitoring
 """
 
+import json
 import os
 import logging
 from enum import Enum
 from typing import Any, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import httpx
 
 from app.core.config import settings
@@ -40,6 +41,11 @@ MODEL_REGISTRY = {
         "llama-3.1-70b-versatile",  # Backup reasoning model
         "llama-3.1-8b-instant",  # Fallback to fast model
     ],
+    "tool_calling": [
+        "llama-3.3-70b-versatile",  # Best for function calling
+        "llama-3.1-70b-versatile",  # Backup
+        "llama-3.1-8b-instant",  # Fallback
+    ],
     "summarization": [
         "llama-3.1-8b-instant",  # Good enough for condensing content
         "mixtral-8x7b-32768",  # Backup option
@@ -58,6 +64,7 @@ class TaskType(str, Enum):
     """Task capability types for model routing."""
     FAST = "fast"  # Tool calls, routing, short responses
     REASONING = "reasoning"  # Multi-step planning, analysis, decisions
+    TOOL_CALLING = "tool_calling"  # Agent tasks needing function calling
     SUMMARIZATION = "summarization"  # Condensing, rewriting, reporting
     FALLBACK = "fallback"  # Universal fallback
 
@@ -69,12 +76,12 @@ class TaskType(str, Enum):
 def get_models_for_task(task_type: TaskType) -> list[str]:
     """
     Get model list for a task type with environment variable overrides.
-    
+
     Environment variables (production safety):
     - FORCE_MODEL: Use single model for all tasks (bypass routing)
     - DEFAULT_FAST_MODEL: Override fast task models
     - DEFAULT_REASONING_MODEL: Override reasoning task models
-    
+
     Returns:
         List of model names in priority order
     """
@@ -83,20 +90,20 @@ def get_models_for_task(task_type: TaskType) -> list[str]:
     if force_model:
         logger.info(f"FORCE_MODEL override active: {force_model}")
         return [force_model]
-    
+
     # Check for task-specific overrides
     if task_type == TaskType.FAST:
         override = os.getenv("DEFAULT_FAST_MODEL")
         if override:
             logger.info(f"DEFAULT_FAST_MODEL override: {override}")
             return [override] + MODEL_REGISTRY["fast"]
-    
-    elif task_type == TaskType.REASONING:
+
+    elif task_type in (TaskType.REASONING, TaskType.TOOL_CALLING):
         override = os.getenv("DEFAULT_REASONING_MODEL")
         if override:
             logger.info(f"DEFAULT_REASONING_MODEL override: {override}")
-            return [override] + MODEL_REGISTRY["reasoning"]
-    
+            return [override] + MODEL_REGISTRY[task_type.value]
+
     # Return registry defaults
     return MODEL_REGISTRY.get(task_type.value, MODEL_REGISTRY["fallback"])
 
@@ -112,6 +119,7 @@ class LLMResponse:
     model_used: str
     finish_reason: str
     usage: dict[str, int]
+    tool_calls: list[dict[str, Any]] | None = field(default=None)
 
 
 class ModelExecutionError(Exception):
@@ -126,32 +134,32 @@ class ModelExecutionError(Exception):
 async def run_groq(model: str, messages: list[dict[str, Any]], **kwargs) -> LLMResponse:
     """
     Execute a Groq model request with error handling.
-    
+
     This is the ONLY function that should interact with Groq SDK.
     All agents and services must call this function, never Groq directly.
-    
+
     Args:
         model: Groq model name
         messages: Chat messages in OpenAI format
-        **kwargs: Additional parameters (temperature, max_tokens, etc.)
-    
+        **kwargs: Additional parameters (temperature, max_tokens, tools, etc.)
+
     Returns:
         LLMResponse with content and metadata
-    
+
     Raises:
         ModelExecutionError: If the model request fails
     """
     if not settings.GROQ_API_KEY:
         raise ModelExecutionError(model, "GROQ_API_KEY not configured")
-    
+
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {settings.GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
-    
+
     # Build request payload
-    payload = {
+    payload: dict[str, Any] = {
         "model": model,
         "messages": messages,
         "temperature": kwargs.get("temperature", 0.7),
@@ -159,11 +167,17 @@ async def run_groq(model: str, messages: list[dict[str, Any]], **kwargs) -> LLMR
         "top_p": kwargs.get("top_p", 1.0),
         "stream": False,
     }
-    
+
+    # Add tools if provided (Groq supports OpenAI-compatible function calling)
+    tools = kwargs.get("tools")
+    if tools:
+        payload["tools"] = tools
+        payload["tool_choice"] = kwargs.get("tool_choice", "auto")
+
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(url, headers=headers, json=payload)
-            
+
             # Handle HTTP errors
             if response.status_code != 200:
                 error_detail = response.text
@@ -172,23 +186,44 @@ async def run_groq(model: str, messages: list[dict[str, Any]], **kwargs) -> LLMR
                     error=f"HTTP {response.status_code}: {error_detail}",
                     status_code=response.status_code,
                 )
-            
+
             data = response.json()
-            
+
             # Extract response content
             choice = data.get("choices", [{}])[0]
-            content = choice.get("message", {}).get("content")
-            
-            if not content:
+            message_data = choice.get("message", {})
+            content = message_data.get("content") or ""
+
+            # Parse tool calls if present
+            raw_tool_calls = message_data.get("tool_calls")
+            parsed_tool_calls = None
+            if raw_tool_calls:
+                parsed_tool_calls = []
+                for tc in raw_tool_calls:
+                    fn = tc.get("function", {})
+                    args_str = fn.get("arguments", "{}")
+                    try:
+                        parsed_args = json.loads(args_str)
+                    except (json.JSONDecodeError, TypeError):
+                        parsed_args = {}
+                    parsed_tool_calls.append({
+                        "id": tc.get("id", ""),
+                        "name": fn.get("name", ""),
+                        "arguments": parsed_args,
+                    })
+
+            # Allow empty content when tool_calls are present
+            if not content and not parsed_tool_calls:
                 raise ModelExecutionError(model, "No content in response")
-            
+
             return LLMResponse(
                 content=str(content),
                 model_used=model,
                 finish_reason=choice.get("finish_reason", "unknown"),
                 usage=data.get("usage", {}),
+                tool_calls=parsed_tool_calls,
             )
-    
+
     except ModelExecutionError:
         raise
     except httpx.TimeoutException as e:
@@ -210,44 +245,44 @@ async def execute_task(
 ) -> LLMResponse:
     """
     Execute an LLM task with automatic model fallback.
-    
+
     This function:
     1. Gets model list for task type (with env overrides)
     2. Tries each model in priority order
     3. Falls back to universal fallback on all failures
     4. Logs all failures for observability
-    
+
     Args:
-        task_type: Type of task (fast, reasoning, summarization)
+        task_type: Type of task (fast, reasoning, tool_calling, summarization)
         messages: Chat messages
-        **kwargs: Additional parameters for model
-    
+        **kwargs: Additional parameters for model (tools, temperature, etc.)
+
     Returns:
         LLMResponse from successful model
-    
+
     Raises:
         RuntimeError: If all models fail (including fallback)
     """
     # Get models for this task type
     models = get_models_for_task(task_type)
-    
+
     # Track failures for logging
     failures = []
-    
+
     # Try each model in priority order
     for model in models:
         try:
             logger.info(f"Attempting task_type={task_type.value} with model={model}")
             response = await run_groq(model, messages, **kwargs)
-            
+
             # Log success
             logger.info(
                 f"✓ Success: task_type={task_type.value}, model={model}, "
                 f"tokens={response.usage.get('total_tokens', 0)}"
             )
-            
+
             return response
-        
+
         except ModelExecutionError as e:
             # Log failure and continue to next model
             logger.warning(
@@ -260,31 +295,31 @@ async def execute_task(
                 "status_code": e.status_code,
             })
             continue
-    
+
     # All primary models failed, try universal fallback
     if task_type != TaskType.FALLBACK:
         logger.warning(
             f"All models failed for task_type={task_type.value}, "
             f"attempting universal fallback"
         )
-        
+
         fallback_models = MODEL_REGISTRY["fallback"]
         for model in fallback_models:
             # Skip if already tried
             if model in models:
                 continue
-            
+
             try:
                 logger.info(f"Fallback attempt with model={model}")
                 response = await run_groq(model, messages, **kwargs)
-                
+
                 logger.info(
                     f"✓ Fallback success: model={model}, "
                     f"tokens={response.usage.get('total_tokens', 0)}"
                 )
-                
+
                 return response
-            
+
             except ModelExecutionError as e:
                 logger.warning(f"✗ Fallback failure: model={model}, error={e.error}")
                 failures.append({
@@ -293,13 +328,13 @@ async def execute_task(
                     "status_code": e.status_code,
                 })
                 continue
-    
+
     # All models failed (including fallback)
     logger.error(
         f"CRITICAL: All Groq models failed for task_type={task_type.value}. "
         f"Failures: {failures}"
     )
-    
+
     raise RuntimeError(
         f"All Groq models failed for task_type={task_type.value}. "
         f"Attempted {len(failures)} models. Check logs for details."

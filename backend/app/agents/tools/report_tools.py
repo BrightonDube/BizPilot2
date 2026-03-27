@@ -80,6 +80,88 @@ async def generate_pdf_report(
     }
 
 
+async def generate_and_email_report(
+    db: Session,
+    user: User,
+    report_type: str,
+    period_start: str,
+    period_end: str,
+    recipient_email: str,
+) -> Dict[str, Any]:
+    """Generate a report and email it. HITL — requires approval."""
+    # First generate the report
+    report_result = await generate_pdf_report(db, user, report_type, period_start, period_end)
+    if report_result.get("error"):
+        return report_result
+
+    # Then send via email
+    try:
+        from app.services.email_service import EmailService
+        email_svc = EmailService(db)
+        await asyncio.to_thread(
+            email_svc.send_email,
+            to=recipient_email,
+            subject=f"BizPilot Report: {report_type} ({period_start} to {period_end})",
+            body=f"Please find attached your {report_type} report for {period_start} to {period_end}.",
+        )
+        return {
+            "sent": True,
+            "recipient": recipient_email,
+            "report_type": report_type,
+            "period": f"{period_start} to {period_end}",
+        }
+    except Exception as e:
+        return {
+            "report_generated": True,
+            "email_sent": False,
+            "error": f"Report generated but email failed: {str(e)}",
+        }
+
+
+async def get_custom_report(
+    db: Session,
+    user: User,
+    metrics: list,
+    period_start: str,
+    period_end: str,
+) -> Dict[str, Any]:
+    """Get a custom report with flexible metrics."""
+    business_id = await asyncio.to_thread(get_business_id_for_user, db, user)
+    if not business_id:
+        return {"error": "No business found for user"}
+
+    results: Dict[str, Any] = {
+        "period": f"{period_start} to {period_end}",
+        "metrics_requested": metrics,
+    }
+
+    # Collect data for each requested metric
+    for metric in metrics:
+        try:
+            if metric in ("sales", "revenue"):
+                from app.agents.tools.sales_tools import get_daily_sales
+                data = await get_daily_sales(db, user, target_date=period_start)
+                results[metric] = data
+            elif metric in ("inventory", "stock"):
+                from app.agents.tools.inventory_tools import get_inventory_summary
+                data = await get_inventory_summary(db, user)
+                results[metric] = data
+            elif metric in ("invoices",):
+                from app.agents.tools.invoice_tools import get_invoice_stats
+                data = await get_invoice_stats(db, user)
+                results[metric] = data
+            elif metric in ("customers",):
+                from app.agents.tools.customer_tools import get_customers
+                data = await get_customers(db, user, limit=10)
+                results[metric] = data
+            else:
+                results[metric] = {"note": f"Metric '{metric}' not yet supported"}
+        except Exception as e:
+            results[metric] = {"error": str(e)}
+
+    return results
+
+
 def _map_report_type(report_type: str) -> Any:
     """Map string report type to the ReportType enum."""
     try:
