@@ -7,7 +7,6 @@ PostgreSQL orderstatus enum.  Migration h3c4d5e6f7a8 adds it.  These tests
 verify the enum value exists in Python and that the endpoint logic is sound.
 """
 
-import pytest
 from app.models.order import OrderStatus
 
 

@@ -10,7 +10,6 @@ Fix: replaced ``Depends(get_db)`` with ``Depends(get_sync_db)`` in all three
 handlers.
 """
 
-import pytest
 
 
 class TestExtendedReportsRoutes:

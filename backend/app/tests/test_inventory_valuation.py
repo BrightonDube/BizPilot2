@@ -62,7 +62,7 @@ class TestInventoryValuationEndpoint:
         app = FastAPI()
         app.include_router(inv_router)
 
-        client = TestClient(app, raise_server_exceptions=False)
+        TestClient(app, raise_server_exceptions=False)  # noqa: F841
         # Without auth this will 403/401, but we just want to confirm
         # the method validation path exists and the logic is correct
         # by unit-testing the validator directly
@@ -74,7 +74,6 @@ class TestInventoryValuationEndpoint:
             with pytest.raises(HTTPException) as exc_info:
                 # Simulate calling the handler with invalid method
                 # We need to bypass the Depends() params
-                from unittest.mock import AsyncMock
                 with patch("app.api.inventory_reports.InventoryReportService"):
                     await get_valuation(
                         method="lifo",

@@ -12,7 +12,6 @@ Also tests the dedicated ``PATCH /{order_id}/status`` route and the
 ``OrderStatusUpdate`` schema.
 """
 
-import pytest
 from app.models.order import OrderStatus
 
 

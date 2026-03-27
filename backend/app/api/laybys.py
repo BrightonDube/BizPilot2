@@ -8,8 +8,6 @@ from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
 
-logger = logging.getLogger(__name__)
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
@@ -38,6 +36,8 @@ from app.schemas.layby_report import (
     AgingReport,
     LaybySummaryReport,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/laybys", tags=["Laybys"])
 

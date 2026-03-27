@@ -7,7 +7,6 @@ purchase-order status dropdown sends PATCH /{order_id}, so it received 405.
 Fix: both PUT and PATCH decorators now share the same handler.
 """
 
-import pytest
 from app.models.order import OrderStatus
 
 
