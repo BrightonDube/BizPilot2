@@ -28,6 +28,8 @@ from app.scheduler.jobs.layby_jobs import (
     layby_overdue_check_job,
     layby_collection_reminder_job,
 )
+from app.scheduler.jobs.statement_job import monthly_statement_job
+from app.scheduler.jobs.collection_reminder_job import collection_reminder_job
 
 # Configure logging for performance monitoring
 logging.basicConfig(level=logging.INFO)
@@ -435,6 +437,24 @@ async def startup_event():
             cron_expression='0 9 * * *',
             job_id='layby_collection_reminder',
             name='Layby Collection Reminder'
+        )
+
+        # Register monthly account statement generation (1st of month at 3 AM UTC)
+        scheduler_manager.add_job(
+            monthly_statement_job,
+            trigger='cron',
+            cron_expression='0 3 1 * *',
+            job_id='monthly_statements',
+            name='Monthly Account Statements'
+        )
+
+        # Register collection reminder job (Monday 8 AM UTC)
+        scheduler_manager.add_job(
+            collection_reminder_job,
+            trigger='cron',
+            cron_expression='0 8 * * 1',
+            job_id='collection_reminders',
+            name='Collection Reminders'
         )
 
         # Start scheduler
