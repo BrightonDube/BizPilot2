@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, Loader2, Plus, Send, Trash2, User } from 'lucide-react'
+import { Bot, Loader2, Plus, Send, Shield, Trash2 } from 'lucide-react'
 
 import { Button, Card, CardContent, Input } from '@/components/ui'
 import { useAIChat } from '@/hooks/useAIChat'
+import { AIMessageRenderer } from '@/components/ai/AIMessageRenderer'
 
 type QuickQuestion = {
   id: string
@@ -21,8 +22,8 @@ const quickQuestions: QuickQuestion[] = [
   },
   {
     id: '2',
-    text: 'How should I price a new product?',
-    prompt: 'Give me guidance on pricing strategy for a new product, considering my current margins and market positioning.'
+    text: 'Email me the sales report',
+    prompt: 'Generate the monthly sales report and email it to me.'
   },
   {
     id: '3',
@@ -31,8 +32,18 @@ const quickQuestions: QuickQuestion[] = [
   },
   {
     id: '4',
-    text: 'How do I create an invoice?',
-    prompt: 'Explain step-by-step how to create an invoice in BizPilot.'
+    text: 'Show overdue invoices',
+    prompt: 'List all my overdue invoices with amounts and how many days overdue.'
+  },
+  {
+    id: '5',
+    text: 'What are my expenses this month?',
+    prompt: 'Give me a summary of my expenses for this month, broken down by category.'
+  },
+  {
+    id: '6',
+    text: 'Who are my top customers?',
+    prompt: 'Show me my top 10 customers by total spending and their purchase patterns.'
   }
 ]
 
@@ -147,7 +158,7 @@ export function AIChatPage() {
           {showQuickQuestions && (
             <div className="p-4 border-b border-gray-700">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Quick Questions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {quickQuestions.map((q) => (
                   <button
                     key={q.id}
@@ -167,34 +178,11 @@ export function AIChatPage() {
               {messages.map((m, idx) => (
                 <motion.div
                   key={m.id}
-                  className={`flex items-start gap-3 ${m.is_user ? 'flex-row-reverse' : ''}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02 }}
                 >
-                  <div
-                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      m.is_user ? 'bg-blue-600' : 'bg-gradient-to-br from-purple-600 to-pink-600'
-                    }`}
-                  >
-                    {m.is_user ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
-                  </div>
-                  <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                      m.is_user ? 'bg-blue-600 text-white' : 'bg-gray-900/50 border border-gray-700 text-gray-100'
-                    }`}
-                  >
-                    {/* Show message type indicator for agent messages */}
-                    {!m.is_user && m.type && (
-                      <div className="text-xs text-gray-400 mb-1">
-                        {m.type === 'plan' && '📋 Plan:'}
-                        {m.type === 'hitl_request' && '⚠️ Action Required:'}
-                        {m.type === 'tool_result' && '✅ Result:'}
-                        {m.type === 'response' && ''}
-                      </div>
-                    )}
-                    <p className="text-sm whitespace-pre-wrap">{m.content}</p>
-                  </div>
+                  <AIMessageRenderer message={m} index={idx} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -219,9 +207,12 @@ export function AIChatPage() {
           {/* HITL Confirmation Dialog */}
           {pendingAction && (
             <div className="border-t border-gray-700 p-4 bg-yellow-900/20">
-              <div className="mb-3">
-                <p className="text-sm font-medium text-yellow-300">The AI wants to perform an action:</p>
-                <p className="text-sm text-gray-200 mt-1">{pendingAction.description}</p>
+              <div className="flex items-start gap-3 mb-3">
+                <Shield className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-300">Approval Required</p>
+                  <p className="text-sm text-gray-200 mt-1">{pendingAction.description}</p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button

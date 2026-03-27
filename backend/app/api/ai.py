@@ -165,6 +165,70 @@ async def get_messages(
     ]
 
 
+@router.get("/metrics")
+async def get_ai_metrics(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_sync_db),
+) -> dict:
+    """Return AI usage metrics for the current user's business.
+
+    Aggregates from the agent_logs table:
+    - Total agent steps run
+    - Total tokens consumed
+    - Success vs failure counts
+    - Most recently generated rules (from ai_rule_generator entries)
+    """
+    from app.models.agent_log import AgentLog
+    from sqlalchemy import func
+
+    business_id_str = getattr(current_user, "business_id", None)
+
+    if business_id_str:
+        # Count total steps and tokens
+        total_steps = (
+            db.query(func.count(AgentLog.id))
+            .filter(AgentLog.business_id == business_id_str)
+            .scalar() or 0
+        )
+        total_tokens = (
+            db.query(func.sum(AgentLog.tokens_used))
+            .filter(AgentLog.business_id == business_id_str)
+            .scalar() or 0
+        )
+        success_count = (
+            db.query(func.count(AgentLog.id))
+            .filter(AgentLog.business_id == business_id_str, AgentLog.success.is_(True))
+            .scalar() or 0
+        )
+        latest_rules_log = (
+            db.query(AgentLog)
+            .filter(
+                AgentLog.business_id == business_id_str,
+                AgentLog.agent_name == "ai_rule_generator",
+            )
+            .order_by(AgentLog.created_at.desc())
+            .first()
+        )
+    else:
+        total_steps = total_tokens = success_count = 0
+        latest_rules_log = None
+
+    return {
+        "business_id": str(business_id_str) if business_id_str else None,
+        "total_agent_steps": int(total_steps),
+        "total_tokens_used": int(total_tokens),
+        "success_count": int(success_count),
+        "failure_count": int(total_steps) - int(success_count),
+        "latest_rules_generated_at": (
+            latest_rules_log.created_at.isoformat()
+            if latest_rules_log and latest_rules_log.created_at else None
+        ),
+        "latest_rules_summary": (
+            latest_rules_log.result_summary if latest_rules_log else None
+        ),
+    }
+
+
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_conversation(
     conversation_id: str,

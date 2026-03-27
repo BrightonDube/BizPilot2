@@ -30,6 +30,7 @@ from app.scheduler.jobs.layby_jobs import (
 )
 from app.scheduler.jobs.statement_job import monthly_statement_job
 from app.scheduler.jobs.collection_reminder_job import collection_reminder_job
+from app.scheduler.jobs.ai_rule_generation_job import ai_rule_generation_job
 
 # Configure logging for performance monitoring
 logging.basicConfig(level=logging.INFO)
@@ -455,6 +456,15 @@ async def startup_event():
             cron_expression='0 8 * * 1',
             job_id='collection_reminders',
             name='Collection Reminders'
+        )
+
+        # Register AI rule generation job (daily at 4 AM UTC)
+        scheduler_manager.add_job(
+            ai_rule_generation_job,
+            trigger='cron',
+            cron_expression='0 4 * * *',
+            job_id='ai_rule_generation',
+            name='AI Rule Generation'
         )
 
         # Start scheduler

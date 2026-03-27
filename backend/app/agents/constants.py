@@ -20,10 +20,10 @@ class AgentTier:
     FAST = TaskType.FAST
 
     # PO drafting, chat, general tool calling
-    BALANCED = TaskType.REASONING
+    BALANCED = TaskType.TOOL_CALLING
 
     # Strategic analysis, forecasting, multi-step decisions
-    POWERFUL = TaskType.REASONING  # deepseek-r1 is in the reasoning fallback chain
+    POWERFUL = TaskType.TOOL_CALLING
 
     # Universal fallback if all others fail
     FALLBACK = TaskType.FALLBACK
