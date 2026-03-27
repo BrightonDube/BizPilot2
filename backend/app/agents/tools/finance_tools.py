@@ -5,7 +5,7 @@ Tool wrappers for General Ledger, Petty Cash, and Expenses.
 """
 
 import asyncio
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 from uuid import UUID

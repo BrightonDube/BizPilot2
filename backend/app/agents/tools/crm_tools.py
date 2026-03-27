@@ -97,7 +97,7 @@ async def log_interaction(
             "interaction_id": str(interaction.id),
             "type": interaction_type,
             "subject": subject,
-            "message": f"Interaction logged for customer.",
+            "message": "Interaction logged for customer.",
         }
     except Exception as e:
         return {"error": f"Failed to log interaction: {str(e)}"}

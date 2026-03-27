@@ -5,7 +5,7 @@ Tool wrappers for in-app notifications.
 """
 
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 

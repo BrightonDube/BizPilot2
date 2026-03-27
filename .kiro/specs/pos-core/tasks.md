@@ -223,8 +223,8 @@
 **Validates: Requirement 11.5 (AI)**
 
 ### Task 22: Background Rule Update Job
-- [ ] 22.1 Create scheduled job (once per day)
-- [ ] 22.2 Trigger rule generation for each business
+- [x] 22.1 Create scheduled job (once per day)
+- [x] 22.2 Trigger rule generation for each business
 - [ ] 22.3 Sync updated rules to mobile clients
 - [x] 22.4 Implement updateRules in SmartCartAssistant
 - [x] 22.5 Write PBT for offline availability (Property 7)
@@ -233,8 +233,8 @@
 
 ### Task 23: AI Guardrails and Safety
 - [x] 23.1 Verify read-only constraint (no auto-add)
-- [ ] 23.2 Implement PII redaction in data pipeline
-- [ ] 23.3 Add subscription tier check
+- [x] 23.2 Implement PII redaction in data pipeline
+- [x] 23.3 Add subscription tier check
 - [x] 23.4 Implement graceful fallback when cache empty
 - [x] 23.5 Write PBT for no automatic modifications (Property 8)
 
@@ -244,7 +244,7 @@
 - [x] 24.1 Create SuggestionMetrics model
 - [x] 24.2 Track suggestion shown events
 - [x] 24.3 Track suggestion accepted events
-- [ ] 24.4 Create acceptance rate report
-- [ ] 24.5 Add cost monitoring dashboard
+- [x] 24.4 Create acceptance rate report
+- [x] 24.5 Add cost monitoring dashboard
 
 **Validates: Requirement 11.9 (AI)**
