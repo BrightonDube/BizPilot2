@@ -714,3 +714,77 @@ def build_purchase_order_pdf(
     pdf.add_footer("Thank you for your business!")
     
     return pdf.build()
+
+
+def build_quote_pdf(
+    quote_number: str,
+    status: str,
+    business_name: str,
+    customer_name: Optional[str],
+    valid_until: Optional[date],
+    items: list[dict],
+    subtotal: Decimal,
+    discount_amount: Decimal,
+    tax_amount: Decimal,
+    total: Decimal,
+    currency: str = "ZAR",
+    notes: Optional[str] = None,
+    terms: Optional[str] = None,
+    issue_date: Optional[date] = None,
+) -> bytes:
+    """Build a PDF for a proforma invoice / quote.
+
+    Parameters mirror build_invoice_pdf but use quote-specific labels.
+    """
+    pdf = PDFBuilder(title=f"Quote {quote_number}")
+
+    pdf.add_header(business_name, "Proforma Invoice / Quote")
+
+    # Quote number and status (right-aligned area)
+    pdf._add_text("QUOTE", pdf.right_margin - 100, 24, bold=True)
+    pdf.y_position -= 20
+    pdf._add_text(quote_number, pdf.right_margin - 100, 12)
+    pdf.y_position -= 15
+
+    status_colors = {
+        "draft": (0.5, 0.5, 0.5),
+        "sent": (0.2, 0.5, 0.8),
+        "approved": (0.2, 0.7, 0.3),
+        "rejected": (0.8, 0.2, 0.2),
+        "expired": (0.6, 0.3, 0.1),
+        "converted": (0.4, 0.2, 0.8),
+    }
+    color = status_colors.get(status.lower(), (0.5, 0.5, 0.5))
+    pdf._set_color(*color)
+    pdf._add_text(status.upper(), pdf.right_margin - 100, 10, bold=True)
+    pdf._reset_color()
+    pdf.y_position -= 30
+
+    # Quote To + Quote Details
+    quote_to_lines = [customer_name or "Valued Customer"]
+    quote_details = [
+        f"Quote Date: {format_date(issue_date or date.today())}",
+        f"Valid Until: {format_date(valid_until) if valid_until else 'N/A'}",
+    ]
+    pdf.add_two_column_section("Quote To:", quote_to_lines, "Quote Details:", quote_details)
+
+    # Items table
+    pdf.add_items_table(items, currency)
+
+    # Totals (no amount_paid / balance_due for quotes)
+    pdf.add_totals_section(
+        subtotal=subtotal,
+        tax_amount=tax_amount,
+        discount_amount=discount_amount,
+        total=total,
+        amount_paid=Decimal(0),
+        balance_due=total,
+        currency=currency,
+    )
+
+    # Notes and terms
+    pdf.add_notes_section(notes, terms)
+
+    pdf.add_footer("This quote is valid until the date shown above. Prices subject to change.")
+
+    return pdf.build()

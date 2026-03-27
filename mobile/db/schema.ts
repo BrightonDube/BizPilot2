@@ -18,7 +18,7 @@
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export const schema = appSchema({
-  version: 7,
+  version: 8,
   tables: [
     // -----------------------------------------------------------------
     // Products — the core catalog shown in the POS grid
@@ -522,6 +522,31 @@ export const schema = appSchema({
         { name: "assigned_by", type: "string" },
         { name: "assigned_at", type: "number" },
         { name: "assignment_source", type: "string" },
+        { name: "synced_at", type: "number", isOptional: true },
+        { name: "is_dirty", type: "boolean" },
+      ],
+    }),
+
+    // -----------------------------------------------------------------
+    // Quotes (Proforma Invoices) — offline draft creation + sync
+    // -----------------------------------------------------------------
+    tableSchema({
+      name: "quotes",
+      columns: [
+        { name: "remote_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "quote_number", type: "string" },
+        { name: "customer_id", type: "string", isOptional: true, isIndexed: true },
+        { name: "status", type: "string" },
+        { name: "subtotal", type: "number" },
+        { name: "tax_amount", type: "number" },
+        { name: "discount_amount", type: "number" },
+        { name: "total", type: "number" },
+        { name: "issue_date", type: "number", isOptional: true },
+        { name: "expiry_date", type: "number", isOptional: true },
+        { name: "notes", type: "string", isOptional: true },
+        { name: "terms", type: "string", isOptional: true },
+        { name: "created_at", type: "number" },
+        { name: "updated_at", type: "number" },
         { name: "synced_at", type: "number", isOptional: true },
         { name: "is_dirty", type: "boolean" },
       ],
