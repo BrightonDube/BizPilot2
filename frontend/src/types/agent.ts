@@ -36,4 +36,5 @@ export type AIMessage = {
   type?: 'plan' | 'response' | 'hitl_request' | 'tool_result' | 'error' | 'stopped'
   session_id?: string
   pending?: boolean
+  tool_name?: string
 }
