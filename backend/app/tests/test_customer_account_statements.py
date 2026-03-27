@@ -3,17 +3,12 @@
 import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from app.models.customer_account import (
-    AccountStatement,
     AccountStatus,
-    CustomerAccount,
     CollectionActivity,
-    ActivityType,
 )
 
 

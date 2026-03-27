@@ -7,7 +7,7 @@ Runs weekly (Monday 8 AM UTC) and:
 """
 
 import logging
-from datetime import datetime, timedelta, timezone, date
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from app.core.database import SessionLocal

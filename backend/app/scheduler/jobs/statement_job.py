@@ -7,11 +7,9 @@ Runs on the 1st of each month at 3 AM UTC and:
 
 import logging
 from datetime import datetime, timezone
-from calendar import monthrange
-from uuid import UUID
 
 from app.core.database import SessionLocal
-from app.models.customer_account import CustomerAccount, AccountStatus, AccountStatement
+from app.models.customer_account import CustomerAccount
 from app.models.business import Business
 from app.services.customer_account_service import CustomerAccountService
 
