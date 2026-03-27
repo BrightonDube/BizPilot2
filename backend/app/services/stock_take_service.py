@@ -303,6 +303,99 @@ class StockTakeService:
             "total_variance_value": total_variance_value,
         }
 
+    def submit_session(self, session_id: str, business_id: str, user_id: str) -> StockTakeSession:
+        """Submit a session for manager approval (IN_PROGRESS → PENDING_APPROVAL)."""
+        session = self.get_session(session_id, business_id)
+        if not session:
+            raise ValueError("Stock take session not found")
+        if session.status != StockTakeStatus.IN_PROGRESS:
+            raise ValueError("Session must be IN_PROGRESS to submit for approval")
+
+        session.status = StockTakeStatus.PENDING_APPROVAL
+        session.submitted_by_id = user_id
+        session.submitted_at = datetime.now(timezone.utc)
+        self.db.commit()
+        self.db.refresh(session)
+        return session
+
+    def approve_session(self, session_id: str, business_id: str, user_id: str) -> StockTakeSession:
+        """Approve and apply a submitted stock take (PENDING_APPROVAL → COMPLETED).
+
+        Applies all variances as ADJUSTMENT inventory transactions.
+        This mirrors complete_session but requires the PENDING_APPROVAL state.
+        """
+        session = self.get_session(session_id, business_id)
+        if not session:
+            raise ValueError("Stock take session not found")
+        if session.status != StockTakeStatus.PENDING_APPROVAL:
+            raise ValueError("Session must be PENDING_APPROVAL to approve")
+
+        counts = self.get_counts(session_id, business_id, variance_only=True)
+
+        for count in counts:
+            if count.variance is None or count.variance == 0:
+                continue
+
+            inv_item = (
+                self.db.query(InventoryItem)
+                .filter(
+                    InventoryItem.product_id == count.product_id,
+                    InventoryItem.business_id == business_id,
+                    InventoryItem.deleted_at.is_(None),
+                )
+                .first()
+            )
+            if inv_item:
+                qty_before = inv_item.quantity_on_hand
+                inv_item.quantity_on_hand += count.variance
+                inv_item.last_counted_at = datetime.now(timezone.utc)
+
+                txn = InventoryTransaction(
+                    business_id=business_id,
+                    product_id=count.product_id,
+                    inventory_item_id=inv_item.id,
+                    transaction_type=TransactionType.COUNT,
+                    quantity_change=count.variance,
+                    quantity_before=qty_before,
+                    quantity_after=inv_item.quantity_on_hand,
+                    unit_cost=count.unit_cost,
+                    total_cost=(
+                        Decimal(str(abs(count.variance))) * count.unit_cost
+                        if count.unit_cost
+                        else None
+                    ),
+                    reference_type="stock_take",
+                    reference_id=session.id,
+                    notes=f"Approved stock take {session.reference}",
+                    user_id=user_id,
+                )
+                self.db.add(txn)
+
+        session.status = StockTakeStatus.COMPLETED
+        session.approved_by_id = user_id
+        session.approved_at = datetime.now(timezone.utc)
+        session.completed_by_id = user_id
+        session.completed_at = datetime.now(timezone.utc)
+        self.db.commit()
+        self.db.refresh(session)
+        return session
+
+    def reject_session(
+        self, session_id: str, business_id: str, user_id: str, reason: str
+    ) -> StockTakeSession:
+        """Reject a submitted stock take — returns it to IN_PROGRESS for re-counting."""
+        session = self.get_session(session_id, business_id)
+        if not session:
+            raise ValueError("Stock take session not found")
+        if session.status != StockTakeStatus.PENDING_APPROVAL:
+            raise ValueError("Session must be PENDING_APPROVAL to reject")
+
+        session.status = StockTakeStatus.IN_PROGRESS
+        session.rejection_reason = reason
+        self.db.commit()
+        self.db.refresh(session)
+        return session
+
     def cancel_session(self, session_id: str, business_id: str) -> StockTakeSession:
         """Cancel a stock take session."""
         session = self.get_session(session_id, business_id)
