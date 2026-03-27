@@ -153,38 +153,38 @@
 **Validates: Correctness Properties 1-4**
 
 ## Task 17: Integration Testing
-- [ ] 17.1 Test complete charge-to-payment workflow
-- [ ] 17.2 Test statement generation accuracy
-- [ ] 17.3 Test collections workflow
-- [ ] 17.4 Test credit limit enforcement
+- [x] 17.1 Test complete charge-to-payment workflow
+- [x] 17.2 Test statement generation accuracy
+- [x] 17.3 Test collections workflow
+- [x] 17.4 Test credit limit enforcement
 
 **Validates: All Requirements**
 
 ## Task 18: Local Testing and Build Verification
-- [ ] 18.1 Run all backend tests (pytest)
-- [ ] 18.2 Run all frontend tests (if applicable)
-- [ ] 18.3 Run linting and code quality checks
-- [ ] 18.4 Build backend application successfully
-- [ ] 18.5 Build frontend application successfully
-- [ ] 18.6 Verify all functionality works locally
-- [ ] 18.7 Test customer accounts workflows end-to-end
+- [x] 18.1 Run all backend tests (pytest)
+- [x] 18.2 Run all frontend tests (if applicable)
+- [x] 18.3 Run linting and code quality checks
+- [x] 18.4 Build backend application successfully
+- [x] 18.5 Build frontend application successfully
+- [x] 18.6 Verify all functionality works locally
+- [x] 18.7 Test customer accounts workflows end-to-end
 
 ## Task 19: Deployment Workflow
-- [ ] 19.1 Commit all changes to feature branch
-- [ ] 19.2 Create pull request to dev branch
-- [ ] 19.3 Merge to dev branch after review
-- [ ] 19.4 Push to dev branch to trigger deployment
-- [ ] 19.5 Monitor deployment using MCP servers
-- [ ] 19.6 Poll deployment status every 2 minutes until complete
-- [ ] 19.7 If deployment fails, analyze logs and fix issues
-- [ ] 19.8 Re-test locally, rebuild, and push fix
-- [ ] 19.9 Continue monitoring until deployment succeeds
-- [ ] 19.10 Verify customer accounts features work in production
+- [x] 19.1 Commit all changes to feature branch
+- [x] 19.2 Create pull request to dev branch
+- [x] 19.3 Merge to dev branch after review
+- [x] 19.4 Push to dev branch to trigger deployment
+- [x] 19.5 Monitor deployment using MCP servers
+- [x] 19.6 Poll deployment status every 2 minutes until complete
+- [x] 19.7 If deployment fails, analyze logs and fix issues
+- [x] 19.8 Re-test locally, rebuild, and push fix
+- [x] 19.9 Continue monitoring until deployment succeeds
+- [x] 19.10 Verify customer accounts features work in production
 
 ## Task 20: Final Checkpoint
-- [ ] 20.1 Confirm all customer accounts features are working
-- [ ] 20.2 Verify database migrations applied correctly
-- [ ] 20.3 Test credit sales and payment processing
-- [ ] 20.4 Confirm statements and collections functionality
-- [ ] 20.5 Document any known issues or limitations
-- [ ] 20.6 Mark feature as complete and ready for use
+- [x] 20.1 Confirm all customer accounts features are working
+- [x] 20.2 Verify database migrations applied correctly
+- [x] 20.3 Test credit sales and payment processing
+- [x] 20.4 Confirm statements and collections functionality
+- [x] 20.5 Document any known issues or limitations
+- [x] 20.6 Mark feature as complete and ready for use
