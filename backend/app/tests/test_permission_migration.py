@@ -8,9 +8,7 @@ Covers:
 """
 
 import uuid
-from decimal import Decimal
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -22,7 +20,7 @@ import pytest
 class TestMigrationTierNameMapping:
     def _get_map_fn(self):
         """Import the helper from the migration module."""
-        import importlib.util, sys
+        import importlib.util
         # The migration file is not on sys.path by default — import it directly
         import os
         path = os.path.join(
@@ -207,7 +205,8 @@ class TestOldAndNewSystemConsistency:
 class TestMigrationIdempotence:
     def test_upgrade_is_idempotent_when_tiers_already_exist(self):
         """Running upgrade twice should not raise even if tier_features rows exist."""
-        import importlib.util, os
+        import importlib.util
+        import os
 
         path = os.path.join(
             os.path.dirname(__file__),
@@ -238,7 +237,8 @@ class TestMigrationIdempotence:
 
     def test_mapping_is_deterministic(self):
         """The same old tier name always maps to the same new tier name."""
-        import importlib.util, os
+        import importlib.util
+        import os
 
         path = os.path.join(
             os.path.dirname(__file__),
