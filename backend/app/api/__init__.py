@@ -83,6 +83,7 @@ from app.api.webhooks import router as webhooks_router
 from app.api.two_factor import router as two_factor_router
 from app.api.collections import router as collections_router
 from app.api.ai import router as ai_router
+from app.api.stock_reports import router as stock_reports_router
 
 router = APIRouter()
 
@@ -168,6 +169,7 @@ router.include_router(inventory_reports_router)
 router.include_router(extended_reports_router)
 router.include_router(sage_router)
 router.include_router(collections_router)
+router.include_router(stock_reports_router)
 router.include_router(pdf_router)
 router.include_router(webhooks_router)
 router.include_router(two_factor_router)

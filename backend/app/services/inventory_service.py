@@ -261,6 +261,44 @@ class InventoryService:
         
         return transactions, total
 
+    def receive_without_po(
+        self,
+        business_id: str,
+        items: List[dict],
+        supplier_id: Optional[str] = None,
+        notes: Optional[str] = None,
+    ) -> List[InventoryTransaction]:
+        """Receive multiple stock items without a purchase order.
+
+        Each item dict must have: product_id, quantity, unit_cost.
+        Updates weighted average cost and creates PURCHASE transactions.
+        Raises ValueError if any product has no inventory record.
+        """
+        transactions = []
+        for entry in items:
+            product_id = str(entry["product_id"])
+            quantity = int(entry["quantity"])
+            unit_cost = Decimal(str(entry["unit_cost"]))
+
+            if quantity <= 0:
+                raise ValueError(f"Quantity must be positive for product {product_id}")
+
+            txn = self.record_purchase(
+                product_id=product_id,
+                business_id=business_id,
+                quantity=quantity,
+                unit_cost=unit_cost,
+                purchase_order_id=None,
+            )
+            if txn is None:
+                raise ValueError(f"No inventory record for product {product_id}")
+            if notes:
+                txn.notes = notes
+            transactions.append(txn)
+
+        self.db.commit()
+        return transactions
+
     def get_low_stock_items(self, business_id: str) -> List[InventoryItem]:
         """Get items below reorder point."""
         return self.db.query(InventoryItem).filter(

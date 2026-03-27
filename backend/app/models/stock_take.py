@@ -14,6 +14,7 @@ class StockTakeStatus(str, enum.Enum):
 
     DRAFT = "draft"
     IN_PROGRESS = "in_progress"
+    PENDING_APPROVAL = "pending_approval"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
 
@@ -31,9 +32,14 @@ class StockTakeSession(BaseModel):
         default=StockTakeStatus.DRAFT,
     )
     started_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    submitted_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    approved_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     completed_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    rejection_reason = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     started_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    approved_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self) -> str:
