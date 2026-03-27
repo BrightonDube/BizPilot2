@@ -17,6 +17,8 @@ from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 
 from app.models.payment import (
+    CashDrawerSession,
+    CashDrawerStatus,
     PaymentMethod,
     PaymentTransaction,
     PaymentTransactionStatus,
@@ -402,6 +404,101 @@ class PaymentService:
     # -----------------------------------------------------------------------
     # Security Helpers
     # -----------------------------------------------------------------------
+
+    # -----------------------------------------------------------------------
+    # Cash Drawer Sessions
+    # -----------------------------------------------------------------------
+
+    def open_cash_drawer(
+        self,
+        business_id: uuid.UUID,
+        opened_by_id: uuid.UUID,
+        opening_float: Decimal,
+        notes: Optional[str] = None,
+    ) -> CashDrawerSession:
+        """Open a new cash drawer session. Raises if one is already open."""
+        existing = (
+            self.db.query(CashDrawerSession)
+            .filter(
+                CashDrawerSession.business_id == business_id,
+                CashDrawerSession.status == CashDrawerStatus.OPEN.value,
+                CashDrawerSession.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if existing:
+            raise ValueError("A cash drawer session is already open for this business")
+
+        session = CashDrawerSession(
+            id=uuid.uuid4(),
+            business_id=business_id,
+            opened_by_id=opened_by_id,
+            opening_float=opening_float,
+            status=CashDrawerStatus.OPEN.value,
+            notes=notes,
+            opened_at=datetime.now(timezone.utc),
+        )
+        self.db.add(session)
+        self.db.flush()
+        return session
+
+    def close_cash_drawer(
+        self,
+        session_id: uuid.UUID,
+        business_id: uuid.UUID,
+        closed_by_id: uuid.UUID,
+        closing_float: Decimal,
+        notes: Optional[str] = None,
+    ) -> CashDrawerSession:
+        """Close a cash drawer session and calculate variance."""
+        session = (
+            self.db.query(CashDrawerSession)
+            .filter(
+                CashDrawerSession.id == session_id,
+                CashDrawerSession.business_id == business_id,
+                CashDrawerSession.status == CashDrawerStatus.OPEN.value,
+                CashDrawerSession.deleted_at.is_(None),
+            )
+            .first()
+        )
+        if not session:
+            raise ValueError("Open cash drawer session not found")
+
+        # Calculate expected float: opening + cash sales - cash refunds during session
+        cash_in = (
+            self.db.query(func.coalesce(func.sum(PaymentTransaction.amount), Decimal(0)))
+            .filter(
+                PaymentTransaction.business_id == business_id,
+                PaymentTransaction.status == PaymentTransactionStatus.COMPLETED.value,
+                PaymentTransaction.processed_at >= session.opened_at,
+            )
+            .scalar()
+        )
+        expected = session.opening_float + (cash_in or Decimal(0))
+
+        session.closed_by_id = closed_by_id
+        session.closing_float = closing_float
+        session.expected_float = expected
+        session.variance = closing_float - expected
+        session.status = CashDrawerStatus.CLOSED.value
+        session.closed_at = datetime.now(timezone.utc)
+        if notes:
+            session.notes = notes
+
+        self.db.flush()
+        return session
+
+    def get_active_session(self, business_id: uuid.UUID) -> Optional[CashDrawerSession]:
+        """Return the currently open cash drawer session, or None."""
+        return (
+            self.db.query(CashDrawerSession)
+            .filter(
+                CashDrawerSession.business_id == business_id,
+                CashDrawerSession.status == CashDrawerStatus.OPEN.value,
+                CashDrawerSession.deleted_at.is_(None),
+            )
+            .first()
+        )
 
     @staticmethod
     def mask_reference(ref: Optional[str]) -> Optional[str]:
