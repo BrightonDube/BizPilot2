@@ -334,7 +334,7 @@ This implementation plan breaks down the Granular Permissions & Subscription Sys
     - _Requirements: 3.3, 4.4, 14.3_
 
 - [ ] 17. Data migration from old schema
-  - [ ] 17.1 Create migration script for existing subscriptions
+  - [x] 17.1 Create migration script for existing subscriptions
     - Create script to read existing businesses.feature_flags JSONB
     - Create BusinessSubscription entries for businesses without subscriptions
     - Create FeatureOverride entries from feature_flags data
@@ -349,7 +349,7 @@ This implementation plan breaks down the Granular Permissions & Subscription Sys
     - **Property 16: Migration Idempotence**
     - **Validates: Requirements 11.5**
   
-  - [ ] 17.4 Update permission check logic for backward compatibility
+  - [x] 17.4 Update permission check logic for backward compatibility
     - If new schema data exists, use it (already implemented)
     - If only old feature_flags exists, fall back to it temporarily
     - Log warning when falling back to old schema

@@ -316,8 +316,17 @@ class PermissionService:
         tier = result.scalar_one_or_none()
         
         if not tier:
-            return set()
-        
+            # Backward compatibility fallback: read feature_flags JSONB from the
+            # old subscription_tiers table (Requirement 17.4).
+            # This handles tier names that predate the tier_features normalisation
+            # (e.g. "free", "starter", "pro") until the data migration runs.
+            logger.warning(
+                "TierFeature row not found for tier_name='%s'. "
+                "Falling back to SubscriptionTier.feature_flags JSONB.",
+                tier_name,
+            )
+            return await self._load_tier_features_from_jsonb(tier_name)
+
         # Build feature set from boolean flags
         features = set()
         
@@ -339,7 +348,53 @@ class PermissionService:
             features.add("has_accounting_integration")
         
         return features
-    
+
+    async def _load_tier_features_from_jsonb(self, tier_name: str) -> set[str]:
+        """
+        Backward compatibility fallback: read feature_flags JSONB from
+        the old subscription_tiers table and return the enabled feature names.
+
+        This is used when a TierFeature row cannot be found for tier_name,
+        which happens when a business is on a legacy tier that predates the
+        tier_features normalisation migration (d4e5f6a7b8c9).
+
+        Validates: Requirement 17.4
+        """
+        from app.models.subscription_tier import SubscriptionTier
+
+        result = self.db.execute(
+            select(SubscriptionTier)
+            .where(SubscriptionTier.name == tier_name)
+        )
+        if inspect.isawaitable(result):
+            result = await result
+        old_tier = result.scalar_one_or_none()
+
+        if not old_tier or not old_tier.feature_flags:
+            logger.warning(
+                "No SubscriptionTier found for tier_name='%s' either. Returning empty feature set.",
+                tier_name,
+            )
+            return set()
+
+        # The old feature_flags JSONB uses the same key names as the new boolean columns.
+        # Collect any key with a truthy value.
+        known_features = {
+            "has_payroll", "has_ai", "has_api_access", "has_advanced_reporting",
+            "has_multi_location", "has_loyalty_programs", "has_recipe_management",
+            "has_accounting_integration",
+        }
+        features: set[str] = set()
+        for key, value in old_tier.feature_flags.items():
+            if key in known_features and value:
+                features.add(key)
+
+        logger.info(
+            "Loaded %d features from SubscriptionTier.feature_flags for tier '%s'.",
+            len(features), tier_name,
+        )
+        return features
+
     async def _load_overrides(
         self,
         business_id: UUID
