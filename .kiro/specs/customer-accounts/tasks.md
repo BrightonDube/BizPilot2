@@ -76,20 +76,20 @@
 ## Task 8: Statement Service
 - [x] 8.1 Implement statement generation
 - [x] 8.2 Implement aging calculation
-- [ ] 8.3 Implement PDF statement generation
-- [ ] 8.4 Implement email delivery
-- [ ] 8.5 Implement scheduled statement generation
-- [ ] 8.6 Write unit tests for statements
+- [x] 8.3 Implement PDF statement generation
+- [x] 8.4 Implement email delivery
+- [x] 8.5 Implement scheduled statement generation
+- [x] 8.6 Write unit tests for statements
 
 **Validates: Requirement 5**
 
 ## Task 9: Collections Service
 - [x] 9.1 Implement overdue account detection
 - [x] 9.2 Implement activity logging
-- [ ] 9.3 Implement promise tracking
-- [ ] 9.4 Implement automated reminders
+- [x] 9.3 Implement promise tracking
+- [x] 9.4 Implement automated reminders
 - [x] 9.5 Implement write-off workflow
-- [ ] 9.6 Write unit tests for collections
+- [x] 9.6 Write unit tests for collections
 
 **Validates: Requirement 7**
 
@@ -104,7 +104,7 @@
 
 ## Task 11: API Endpoints - Statements & Reports
 - [x] 11.1 Create statement generation endpoint
-- [ ] 11.2 Create statement email endpoint
+- [x] 11.2 Create statement email endpoint
 - [x] 11.3 Create aging report endpoint
 - [x] 11.4 Create AR summary endpoint
 - [x] 11.5 Create DSO report endpoint
