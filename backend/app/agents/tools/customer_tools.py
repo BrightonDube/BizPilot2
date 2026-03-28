@@ -23,10 +23,19 @@ async def get_customers(
         return {"error": "No business found for user"}
 
     svc = CustomerService(db)
-    customers = await asyncio.to_thread(svc.get_customers, business_id=business_id, limit=int(limit))
+    # CustomerService.get_customers returns (List[Customer], int) using page/per_page
+    result = await asyncio.to_thread(
+        svc.get_customers, business_id=business_id, per_page=int(limit)
+    )
+    # Handle both (list, total) tuple and plain list return shapes
+    if isinstance(result, tuple):
+        customers, total = result
+    else:
+        customers = result or []
+        total = len(customers)
 
     return {
-        "total": len(customers),
+        "total": total,
         "customers": [
             {
                 "id": str(c.id),
@@ -79,7 +88,8 @@ async def search_customers(
         )
     except AttributeError:
         # Fallback: filter from full list if search method doesn't exist
-        all_customers = await asyncio.to_thread(svc.get_customers, business_id=business_id, limit=100)
+        raw = await asyncio.to_thread(svc.get_customers, business_id=business_id, per_page=100)
+        all_customers = raw[0] if isinstance(raw, tuple) else (raw or [])
         q = query.lower()
         customers = [
             c for c in all_customers

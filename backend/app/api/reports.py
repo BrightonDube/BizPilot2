@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
-from sqlalchemy import func
+from sqlalchemy import func, case
 
 from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id, check_feature
@@ -768,17 +768,12 @@ async def get_user_activity_report(
             User.last_name,
             func.sum(TimeEntry.hours_worked).label("total_hours"),
             func.count(TimeEntry.id).label("total_entries"),
+            # Count rows where clock_in / clock_out is not NULL
             func.sum(
-                func.case(
-                    (TimeEntry.clock_in.isnot(None), 1),
-                    else_=0
-                )
+                case((TimeEntry.clock_in.isnot(None), 1), else_=0)
             ).label("clock_ins"),
             func.sum(
-                func.case(
-                    (TimeEntry.clock_out.isnot(None), 1),
-                    else_=0
-                )
+                case((TimeEntry.clock_out.isnot(None), 1), else_=0)
             ).label("clock_outs"),
             func.sum(TimeEntry.break_duration).label("break_duration"),
             func.max(TimeEntry.clock_in).label("last_activity"),

@@ -88,10 +88,14 @@ class Orchestrator:
                     max_tokens=2048,
                 )
             except Exception as exc:
-                AgentLogger.error("Groq call failed", error=exc)
+                logger.error(
+                    "LLM call failed for agent '%s': %s: %s",
+                    agent_name, type(exc).__name__, exc,
+                    exc_info=True,
+                )
                 return {
                     "type": "error",
-                    "message": f"AI provider error ({type(exc).__name__}): {exc}",
+                    "message": "I'm having trouble processing your request right now. Please try again in a moment.",
                 }
 
             guard_result = guard.record_step(
@@ -106,7 +110,9 @@ class Orchestrator:
             if response.tool_calls:
                 for tool_call in response.tool_calls:
                     tool_name = tool_call["name"]
-                    tool_args = tool_call["arguments"]
+                    # Guard against None arguments (LLM may return null JSON)
+                    raw_args = tool_call["arguments"]
+                    tool_args = raw_args if isinstance(raw_args, dict) else {}
                     tool_def = tool_registry.get(tool_name)
 
                     if not tool_def:
@@ -238,7 +244,8 @@ class Orchestrator:
             return {"type": "error", "message": f"Tool '{tool_name}' not found"}
 
         try:
-            result = await tool_def.handler(db=self.db, user=user, **tool_args)
+            safe_args = tool_args if isinstance(tool_args, dict) else {}
+            result = await tool_def.handler(db=self.db, user=user, **safe_args)
             AgentLogger.tool_result(agent_name, tool_name, result)
 
             log_agent_step(
@@ -306,8 +313,13 @@ class Orchestrator:
     async def _get_system_prompt(
         self, agent_def: Any, user: User, sharing_level: AIDataSharingLevel
     ) -> str:
-        """Return cached system prompt or build and cache a new one."""
-        cached = await get_cached_prompt(agent_def.name)
+        """Return cached system prompt or build and cache a new one.
+
+        The cache key includes the user_id so each user's business context
+        is isolated — no cross-user prompt leakage.
+        """
+        cache_key = f"{agent_def.name}:{user.id}"
+        cached = await get_cached_prompt(cache_key)
         if cached:
             return cached
 
@@ -320,7 +332,7 @@ class Orchestrator:
             static_context=static_ctx,
             dynamic_context=dynamic_ctx,
         )
-        await cache_prompt(agent_def.name, prompt)
+        await cache_prompt(cache_key, prompt)
         return prompt
 
     @staticmethod

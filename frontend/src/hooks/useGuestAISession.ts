@@ -7,7 +7,7 @@
  * Requirements: 2.2, 2.4
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 interface GuestSession {
   id: string;
@@ -48,14 +48,24 @@ const DEFAULT_CONFIG: GuestAISessionConfig = {
 };
 
 export function useGuestAISession(config: Partial<GuestAISessionConfig> = {}) {
-  // Validate and merge config with defaults
-  const finalConfig: GuestAISessionConfig = {
+  // Memoize the merged config so callbacks only rebuild when config values actually change.
+  // Without useMemo, a new object is created every render and all useCallback deps
+  // that reference config properties would see new values → exhaustive-deps violation.
+  const finalConfig = useMemo((): GuestAISessionConfig => ({
     maxMessagesPerSession: Math.max(1, config.maxMessagesPerSession ?? DEFAULT_CONFIG.maxMessagesPerSession),
     maxMessagesPerHour: Math.max(1, config.maxMessagesPerHour ?? DEFAULT_CONFIG.maxMessagesPerHour),
     sessionTimeoutMs: Math.max(1000, config.sessionTimeoutMs ?? DEFAULT_CONFIG.sessionTimeoutMs),
     storageKey: config.storageKey || DEFAULT_CONFIG.storageKey,
-    analyticsAdapter: config.analyticsAdapter
-  };
+    analyticsAdapter: config.analyticsAdapter,
+  // Primitive config values as deps — analyticsAdapter by reference is intentional
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [
+    config.maxMessagesPerSession,
+    config.maxMessagesPerHour,
+    config.sessionTimeoutMs,
+    config.storageKey,
+    config.analyticsAdapter,
+  ]);
   
   // Helper to load session from storage
   const loadSessionFromStorage = useCallback((): GuestSession | null => {
