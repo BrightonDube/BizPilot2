@@ -114,8 +114,9 @@ class TestOrchestratorErrorPropagation:
     @pytest.mark.asyncio
     async def test_llm_failure_returns_error_type_not_generic(self):
         """
-        When execute_task raises, the orchestrator must return {"type": "error"}.
-        The message must include the actual error type, not just "Please try again".
+        When execute_task raises, the orchestrator must return {"type": "error"}
+        with a user-friendly message. The real error details must NOT be exposed
+        to the user — they go to the runtime log only (see test_llm_failure_is_logged).
         """
         from app.agents.orchestrator import Orchestrator
 
@@ -146,8 +147,14 @@ class TestOrchestratorErrorPropagation:
             )
 
         assert result["type"] == "error"
-        # The real error detail must be present, not just a generic phrase
-        assert "Groq" in result["message"] or "401" in result["message"] or "Exception" in result["message"]
+        # User must see a friendly message — NOT the raw exception details.
+        # Raw details go to DO runtime logs via logger.error(exc_info=True).
+        assert isinstance(result["message"], str)
+        assert len(result["message"]) > 0
+        # Error details must NOT be exposed to users
+        assert "401" not in result["message"]
+        assert "Groq API key" not in result["message"]
+        assert type(Exception()).__name__ not in result["message"]
 
     @pytest.mark.asyncio
     async def test_llm_failure_is_logged_with_traceback(self):
