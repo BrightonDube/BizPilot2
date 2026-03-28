@@ -86,7 +86,6 @@ async def test_orchestrator_does_not_await_sync_commit():
     `await self.db.commit()`, the test will raise a TypeError.
     """
     from app.agents.orchestrator import Orchestrator
-    from app.agents.agent_registry import registry
 
     # Use a sync MagicMock — commit() returns None, not a coroutine
     db = MagicMock()
