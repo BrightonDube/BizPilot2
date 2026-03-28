@@ -7,6 +7,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
+from redis.asyncio import Redis
 from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id, get_redis
 from app.models.user import User
@@ -88,7 +89,7 @@ async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
     business_id: str = Depends(get_current_business_id),
     db=Depends(get_sync_db),
-    redis=Depends(get_redis)
+    redis: Optional[Redis] = Depends(get_redis),
 ):
     """
     Get dashboard statistics for the current user's business.

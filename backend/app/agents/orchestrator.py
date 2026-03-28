@@ -141,7 +141,7 @@ class Orchestrator:
                             tool_name=tool_name,
                             reasoning=f"HITL pause: {tool_name}({tool_args})",
                         )
-                        await self.db.commit()
+                        self.db.commit()
 
                         return await pause_for_approval(
                             session_id=session_id,
@@ -195,7 +195,7 @@ class Orchestrator:
                         success=True,
                     )
 
-                await self.db.commit()
+                self.db.commit()
                 # Continue the ReAct loop — LLM will see tool results
                 continue
 
@@ -212,7 +212,7 @@ class Orchestrator:
                 tokens_used=response.usage.get("total_tokens", 0),
                 reasoning=final_text[:500],
             )
-            await self.db.commit()
+            self.db.commit()
 
             return {"type": "response", "message": final_text, "steps": step}
 
@@ -251,7 +251,7 @@ class Orchestrator:
                 result_summary=str(result)[:500],
                 success=True,
             )
-            await self.db.commit()
+            self.db.commit()
 
             # Feed result back to LLM for a summary response
             messages_so_far.append({
@@ -292,7 +292,7 @@ class Orchestrator:
                 success=False,
                 error_message=str(exc),
             )
-            await self.db.commit()
+            self.db.commit()
             return {"type": "error", "message": f"Tool execution failed: {str(exc)}"}
 
     async def _get_system_prompt(

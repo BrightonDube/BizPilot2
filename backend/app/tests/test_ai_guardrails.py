@@ -213,7 +213,7 @@ class TestAIMetricsEndpoint:
         import asyncio
         from app.api.ai import get_ai_metrics
 
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             get_ai_metrics(current_user=mock_user, db=mock_db)
         )
 
