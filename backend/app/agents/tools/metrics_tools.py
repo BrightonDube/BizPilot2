@@ -66,7 +66,7 @@ async def get_product_performance(
     start = _parse_date(start_date)
     end = _parse_date(end_date)
     svc = SalesReportService(db)
-    return await asyncio.to_thread(svc.get_product_performance, UUID(business_id), start, end, limit=limit)
+    return await asyncio.to_thread(svc.get_product_performance, UUID(business_id), start, end, limit=int(limit))
 
 
 async def get_dashboard_kpis(db: Session, user: User) -> Dict[str, Any]:

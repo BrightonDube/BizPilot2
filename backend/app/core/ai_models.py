@@ -38,12 +38,10 @@ MODEL_REGISTRY = {
     ],
     "reasoning": [
         "llama-3.3-70b-versatile",  # Best for complex analysis and planning
-        "llama-3.1-70b-versatile",  # Backup reasoning model
         "llama-3.1-8b-instant",  # Fallback to fast model
     ],
     "tool_calling": [
         "llama-3.3-70b-versatile",  # Best for function calling
-        "llama-3.1-70b-versatile",  # Backup
         "llama-3.1-8b-instant",  # Fallback
     ],
     "summarization": [

@@ -23,7 +23,7 @@ async def get_customers(
         return {"error": "No business found for user"}
 
     svc = CustomerService(db)
-    customers = await asyncio.to_thread(svc.get_customers, business_id=business_id, limit=limit)
+    customers = await asyncio.to_thread(svc.get_customers, business_id=business_id, limit=int(limit))
 
     return {
         "total": len(customers),
@@ -49,7 +49,7 @@ async def get_top_customers(
         return {"error": "No business found for user"}
 
     svc = CustomerService(db)
-    customers = await asyncio.to_thread(svc.get_top_customers, business_id=business_id, limit=limit)
+    customers = await asyncio.to_thread(svc.get_top_customers, business_id=business_id, limit=int(limit))
 
     return {
         "top_customers": [
@@ -75,7 +75,7 @@ async def search_customers(
     svc = CustomerService(db)
     try:
         customers = await asyncio.to_thread(
-            svc.search_customers, business_id=business_id, query=query, limit=limit
+            svc.search_customers, business_id=business_id, query=query, limit=int(limit)
         )
     except AttributeError:
         # Fallback: filter from full list if search method doesn't exist
