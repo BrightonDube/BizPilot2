@@ -34,7 +34,11 @@ class AgentLogger:
         if error:
             kwargs["error_type"] = type(error).__name__
             kwargs["error_detail"] = str(error)
-        _logger.error(message, extra={"agent_data": kwargs} if kwargs else None)
+        _logger.error(
+            message,
+            extra={"agent_data": kwargs} if kwargs else None,
+            exc_info=error if error else False,
+        )
 
     @staticmethod
     def tool_call(agent_name: str, tool_name: str, arguments: dict) -> None:
