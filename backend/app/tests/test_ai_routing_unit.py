@@ -113,44 +113,43 @@ class TestModelExecution:
         """Test automatic fallback when first model fails."""
         mock_success = LLMResponse(
             content="Fallback response",
-            model_used="llama-3.1-70b-versatile",
+            model_used="llama-3.1-8b-instant",
             finish_reason="stop",
             usage={"total_tokens": 100}
         )
-        
+
         with patch("app.core.ai_models.run_groq", new_callable=AsyncMock) as mock_groq:
-            # First call fails, second succeeds
+            # First call fails, second (llama-3.1-8b-instant) succeeds
             mock_groq.side_effect = [
                 ModelExecutionError("llama-3.3-70b-versatile", "Model deprecated", 404),
                 mock_success
             ]
-            
+
             result = await execute_reasoning_task([{"role": "user", "content": "test"}])
-            
+
             assert result.content == "Fallback response"
-            assert result.model_used == "llama-3.1-70b-versatile"
+            assert result.model_used == "llama-3.1-8b-instant"
             assert mock_groq.call_count == 2
     
     @pytest.mark.asyncio
     async def test_universal_fallback_when_all_primary_fail(self):
         """Test universal fallback when all primary models fail.
-        
-        Since llama-3.1-8b-instant is already in the reasoning models list,
-        the fallback logic skips it (already tried). RuntimeError is raised.
+
+        reasoning has 2 models: llama-3.3-70b-versatile and llama-3.1-8b-instant.
+        llama-3.1-8b-instant is also the universal fallback, so when both primary
+        models fail the fallback is skipped (already tried) and RuntimeError is raised.
         """
         with patch("app.core.ai_models.run_groq", new_callable=AsyncMock) as mock_groq:
-            # All reasoning models fail (includes the fallback model)
             mock_groq.side_effect = [
                 ModelExecutionError("llama-3.3-70b-versatile", "Error", 500),
-                ModelExecutionError("llama-3.1-70b-versatile", "Error", 500),
                 ModelExecutionError("llama-3.1-8b-instant", "Error", 500),
             ]
-            
+
             with pytest.raises(RuntimeError, match="All Groq models failed"):
                 await execute_reasoning_task([{"role": "user", "content": "test"}])
-            
-            # Should have tried all 3 reasoning models (fallback skipped)
-            assert mock_groq.call_count == 3
+
+            # Should have tried both reasoning models; fallback model was already tried
+            assert mock_groq.call_count == 2
     
     @pytest.mark.asyncio
     async def test_raises_error_when_all_models_fail(self):
@@ -336,7 +335,7 @@ class TestModelSelectionLogic:
         # Should have multiple models for fallback
         assert len(models) >= 2
         # First should be the best reasoning model
-        assert "llama-3.3-70b-versatile" in models or "llama-3.1-70b-versatile" in models
+        assert "llama-3.3-70b-versatile" in models
     
     def test_summarization_task_selects_appropriate_models(self):
         """Verify summarization tasks use appropriate models."""
