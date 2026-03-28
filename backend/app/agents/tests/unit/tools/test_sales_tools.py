@@ -21,10 +21,10 @@ def _make_mock_report():
 
 @pytest.mark.asyncio
 async def test_get_daily_sales_happy_path(mock_db, sample_user, sample_business):
-    with patch("app.agents.tools.sales_tools.AIService") as mock_ai_cls, \
+    with patch("app.agents.tools.sales_tools.get_business_id_for_user",
+               return_value=str(sample_business.id)), \
          patch("app.agents.tools.sales_tools.SalesReportService") as mock_svc_cls:
 
-        mock_ai_cls.return_value._get_business_for_user.return_value = sample_business
         mock_svc_cls.return_value.get_daily_report.return_value = _make_mock_report()
 
         result = await get_daily_sales(db=mock_db, user=sample_user, target_date="2026-03-12")
@@ -35,10 +35,10 @@ async def test_get_daily_sales_happy_path(mock_db, sample_user, sample_business)
 
 @pytest.mark.asyncio
 async def test_get_daily_sales_defaults_to_today(mock_db, sample_user, sample_business):
-    with patch("app.agents.tools.sales_tools.AIService") as mock_ai_cls, \
+    with patch("app.agents.tools.sales_tools.get_business_id_for_user",
+               return_value=str(sample_business.id)), \
          patch("app.agents.tools.sales_tools.SalesReportService") as mock_svc_cls:
 
-        mock_ai_cls.return_value._get_business_for_user.return_value = sample_business
         mock_svc_cls.return_value.get_daily_report.return_value = _make_mock_report()
 
         result = await get_daily_sales(db=mock_db, user=sample_user)
@@ -49,8 +49,8 @@ async def test_get_daily_sales_defaults_to_today(mock_db, sample_user, sample_bu
 
 @pytest.mark.asyncio
 async def test_get_daily_sales_no_business_returns_error(mock_db, sample_user):
-    with patch("app.agents.tools.sales_tools.AIService") as mock_ai_cls:
-        mock_ai_cls.return_value._get_business_for_user.return_value = None
+    with patch("app.agents.tools.sales_tools.get_business_id_for_user",
+               return_value=None):
 
         result = await get_daily_sales(db=mock_db, user=sample_user)
 
@@ -60,8 +60,8 @@ async def test_get_daily_sales_no_business_returns_error(mock_db, sample_user):
 
 @pytest.mark.asyncio
 async def test_get_daily_sales_invalid_date_returns_error(mock_db, sample_user, sample_business):
-    with patch("app.agents.tools.sales_tools.AIService") as mock_ai_cls:
-        mock_ai_cls.return_value._get_business_for_user.return_value = sample_business
+    with patch("app.agents.tools.sales_tools.get_business_id_for_user",
+               return_value=str(sample_business.id)):
 
         result = await get_daily_sales(db=mock_db, user=sample_user, target_date="not-a-date")
 

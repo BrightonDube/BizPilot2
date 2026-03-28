@@ -89,7 +89,10 @@ class Orchestrator:
                 )
             except Exception as exc:
                 AgentLogger.error("Groq call failed", error=exc)
-                return {"type": "error", "message": "AI provider error. Please try again."}
+                return {
+                    "type": "error",
+                    "message": f"AI provider error ({type(exc).__name__}): {exc}",
+                }
 
             guard_result = guard.record_step(
                 description=f"Step {step}: LLM call",
@@ -273,8 +276,13 @@ class Orchestrator:
                     "message": summary_response.content.strip(),
                     "tool_name": tool_name,
                 }
-            except Exception:
-                # If summary call fails, return raw result
+            except Exception as summary_exc:
+                logger.warning(
+                    "HITL summary LLM call failed for tool '%s': %s",
+                    tool_name,
+                    summary_exc,
+                    exc_info=True,
+                )
                 return {"type": "tool_result", "tool": tool_name, "result": result}
 
         except Exception as exc:
