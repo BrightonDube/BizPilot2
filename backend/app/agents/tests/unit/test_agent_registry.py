@@ -24,7 +24,7 @@ def test_all_agents_have_required_fields():
 
 
 def test_all_agents_have_valid_model_tier():
-    valid_tiers = {TaskType.FAST, TaskType.REASONING, TaskType.SUMMARIZATION, TaskType.FALLBACK}
+    valid_tiers = {TaskType.FAST, TaskType.REASONING, TaskType.TOOL_CALLING, TaskType.SUMMARIZATION, TaskType.FALLBACK}
     for name in agent_registry.all_names():
         agent = agent_registry.get(name)
         assert agent.model_tier in valid_tiers, (
