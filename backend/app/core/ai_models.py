@@ -172,6 +172,11 @@ async def run_groq(model: str, messages: list[dict[str, Any]], **kwargs) -> LLMR
         payload["tools"] = tools
         payload["tool_choice"] = kwargs.get("tool_choice", "auto")
 
+    # Add stop sequences if provided (used by ReAct loop to prevent fake Observations)
+    stop = kwargs.get("stop")
+    if stop:
+        payload["stop"] = stop
+
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(url, headers=headers, json=payload)
