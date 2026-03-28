@@ -32,10 +32,12 @@ class ActivityType(str, enum.Enum):
     """Collection activity type."""
 
     PHONE_CALL = "phone_call"
+    CALL = "call"
     EMAIL = "email"
     LETTER = "letter"
     VISIT = "visit"
     PROMISE = "promise"
+    PROMISE_TO_PAY = "promise_to_pay"
     NOTE = "note"
 
 
