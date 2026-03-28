@@ -4,7 +4,6 @@ test_agent_evals.py
 Evaluation tests for the BizPilot agent system.
 Tests intent routing, error propagation, quality scoring, and end-to-end flow.
 """
-import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4

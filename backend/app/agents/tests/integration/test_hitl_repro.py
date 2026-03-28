@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 from app.agents.tasks.chat_agent import ChatAgent
-from app.models.user import User
 from app.models.user_settings import AIDataSharingLevel
 
 @pytest.mark.asyncio
