@@ -86,6 +86,7 @@ async def get_stock_movements(
 
 @router.get("/valuation")
 async def get_valuation(
+    method: str = Query("average", description="Costing method: average or fifo"),
     category_id: Optional[UUID] = None,
     business_id: UUID = Depends(get_current_business_id),
     current_user=Depends(get_current_active_user),
@@ -94,11 +95,19 @@ async def get_valuation(
     """
     Inventory valuation report grouped by category.
     Shows cost value, retail value, and margin per category.
+
+    ``method`` is accepted for forward-compatibility with the service layer
+    (currently only ``average`` is fully implemented; ``fifo`` uses average cost
+    as a fallback until movement history is back-filled).
     """
+    if method not in ("average", "fifo"):
+        from fastapi import HTTPException as _HTTPException
+        raise _HTTPException(status_code=422, detail=f"Invalid valuation method: {method!r}. Use 'average' or 'fifo'.")
     service = InventoryReportService(db)
     result = service.get_valuation(
         business_id=business_id,
         category_id=category_id,
+        method=method,
     )
     return result
 

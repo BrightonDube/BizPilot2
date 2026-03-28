@@ -29,7 +29,7 @@ async def get_cached_or_fetch(
     Generic cache-aside pattern: check cache, fetch if miss, store result.
     Performance: Cache hit under 5ms. Serializes as JSON.
     """
-    if not redis_client:
+    if not redis_client or not hasattr(redis_client, "get"):
         return await fetch_fn()
 
     try:

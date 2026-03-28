@@ -2,7 +2,9 @@
 
 import csv
 import io
+import logging
 from datetime import date, timedelta
+from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
 
@@ -12,6 +14,7 @@ from fastapi.responses import StreamingResponse
 from app.core.database import get_sync_db
 from app.api.deps import get_current_active_user, get_current_business_id
 from app.models.user import User
+from app.models.product import Product
 from app.services.layby_service import LaybyService
 from app.services.layby_report_service import LaybyReportService
 from app.schemas.layby import (
@@ -33,6 +36,8 @@ from app.schemas.layby_report import (
     AgingReport,
     LaybySummaryReport,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/laybys", tags=["Laybys"])
 
@@ -267,18 +272,63 @@ async def create_layby(
     business_id: str = Depends(get_current_business_id),
     db=Depends(get_sync_db),
 ):
-    """Create a new layby."""
+    """
+    Create a new layby.
+
+    Validates each product exists, then delegates to LaybyService.create_layby
+    with the positional arguments it expects.
+
+    Root-cause fix: the previous implementation passed ``user_id`` and ``data``
+    as keyword arguments, which do not exist on LaybyService.create_layby,
+    causing an immediate TypeError → 500.
+    """
     try:
+        # Resolve product names required by LaybyService
+        items: List[dict] = []
+        for li in data.items:
+            product = (
+                db.query(Product)
+                .filter(
+                    Product.id == li.product_id,
+                    Product.business_id == business_id,
+                    Product.deleted_at.is_(None),
+                )
+                .first()
+            )
+            if not product:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Product {li.product_id} not found in this business",
+                )
+            items.append(
+                {
+                    "product_id": str(li.product_id),
+                    "product_name": product.name,
+                    "product_sku": product.sku,
+                    "quantity": li.quantity,
+                    "unit_price": li.unit_price,
+                    "discount_amount": Decimal("0.00"),
+                    "tax_amount": Decimal("0.00"),
+                }
+            )
+
         service = LaybyService(db)
         layby = service.create_layby(
-            business_id=business_id,
-            user_id=str(current_user.id),
-            data=data,
+            business_id=UUID(business_id),
+            customer_id=data.customer_id,
+            items=items,
+            deposit_amount=data.deposit_amount,
+            frequency=data.payment_frequency,
+            created_by=current_user.id,
+            notes=data.notes,
         )
         return layby
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.exception("Unexpected error creating layby: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create layby: {str(e)}",

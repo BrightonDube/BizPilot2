@@ -32,9 +32,9 @@ def _make_db():
 
 
 def test_create_account_sets_credit_limit():
-    from app.models.customer_account import CustomerAccount, AccountStatus
+    from app.models.customer_account import AccountStatus
 
-    account = MagicMock(spec=CustomerAccount)
+    account = MagicMock()
     account.id = _uuid()
     account.credit_limit = Decimal("5000.00")
     account.current_balance = Decimal("0.00")
