@@ -49,7 +49,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "es-abstract": "^1.24.1",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "16.1.4",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
