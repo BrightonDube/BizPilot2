@@ -71,7 +71,7 @@ async def get_overdue_invoices(
     svc = InvoiceService(db)
     try:
         invoices = await asyncio.to_thread(
-            svc.get_overdue_invoices, business_id=business_id, limit=limit
+            svc.get_overdue_invoices, business_id=business_id, limit=int(limit)
         )
     except AttributeError:
         # Fallback: get all invoices and filter overdue

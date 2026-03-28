@@ -110,7 +110,7 @@ async def get_reorder_suggestions(
     svc = InventoryService(db)
     try:
         suggestions = await asyncio.to_thread(
-            svc.get_reorder_suggestions, business_id=business_id, limit=limit
+            svc.get_reorder_suggestions, business_id=business_id, limit=int(limit)
         )
         if isinstance(suggestions, list):
             return {"suggestions": suggestions}

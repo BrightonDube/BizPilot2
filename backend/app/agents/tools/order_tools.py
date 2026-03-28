@@ -24,7 +24,7 @@ async def get_orders(
         return {"error": "No business found for user"}
 
     svc = OrderService(db)
-    orders = await asyncio.to_thread(svc.get_orders, business_id=business_id, limit=limit)
+    orders = await asyncio.to_thread(svc.get_orders, business_id=business_id, limit=int(limit))
 
     return {
         "orders": [
